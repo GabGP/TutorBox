@@ -9,21 +9,21 @@ description = "TutorBox FastAPI Backend & AI Socratic Engine"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.28.0",
-    "pydantic>=2.6.0",
-    "bcrypt>=4.0.0",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.3",
+    "pydantic>=2.13.4",
+    "bcrypt>=5.0.0",
     "passlib[bcrypt]>=1.7.4",
-    "sympy>=1.12",
-    "httpx>=0.27.0",
+    "sympy>=1.14.0",
+    "httpx>=0.28.1",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=4.1.0",
-    "pre-commit>=3.6.0",
-    "ruff>=0.3.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pre-commit>=4.6.2",
+    "ruff>=0.16.3",
 ]
 
 [tool.pytest.ini_options]
