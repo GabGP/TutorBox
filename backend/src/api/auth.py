@@ -4,8 +4,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from src.db.database import get_db_connection
-from src.security.auth import verify_pin
+from db.database import get_db_connection
+from security.auth import verify_pin
 
 logger = logging.getLogger(__name__)
 

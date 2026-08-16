@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.api.auth import router as auth_router
-from src.api.health import router as health_router
-from src.db.database import get_db_path
-from src.db.migrations import apply_migrations
+from api.auth import router as auth_router
+from api.health import router as health_router
+from db.database import get_db_path
+from db.migrations import apply_migrations
 
 logging.basicConfig(
     level=logging.INFO,
