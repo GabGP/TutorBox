@@ -72,11 +72,12 @@ python -m uvicorn src.main:app --reload
 The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
 #### Running Tests & Linters:
+Run pytest with code coverage
 ```bash
-# Run pytest with code coverage
 python -m pytest
-
-# Run Ruff linter and formatter checks manually
+```
+Run Ruff linter and formatter checks manually
+```
 ruff check .
 ruff format --check .
 ```
@@ -106,7 +107,8 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 ```text
 .
 ├── migrations/
-│   └── 001_initial_schema.sql
+│   ├── 001_initial_schema.sql
+│   └── 002_add_user_role.sql
 ├── src/
 │   ├── __init__.py
 │   ├── main.py
@@ -120,7 +122,8 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 │   │   └── migrations.py
 │   └── security/
 │       ├── __init__.py
-│       └── auth.py
+│       ├── auth.py
+│       └── rate_limit.py
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
