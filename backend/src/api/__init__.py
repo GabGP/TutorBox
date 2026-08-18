@@ -1,1 +1,5 @@
-# src.api package
+"""TutorBox API package."""
+
+from . import auth, health
+
+__all__ = ["auth", "health"]

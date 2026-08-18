@@ -1,1 +1,1 @@
-# tests package
+"""TutorBox Backend test suite package."""
