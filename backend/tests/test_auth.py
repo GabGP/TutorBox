@@ -102,3 +102,85 @@ def test_login_creates_database_session(seeded_db, client: TestClient):
     assert session["id"] == session_id
     assert session["is_active"] == 1
     conn.close()
+
+
+def test_login_rate_limiting_triggers_429(seeded_db, client: TestClient):
+    """
+    Test that 5 consecutive failed login attempts lock out the user and the 6th returns 429.
+    """
+    from src.security.rate_limit import login_rate_limiter
+
+    login_rate_limiter.clear()
+
+    # 5 failed attempts with wrong PIN
+    for _ in range(5):
+        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        assert response.status_code == 401
+
+    # 6th attempt should be blocked with 429 Too Many Requests
+    response = client.post("/login", json={"username": "student1", "pin": "9999"})
+    assert response.status_code == 429
+    assert "Too many failed login attempts" in response.json()["detail"]
+
+    # Even with correct PIN, user is locked out
+    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    assert response.status_code == 429
+
+    login_rate_limiter.clear()
+
+
+def test_login_rate_limiting_lockout_expires(
+    seeded_db, client: TestClient, monkeypatch
+):
+    """
+    Test that after the lockout duration passes, the user can successfully log in.
+    """
+    import time
+
+    from src.security.rate_limit import login_rate_limiter
+
+    login_rate_limiter.clear()
+
+    # Trigger lockout
+    for _ in range(5):
+        client.post("/login", json={"username": "student1", "pin": "9999"})
+
+    # Verify locked out
+    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    assert response.status_code == 429
+
+    # Advance time past the lockout duration (300 seconds)
+    original_time = time.time()
+    monkeypatch.setattr(time, "time", lambda: original_time + 301)
+
+    # Now login with correct PIN should succeed
+    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "authenticated"
+
+    login_rate_limiter.clear()
+
+
+def test_login_rate_limiting_resets_on_success(seeded_db, client: TestClient):
+    """
+    Test that successful login resets the consecutive failure counter.
+    """
+    from src.security.rate_limit import login_rate_limiter
+
+    login_rate_limiter.clear()
+
+    # 4 failed attempts (less than max of 5)
+    for _ in range(4):
+        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        assert response.status_code == 401
+
+    # Successful login resets the counter
+    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    assert response.status_code == 200
+
+    # 4 more failed attempts shouldn't lock out (needs 5 new consecutive ones)
+    for _ in range(4):
+        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        assert response.status_code == 401
+
+    login_rate_limiter.clear()

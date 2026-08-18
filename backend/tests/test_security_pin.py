@@ -27,17 +27,17 @@ def test_plain_text_pin_not_in_database(temp_db):
     row = cursor.fetchone()
     assert row is not None
 
-    # Verify column naming and absence of plain-text PIN
+    # Verify no column is named exactly "pin" (only "hashed_pin" should exist)
     row_dict = dict(row)
     assert "hashed_pin" in row_dict
-    assert "pin" not in row_dict
+    assert "pin" not in row_dict, "A bare 'pin' column exists — rename to 'hashed_pin'"
 
     # Strict assertion: The plain text PIN string must not be present in any row value
     for col_name, value in row_dict.items():
         assert test_pin != str(value), f"Plain text PIN leaked in column: {col_name}"
-        assert test_pin not in str(
-            value
-        ), f"Plain text PIN found as substring in: {col_name}"
+        assert test_pin not in str(value), (
+            f"Plain text PIN found as substring in: {col_name}"
+        )
 
 
 def test_plain_text_pin_never_logged_during_login(
@@ -64,9 +64,9 @@ def test_plain_text_pin_never_logged_during_login(
     for record in caplog.records:
         log_message = record.getMessage()
         for sensitive_pin in sensitive_pins:
-            assert (
-                sensitive_pin not in log_message
-            ), f"Security violation: Sensitive PIN '{sensitive_pin}' was logged in message: '{log_message}'"
+            assert sensitive_pin not in log_message, (
+                f"Security violation: Sensitive PIN '{sensitive_pin}' was logged in message: '{log_message}'"
+            )
 
 
 def test_plain_text_pin_never_logged_during_hashing(caplog):
@@ -85,7 +85,7 @@ def test_plain_text_pin_never_logged_during_hashing(caplog):
 
     for record in caplog.records:
         log_message = record.getMessage()
-        assert (
-            sensitive_pin not in log_message
-        ), f"Security violation: Plain text PIN '{sensitive_pin}' leaked in logger: '{log_message}'"
+        assert sensitive_pin not in log_message, (
+            f"Security violation: Plain text PIN '{sensitive_pin}' leaked in logger: '{log_message}'"
+        )
         assert "wrong_pin" not in log_message

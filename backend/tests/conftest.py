@@ -49,9 +49,10 @@ def seeded_db(temp_db):
 
 
 @pytest.fixture
-def client(temp_db):
+def client():
     """
-    TestClient configured with the isolated temporary database.
+    TestClient that uses whatever DATABASE_PATH is currently set.
+    Must be used AFTER a DB fixture (temp_db or seeded_db) in the test signature.
     """
     with TestClient(app) as test_client:
         yield test_client
