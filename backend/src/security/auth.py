@@ -28,5 +28,5 @@ def verify_pin(plain_pin: str, hashed_pin: str) -> bool:
             logger.warning("PIN verification failed: Invalid PIN provided.")
         return is_valid
     except (ValueError, TypeError) as e:
-        logger.error(f"Error during PIN verification: {type(e).__name__}")
+        logger.error("Error during PIN verification: %s", type(e).__name__)
         return False

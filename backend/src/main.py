@@ -19,7 +19,7 @@ logger = logging.getLogger("tutorbox")
 async def lifespan(app: FastAPI):
     logger.info("Initializing TutorBox backend appliance...")
     db_path = get_db_path()
-    logger.info(f"Running database migrations on {db_path}...")
+    logger.info("Running database migrations on %s...", db_path)
     apply_migrations(db_path)
     logger.info("Database migrations complete.")
     yield
