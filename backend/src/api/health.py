@@ -2,7 +2,7 @@ import sqlite3
 
 from fastapi import APIRouter
 
-from db.database import get_db_connection
+from db.database import get_db
 
 router = APIRouter()
 
@@ -14,9 +14,8 @@ def health_check():
     """
     db_status = "healthy"
     try:
-        conn = get_db_connection()
-        conn.execute("SELECT 1")
-        conn.close()
+        with get_db() as conn:
+            conn.execute("SELECT 1")
     except (sqlite3.Error, OSError) as e:
         db_status = f"unhealthy: {type(e).__name__}"
 

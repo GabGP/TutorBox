@@ -4,8 +4,9 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from db.database import get_db_connection
+from db.database import get_db
 from security.auth import verify_pin
+from security.rate_limit import check_rate_limit, login_rate_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -28,47 +29,49 @@ def login(request: LoginRequest):
     """
     Authenticates a student by username and numeric PIN.
     """
-    logger.info(f"Attempting login for user: {request.username}")
+    logger.info("Attempting login for user: %s", request.username)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    check_rate_limit(request.username)
 
-    cursor.execute(
-        "SELECT id, username, hashed_pin FROM users WHERE username = ?",
-        (request.username,),
-    )
-    user = cursor.fetchone()
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, username, hashed_pin FROM users WHERE username = ?",
+            (request.username,),
+        )
+        user = cursor.fetchone()
 
-    if not user:
-        logger.warning(f"Login failed: User '{request.username}' not found.")
-        conn.close()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or PIN.",
+        if not user:
+            login_rate_limiter.record_failure(request.username)
+            logger.warning("Login failed: User '%s' not found.", request.username)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid username or PIN.",
+            )
+
+        user_id, username, stored_hashed_pin = (
+            user["id"],
+            user["username"],
+            user["hashed_pin"],
         )
 
-    user_id, username, stored_hashed_pin = (
-        user["id"],
-        user["username"],
-        user["hashed_pin"],
-    )
+        if not verify_pin(request.pin, stored_hashed_pin):
+            login_rate_limiter.record_failure(request.username)
+            logger.warning("Login failed: Invalid PIN for user '%s'.", request.username)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid username or PIN.",
+            )
 
-    if not verify_pin(request.pin, stored_hashed_pin):
-        logger.warning(f"Login failed: Invalid PIN for user '{request.username}'.")
-        conn.close()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or PIN.",
+        login_rate_limiter.record_success(request.username)
+
+        # Create active session
+        session_id = str(uuid.uuid4())
+        cursor.execute(
+            "INSERT INTO sessions (id, user_id, is_active) VALUES (?, ?, 1)",
+            (session_id, user_id),
         )
+        conn.commit()
 
-    # Create active session
-    session_id = str(uuid.uuid4())
-    cursor.execute(
-        "INSERT INTO sessions (id, user_id, is_active) VALUES (?, ?, 1)",
-        (session_id, user_id),
-    )
-    conn.commit()
-    conn.close()
-
-    logger.info(f"Login successful for user '{username}'. Session ID: {session_id}")
+    logger.info("Login successful for user '%s'. Session ID: %s", username, session_id)
     return LoginResponse(session_id=session_id, username=username)
