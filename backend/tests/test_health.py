@@ -33,7 +33,7 @@ def test_health_check_structure(temp_db, client: TestClient):
     assert set(data.keys()) == {"status", "service", "database"}
 
 
-def test_health_check_degraded_database(client: TestClient):
+def test_health_check_degraded_database(temp_db, client: TestClient):
     """
     Test that /health returns degraded status when database raises an OperationalError.
     """
