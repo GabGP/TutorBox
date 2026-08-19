@@ -10,6 +10,18 @@ from src.main import app
 from src.security.auth import hash_pin
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """
+    Ensure rate limiter state is clean before and after every test.
+    """
+    from src.security.rate_limit import login_rate_limiter
+
+    login_rate_limiter.clear()
+    yield
+    login_rate_limiter.clear()
+
+
 @pytest.fixture
 def temp_db():
     """
