@@ -75,7 +75,9 @@ def test_migrations_records_version():
         apply_migrations(db_path)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT version, applied_at FROM schema_migrations")
+        cursor.execute(
+            "SELECT version, applied_at FROM schema_migrations ORDER BY version"
+        )
         rows = cursor.fetchall()
         assert len(rows) >= 1
         assert rows[0][0] == 1
