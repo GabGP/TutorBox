@@ -23,14 +23,16 @@ def _reset_rate_limiter():
 
 
 @pytest.fixture
-def temp_db():
+def temp_db(monkeypatch: pytest.MonkeyPatch):
     """
     Creates an isolated temporary SQLite database with all migrations applied.
+    Uses monkeypatch for DATABASE_PATH so the environment is always restored,
+    even if the test fails.
     """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
-    os.environ["DATABASE_PATH"] = db_path
+    monkeypatch.setenv("DATABASE_PATH", db_path)
     apply_migrations(db_path)
 
     conn = sqlite3.connect(db_path)
