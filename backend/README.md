@@ -93,9 +93,9 @@ python -m pip install .
 ```
 
 #### Running in Production:
-Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`, using worker processes for concurrency:
+Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 ```bash
-python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 2
+python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 ```
 
 The database `tutorbox.db` will be initialized and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
@@ -108,7 +108,8 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 .
 ├── migrations/
 │   ├── 001_initial_schema.sql
-│   └── 002_add_user_role.sql
+│   ├── 002_add_user_role.sql
+│   └── 003_add_lookup_indexes.sql
 ├── src/
 │   ├── __init__.py
 │   ├── main.py
@@ -131,6 +132,7 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 │   ├── test_database.py
 │   ├── test_health.py
 │   ├── test_migrations.py
+│   ├── test_rate_limit.py
 │   └── test_security_pin.py
 ├── pyproject.toml
 └── README.md
