@@ -1,8 +1,11 @@
 import logging
+import re
 import sqlite3
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+MIGRATION_NAME_RE = re.compile(r"^(\d{3})_[a-z0-9_]+\.sql$")
 
 
 def get_migrations_dir() -> Path:
@@ -37,26 +40,38 @@ def apply_migrations(db_path: str) -> None:
             return
 
         sql_files = sorted(migrations_dir.glob("*.sql"))
+        seen_versions: set[int] = set()
 
         for sql_file in sql_files:
-            try:
-                version_str = sql_file.name.split("_")[0]
-                version = int(version_str)
-            except (ValueError, IndexError):
+            match = MIGRATION_NAME_RE.match(sql_file.name)
+            if match is None:
                 logger.warning(
-                    "Skipping migration file with invalid name format: %s",
+                    "Skipping migration file with invalid name format "
+                    "(expected 'NNN_lowercase_name.sql'): %s",
                     sql_file.name,
                 )
                 continue
 
+            version = int(match.group(1))
+
             if version in applied_versions:
                 continue
+            if version in seen_versions:
+                logger.warning(
+                    "Duplicate migration version %d detected (%s). Skipping.",
+                    version,
+                    sql_file.name,
+                )
+                continue
+            seen_versions.add(version)
 
             logger.info("Applying migration %s (version %d)...", sql_file.name, version)
             sql_script = sql_file.read_text(encoding="utf-8")
 
             try:
                 conn.execute("BEGIN")
+                # NOTE: statements are split on ';'. Migration SQL must NOT contain
+                # semicolons inside string literals, triggers, or BEGIN...END blocks.
                 statements = [s.strip() for s in sql_script.split(";") if s.strip()]
                 for statement in statements:
                     cursor.execute(statement)

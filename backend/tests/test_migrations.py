@@ -21,11 +21,19 @@ def test_migrations_applied_successfully():
         versions = [r[0] for r in rows]
         assert 1 in versions
         assert 2 in versions
+        assert 3 in versions
 
         # Verify role column added by migration 002 exists
         cursor.execute("PRAGMA table_info(users)")
         columns = {col[1] for col in cursor.fetchall()}
         assert "role" in columns
+
+        # Verify FK lookup indexes added by migration 003 exist
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' "
+            "AND name='idx_turn_logs_session_id'"
+        )
+        assert cursor.fetchone() is not None
         conn.close()
     finally:
         if os.path.exists(db_path):
@@ -138,6 +146,39 @@ def test_migrations_invalid_filename_skipped(tmp_path):
     tables = [r[0] for r in cursor.fetchall()]
     assert "valid_table" in tables
     assert "test" not in tables
+    conn.close()
+
+
+def test_migrations_skip_duplicate_version_numbers(tmp_path):
+    """
+    Test that two files claiming the same version do not crash: the first is
+    applied and the second is skipped with a warning.
+    """
+    from unittest.mock import patch
+
+    db_path = str(tmp_path / "dup.db")
+    mig_dir = tmp_path / "migrations"
+    mig_dir.mkdir()
+
+    (mig_dir / "001_first.sql").write_text(
+        "CREATE TABLE first_table (id INT);", encoding="utf-8"
+    )
+    (mig_dir / "001_second.sql").write_text(
+        "CREATE TABLE second_table (id INT);", encoding="utf-8"
+    )
+
+    with patch("src.db.migrations.get_migrations_dir", return_value=mig_dir):
+        apply_migrations(db_path)  # must not raise
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM schema_migrations WHERE version = 1")
+    assert cursor.fetchone()[0] == 1
+    tables = {
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    assert "first_table" in tables
+    assert "second_table" not in tables
     conn.close()
 
 
