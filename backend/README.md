@@ -1,6 +1,6 @@
 # TutorBox Backend
 
-[![ci](https://github.com/GabGP/TutorBox/actions/workflows/ci.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci.yml)
+[![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
 FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local development support on Windows and Linux.
 

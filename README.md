@@ -1,6 +1,6 @@
 # TutorBox: Autonomous Offline Edge AI Socratic Educational Platform
 
-[![ci](https://github.com/GabGP/TutorBox/actions/workflows/ci.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci.yml)
+[![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
 **TutorBox** is an offline Edge AI educational appliance designed for basic education students in rural and off-grid communities with zero internet connectivity. The system acts as a Socratic math tutor, communicating in the **K'iche' language** (`quc_Latn`) via voice and text.
 
