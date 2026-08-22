@@ -88,5 +88,5 @@ def login(request: LoginRequest):
         )
         conn.commit()
 
-    logger.info("Login successful for user '%s'. Session ID: %s", username, session_id)
+    logger.info("Login successful for user '%s'.", username)
     return LoginResponse(session_id=session_id, username=username)

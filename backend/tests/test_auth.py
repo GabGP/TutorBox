@@ -1,7 +1,10 @@
+import logging
+
 from fastapi.testclient import TestClient
 
 from src.db.database import get_db_connection
 from src.security.auth import hash_pin, verify_pin
+from src.security.rate_limit import LOCKOUT_DURATION_SECONDS
 
 
 def test_hash_pin_generates_bcrypt_hash():
@@ -104,6 +107,24 @@ def test_login_creates_database_session(seeded_db, client: TestClient):
     conn.close()
 
 
+def test_session_id_never_logged(seeded_db, client: TestClient, caplog):
+    """
+    SECURITY PROOF 4:
+    The session identifier returned to the client must never appear in any
+    log output (it is a bearer credential).
+    """
+    with caplog.at_level(logging.DEBUG):
+        response = client.post("/login", json={"username": "student1", "pin": "1234"})
+
+    assert response.status_code == 200
+    session_id = response.json()["session_id"]
+
+    for record in caplog.records:
+        assert session_id not in record.getMessage(), (
+            f"Security violation: session ID leaked in log: '{record.getMessage()}'"
+        )
+
+
 def test_login_rate_limiting_triggers_429(seeded_db, client: TestClient):
     """
     Test that 5 consecutive failed login attempts lock out the user and the 6th returns 429.
@@ -139,9 +160,11 @@ def test_login_rate_limiting_lockout_expires(
     response = client.post("/login", json={"username": "student1", "pin": "1234"})
     assert response.status_code == 429
 
-    # Advance time past the lockout duration (300 seconds)
+    # Advance time past the lockout duration (constant-driven: survives recalibration)
     original_time = time.time()
-    monkeypatch.setattr(time, "time", lambda: original_time + 301)
+    monkeypatch.setattr(
+        time, "time", lambda: original_time + LOCKOUT_DURATION_SECONDS + 1
+    )
 
     # Now login with correct PIN should succeed
     response = client.post("/login", json={"username": "student1", "pin": "1234"})
