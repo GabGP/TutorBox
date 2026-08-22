@@ -1,30 +1,54 @@
 import logging
 import time
-from collections import defaultdict
 
 from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 5
-LOCKOUT_DURATION_SECONDS = 300  # 5 minutes
+LOCKOUT_DURATION_SECONDS = 30
+MAX_TRACKED_KEYS = 10_000
 
 
 class InMemoryRateLimiter:
     """
-    Lightweight in-memory rate limiter for tracking failed authentication attempts.
-    Locks out a username after MAX_ATTEMPTS consecutive failures for LOCKOUT_DURATION_SECONDS.
+    Lightweight in-memory rate limiter for failed authentication attempts.
     """
 
     def __init__(
         self,
         max_attempts: int = MAX_ATTEMPTS,
         lockout_seconds: int = LOCKOUT_DURATION_SECONDS,
+        max_tracked_keys: int = MAX_TRACKED_KEYS,
     ):
         self.max_attempts = max_attempts
         self.lockout_seconds = lockout_seconds
-        self._failed_attempts: dict[str, int] = defaultdict(int)
+        self.max_tracked_keys = max_tracked_keys
+        self._failed_attempts: dict[str, int] = {}
         self._lockout_until: dict[str, float] = {}
+
+    def _evict_stale(self) -> None:
+        """
+        Removes expired lockouts together with their failure counters.
+        """
+        now = time.time()
+        for key in list(self._lockout_until):
+            if now >= self._lockout_until[key]:
+                del self._lockout_until[key]
+                self._failed_attempts.pop(key, None)
+
+    def _enforce_cap(self) -> None:
+        """
+        Hard-caps tracked keys. Locked-out keys are never evicted; the oldest
+        non-locked-out entries (insertion order) are dropped first.
+        """
+        excess = len(self._failed_attempts) - self.max_tracked_keys
+        for key in list(self._failed_attempts):
+            if excess <= 0:
+                break
+            if key not in self._lockout_until:
+                del self._failed_attempts[key]
+                excess -= 1
 
     def is_locked_out(self, key: str) -> bool:
         """
@@ -39,17 +63,19 @@ class InMemoryRateLimiter:
                 return True
             # Lockout expired, reset counter and lockout
             del self._lockout_until[key]
-            self._failed_attempts[key] = 0
+            self._failed_attempts.pop(key, None)
 
         return False
 
     def record_failure(self, key: str) -> bool:
         """
-        Records a failed attempt. If failures reach max_attempts, locks out the key.
-        Returns True if the key is now locked out.
+        Records a failed attempt. If failures reach max_attempts, locks out
+        the key. Returns True if the key is now locked out.
         """
-        self._failed_attempts[key] += 1
-        if self._failed_attempts[key] >= self.max_attempts:
+        self._evict_stale()
+        self._failed_attempts[key] = self._failed_attempts.get(key, 0) + 1
+        locked_now = self._failed_attempts[key] >= self.max_attempts
+        if locked_now:
             self._lockout_until[key] = time.time() + self.lockout_seconds
             logger.warning(
                 "User '%s' exceeded max failed login attempts (%d). Locked out for %d seconds.",
@@ -57,12 +83,14 @@ class InMemoryRateLimiter:
                 self.max_attempts,
                 self.lockout_seconds,
             )
-            return True
-        return False
+        # Enforce the cap last so freshly locked-out keys are never evicted.
+        self._enforce_cap()
+        return locked_now
 
     def record_success(self, key: str) -> None:
         """
-        Resets failed attempts and lockout status for a key upon successful authentication.
+        Resets failed attempts and lockout status for a key upon successful
+        authentication.
         """
         self._failed_attempts.pop(key, None)
         self._lockout_until.pop(key, None)
