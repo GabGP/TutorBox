@@ -12,10 +12,25 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+USERNAME_PATTERN = r"^[A-Za-z0-9_.-]{3,32}$"
+PIN_PATTERN = r"^\d{4,8}$"
+
 
 class LoginRequest(BaseModel):
-    username: str = Field(..., examples=["student1"])
-    pin: str = Field(..., examples=["1234"])
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=32,
+        pattern=USERNAME_PATTERN,
+        examples=["student1"],
+    )
+    pin: str = Field(
+        ...,
+        min_length=4,
+        max_length=8,
+        pattern=PIN_PATTERN,
+        examples=["1234"],
+    )
 
 
 class LoginResponse(BaseModel):

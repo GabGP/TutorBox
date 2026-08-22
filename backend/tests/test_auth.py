@@ -166,3 +166,38 @@ def test_login_rate_limiting_resets_on_success(seeded_db, client: TestClient):
     for _ in range(4):
         response = client.post("/login", json={"username": "student1", "pin": "9999"})
         assert response.status_code == 401
+
+
+def test_login_rejects_oversized_username(seeded_db, client: TestClient):
+    """
+    Usernames longer than 32 characters must fail validation with 422.
+    """
+    response = client.post("/login", json={"username": "x" * 33, "pin": "1234"})
+    assert response.status_code == 422
+
+
+def test_login_rejects_invalid_username_characters(seeded_db, client: TestClient):
+    """
+    Usernames with characters outside [A-Za-z0-9_.-] must be rejected
+    (log-injection guard).
+    """
+    response = client.post("/login", json={"username": "bad\nuser", "pin": "1234"})
+    assert response.status_code == 422
+
+
+def test_login_rejects_non_numeric_pin(seeded_db, client: TestClient):
+    """
+    Pins must be numeric digits only.
+    """
+    response = client.post("/login", json={"username": "student1", "pin": "abcd"})
+    assert response.status_code == 422
+
+
+def test_login_rejects_wrong_pin_length(seeded_db, client: TestClient):
+    """
+    Pins shorter than 4 or longer than 8 digits must be rejected.
+    """
+    short = client.post("/login", json={"username": "student1", "pin": "123"})
+    long_pin = client.post("/login", json={"username": "student1", "pin": "1" * 9})
+    assert short.status_code == 422
+    assert long_pin.status_code == 422
