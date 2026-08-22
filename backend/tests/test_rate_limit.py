@@ -1,4 +1,6 @@
-from src.security.rate_limit import InMemoryRateLimiter
+import threading
+
+from src.security.rate_limit import LOCKOUT_DURATION_SECONDS, InMemoryRateLimiter
 
 
 def test_rate_limiter_caps_tracked_keys():
@@ -9,6 +11,31 @@ def test_rate_limiter_caps_tracked_keys():
     limiter = InMemoryRateLimiter(max_tracked_keys=100)
     for i in range(500):
         limiter.record_failure(f"user_{i}")
+    assert len(limiter._failed_attempts) <= 100
+
+
+def test_rate_limiter_thread_safety_under_concurrency():
+    """
+    The cap invariant must survive concurrent record_failure calls from
+    multiple threads (regression guard for the locking fix).
+    """
+    limiter = InMemoryRateLimiter(max_attempts=10**9, max_tracked_keys=100)
+    errors: list[Exception] = []
+
+    def worker(n: int) -> None:
+        try:
+            for i in range(250):
+                limiter.record_failure(f"user_{(n * 250 + i) % 150}")
+        except Exception as exc:  # noqa: BLE001 - captured and asserted below
+            errors.append(exc)
+
+    threads = [threading.Thread(target=worker, args=(n,)) for n in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors
     assert len(limiter._failed_attempts) <= 100
 
 
@@ -36,7 +63,9 @@ def test_rate_limiter_sweeps_expired_lockouts_on_write(monkeypatch):
     assert limiter.is_locked_out("student1") is True
 
     original_time = time.time()
-    monkeypatch.setattr(time, "time", lambda: original_time + 31)
+    monkeypatch.setattr(
+        time, "time", lambda: original_time + LOCKOUT_DURATION_SECONDS + 1
+    )
 
     limiter.record_failure("other_user")
     assert "student1" not in limiter._lockout_until
