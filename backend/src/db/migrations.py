@@ -43,6 +43,7 @@ def apply_migrations(db_path: str) -> None:
         seen_versions: set[int] = set()
 
         for sql_file in sql_files:
+            # Validate migration file name format
             match = MIGRATION_NAME_RE.match(sql_file.name)
             if match is None:
                 logger.warning(
@@ -54,6 +55,7 @@ def apply_migrations(db_path: str) -> None:
 
             version = int(match.group(1))
 
+            # Skip already applied migrations and detect duplicates
             if version in applied_versions:
                 continue
             if version in seen_versions:
