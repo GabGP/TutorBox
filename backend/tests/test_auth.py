@@ -224,3 +224,103 @@ def test_login_rejects_wrong_pin_length(seeded_db, client: TestClient):
     long_pin = client.post("/login", json={"username": "student1", "pin": "1" * 9})
     assert short.status_code == 422
     assert long_pin.status_code == 422
+
+
+def test_login_response_surfaces_must_change_pin(temp_db, client: TestClient):
+    """
+    Login must return must_change_pin=True when flagged in the database,
+    and must_change_pin=False by default.
+    """
+    _, conn = temp_db
+    hashed = hash_pin("1234")
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, must_change_pin) VALUES (?, ?, 1)",
+        ("rotate_user", hashed),
+    )
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, must_change_pin) VALUES (?, ?, 0)",
+        ("normal_user", hashed),
+    )
+    conn.commit()
+
+    # User with rotation pending
+    res1 = client.post("/login", json={"username": "rotate_user", "pin": "1234"})
+    assert res1.status_code == 200
+    assert res1.json()["must_change_pin"] is True
+
+    # User with no rotation pending
+    res2 = client.post("/login", json={"username": "normal_user", "pin": "1234"})
+    assert res2.status_code == 200
+    assert res2.json()["must_change_pin"] is False
+
+
+def test_login_soft_deleted_user_returns_401(temp_db, client: TestClient):
+    """
+    Soft-deleted users must receive generic 401 on login without existence leak.
+    """
+    _, conn = temp_db
+    hashed = hash_pin("1234")
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, deleted_at) VALUES (?, ?, '2026-08-23 00:00:00')",
+        ("deleted_student", hashed),
+    )
+    conn.commit()
+
+    response = client.post(
+        "/login", json={"username": "deleted_student", "pin": "1234"}
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid username or PIN."
+
+
+def test_logout_success_deactivates_session(seeded_db, client: TestClient):
+    """
+    POST /logout must deactivate the active session in SQLite.
+    """
+    db_path, _ = seeded_db
+    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    assert login_res.status_code == 200
+    session_id = login_res.json()["session_id"]
+
+    # Logout
+    logout_res = client.post(
+        "/logout", headers={"Authorization": f"Bearer {session_id}"}
+    )
+    assert logout_res.status_code == 200
+    assert logout_res.json()["detail"] == "Logged out."
+
+    # Verify session is deactivated in DB
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_active FROM sessions WHERE id = ?", (session_id,))
+    row = cursor.fetchone()
+    assert row is not None
+    assert row["is_active"] == 0
+    conn.close()
+
+
+def test_logout_idempotent_and_subsequent_request_fails(seeded_db, client: TestClient):
+    """
+    Calling logout deactivates session; a second attempt with that dead token
+    fails at the Bearer dependency (401).
+    """
+    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    session_id = login_res.json()["session_id"]
+
+    # First logout succeeds
+    res1 = client.post("/logout", headers={"Authorization": f"Bearer {session_id}"})
+    assert res1.status_code == 200
+
+    # Second call with the same token fails with 401 because session is no longer active
+    res2 = client.post("/logout", headers={"Authorization": f"Bearer {session_id}"})
+    assert res2.status_code == 401
+
+
+def test_logout_unauthenticated_returns_401(client: TestClient):
+    """
+    Calling /logout without Bearer header returns 401.
+    """
+    res = client.post("/logout")
+    assert res.status_code == 401

@@ -1,12 +1,14 @@
 import logging
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from db.database import get_db
 from security.auth import verify_pin
 from security.rate_limit import check_rate_limit, login_rate_limiter
+from security.session import AuthContext, get_current_session
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ class LoginResponse(BaseModel):
     session_id: str
     username: str
     status: str = "authenticated"
+    must_change_pin: bool = False
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -51,7 +54,8 @@ def login(request: LoginRequest):
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, username, hashed_pin FROM users WHERE username = ?",
+            "SELECT id, username, hashed_pin, must_change_pin "
+            "FROM users WHERE username = ? AND deleted_at IS NULL",
             (request.username,),
         )
         user = cursor.fetchone()
@@ -89,4 +93,25 @@ def login(request: LoginRequest):
         conn.commit()
 
     logger.info("Login successful for user '%s'.", username)
-    return LoginResponse(session_id=session_id, username=username)
+    return LoginResponse(
+        session_id=session_id,
+        username=username,
+        must_change_pin=bool(user["must_change_pin"]),
+    )
+
+
+@router.post("/logout")
+def logout(ctx: Annotated[AuthContext, Depends(get_current_session)]):
+    """
+    Deactivates the caller's current session.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE sessions SET is_active = 0 WHERE id = ? AND is_active = 1",
+            (ctx.session_id,),
+        )
+        conn.commit()
+
+    logger.info("User '%s' logged out.", ctx.username)
+    return {"detail": "Logged out."}
