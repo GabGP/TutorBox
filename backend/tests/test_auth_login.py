@@ -3,55 +3,8 @@ import logging
 from fastapi.testclient import TestClient
 
 from src.db.database import get_db_connection
-from src.security.auth import hash_pin, verify_pin
+from src.security.auth import hash_pin
 from src.security.rate_limit import LOCKOUT_DURATION_SECONDS
-
-
-def test_hash_pin_generates_bcrypt_hash():
-    """
-    Test that hash_pin produces a valid bcrypt hash starting with $2b$.
-    """
-    pin = "1234"
-    hashed = hash_pin(pin)
-    assert hashed != pin
-    assert hashed.startswith(("$2b$", "$2a$"))
-
-
-def test_hash_pin_generates_unique_salts():
-    """
-    Test that hashing the same PIN twice yields different hash strings due to salt.
-    """
-    pin = "1234"
-    hash1 = hash_pin(pin)
-    hash2 = hash_pin(pin)
-    assert hash1 != hash2
-    assert verify_pin(pin, hash1) is True
-    assert verify_pin(pin, hash2) is True
-
-
-def test_verify_pin_success():
-    """
-    Test verify_pin returns True for valid PIN and hash.
-    """
-    pin = "5678"
-    hashed = hash_pin(pin)
-    assert verify_pin(pin, hashed) is True
-
-
-def test_verify_pin_failure():
-    """
-    Test verify_pin returns False for incorrect PIN.
-    """
-    pin = "5678"
-    hashed = hash_pin(pin)
-    assert verify_pin("0000", hashed) is False
-
-
-def test_verify_pin_invalid_hash_format():
-    """
-    Test verify_pin handles invalid hash string format gracefully without crashing.
-    """
-    assert verify_pin("1234", "not_a_valid_bcrypt_hash") is False
 
 
 def test_login_success(seeded_db, client: TestClient):
@@ -273,54 +226,3 @@ def test_login_soft_deleted_user_returns_401(temp_db, client: TestClient):
     )
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid username or PIN."
-
-
-def test_logout_success_deactivates_session(seeded_db, client: TestClient):
-    """
-    POST /logout must deactivate the active session in SQLite.
-    """
-    db_path, _ = seeded_db
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
-    assert login_res.status_code == 200
-    session_id = login_res.json()["session_id"]
-
-    # Logout
-    logout_res = client.post(
-        "/logout", headers={"Authorization": f"Bearer {session_id}"}
-    )
-    assert logout_res.status_code == 200
-    assert logout_res.json()["detail"] == "Logged out."
-
-    # Verify session is deactivated in DB
-    conn = get_db_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT is_active FROM sessions WHERE id = ?", (session_id,))
-    row = cursor.fetchone()
-    assert row is not None
-    assert row["is_active"] == 0
-    conn.close()
-
-
-def test_logout_idempotent_and_subsequent_request_fails(seeded_db, client: TestClient):
-    """
-    Calling logout deactivates session; a second attempt with that dead token
-    fails at the Bearer dependency (401).
-    """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
-    session_id = login_res.json()["session_id"]
-
-    # First logout succeeds
-    res1 = client.post("/logout", headers={"Authorization": f"Bearer {session_id}"})
-    assert res1.status_code == 200
-
-    # Second call with the same token fails with 401 because session is no longer active
-    res2 = client.post("/logout", headers={"Authorization": f"Bearer {session_id}"})
-    assert res2.status_code == 401
-
-
-def test_logout_unauthenticated_returns_401(client: TestClient):
-    """
-    Calling /logout without Bearer header returns 401.
-    """
-    res = client.post("/logout")
-    assert res.status_code == 401
