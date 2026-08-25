@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import sys
 import tempfile
 
 import pytest
@@ -11,15 +12,20 @@ from src.security.auth import hash_pin
 
 
 @pytest.fixture(autouse=True)
-def _reset_rate_limiter():
+def _reset_rate_limiters():
     """
-    Ensure rate limiter state is clean before and after every test.
+    Ensure rate limiter state is clean before and after every test across all import aliases.
     """
-    from src.security.rate_limit import login_rate_limiter
 
-    login_rate_limiter.clear()
+    def _clear_all():
+        for mod_name in ("security.rate_limit", "src.security.rate_limit"):
+            mod = sys.modules.get(mod_name)
+            if mod and hasattr(mod, "login_rate_limiter"):
+                mod.login_rate_limiter.clear()
+
+    _clear_all()
     yield
-    login_rate_limiter.clear()
+    _clear_all()
 
 
 @pytest.fixture
@@ -70,3 +76,40 @@ def client():
     """
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def staff_db(temp_db):
+    """
+    Pre-seeds standard test roster across all roles:
+    - student1 (pin: 1234, role: student)
+    - student2 (pin: 1234, role: student)
+    - teacher1 (pin: 1234, role: teacher)
+    - admin1   (pin: 1234, role: admin)
+    """
+    db_path, conn = temp_db
+    hashed = hash_pin("1234")
+    cursor = conn.cursor()
+    users = [
+        ("student1", hashed, "student"),
+        ("student2", hashed, "student"),
+        ("teacher1", hashed, "teacher"),
+        ("admin1", hashed, "admin"),
+    ]
+    cursor.executemany(
+        "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, ?)",
+        users,
+    )
+    conn.commit()
+    return db_path, conn
+
+
+def auth_headers(
+    client: TestClient, username: str, pin: str = "1234"
+) -> dict[str, str]:
+    """Helper to log in and return Bearer authorization headers."""
+    response = client.post("/login", json={"username": username, "pin": pin})
+    assert response.status_code == 200, (
+        f"Login failed for {username}: {response.json()}"
+    )
+    return {"Authorization": f"Bearer {response.json()['session_id']}"}

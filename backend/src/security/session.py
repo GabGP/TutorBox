@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -7,13 +6,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from db.database import get_db
+from security.validation import UUID_RE
 
 logger = logging.getLogger(__name__)
-
-UUID_RE = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-    re.IGNORECASE,
-)
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

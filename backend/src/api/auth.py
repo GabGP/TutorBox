@@ -9,27 +9,32 @@ from db.database import get_db
 from security.auth import verify_pin
 from security.rate_limit import check_rate_limit, login_rate_limiter
 from security.session import AuthContext, get_current_session
+from security.validation import (
+    PIN_MAX_LENGTH,
+    PIN_MIN_LENGTH,
+    PIN_PATTERN,
+    USERNAME_MAX_LENGTH,
+    USERNAME_MIN_LENGTH,
+    USERNAME_PATTERN,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-USERNAME_PATTERN = r"^[A-Za-z0-9_.-]{3,32}$"
-PIN_PATTERN = r"^\d{4,8}$"
-
 
 class LoginRequest(BaseModel):
     username: str = Field(
         ...,
-        min_length=3,
-        max_length=32,
+        min_length=USERNAME_MIN_LENGTH,
+        max_length=USERNAME_MAX_LENGTH,
         pattern=USERNAME_PATTERN,
         examples=["student1"],
     )
     pin: str = Field(
         ...,
-        min_length=4,
-        max_length=8,
+        min_length=PIN_MIN_LENGTH,
+        max_length=PIN_MAX_LENGTH,
         pattern=PIN_PATTERN,
         examples=["1234"],
     )
