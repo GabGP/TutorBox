@@ -70,3 +70,38 @@ def test_rate_limiter_sweeps_expired_lockouts_on_write(monkeypatch):
     limiter.record_failure("other_user")
     assert "student1" not in limiter._lockout_until
     assert "student1" not in limiter._failed_attempts
+
+
+def test_sliding_window_limiter_enforces_limit_and_expires(monkeypatch):
+    """
+    SlidingWindowLimiter allows events up to max_events, blocks excess,
+    and expires old events after the window elapses.
+    """
+    import time
+
+    from src.security.rate_limit import SlidingWindowLimiter
+
+    limiter = SlidingWindowLimiter(max_events=2, window_seconds=10)
+    assert limiter.allow() is True
+    assert limiter.allow() is True
+    assert limiter.allow() is False  # Limit reached
+
+    # Advance time past window
+    current_time = time.time()
+    monkeypatch.setattr(time, "time", lambda: current_time + 15)
+
+    # Expired events popped, new event allowed
+    assert limiter.allow() is True
+
+
+def test_sliding_window_limiter_clear():
+    """
+    SlidingWindowLimiter.clear resets internal event queue.
+    """
+    from src.security.rate_limit import SlidingWindowLimiter
+
+    limiter = SlidingWindowLimiter(max_events=1, window_seconds=10)
+    assert limiter.allow() is True
+    assert limiter.allow() is False
+    limiter.clear()
+    assert limiter.allow() is True

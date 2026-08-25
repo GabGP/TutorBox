@@ -20,8 +20,11 @@ def _reset_rate_limiters():
     def _clear_all():
         for mod_name in ("security.rate_limit", "src.security.rate_limit"):
             mod = sys.modules.get(mod_name)
-            if mod and hasattr(mod, "login_rate_limiter"):
-                mod.login_rate_limiter.clear()
+            if mod:
+                if hasattr(mod, "login_rate_limiter"):
+                    mod.login_rate_limiter.clear()
+                if hasattr(mod, "signup_rate_limiter"):
+                    mod.signup_rate_limiter.clear()
 
     _clear_all()
     yield

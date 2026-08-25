@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from db.database import get_db
 from security.auth import hash_pin
+from security.rate_limit import signup_rate_limiter
 from security.session import AuthContext, get_current_session
 from security.validation import (
     PIN_MAX_LENGTH,
@@ -61,6 +62,13 @@ def signup(request: SignupRequest):
     Student self-signup. Role is always 'student' with direct activation.
     """
     logger.info("Signup attempt for username: %s", request.username)
+
+    if not signup_rate_limiter.allow():
+        logger.warning("Signup rate limit exceeded.")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many signup attempts. Please try again later.",
+        )
 
     hashed = hash_pin(request.pin)
 

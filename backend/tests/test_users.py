@@ -39,6 +39,23 @@ def test_signup_duplicate_username_returns_409(seeded_db, client: TestClient):
     assert response.json()["detail"] == "Username already taken."
 
 
+def test_signup_rate_limiting_triggers_429(temp_db, client: TestClient, monkeypatch):
+    """
+    Global signup limiter throttles after limit is reached, returning 429.
+    """
+    import sys
+
+    for mod_name in ("security.rate_limit", "src.security.rate_limit"):
+        if mod_name in sys.modules:
+            monkeypatch.setattr(
+                sys.modules[mod_name].signup_rate_limiter, "allow", lambda: False
+            )
+
+    res = client.post("/signup", json={"username": "flood_blocked", "pin": "1234"})
+    assert res.status_code == 429
+    assert "Too many signup attempts" in res.json()["detail"]
+
+
 def test_signup_validation_errors(temp_db, client: TestClient):
     """
     POST /signup validates input bounds and formats, returning 422 Unprocessable Entity.
