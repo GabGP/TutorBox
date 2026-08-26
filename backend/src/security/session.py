@@ -64,7 +64,9 @@ def get_current_session(
     )
 
 
-def ensure_no_pending_rotation(ctx: AuthContext) -> AuthContext:
+def ensure_no_pending_rotation(
+    ctx: Annotated[AuthContext, Depends(get_current_session)],
+) -> AuthContext:
     """
     Blocks privileged/interactive endpoints while a PIN rotation is pending.
     Allowlist: PATCH /users/me/pin, GET /users/me, POST /logout.
@@ -81,9 +83,8 @@ def require_roles(*allowed: str):
     """Dependency factory: 403 unless the caller's role is in *allowed*."""
 
     def checker(
-        ctx: Annotated[AuthContext, Depends(get_current_session)],
+        ctx: Annotated[AuthContext, Depends(ensure_no_pending_rotation)],
     ) -> AuthContext:
-        ensure_no_pending_rotation(ctx)
         if ctx.role not in allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
