@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
@@ -84,6 +85,12 @@ def _change_credential(
                 "UPDATE users SET hashed_pin = ?, must_change_pin = 0 WHERE id = ?",
                 (hash_pin(payload.new_pin), ctx.user_id),
             )
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="pin_changed",
+                target_user_id=ctx.user_id,
+            )
         else:
             assert isinstance(payload, ChangeUsernameRequest)
             if payload.new_username == ctx.username:
@@ -101,6 +108,12 @@ def _change_credential(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Username already taken.",
                 )
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="username_changed",
+                target_user_id=ctx.user_id,
+            )
 
         # 3) Deactivate ONLY the caller's active session
         cursor.execute(

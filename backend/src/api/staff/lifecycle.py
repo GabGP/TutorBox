@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
@@ -89,6 +90,12 @@ def delete_user(
             )
 
         _soft_delete_user(conn, user_id, target["role"])
+        record_audit(
+            conn,
+            actor_user_id=ctx.user_id,
+            action="account_deleted",
+            target_user_id=user_id,
+        )
         conn.commit()
 
     logger.info("User id %d soft-deleted by '%s'.", user_id, ctx.username)
@@ -136,6 +143,12 @@ def recover_user(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Username already taken. Choose another for this account.",
             )
+        record_audit(
+            conn,
+            actor_user_id=ctx.user_id,
+            action="account_recovered",
+            target_user_id=user_id,
+        )
         conn.commit()
 
     logger.info(

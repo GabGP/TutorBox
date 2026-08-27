@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
@@ -118,6 +119,13 @@ def create_user(
             cursor.execute(
                 "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, ?)",
                 (payload.username, hashed, payload.role),
+            )
+            new_user_id = cursor.lastrowid
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="user_created",
+                target_user_id=new_user_id,
             )
             conn.commit()
     except sqlite3.IntegrityError:

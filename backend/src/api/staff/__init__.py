@@ -2,6 +2,12 @@
 
 from fastapi import APIRouter
 
+from .audit import (
+    AuditLogsResponse,
+)
+from .audit import (
+    router as audit_router,
+)
 from .lifecycle import (
     DeleteUserResponse,
     RecoverUserRequest,
@@ -29,8 +35,10 @@ router = APIRouter()
 router.include_router(users_router)
 router.include_router(reset_pin_router)
 router.include_router(lifecycle_router)
+router.include_router(audit_router)
 
 __all__ = [
+    "AuditLogsResponse",
     "CreateUserRequest",
     "CreateUserResponse",
     "DeleteUserResponse",
@@ -38,6 +46,7 @@ __all__ = [
     "RecoverUserResponse",
     "ResetPinResponse",
     "UserListResponse",
+    "audit_router",
     "lifecycle_router",
     "reset_pin_router",
     "router",

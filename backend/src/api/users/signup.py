@@ -4,6 +4,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
+from db.audit import record_audit
 from db.database import get_db
 from security import (
     PinField,
@@ -53,6 +54,13 @@ def signup(request: SignupRequest):
             cursor.execute(
                 "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, 'student')",
                 (request.username, hashed),
+            )
+            new_user_id = cursor.lastrowid
+            record_audit(
+                conn,
+                actor_user_id=None,
+                action="signup",
+                target_user_id=new_user_id,
             )
             conn.commit()
     except sqlite3.IntegrityError:

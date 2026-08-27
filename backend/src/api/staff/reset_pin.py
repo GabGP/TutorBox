@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
@@ -64,6 +65,12 @@ def reset_pin(
         cursor.execute(
             "UPDATE sessions SET is_active = 0 WHERE user_id = ? AND is_active = 1",
             (user_id,),
+        )
+        record_audit(
+            conn,
+            actor_user_id=ctx.user_id,
+            action="pin_reset",
+            target_user_id=user_id,
         )
         conn.commit()
 
