@@ -109,7 +109,7 @@ def create_user(
     """
     Staff user creation. Teachers can create student and teacher accounts. Admins can create any account.
     """
-    # teachers create students AND teachers; only admins create admins.
+    # Teachers create students AND teachers; only admins create admins.
     if ctx.role == "teacher" and payload.role == "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
