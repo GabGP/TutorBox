@@ -1,14 +1,12 @@
 import logging
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from db.database import get_db
 from security.auth import verify_pin
 from security.rate_limit import check_rate_limit, login_rate_limiter
-from security.session import AuthContext, get_current_session
 from security.validation import (
     PIN_MAX_LENGTH,
     PIN_MIN_LENGTH,
@@ -103,20 +101,3 @@ def login(request: LoginRequest):
         username=username,
         must_change_pin=bool(user["must_change_pin"]),
     )
-
-
-@router.post("/logout")
-def logout(ctx: Annotated[AuthContext, Depends(get_current_session)]):
-    """
-    Deactivates the caller's current session.
-    """
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE sessions SET is_active = 0 WHERE id = ? AND is_active = 1",
-            (ctx.session_id,),
-        )
-        conn.commit()
-
-    logger.info("User '%s' logged out.", ctx.username)
-    return {"detail": "Logged out."}
