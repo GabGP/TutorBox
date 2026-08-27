@@ -3,18 +3,16 @@ import sqlite3
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from db.database import get_db
-from security.auth import hash_pin
-from security.session import AuthContext, require_roles
-from security.validation import (
-    PIN_MAX_LENGTH,
-    PIN_MIN_LENGTH,
-    PIN_PATTERN,
-    USERNAME_MAX_LENGTH,
-    USERNAME_MIN_LENGTH,
-    USERNAME_PATTERN,
+from security import (
+    AuthContext,
+    PinField,
+    RoleField,
+    UsernameField,
+    hash_pin,
+    require_roles,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,21 +21,9 @@ router = APIRouter()
 
 
 class CreateUserRequest(BaseModel):
-    username: str = Field(
-        ...,
-        min_length=USERNAME_MIN_LENGTH,
-        max_length=USERNAME_MAX_LENGTH,
-        pattern=USERNAME_PATTERN,
-        examples=["student3"],
-    )
-    pin: str = Field(
-        ...,
-        min_length=PIN_MIN_LENGTH,
-        max_length=PIN_MAX_LENGTH,
-        pattern=PIN_PATTERN,
-        examples=["1234"],
-    )
-    role: str = Field("student", pattern="^(student|teacher|admin)$")
+    username: UsernameField
+    pin: PinField
+    role: RoleField = "student"
 
 
 class CreateUserResponse(BaseModel):

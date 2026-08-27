@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from security.session import AuthContext, get_current_session
+from security import AuthContext, get_current_session
 
 logger = logging.getLogger(__name__)
 

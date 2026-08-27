@@ -2,18 +2,14 @@ import logging
 import sqlite3
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from db.database import get_db
-from security.auth import hash_pin
-from security.rate_limit import signup_rate_limiter
-from security.validation import (
-    PIN_MAX_LENGTH,
-    PIN_MIN_LENGTH,
-    PIN_PATTERN,
-    USERNAME_MAX_LENGTH,
-    USERNAME_MIN_LENGTH,
-    USERNAME_PATTERN,
+from security import (
+    PinField,
+    UsernameField,
+    hash_pin,
+    signup_rate_limiter,
 )
 
 logger = logging.getLogger(__name__)
@@ -22,20 +18,8 @@ router = APIRouter()
 
 
 class SignupRequest(BaseModel):
-    username: str = Field(
-        ...,
-        min_length=USERNAME_MIN_LENGTH,
-        max_length=USERNAME_MAX_LENGTH,
-        pattern=USERNAME_PATTERN,
-        examples=["student2"],
-    )
-    pin: str = Field(
-        ...,
-        min_length=PIN_MIN_LENGTH,
-        max_length=PIN_MAX_LENGTH,
-        pattern=PIN_PATTERN,
-        examples=["1234"],
-    )
+    username: UsernameField
+    pin: PinField
 
 
 class SignupResponse(BaseModel):
