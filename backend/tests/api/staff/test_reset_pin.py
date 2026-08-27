@@ -1,17 +1,8 @@
 import logging
-import sqlite3
 
 from fastapi.testclient import TestClient
 
-from tests.conftest import auth_headers
-
-
-def _get_user_id(conn: sqlite3.Connection, username: str) -> int:
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-    row = cursor.fetchone()
-    assert row is not None, f"User {username} not found in test database."
-    return row["id"]
+from tests.conftest import auth_headers, get_user_id
 
 
 def test_teacher_resets_student_pin(staff_db, client: TestClient):
@@ -21,7 +12,7 @@ def test_teacher_resets_student_pin(staff_db, client: TestClient):
     The database flags must_change_pin=1, old PIN fails, and temp PIN succeeds.
     """
     _, conn = staff_db
-    student_id = _get_user_id(conn, "student1")
+    student_id = get_user_id(conn, "student1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     res = client.post(f"/users/{student_id}/reset-pin", headers=teacher_headers)
@@ -54,7 +45,7 @@ def test_teacher_resets_target_invalidates_all_target_sessions(
     Resetting a user's PIN immediately invalidates all active sessions for that user.
     """
     _, conn = staff_db
-    student_id = _get_user_id(conn, "student1")
+    student_id = get_user_id(conn, "student1")
 
     # Student logs in
     login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
@@ -80,7 +71,7 @@ def test_teacher_resetting_admin_returns_403(staff_db, client: TestClient):
     A teacher cannot reset an admin's PIN (403 Forbidden).
     """
     _, conn = staff_db
-    admin_id = _get_user_id(conn, "admin1")
+    admin_id = get_user_id(conn, "admin1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     res = client.post(f"/users/{admin_id}/reset-pin", headers=teacher_headers)
@@ -102,7 +93,7 @@ def test_teacher_resets_another_teacher(staff_db, client: TestClient):
         json={"username": "teacher2", "pin": "1234", "role": "teacher"},
     )
     assert create_res.status_code == 201
-    teacher2_id = _get_user_id(conn, "teacher2")
+    teacher2_id = get_user_id(conn, "teacher2")
 
     reset_res = client.post(f"/users/{teacher2_id}/reset-pin", headers=teacher_headers)
     assert reset_res.status_code == 200
@@ -118,12 +109,12 @@ def test_admin_resets_any_account(staff_db, client: TestClient):
     admin_headers = auth_headers(client, "admin1", "1234")
 
     # Admin resets student
-    student_id = _get_user_id(conn, "student1")
+    student_id = get_user_id(conn, "student1")
     res_s = client.post(f"/users/{student_id}/reset-pin", headers=admin_headers)
     assert res_s.status_code == 200
 
     # Admin resets teacher
-    teacher_id = _get_user_id(conn, "teacher1")
+    teacher_id = get_user_id(conn, "teacher1")
     res_t = client.post(f"/users/{teacher_id}/reset-pin", headers=admin_headers)
     assert res_t.status_code == 200
 
@@ -133,7 +124,7 @@ def test_admin_resets_any_account(staff_db, client: TestClient):
         headers=admin_headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
-    admin2_id = _get_user_id(conn, "admin2")
+    admin2_id = get_user_id(conn, "admin2")
     res_a = client.post(f"/users/{admin2_id}/reset-pin", headers=admin_headers)
     assert res_a.status_code == 200
 
@@ -153,7 +144,7 @@ def test_reset_pin_target_soft_deleted(staff_db, client: TestClient):
     Resetting a soft-deleted user returns 404 Not Found.
     """
     _, conn = staff_db
-    student2_id = _get_user_id(conn, "student2")
+    student2_id = get_user_id(conn, "student2")
     cursor = conn.cursor()
     cursor.execute(
         "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -172,7 +163,7 @@ def test_reset_pin_forbidden_for_students(staff_db, client: TestClient):
     Student role is forbidden (403) from resetting PINs.
     """
     _, conn = staff_db
-    student2_id = _get_user_id(conn, "student2")
+    student2_id = get_user_id(conn, "student2")
     student_headers = auth_headers(client, "student1", "1234")
 
     res = client.post(f"/users/{student2_id}/reset-pin", headers=student_headers)
@@ -225,7 +216,7 @@ def test_reset_pin_temporary_pin_never_logged(staff_db, client: TestClient, capl
     The temporary PIN generated for a reset must never appear in any log output.
     """
     _, conn = staff_db
-    student_id = _get_user_id(conn, "student1")
+    student_id = get_user_id(conn, "student1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     with caplog.at_level(logging.DEBUG):

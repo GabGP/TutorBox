@@ -116,3 +116,12 @@ def auth_headers(
         f"Login failed for {username}: {response.json()}"
     )
     return {"Authorization": f"Bearer {response.json()['session_id']}"}
+
+
+def get_user_id(conn: sqlite3.Connection, username: str) -> int:
+    """Helper to query user id by username."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    assert row is not None, f"User {username} not found in test database."
+    return row["id"]
