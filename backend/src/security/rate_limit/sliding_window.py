@@ -1,0 +1,40 @@
+import threading
+import time
+from collections import deque
+
+SIGNUP_MAX_EVENTS = 30
+SIGNUP_WINDOW_SECONDS = 60
+
+
+class SlidingWindowLimiter:
+    """
+    Thread-safe global event-window limiter (no per-key state).
+    Used to bound account-creation floods on the shared Jetson.
+    """
+
+    def __init__(
+        self,
+        max_events: int = SIGNUP_MAX_EVENTS,
+        window_seconds: int = SIGNUP_WINDOW_SECONDS,
+    ):
+        self.max_events = max_events
+        self.window_seconds = window_seconds
+        self._events: deque[float] = deque()
+        self._lock = threading.Lock()
+
+    def allow(self) -> bool:
+        now = time.time()
+        with self._lock:
+            while self._events and now - self._events[0] > self.window_seconds:
+                self._events.popleft()
+            if len(self._events) >= self.max_events:
+                return False
+            self._events.append(now)
+            return True
+
+    def clear(self) -> None:
+        with self._lock:
+            self._events.clear()
+
+
+signup_rate_limiter = SlidingWindowLimiter(SIGNUP_MAX_EVENTS, SIGNUP_WINDOW_SECONDS)
