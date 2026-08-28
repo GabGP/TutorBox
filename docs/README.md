@@ -7,17 +7,23 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 ---
 
 ## Table of Contents
-- [1. Technical Guides & Specifications](#1-technical-guides--specifications)
+- [1. Core Technical References](#1-core-technical-references)
   - [Database Schema & ER Model](#database-schema--er-model)
   - [REST API Reference & Contracts](#rest-api-reference--contracts)
-- [2. Architectural Roadmap](#2-architectural-roadmap)
+- [2. System Architecture & Modes](#2-system-architecture--modes)
+  - [The Three Appliance Modes & Transversal Telemetry](#the-three-appliance-modes--transversal-telemetry)
+  - [Hardware Architecture & Offline Topology](#hardware-architecture--offline-topology)
+  - [Socratic Pedagogical Model & Containment](#socratic-pedagogical-model--containment)
+- [3. Project Milestones & Roadmap](#3-project-milestones--roadmap)
+  - [10-Week Engineering Roadmap](#10-week-engineering-roadmap)
+  - [Week 1 Milestone Synthesis](#week-1-milestone-synthesis)
 - [Next Steps](#next-steps)
 
 ---
 
-## 1. Technical Guides & Specifications
+## 1. Core Technical References
 
-### Database Schema & ER Model
+### [Database Schema & ER Model](database-schema.md)
 Complete documentation for the SQLite edge database engine in **[`database-schema.md`](database-schema.md)**:
 * **Engine Configuration**: WAL mode, foreign key enforcement, and busy timeout pragmas.
 * **Mermaid Entity-Relationship (ER) Diagram**: Visual model of `users`, `sessions`, `turn_logs`, `audit_logs`, and `schema_migrations`.
@@ -28,7 +34,7 @@ Complete documentation for the SQLite edge database engine in **[`database-schem
 
 ---
 
-### REST API Reference & Contracts
+### [REST API Reference & Contracts](api-reference.md)
 Integration contracts and communication protocols for the FastAPI backend in **[`api-reference.md`](api-reference.md)**:
 * **System Overview & Base URL**: Edge appliance network configuration (`http://<appliance-ip>:8000`).
 * **Authentication & Session Flow**: Bearer session tokens (`Authorization: Bearer <uuid4>`) with interactive Mermaid sequence diagram.
@@ -44,17 +50,36 @@ Integration contracts and communication protocols for the FastAPI backend in **[
 
 ---
 
-## 2. Architectural Roadmap
+## 2. System Architecture & Modes
 
-* **Pedagogical State Machine**: Socratic ladder escalation logic and conversation tree rules.
-* **SymPy Validation Engine**: Deterministic mathematical syntax checking and LLM hallucination containment guardrails.
-* **K'iche' Speech Recognition (ASR)**: Offline Meta Omnilingual ASR 300M CTC int8 (`sherpa-onnx`) pipeline.
-* **Hardware & Network Topology**: NVIDIA Jetson Orin Nano + BeagleBone Black (BBB) USB-CDC / Wi-Fi mesh interaction.
+### [The Three Appliance Modes & Transversal Telemetry](architecture/three-modes.md)
+* **Mode 1: Classroom Quiz**: Teacher-led classroom quiz with diagnostic distractors and the >51% offline audio explanation rule.
+* **Mode 2: Socratic Tutor**: After-class mobile math tutoring with SymPy containment.
+* **Mode 3: Offline Primary Games**: `primariaconk.uk` games with opportunistic error log synchronization.
+* **Unified Analytics**: Transversal error concept logging generating a weekly teacher remediation report.
+
+### [Hardware Architecture & Offline Topology](architecture/hardware-topology.md)
+* **Offline Network Layout**: Isolated Access Point (GL.iNet) and Jetson Orin Nano Core Appliance.
+* **Unified Memory Budget**: 8GB RAM allocation breakdown for concurrent multi-mode operations.
+
+### [Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)
+* **Socratic Dialogue Principle**: Never revealing direct solutions; guiding students through misconception diagnosis.
+* **Hint Escalation Ladder**: Deterministic 4-level hint progression ($0 \to 3$).
+
+---
+
+## 3. Project Milestones & Roadmap
+
+### [10-Week Engineering Roadmap](milestones/roadmap.md)
+Sequential delivery schedule balancing development between Student A and Student B with weekly Pilot / Copilot rotations.
+
+### [Week 1 Milestone Synthesis](milestones/week-1-auth-storage.md)
+Detailed post-milestone review covering 100% test coverage, zero linter warnings, RBAC proofs, and modularity verification.
 
 ---
 
 ## Next Steps
 
-* **[Database Schema Reference](database-schema.md)**: Deep dive into the SQLite ER diagram and table data dictionaries.
-* **[REST API Reference](api-reference.md)**: Review endpoint contracts, schemas, and RBAC matrix.
+* **[The Three Appliance Modes](architecture/three-modes.md)**: Understand the Quiz, Tutor, and Offline Games architecture.
+* **[10-Week Engineering Roadmap](milestones/roadmap.md)**: Explore the Week 2 Quiz Contract & Diagnostic Distractor requirements.
 * **[Backend Developer Guide](../backend/README.md)**: Local developer setup, virtual environment, and testing instructions.

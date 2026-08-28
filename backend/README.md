@@ -40,12 +40,12 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Numbered, idempotent schema migrations (`001` through `006`).
   - Append-only `audit_logs` table tracking privileged user and account mutations.
 
-The following items are placeholders for planned work and are not fully implemented in the current backend:
+The following items are planned deliverables across upcoming milestone phases:
 
-- **WebSocket endpoints**: Real-time interactions and shared chat rooms.
-- **Pedagogical Logic**: Socratic hint-escalation ladder state machine.
-- **Math Validation**: Deterministic SymPy engine and containment guardrail.
-- **ASR Service**: Meta Omnilingual ASR 300M CTC int8 (`sherpa-onnx`) integration for K'iche' speech-to-text.
+- **Classroom Quiz Engine (Weeks 2–4)**: JSON schema with diagnostic distractors, deterministic SymPy validator, session engine with >51% threshold, and Jetson offline Spanish & K'iche' voice feedback.
+- **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine ($0 \to 3$) and SymPy math containment guardrail.
+- **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
+- **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
 

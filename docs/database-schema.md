@@ -142,7 +142,7 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | — | Unique telemetry turn record ID. |
 | `session_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> sessions(id) ON DELETE CASCADE` | — | Foreign key referencing the originating dialogue session. |
-| `user_input` | `TEXT` | `NOT NULL` | — | The student's raw text or transcribed speech input. |
+| `user_input` | `TEXT` | `NOT NULL` | — | The student's raw text or multiple-choice input. |
 | `sympy_evaluated_expression` | `TEXT` | `NULL` | `NULL` | Canonical AST representation parsed by SymPy. |
 | `sympy_target_result` | `TEXT` | `NULL` | `NULL` | Target pedagogical expected result. |
 | `sympy_is_correct` | `INTEGER` | `NULL`, `CHECK(sympy_is_correct IN (0, 1))` | `NULL` | `1` if mathematical expression is correct, `0` otherwise. |
