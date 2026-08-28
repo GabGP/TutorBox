@@ -1,6 +1,15 @@
 # TutorBox Engineering Roadmap (10-Week Plan)
 
-> [TutorBox](../../README.md) / [Documentation](../README.md) / **Roadmap**
+<div align="center">
+
+| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md)
+
+</div>
+
+---
 
 This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 

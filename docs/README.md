@@ -2,7 +2,14 @@
 
 Welcome to the **TutorBox** documentation portal. This directory contains detailed architectural specifications, database schemas, and REST API contract documentation for the offline edge AI educational platform.
 
-> [TutorBox](../README.md) / **Documentation** • [Backend](../backend/README.md) • [Frontend](../pwa/README.md) • [Infrastructure](../infra/README.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 **Docs** | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Documentation Hub** • **Quick Links:** [API Reference](api-reference.md) • [Database Schema](database-schema.md) • [Roadmap](milestones/roadmap.md) • [Three Modes](architecture/three-modes.md)
+
+</div>
 
 ---
 

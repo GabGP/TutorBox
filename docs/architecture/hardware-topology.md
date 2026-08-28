@@ -1,6 +1,15 @@
 # Hardware Architecture & Offline Network Topology
 
-> [TutorBox](../../README.md) / [Documentation](../README.md) / **Hardware Topology**
+<div align="center">
+
+| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Architecture** › **Hardware Topology** • **Related:** [Three Modes](three-modes.md) • [Socratic Pedagogy](socratic-pedagogy.md) • [Infra Guide](../../infra/README.md)
+
+</div>
+
+---
 
 The entire **TutorBox** platform operates **100% offline** as an integrated single-appliance edge system without WAN or internet connectivity.
 

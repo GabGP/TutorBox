@@ -2,7 +2,14 @@
 
 Comprehensive technical specification and integration contracts for the **TutorBox** backend REST API.
 
-> [TutorBox](../README.md) / [Documentation](README.md) / **REST API Reference** • [Database Schema](database-schema.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 [Docs](README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **REST API Reference** • **Related:** [Database Schema](database-schema.md) • [Backend Guide](../backend/README.md)
+
+</div>
 
 ---
 

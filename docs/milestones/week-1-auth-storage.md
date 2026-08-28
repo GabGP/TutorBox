@@ -1,6 +1,15 @@
 # Week 1 Milestone: Appliance Baseline & Storage Infrastructure
 
-> [TutorBox](../../README.md) / [Documentation](../README.md) / [Milestones](roadmap.md) / **Week 1 Milestone**
+<div align="center">
+
+| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Milestones** › **Week 1 Milestone** • **Related:** [Engineering Roadmap](roadmap.md)
+
+</div>
+
+---
 
 This document summarizes the technical deliverables, architectural implementations, and quality metrics achieved during the **Week 1 Milestone** by both **Student A** and **Student B**.
 

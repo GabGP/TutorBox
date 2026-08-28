@@ -2,7 +2,14 @@
 
 React / Vite Progressive Web App client hosted directly on the NVIDIA Jetson Orin Nano appliance.
 
-> [TutorBox](../README.md) / **Frontend (PWA)** • [Documentation](../docs/README.md) • [API Reference](../docs/api-reference.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 **PWA** | 🔌 [Infra](../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Frontend (PWA)** › **Overview** • **Related:** [Docs](../docs/README.md) • [REST API Reference](../docs/api-reference.md) • [Three Modes](../docs/architecture/three-modes.md)
+
+</div>
 
 ---
 

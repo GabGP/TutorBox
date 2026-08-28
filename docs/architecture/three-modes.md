@@ -1,6 +1,15 @@
 # The Three Appliance Modes & Transversal Telemetry
 
-> [TutorBox](../../README.md) / [Documentation](../README.md) / [Architecture](hardware-topology.md) / **Three Modes**
+<div align="center">
+
+| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Architecture** › **Three Modes** • **Related:** [Hardware Topology](hardware-topology.md) • [Socratic Pedagogy](socratic-pedagogy.md)
+
+</div>
+
+---
 
 **TutorBox** operates as a multi-mode offline educational appliance centered around diagnosing and addressing student conceptual misconceptions.
 

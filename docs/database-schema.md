@@ -2,7 +2,14 @@
 
 Technical specification and Entity-Relationship model for the **TutorBox** SQLite database engine.
 
-> [TutorBox](../README.md) / [Documentation](README.md) / **Database Schema** • [API Reference](api-reference.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 [Docs](README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Database Schema** • **Related:** [REST API Reference](api-reference.md) • [Backend Guide](../backend/README.md)
+
+</div>
 
 ---
 

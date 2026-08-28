@@ -2,7 +2,14 @@
 
 [![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
-> **TutorBox** • [Documentation](docs/README.md) • [Backend](backend/README.md) • [Frontend](pwa/README.md) • [Infrastructure](infra/README.md)
+<div align="center">
+
+| 🏠 **TutorBox** | 📚 [Docs](docs/README.md) | ⚙️ [Backend](backend/README.md) | 📱 [PWA](pwa/README.md) | 🔌 [Infra](infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Root** › **Overview** • **Quick Links:** [Architecture](docs/README.md#2-system-architecture--modes) • [Roadmap](docs/milestones/roadmap.md) • [API Reference](docs/api-reference.md) • [Database Schema](docs/database-schema.md)
+
+</div>
 
 ---
 

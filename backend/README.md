@@ -4,7 +4,14 @@
 
 FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local development support on Windows and Linux.
 
-> [TutorBox](../README.md) / **Backend** • [Documentation](../docs/README.md) • [API Reference](../docs/api-reference.md) • [Database Schema](../docs/database-schema.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Backend** › **Overview** • **Related:** [REST API Reference](../docs/api-reference.md) • [Database Schema](../docs/database-schema.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
+
+</div>
 
 ---
 

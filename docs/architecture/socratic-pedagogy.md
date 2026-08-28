@@ -1,6 +1,15 @@
 # Socratic Pedagogical Model & Math Containment Guardrails
 
-> [TutorBox](../../README.md) / [Documentation](../README.md) / **Socratic Pedagogy**
+<div align="center">
+
+| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Docs** › **Architecture** › **Socratic Pedagogy** • **Related:** [Three Modes](three-modes.md) • [Hardware Topology](hardware-topology.md)
+
+</div>
+
+---
 
 TutorBox guides basic education students in rural Guatemala using an adaptive Socratic pedagogy. The system communicates via voice and text in **K'iche'** (`quc_Latn`) and **Spanish**.
 

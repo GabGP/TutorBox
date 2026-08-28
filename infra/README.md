@@ -2,7 +2,14 @@
 
 Deployment configurations, systemd service units, and isolated networking setup for the offline edge appliance.
 
-> [TutorBox](../README.md) / **Infrastructure** • [Documentation](../docs/README.md) • [Backend](../backend/README.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
+<div align="center">
+
+| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 **Infra** |
+| :---: | :---: | :---: | :---: | :---: |
+
+📍 **Infrastructure** › **Overview** • **Related:** [Hardware Topology](../docs/architecture/hardware-topology.md) • [Backend Guide](../backend/README.md)
+
+</div>
 
 ---
 
