@@ -2,41 +2,32 @@ import logging
 import uuid
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from db.database import get_db
-from security.auth import verify_pin
-from security.rate_limit import check_rate_limit, login_rate_limiter
+from security import (
+    PinField,
+    UsernameField,
+    check_rate_limit,
+    login_rate_limiter,
+    verify_pin,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-USERNAME_PATTERN = r"^[A-Za-z0-9_.-]{3,32}$"
-PIN_PATTERN = r"^\d{4,8}$"
-
 
 class LoginRequest(BaseModel):
-    username: str = Field(
-        ...,
-        min_length=3,
-        max_length=32,
-        pattern=USERNAME_PATTERN,
-        examples=["student1"],
-    )
-    pin: str = Field(
-        ...,
-        min_length=4,
-        max_length=8,
-        pattern=PIN_PATTERN,
-        examples=["1234"],
-    )
+    username: UsernameField
+    pin: PinField
 
 
 class LoginResponse(BaseModel):
     session_id: str
     username: str
     status: str = "authenticated"
+    must_change_pin: bool = False
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -51,7 +42,8 @@ def login(request: LoginRequest):
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, username, hashed_pin FROM users WHERE username = ?",
+            "SELECT id, username, hashed_pin, must_change_pin "
+            "FROM users WHERE username = ? AND deleted_at IS NULL",
             (request.username,),
         )
         user = cursor.fetchone()
@@ -89,4 +81,8 @@ def login(request: LoginRequest):
         conn.commit()
 
     logger.info("Login successful for user '%s'.", username)
-    return LoginResponse(session_id=session_id, username=username)
+    return LoginResponse(
+        session_id=session_id,
+        username=username,
+        must_change_pin=bool(user["must_change_pin"]),
+    )
