@@ -1,0 +1,147 @@
+import logging
+import sqlite3
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
+from db.audit import record_audit
+from db.database import get_db
+from security import (
+    AuthContext,
+    PinField,
+    RoleField,
+    UsernameField,
+    hash_pin,
+    require_roles,
+)
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+
+class CreateUserRequest(BaseModel):
+    username: UsernameField
+    pin: PinField
+    role: RoleField = "student"
+
+
+class CreateUserResponse(BaseModel):
+    username: str
+    role: str
+
+
+class UserListResponse(BaseModel):
+    users: list[dict[str, Any]]
+
+
+@router.get("/users", response_model=UserListResponse)
+def list_users(
+    ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
+    include_deleted: bool = False,
+):
+    """
+    Roster view. Lists active users, or minimal metadata for deleted accounts when include_deleted=True.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if include_deleted:
+            cursor.execute(
+                "SELECT id, role, former_username, deleted_at FROM users "
+                "WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT 1000"
+            )
+            return UserListResponse(
+                users=[
+                    {
+                        "id": r["id"],
+                        "role": r["role"],
+                        "former_username": r["former_username"],
+                        "deleted_at": r["deleted_at"],
+                    }
+                    for r in cursor.fetchall()
+                ]
+            )
+
+        cursor.execute(
+            "SELECT id, username, role, created_at, must_change_pin "
+            "FROM users WHERE deleted_at IS NULL "
+            "ORDER BY username LIMIT 1000"
+        )
+        rows = cursor.fetchall()
+
+    return UserListResponse(
+        users=[
+            {
+                "id": r["id"],
+                "username": r["username"],
+                "role": r["role"],
+                "created_at": r["created_at"],
+                "must_change_pin": bool(r["must_change_pin"]),
+            }
+            for r in rows
+        ]
+    )
+
+
+@router.post(
+    "/users",
+    response_model=CreateUserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_user(
+    payload: CreateUserRequest,
+    ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
+):
+    """
+    Staff user creation. Teachers can create student and teacher accounts. Admins can create any account.
+    """
+    # Teachers create students AND teachers; only admins create admins.
+    if ctx.role == "teacher" and payload.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins may create admin accounts.",
+        )
+
+    logger.info(
+        "User creation attempt by '%s' (role: %s) for new user '%s' (role: %s).",
+        ctx.username,
+        ctx.role,
+        payload.username,
+        payload.role,
+    )
+
+    hashed = hash_pin(payload.pin)
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, ?)",
+                (payload.username, hashed, payload.role),
+            )
+            new_user_id = cursor.lastrowid
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="user_created",
+                target_user_id=new_user_id,
+            )
+            conn.commit()
+    except sqlite3.IntegrityError:
+        logger.warning(
+            "User creation conflict: Username '%s' already exists.",
+            payload.username,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already taken.",
+        )
+
+    logger.info(
+        "User '%s' (role: %s) created successfully by '%s'.",
+        payload.username,
+        payload.role,
+        ctx.username,
+    )
+    return CreateUserResponse(username=payload.username, role=payload.role)

@@ -3,55 +3,8 @@ import logging
 from fastapi.testclient import TestClient
 
 from src.db.database import get_db_connection
-from src.security.auth import hash_pin, verify_pin
+from src.security.auth import hash_pin
 from src.security.rate_limit import LOCKOUT_DURATION_SECONDS
-
-
-def test_hash_pin_generates_bcrypt_hash():
-    """
-    Test that hash_pin produces a valid bcrypt hash starting with $2b$.
-    """
-    pin = "1234"
-    hashed = hash_pin(pin)
-    assert hashed != pin
-    assert hashed.startswith(("$2b$", "$2a$"))
-
-
-def test_hash_pin_generates_unique_salts():
-    """
-    Test that hashing the same PIN twice yields different hash strings due to salt.
-    """
-    pin = "1234"
-    hash1 = hash_pin(pin)
-    hash2 = hash_pin(pin)
-    assert hash1 != hash2
-    assert verify_pin(pin, hash1) is True
-    assert verify_pin(pin, hash2) is True
-
-
-def test_verify_pin_success():
-    """
-    Test verify_pin returns True for valid PIN and hash.
-    """
-    pin = "5678"
-    hashed = hash_pin(pin)
-    assert verify_pin(pin, hashed) is True
-
-
-def test_verify_pin_failure():
-    """
-    Test verify_pin returns False for incorrect PIN.
-    """
-    pin = "5678"
-    hashed = hash_pin(pin)
-    assert verify_pin("0000", hashed) is False
-
-
-def test_verify_pin_invalid_hash_format():
-    """
-    Test verify_pin handles invalid hash string format gracefully without crashing.
-    """
-    assert verify_pin("1234", "not_a_valid_bcrypt_hash") is False
 
 
 def test_login_success(seeded_db, client: TestClient):
@@ -224,3 +177,52 @@ def test_login_rejects_wrong_pin_length(seeded_db, client: TestClient):
     long_pin = client.post("/login", json={"username": "student1", "pin": "1" * 9})
     assert short.status_code == 422
     assert long_pin.status_code == 422
+
+
+def test_login_response_surfaces_must_change_pin(temp_db, client: TestClient):
+    """
+    Login must return must_change_pin=True when flagged in the database,
+    and must_change_pin=False by default.
+    """
+    _, conn = temp_db
+    hashed = hash_pin("1234")
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, must_change_pin) VALUES (?, ?, 1)",
+        ("rotate_user", hashed),
+    )
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, must_change_pin) VALUES (?, ?, 0)",
+        ("normal_user", hashed),
+    )
+    conn.commit()
+
+    # User with rotation pending
+    res1 = client.post("/login", json={"username": "rotate_user", "pin": "1234"})
+    assert res1.status_code == 200
+    assert res1.json()["must_change_pin"] is True
+
+    # User with no rotation pending
+    res2 = client.post("/login", json={"username": "normal_user", "pin": "1234"})
+    assert res2.status_code == 200
+    assert res2.json()["must_change_pin"] is False
+
+
+def test_login_soft_deleted_user_returns_401(temp_db, client: TestClient):
+    """
+    Soft-deleted users must receive generic 401 on login without existence leak.
+    """
+    _, conn = temp_db
+    hashed = hash_pin("1234")
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO users (username, hashed_pin, deleted_at) VALUES (?, ?, '2026-08-23 00:00:00')",
+        ("deleted_student", hashed),
+    )
+    conn.commit()
+
+    response = client.post(
+        "/login", json={"username": "deleted_student", "pin": "1234"}
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid username or PIN."

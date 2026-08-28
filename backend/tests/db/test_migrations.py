@@ -22,16 +22,38 @@ def test_migrations_applied_successfully():
         assert 1 in versions
         assert 2 in versions
         assert 3 in versions
+        assert 4 in versions
+        assert 5 in versions
+        assert 6 in versions
 
-        # Verify role column added by migration 002 exists
+        # Verify columns added by migrations 002, 004, 005 exist on users
         cursor.execute("PRAGMA table_info(users)")
         columns = {col[1] for col in cursor.fetchall()}
         assert "role" in columns
+        assert "must_change_pin" in columns
+        assert "deleted_at" in columns
+        assert "former_username" in columns
 
         # Verify FK lookup indexes added by migration 003 exist
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='index' "
             "AND name='idx_turn_logs_session_id'"
+        )
+        assert cursor.fetchone() is not None
+
+        # Verify audit_logs table and indexes added by migration 006 exist
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='audit_logs'"
+        )
+        assert cursor.fetchone() is not None
+
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_logs_actor'"
+        )
+        assert cursor.fetchone() is not None
+
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_logs_target'"
         )
         assert cursor.fetchone() is not None
         conn.close()
