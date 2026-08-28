@@ -9,33 +9,15 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [TutorBox Backend](#tutorbox-backend)
-  - [Table of Contents](#table-of-contents)
-  - [1. Components \& Architecture](#1-components--architecture)
-  - [API Summary](#api-summary)
-  - [Environment Setup](#environment-setup)
-  - [=======](#)
-  - [2. API Surface Summary](#2-api-surface-summary)
-  - [3. Environment Setup](#3-environment-setup)
-    - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
-      - [Windows (PowerShell)](#windows-powershell)
-      - [Linux](#linux)
-      - [Conda (Windows or Linux)](#conda-windows-or-linux)
-  - [4. Installation \& Workflow](#4-installation--workflow)
-    - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
-      - [Running in Development:](#running-in-development)
-      - [Running Tests \& Linters:](#running-tests--linters)
-    - [B. Production Mode](#b-production-mode)
-      - [Running in Production:](#running-in-production)
-  - [Project Structure](#project-structure)
-  - [=======](#-1)
-  - [5. Testing \& Quality Assurance](#5-testing--quality-assurance)
-    - [Running the Test Suite:](#running-the-test-suite)
-    - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
-    - [Code Formatting \& Static Analysis:](#code-formatting--static-analysis)
-  - [6. Project Structure](#6-project-structure)
-  - [Next Steps](#next-steps)
-
+- [1. Components & Architecture](#1-components--architecture)
+- [2. API Surface Summary](#2-api-surface-summary)
+- [3. Environment Setup](#3-environment-setup)
+- [4. Installation & Workflow](#4-installation--workflow)
+  - [A. Development Mode](#a-development-mode-local-coding--testing)
+  - [B. Production Mode](#b-production-mode)
+- [5. Testing & Quality Assurance](#5-testing--quality-assurance)
+- [6. Project Structure](#6-project-structure)
+- [Next Steps](#next-steps)
 
 ---
 
@@ -67,31 +49,6 @@ The following items are placeholders for planned work and are not fully implemen
 
 ---
 
-## API Summary
-
-| Method | Path | Auth / Role | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Public | System and SQLite health check |
-| `POST` | `/signup` | Public (Rate-limited) | Student self-registration |
-| `POST` | `/login` | Public (Rate-limited) | Authenticate with username and PIN; returns session token |
-| `POST` | `/logout` | Bearer Token | Invalidate current caller session |
-| `GET` | `/users/me` | Bearer Token | Return profile of authenticated user |
-| `PATCH` | `/users/me/pin` | Bearer Token | Self-service PIN change (clears forced rotation flag) |
-| `PATCH` | `/users/me/username` | Bearer Token | Self-service username change |
-| `GET` | `/users` | Teacher, Admin | List active accounts, or deleted accounts with `?include_deleted=true` |
-| `POST` | `/users` | Teacher, Admin | Staff user creation (Teachers: student/teacher; Admins: any role) |
-| `POST` | `/users/{id}/reset-pin` | Teacher, Admin | Issue 6-digit temp PIN, invalidate sessions, and require PIN rotation |
-| `DELETE` | `/users/{id}` | Teacher, Admin | Soft-delete user, anonymize username, preserve telemetry, last-admin guard |
-| `POST` | `/users/{id}/recover` | Teacher, Admin | Restore soft-deleted account under new username with temporary PIN |
-| `GET` | `/audit-logs` | Admin Only | View up to 500 append-only audit trail records |
-
----
-
-<<<<<<< Updated upstream
-## Environment Setup
-=======
----
-
 ## 2. API Surface Summary
 
 > [!TIP]
@@ -116,7 +73,6 @@ The following items are placeholders for planned work and are not fully implemen
 ---
 
 ## 3. Environment Setup
->>>>>>> Stashed changes
 
 Ensure you are using Python 3.10 or newer.
 
@@ -172,26 +128,6 @@ python -m uvicorn src.main:app --reload
 ```
 The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
-<<<<<<< Updated upstream
-#### Running Tests & Linters:
-Run pytest with full code coverage:
-```bash
-python -m pytest
-```
-
-Run a specific test subpackage:
-```bash
-python -m pytest tests/api/staff/ -o addopts="--strict-markers"
-```
-
-Run Ruff linter and formatter checks manually:
-```bash
-ruff check .
-ruff format --check .
-```
-
-=======
->>>>>>> Stashed changes
 ---
 
 ### B. Production Mode
@@ -210,11 +146,6 @@ python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 
 The database `tutorbox.db` will be initialized and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
 
----
-
-<<<<<<< Updated upstream
-## Project Structure
-=======
 ---
 
 ## 5. Testing & Quality Assurance
@@ -247,7 +178,6 @@ ruff format .
 ---
 
 ## 6. Project Structure
->>>>>>> Stashed changes
 
 Generated environments, caches, and build artifacts are omitted from this overview.
 
