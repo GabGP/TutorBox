@@ -19,6 +19,7 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
 - [3. Data Dictionary](#3-data-dictionary)
   - [Table: `users`](#table-users)
   - [Table: `sessions`](#table-sessions)
+  - [Table: `devices`](#table-devices)
   - [Table: `turn_logs`](#table-turn_logs)
   - [Table: `audit_logs`](#table-audit_logs)
   - [Table: `schema_migrations`](#table-schema_migrations)
@@ -26,6 +27,7 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
 - [5. Data Lifecycle & Integrity Policies](#5-data-lifecycle--integrity-policies)
   - [A. Soft-Deletion & Username Freeing](#a-soft-deletion--username-freeing)
   - [B. Last-Admin Guard](#b-last-admin-guard)
+  - [C. Device Unlinking on Deletion](#c-device-unlinking-on-deletion)
 - [6. Migration Changelog](#6-migration-changelog)
 - [Next Steps](#next-steps)
 
@@ -43,7 +45,7 @@ PRAGMA journal_mode = WAL;
 PRAGMA busy_timeout = 5000;
 ```
 
-* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`).
+* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`, `devices -> users`).
 * **`journal_mode = WAL`**: Write-Ahead Logging allows simultaneous non-blocking concurrent readers while a write transaction is committed.
 * **`busy_timeout = 5000`**: Sets a 5-second lock acquisition timeout to prevent immediate busy errors under concurrent student load.
 
@@ -54,6 +56,7 @@ PRAGMA busy_timeout = 5000;
 ```mermaid
 erDiagram
     users ||--o{ sessions : "has"
+    users ||--o| devices : "assigned to"
     sessions ||--o{ turn_logs : "records"
     users ||--o{ audit_logs : "actor / target"
 
@@ -66,6 +69,12 @@ erDiagram
         INTEGER must_change_pin "0: False | 1: True"
         TIMESTAMP deleted_at "NULL: Active | TIMESTAMP: Soft-deleted"
         TEXT former_username "Preserved original username"
+    }
+
+    devices {
+        TEXT device_id PK "Hardware clicker ID (e.g. '1', 'ESP32_01')"
+        INTEGER assigned_user_id UK "REFERENCES users(id) ON DELETE SET NULL"
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
     sessions {
@@ -125,6 +134,19 @@ Stores student and staff credentials, roles, and lifecycle states.
 
 ---
 
+### Table: `devices`
+Registry of physical ESP32 clickers and active 1:1 classroom pairings to student accounts.
+
+> **Related API Operations**: Created by [`POST /devices`](api-reference.md#66-hardware-clicker--device-fleet-management); queried by [`GET /devices`](api-reference.md#66-hardware-clicker--device-fleet-management); paired by [`POST /devices/{id}/assign`](api-reference.md#66-hardware-clicker--device-fleet-management); unpaired by [`POST /devices/{id}/unassign`](api-reference.md#66-hardware-clicker--device-fleet-management); removed by [`DELETE /devices/{id}`](api-reference.md#66-hardware-clicker--device-fleet-management).
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `device_id` | `TEXT` | `PRIMARY KEY` | — | Unique hardware clicker identifier (1–32 chars, e.g. `'1'`, `'ESP32_01'`). |
+| `assigned_user_id` | `INTEGER` | `UNIQUE`, `FOREIGN KEY -> users(id) ON DELETE SET NULL` | `NULL` | Currently linked student account ID (`NULL` when unassigned). |
+| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp when clicker was registered into the fleet. |
+
+---
+
 ### Table: `sessions`
 Tracks active and revoked bearer sessions.
 
@@ -161,9 +183,9 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 ---
 
 ### Table: `audit_logs`
-Append-only audit trail recording sensitive operational and staff actions.
+Append-only audit trail recording sensitive operational, staff, and hardware pairing actions.
 
-> **Related API Operations**: Queried by [`GET /audit-logs`](api-reference.md#get-audit-logs); automatically appended by mutations across `signup`, `users`, `reset_pin`, `credentials`, `delete`, and `recover` modules.
+> **Related API Operations**: Queried by [`GET /audit-logs`](api-reference.md#get-audit-logs); automatically appended by mutations across `signup`, `users`, `reset_pin`, `credentials`, `delete`, `recover`, `devices`, and `device_pairing` modules.
 
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -181,6 +203,10 @@ Append-only audit trail recording sensitive operational and staff actions.
 * `pin_changed`: PIN rotated by user via [`PATCH /users/me/pin`](api-reference.md#patch-usersmepin).
 * `account_deleted`: Account soft-deleted via [`DELETE /users/{id}`](api-reference.md#delete-usersuser_id).
 * `account_recovered`: Soft-deleted account restored via [`POST /users/{id}/recover`](api-reference.md#post-usersuser_idrecover).
+* `device_registered`: Hardware clicker registered into appliance fleet via [`POST /devices`](api-reference.md#66-hardware-clicker--device-fleet-management).
+* `device_assigned`: Clicker linked to student via [`POST /devices/{id}/assign`](api-reference.md#66-hardware-clicker--device-fleet-management).
+* `device_unassigned`: Clicker unlinked via [`POST /devices/{id}/unassign`](api-reference.md#66-hardware-clicker--device-fleet-management).
+* `device_deleted`: Clicker removed from fleet via [`DELETE /devices/{id}`](api-reference.md#66-hardware-clicker--device-fleet-management).
 
 ---
 
@@ -203,6 +229,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | `idx_turn_logs_session_id` | `turn_logs` | `(session_id)` | Fast lookup of dialogue history per student session. |
 | `idx_audit_logs_actor` | `audit_logs` | `(actor_user_id)` | Fast filtering of audit logs by acting administrator/teacher. |
 | `idx_audit_logs_target` | `audit_logs` | `(target_user_id)` | Fast filtering of audit logs by target account. |
+| `idx_devices_assigned_user` | `devices` | `(assigned_user_id)` | Fast reverse-lookup of clicker assignment by student ID. |
 
 ---
 
@@ -220,6 +247,9 @@ When [`DELETE /users/{id}`](api-reference.md#delete-usersuser_id) is executed:
 ### B. Last-Admin Guard
 The application enforces that the appliance must never lose its final administrator. Deleting the last active user with `role = 'admin'` is rejected with `409 Conflict`.
 
+### C. Device Unlinking on Deletion
+When an account is deleted or soft-deleted, any associated hardware clicker has `assigned_user_id` set to `NULL`, automatically freeing the device for reassignment to another student.
+
 ---
 
 ## 6. Migration Changelog
@@ -232,6 +262,7 @@ Schema migrations are applied automatically at application startup in sequential
 * **[`004_add_must_change_pin.sql`](../backend/migrations/004_add_must_change_pin.sql)**: Adds `must_change_pin` column (`0` / `1`).
 * **[`005_add_users_deleted_at.sql`](../backend/migrations/005_add_users_deleted_at.sql)**: Adds `deleted_at` and `former_username` columns.
 * **[`006_add_audit_logs.sql`](../backend/migrations/006_add_audit_logs.sql)**: Creates `audit_logs` table and lookup indexes `idx_audit_logs_actor` and `idx_audit_logs_target`.
+* **[`007_add_devices.sql`](../backend/migrations/007_add_devices.sql)**: Creates `devices` table and lookup index `idx_devices_assigned_user` for ESP32 clicker fleet pairing.
 
 ---
 

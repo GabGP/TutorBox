@@ -14,6 +14,22 @@ from .delete import (
 from .delete import (
     router as delete_router,
 )
+from .device_pairing import (
+    AssignDeviceRequest,
+    AssignDeviceResponse,
+)
+from .device_pairing import (
+    router as device_pairing_router,
+)
+from .devices import (
+    DeviceItem,
+    DeviceListResponse,
+    DeviceMessageResponse,
+    RegisterDeviceRequest,
+)
+from .devices import (
+    router as devices_router,
+)
 from .recover import (
     RecoverUserRequest,
     RecoverUserResponse,
@@ -42,18 +58,28 @@ router.include_router(reset_pin_router)
 router.include_router(delete_router)
 router.include_router(recover_router)
 router.include_router(audit_router)
+router.include_router(devices_router)
+router.include_router(device_pairing_router)
 
 __all__ = [
+    "AssignDeviceRequest",
+    "AssignDeviceResponse",
     "AuditLogsResponse",
     "CreateUserRequest",
     "CreateUserResponse",
     "DeleteUserResponse",
+    "DeviceItem",
+    "DeviceListResponse",
+    "DeviceMessageResponse",
     "RecoverUserRequest",
     "RecoverUserResponse",
+    "RegisterDeviceRequest",
     "ResetPinResponse",
     "UserListResponse",
     "audit_router",
     "delete_router",
+    "device_pairing_router",
+    "devices_router",
     "recover_router",
     "reset_pin_router",
     "router",

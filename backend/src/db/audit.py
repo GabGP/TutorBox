@@ -11,6 +11,10 @@ VALID_ACTIONS = frozenset(
         "pin_changed",
         "account_deleted",
         "account_recovered",
+        "device_registered",
+        "device_assigned",
+        "device_unassigned",
+        "device_deleted",
     }
 )
 

@@ -25,6 +25,7 @@ def test_migrations_applied_successfully():
         assert 4 in versions
         assert 5 in versions
         assert 6 in versions
+        assert 7 in versions
 
         # Verify columns added by migrations 002, 004, 005 exist on users
         cursor.execute("PRAGMA table_info(users)")
@@ -54,6 +55,17 @@ def test_migrations_applied_successfully():
 
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_logs_target'"
+        )
+        assert cursor.fetchone() is not None
+
+        # Verify devices table and index added by migration 007 exist
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='devices'"
+        )
+        assert cursor.fetchone() is not None
+
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_devices_assigned_user'"
         )
         assert cursor.fetchone() is not None
         conn.close()

@@ -50,6 +50,10 @@ def _soft_delete_user(
         "UPDATE sessions SET is_active = 0 WHERE user_id = ? AND is_active = 1",
         (target_id,),
     )
+    cursor.execute(
+        "UPDATE devices SET assigned_user_id = NULL WHERE assigned_user_id = ?",
+        (target_id,),
+    )
 
 
 @router.delete(

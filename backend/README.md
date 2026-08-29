@@ -34,7 +34,8 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Health checks (`/health`)
   - Authentication (`/login`, `/logout`)
   - Student self-service lifecycle (`/signup`, `/users/me`, `/users/me/pin`, `/users/me/username`)
-  - Staff management (`/users`, `/users/{id}/reset-pin`, `/users/{id}`, `/users/{id}/recover`)
+  - Staff user management (`/users`, `/users/{id}/reset-pin`, `/users/{id}`, `/users/{id}/recover`)
+  - ESP32 hardware clicker fleet pairing (`/devices`, `/devices/{id}/assign`, `/devices/{id}/unassign`)
   - Privileged system audit trail (`/audit-logs`)
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
@@ -43,15 +44,16 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Bearer session token lifecycle with active session deactivation.
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Database & Migrations**:
-  - SQLite database with foreign keys and index optimization.
-  - Numbered, idempotent schema migrations (`001` through `006`).
-  - Append-only `audit_logs` table tracking privileged user and account mutations.
+  - SQLite database with foreign keys, index optimization, and WAL mode.
+  - Numbered, idempotent schema migrations (`001` through `007`).
+  - Append-only `audit_logs` table tracking privileged user, account, and hardware pairing mutations.
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Classroom Quiz Engine (Weeks 2–4)**: JSON schema with diagnostic distractors, deterministic SymPy validator, session engine with >51% threshold, and Jetson offline Spanish & K'iche' voice feedback.
 - **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine ($0 \to 3$) and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
+- **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
@@ -76,6 +78,11 @@ The following items are planned deliverables across upcoming milestone phases:
 | `DELETE` | `/users/{id}` | Teacher, Admin | Soft-delete user, anonymize username, preserve telemetry, last-admin guard |
 | `POST` | `/users/{id}/recover` | Teacher, Admin | Restore soft-deleted account under new username with temporary PIN |
 | `GET` | `/audit-logs` | Admin Only | View up to 500 append-only audit trail records |
+| `GET` | `/devices` | Teacher, Admin | List all registered physical clickers and student pairings |
+| `POST` | `/devices` | Teacher, Admin | Register a new clicker device identifier into the fleet |
+| `POST` | `/devices/{id}/assign` | Teacher, Admin | Link a physical clicker to an active student account |
+| `POST` | `/devices/{id}/unassign` | Teacher, Admin | Unlink a physical clicker from any student |
+| `DELETE` | `/devices/{id}` | Teacher, Admin | Remove a physical clicker from the fleet |
 
 ---
 
@@ -196,7 +203,8 @@ backend/
 │   ├── 003_add_lookup_indexes.sql
 │   ├── 004_add_must_change_pin.sql
 │   ├── 005_add_users_deleted_at.sql
-│   └── 006_add_audit_logs.sql
+│   ├── 006_add_audit_logs.sql
+│   └── 007_add_devices.sql
 ├── src/
 │   ├── __init__.py
 │   ├── main.py
@@ -211,6 +219,8 @@ backend/
 │   │   │   ├── __init__.py
 │   │   │   ├── audit.py
 │   │   │   ├── delete.py
+│   │   │   ├── device_pairing.py
+│   │   │   ├── devices.py
 │   │   │   ├── recover.py
 │   │   │   ├── reset_pin.py
 │   │   │   └── users.py
@@ -246,6 +256,7 @@ backend/
 │   │   │   ├── __init__.py
 │   │   │   ├── test_audit.py
 │   │   │   ├── test_delete.py
+│   │   │   ├── test_devices.py
 │   │   │   ├── test_recover.py
 │   │   │   ├── test_reset_pin.py
 │   │   │   └── test_users.py

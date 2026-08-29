@@ -17,12 +17,16 @@ from .session import (
 )
 from .validation import (
     ALLOWED_ROLES,
+    DEVICE_ID_MAX_LENGTH,
+    DEVICE_ID_MIN_LENGTH,
+    DEVICE_ID_PATTERN,
     PIN_MAX_LENGTH,
     PIN_MIN_LENGTH,
     PIN_PATTERN,
     USERNAME_MAX_LENGTH,
     USERNAME_MIN_LENGTH,
     USERNAME_PATTERN,
+    DeviceIdField,
     PinField,
     RoleField,
     UsernameField,
@@ -30,6 +34,9 @@ from .validation import (
 
 __all__ = [
     "ALLOWED_ROLES",
+    "DEVICE_ID_MAX_LENGTH",
+    "DEVICE_ID_MIN_LENGTH",
+    "DEVICE_ID_PATTERN",
     "PIN_MAX_LENGTH",
     "PIN_MIN_LENGTH",
     "PIN_PATTERN",
@@ -37,6 +44,7 @@ __all__ = [
     "USERNAME_MIN_LENGTH",
     "USERNAME_PATTERN",
     "AuthContext",
+    "DeviceIdField",
     "InMemoryRateLimiter",
     "PinField",
     "RoleField",

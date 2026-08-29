@@ -28,6 +28,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.3 User Self-Service (`POST /signup`, `GET /users/me`, `PATCH /users/me/pin`, `PATCH /users/me/username`)](#63-user-self-service)
   - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{id}/reset-pin`, `DELETE /users/{id}`, `POST /users/{id}/recover`)](#64-staff-administration)
   - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
+  - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{id}/assign`, `POST /devices/{id}/unassign`, `DELETE /devices/{id}`)](#66-hardware-clicker--device-fleet-management)
 - [Next Steps](#next-steps)
 
 ---
@@ -82,8 +83,8 @@ Authorization: Bearer <session_id>
 
 TutorBox enforces strict role-based access across three user roles:
 * **`student`**: Self-service learner account.
-* **`teacher`**: Classroom supervisor (can manage students and other teachers).
-* **`admin`**: System administrator (can manage all accounts, create/recover admins, and view audit logs).
+* **`teacher`**: Classroom supervisor (can manage students, other teachers, and hardware clickers).
+* **`admin`**: System administrator (can manage all accounts, create/recover admins, view audit logs, and manage devices).
 
 | Endpoint | Method | Public | Student | Teacher | Admin | Gated by Pending Rotation? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -100,6 +101,12 @@ TutorBox enforces strict role-based access across three user roles:
 | `/users/{id}` | `DELETE` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
 | `/users/{id}/recover` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
 | `/audit-logs` | `GET` | ❌ | ❌ | ❌ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+
 
 ---
 
@@ -447,6 +454,117 @@ Read up to 500 append-only audit trail records.
     }
     ```
   * `403 Forbidden`: Caller is not an admin.
+
+---
+
+### 6.6 Hardware Clicker & Device Fleet Management
+
+#### `GET /devices`
+List all registered physical ESP32 clickers with current student pairing info.
+
+* **Authorization**: Teacher, Admin
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "devices": [
+        {
+          "device_id": "1",
+          "assigned_user_id": 12,
+          "assigned_username": "juan_p",
+          "created_at": "2026-08-29 14:00:00"
+        },
+        {
+          "device_id": "ESP32_02",
+          "assigned_user_id": null,
+          "assigned_username": null,
+          "created_at": "2026-08-29 14:05:00"
+        }
+      ]
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+
+#### `POST /devices`
+Register a new physical clicker identifier into the appliance fleet.
+
+* **Authorization**: Teacher, Admin
+* **Request Body**:
+  ```json
+  {
+    "device_id": "1"
+  }
+  ```
+* **Responses**:
+  * `201 Created`:
+    ```json
+    {
+      "device_id": "1",
+      "assigned_user_id": null,
+      "assigned_username": null,
+      "created_at": "2026-08-29 14:00:00"
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+  * `409 Conflict`: `device_id` is already registered.
+  * `422 Unprocessable Entity`: `device_id` is empty or invalid format.
+
+#### `POST /devices/{device_id}/assign`
+Link a physical clicker to an active student user account.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `device_id` (`string`, required): Unique device identifier.
+* **Request Body**:
+  ```json
+  {
+    "user_id": 12
+  }
+  ```
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "device_id": "1",
+      "assigned_user_id": 12,
+      "assigned_username": "juan_p"
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+  * `404 Not Found`: Device or student account not found.
+  * `422 Unprocessable Entity`: Target user is not a student account.
+
+#### `POST /devices/{device_id}/unassign`
+Unlink a physical clicker from any student.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `device_id` (`string`, required): Unique device identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "detail": "Device unassigned successfully."
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+  * `404 Not Found`: Device not found.
+
+#### `DELETE /devices/{device_id}`
+Remove a physical clicker from the appliance fleet.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `device_id` (`string`, required): Unique device identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "detail": "Device removed from fleet."
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+  * `404 Not Found`: Device not found.
 
 ---
 

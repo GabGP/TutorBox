@@ -50,3 +50,18 @@ RoleField = Annotated[
         examples=["student"],
     ),
 ]
+
+DEVICE_ID_MIN_LENGTH = 1
+DEVICE_ID_MAX_LENGTH = 32
+DEVICE_ID_PATTERN = r"^[A-Za-z0-9_.-]{1,32}$"
+
+DeviceIdField = Annotated[
+    str,
+    Field(
+        ...,
+        min_length=DEVICE_ID_MIN_LENGTH,
+        max_length=DEVICE_ID_MAX_LENGTH,
+        pattern=DEVICE_ID_PATTERN,
+        examples=["1", "ESP32_01"],
+    ),
+]
