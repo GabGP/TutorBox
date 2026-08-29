@@ -8,13 +8,18 @@ from .audit import (
 from .audit import (
     router as audit_router,
 )
-from .lifecycle import (
+from .delete import (
     DeleteUserResponse,
+)
+from .delete import (
+    router as delete_router,
+)
+from .recover import (
     RecoverUserRequest,
     RecoverUserResponse,
 )
-from .lifecycle import (
-    router as lifecycle_router,
+from .recover import (
+    router as recover_router,
 )
 from .reset_pin import (
     ResetPinResponse,
@@ -34,7 +39,8 @@ from .users import (
 router = APIRouter()
 router.include_router(users_router)
 router.include_router(reset_pin_router)
-router.include_router(lifecycle_router)
+router.include_router(delete_router)
+router.include_router(recover_router)
 router.include_router(audit_router)
 
 __all__ = [
@@ -47,7 +53,8 @@ __all__ = [
     "ResetPinResponse",
     "UserListResponse",
     "audit_router",
-    "lifecycle_router",
+    "delete_router",
+    "recover_router",
     "reset_pin_router",
     "router",
     "users_router",

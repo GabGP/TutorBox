@@ -210,7 +210,8 @@ backend/
 │   │   ├── staff/
 │   │   │   ├── __init__.py
 │   │   │   ├── audit.py
-│   │   │   ├── lifecycle.py
+│   │   │   ├── delete.py
+│   │   │   ├── recover.py
 │   │   │   ├── reset_pin.py
 │   │   │   └── users.py
 │   │   └── users/

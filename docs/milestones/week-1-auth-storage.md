@@ -20,7 +20,7 @@ This document summarizes the technical deliverables, architectural implementatio
 * **Backend Test Suite**: **134 / 134 passing tests**
 * **Statement Coverage**: **100.00% coverage** across all 25 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
-* **Modularity Compliance**: **100% of source files $\le 138$ LoC** ($\le 150$ LoC rule) and **100% of test files $\le 247$ LoC** ($\le 300$ LoC rule).
+* **Modularity Compliance**: **100% of source files $\le 149$ LoC** ($\le 150$ LoC rule) and **100% of test files $\le 295$ LoC** ($\le 300$ LoC rule).
 * **Hardware & Appliance Baseline**:
   * Jetson Orin Nano running headless JetPack on NVMe in 25W mode with persistent `jetson_clocks`.
   * Idle system RAM footprint verified at **$\le 1.0$ GB RSS**.
