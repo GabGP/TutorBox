@@ -17,8 +17,8 @@ This document summarizes the technical deliverables, architectural implementatio
 
 ## 1. Executive Summary & Verification Metrics
 * **Status**: **100% Complete & Green (Both Student A and Student B)**
-* **Backend Test Suite**: **134 / 134 passing tests**
-* **Statement Coverage**: **100.00% coverage** across all 25 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Backend Test Suite**: **135 / 135 passing tests**
+* **Statement Coverage**: **100.00% coverage** across all 28 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 149$ LoC** ($\le 150$ LoC rule) and **100% of test files $\le 295$ LoC** ($\le 300$ LoC rule).
 * **Hardware & Appliance Baseline**:

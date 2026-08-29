@@ -9,6 +9,7 @@ os.environ["BCRYPT_ROUNDS"] = "4"
 import pytest
 from fastapi.testclient import TestClient
 
+from src.db.database import get_db_connection
 from src.db.migrations import apply_migrations
 from src.main import app
 from src.security.auth import hash_pin
@@ -47,9 +48,7 @@ def temp_db(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DATABASE_PATH", db_path)
     apply_migrations(db_path)
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
+    conn = get_db_connection(db_path)
 
     yield db_path, conn
 
