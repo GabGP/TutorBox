@@ -1,17 +1,26 @@
 import logging
+import os
 
 import bcrypt
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_BCRYPT_ROUNDS = 12
 
-def hash_pin(pin: str) -> str:
+
+def get_bcrypt_rounds() -> int:
+    """Returns configured bcrypt rounds, falling back to production constant (12)."""
+    return int(os.getenv("BCRYPT_ROUNDS", str(DEFAULT_BCRYPT_ROUNDS)))
+
+
+def hash_pin(pin: str, rounds: int | None = None) -> str:
     """
     Hashes a plain-text numeric PIN using bcrypt with salt generation.
     """
     logger.info("Hashing user PIN for secure storage.")
+    work_factor = rounds if rounds is not None else get_bcrypt_rounds()
     pin_bytes = pin.encode("utf-8")
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=work_factor)
     hashed = bcrypt.hashpw(pin_bytes, salt)
     return hashed.decode("utf-8")
 

@@ -3,6 +3,9 @@ import sqlite3
 import sys
 import tempfile
 
+# Use minimum work factor for fast test execution (240x speedup)
+os.environ["BCRYPT_ROUNDS"] = "4"
+
 import pytest
 from fastapi.testclient import TestClient
 
