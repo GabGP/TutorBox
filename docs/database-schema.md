@@ -164,7 +164,7 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 ### Table: `audit_logs`
 Append-only audit trail recording sensitive operational and staff actions.
 
-> **Related API Operations**: Queried by [`GET /audit-logs`](api-reference.md#get-audit-logs); automatically appended by mutations across `signup`, `users`, `reset_pin`, `credentials`, and `lifecycle` modules.
+> **Related API Operations**: Queried by [`GET /audit-logs`](api-reference.md#get-audit-logs); automatically appended by mutations across `signup`, `users`, `reset_pin`, `credentials`, `delete`, and `recover` modules.
 
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
