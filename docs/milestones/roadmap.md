@@ -44,7 +44,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ### ✅ [Week 1 — Appliance Baseline & Storage Infrastructure (Completed)](week-1-auth-storage.md)
 * **Focus**: Establish foundational offline infrastructure — headless Jetson Orin Nano, isolated classroom AP, and backend auth/storage.
-* **Student A Deliverables**: Monorepo with pre-commit + pytest, FastAPI REST API (`/health`, `/login`), SQLite engine with migrations 001–006, 134 passing tests with 100% coverage.
+* **Student A Deliverables**: Monorepo with pre-commit + pytest, FastAPI REST API (`/health`, `/login`), SQLite engine with migrations 001–006, 135 passing tests with 100% coverage.
 * **Student B Deliverables**: JetPack on NVMe, desktop GUI disabled, 25W mode + persistent `jetson_clocks`, GL-AR300M16 router configured as isolated local AP without WAN.
 * **Tuesday Defense**: *"Architecture of an offline educational appliance: from classroom to silicon"*.
 * **Key Verification Metrics**: Local CI green with 100% coverage; Jetson headless idle RSS $\le 1.0$ GB; versioned network topology diagram.

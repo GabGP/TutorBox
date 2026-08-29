@@ -29,7 +29,6 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
 - [6. Migration Changelog](#6-migration-changelog)
 - [Next Steps](#next-steps)
 
-
 ---
 
 ## 1. Engine Configuration & Pragmas

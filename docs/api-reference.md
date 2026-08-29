@@ -30,7 +30,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
 - [Next Steps](#next-steps)
 
-
+---
 
 ## 1. System Overview & Base URL
 
