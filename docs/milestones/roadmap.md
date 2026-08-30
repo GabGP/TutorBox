@@ -13,6 +13,25 @@
 
 This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
+## Table of Contents
+- [TutorBox Engineering Roadmap (10-Week Plan)](#tutorbox-engineering-roadmap-10-week-plan)
+  - [Table of Contents](#table-of-contents)
+  - [1. Operating Rules \& Team Rotation](#1-operating-rules--team-rotation)
+  - [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
+  - [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
+  - [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
+    - [✅ Week 1 — Appliance Baseline \& Storage Infrastructure (Completed)](#-week-1--appliance-baseline--storage-infrastructure-completed)
+    - [⏳ Week 2 — Quiz Contract \& Diagnostic Distractors (Pilot: A · Copilot: B)](#-week-2--quiz-contract--diagnostic-distractors-pilot-a--copilot-b)
+    - [⏳ Week 3 — Session Engine \& Browser Voting (Pilot: B · Copilot: A)](#-week-3--session-engine--browser-voting-pilot-b--copilot-a)
+    - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#-week-4--full-quiz-mode-with-offline-spanish-voice-pilot-a--copilot-b)
+    - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#-week-5--socratic-tutor-mode-pilot-b--copilot-a)
+    - [⏳ Week 6 — Offline Primary Games \& Log Synchronization (Pilot: A · Copilot: B)](#-week-6--offline-primary-games--log-synchronization-pilot-a--copilot-b)
+    - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#-week-7--esp32-physical-clickers-pilot-b--copilot-a)
+    - [⏳ Week 8 — Unified Analytics \& Weekly Teacher Report (Pilot: A · Copilot: B)](#-week-8--unified-analytics--weekly-teacher-report-pilot-a--copilot-b)
+    - [⏳ Week 9 — Concurrency \& Full System Stress Testing (Pilot: B · Copilot: A)](#-week-9--concurrency--full-system-stress-testing-pilot-b--copilot-a)
+    - [⏳ Week 10 — General Rehearsal, Documentation \& Release v1.0 (Both as Co-Leads)](#-week-10--general-rehearsal-documentation--release-v10-both-as-co-leads)
+  - [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
+
 ---
 
 ## 1. Operating Rules & Team Rotation
@@ -23,35 +42,65 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-## 2. Weekly Milestone Summary Table
+## 2. Engineering Schedule Gantt Chart
+
+```mermaid
+gantt
+    title TutorBox 10-Week Engineering Schedule (Rotational Ownership)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Foundation & Storage
+    Week 1 - Baseline, Auth & Devices (A & B) :done, w1, 2026-08-23, 2026-08-30
+
+    section Classroom Quiz Subsystem
+    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :active, w2, 2026-08-30, 2026-09-06
+    Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :w3, 2026-09-06, 2026-09-13
+    Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):w4, 2026-09-13, 2026-09-20
+
+    section Socratic & Games Subsystems
+    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :w5, 2026-09-20, 2026-09-27
+    Week 6 - Offline Games & Log Sync (Pilot A / Copilot B)    :w6, 2026-09-27, 2026-10-04
+
+    section Hardware, Analytics & Stress
+    Week 7 - ESP32 Hardware Clickers (Pilot B / Copilot A)     :w7, 2026-10-04, 2026-10-11
+    Week 8 - Unified Analytics & Reports (Pilot A / Copilot B) :w8, 2026-10-11, 2026-10-18
+    Week 9 - Concurrency & Stress Soak (Pilot B / Copilot A)   :w9, 2026-10-18, 2026-10-25
+    Week 10 - Rehearsal & Release v1.0 (Both Co-Leads)         :w10, 2026-10-25, 2026-11-01
+```
+
+---
+
+## 3. Weekly Milestone Summary Table
 
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
 | :---: | :--- | :--- | :---: |
-| **1 ✅** | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (100% green) | A & B |
-| **2** | Quiz Contract & Diagnostic Distractors | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
-| **3** | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
-| **4** | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
-| **5** | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
-| **6** | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
-| **7** | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
-| **8** | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
-| **9** | Concurrency & Full System Stress | Combined load (30 quiz + 10 tutor + games) + 2h stable soak test without OOM/throttling | **B** / A |
-| **10** | Rehearsal, Documentation & Release v1.0 | User trial report, cold-rebuild runbook, teacher manual ($\le 10$p), 3-min video, tag `v1.0` | Both |
+| **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
+| **2** ⏳ | Quiz Contract & Diagnostic Distractors | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
+| **3** ⏳ | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
+| **4** ⏳ | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
+| **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
+| **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
+| **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
+| **8** ⏳ | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
+| **9** ⏳ | Concurrency & Full System Stress | Combined load (30 quiz + 10 tutor + games) + 2h stable soak test without OOM/throttling | **B** / A |
+| **10** ⏳ | Rehearsal, Documentation & Release v1.0 | User trial report, cold-rebuild runbook, teacher manual ($\le 10$p), 3-min video, tag `v1.0` | Both |
 
 ---
 
-## 3. Detailed Weekly Milestone Breakdown
+## 4. Detailed Weekly Milestone Breakdown
 
-### ✅ [Week 1 — Appliance Baseline & Storage Infrastructure (Completed)](week-1-auth-storage.md)
+### <a id="week-1"></a>✅ Week 1 — Appliance Baseline & Storage Infrastructure (Completed)
 * **Focus**: Establish foundational offline infrastructure — headless Jetson Orin Nano, isolated classroom AP, and backend auth/storage.
-* **Student A Deliverables**: Monorepo with pre-commit + pytest, FastAPI REST API (`/health`, `/login`), SQLite engine with migrations 001–006, 135 passing tests with 100% coverage.
+* **Student A Deliverables**: Monorepo with pre-commit + pytest, FastAPI REST API (`/health`, `/login`, `/users`, `/devices`), SQLite engine with migrations 001–007, 144 passing tests with 100% coverage.
 * **Student B Deliverables**: JetPack on NVMe, desktop GUI disabled, 25W mode + persistent `jetson_clocks`, GL-AR300M16 router configured as isolated local AP without WAN.
 * **Tuesday Defense**: *"Architecture of an offline educational appliance: from classroom to silicon"*.
 * **Key Verification Metrics**: Local CI green with 100% coverage; Jetson headless idle RSS $\le 1.0$ GB; versioned network topology diagram.
+* **Detailed Milestone Report**: [Week 1 Milestone Synthesis](week-1-auth-storage.md).
 
 ---
 
-### ⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)
+### <a id="week-2"></a>⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)
 * **Focus**: Establish the core data format uniting the quiz appliance and generate pedagogically valid questions with diagnostic error mapping.
 * **Student A (Pilot)**:
   * Formal JSON Schema specification for quiz questions (1 correct option + 3 diagnostic distractors, each mapping to a concrete conceptual misconception and primary-school explanation).
@@ -69,7 +118,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
+### <a id="week-3"></a>⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
 * **Focus**: The complete question lifecycle (open $\to$ vote $\to$ aggregate $\to$ decide) using web browsers as the initial transport layer.
 * **Student B (Pilot)**:
   * Device-agnostic `VoteTransport` abstract interface.
@@ -89,7 +138,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)
+### <a id="week-4"></a>⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)
 * **Focus**: Complete the end-to-end Classroom Quiz mode with spoken conceptual explanations.
 * **Student A (Pilot)**:
   * Offline Spanish TTS engine on Jetson Orin Nano integrated to read distractor explanations out loud.
@@ -108,7 +157,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
+### <a id="week-5"></a>⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
 * **Focus**: Launch Mode 2 (Conversational Math Practice) reusing the local inference backend.
 * **Student B (Pilot)**:
   * Installable offline PWA tutor client with student login and persistent session state across visits.
@@ -128,7 +177,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 6 — Offline Primary Games & Log Synchronization (Pilot: A · Copilot: B)
+### <a id="week-6"></a>⏳ Week 6 — Offline Primary Games & Log Synchronization (Pilot: A · Copilot: B)
 * **Focus**: Mode 3 (`primariaconk.uk`) operating 100% offline with resilient data synchronization.
 * **Student A (Pilot)**:
   * Ingestion REST endpoint normalizing game error events to the unified concept taxonomy.
@@ -146,7 +195,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)
+### <a id="week-7"></a>⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)
 * **Focus**: Introduce physical hardware clickers as an additional transport without modifying session logic.
 * **Student B (Pilot)**:
   * ESP32 firmware (Wi-Fi AP association, persistent device ID, 4 physical buttons, LED vote confirmation, auto-reconnect).
@@ -164,7 +213,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 8 — Unified Analytics & Weekly Teacher Report (Pilot: A · Copilot: B)
+### <a id="week-8"></a>⏳ Week 8 — Unified Analytics & Weekly Teacher Report (Pilot: A · Copilot: B)
 * **Focus**: Synthesize cross-mode error logs into actionable pedagogical recommendations for teachers.
 * **Student A (Pilot)**:
   * Weekly reporting engine computing top error concepts, students requiring remediation, and suggested review order via deterministic SQL queries.
@@ -182,7 +231,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 9 — Concurrency & Full System Stress Testing (Pilot: B · Copilot: A)
+### <a id="week-9"></a>⏳ Week 9 — Concurrency & Full System Stress Testing (Pilot: B · Copilot: A)
 * **Focus**: Prove the appliance withstands real classroom load with all 3 operating modes running concurrently.
 * **Student B (Pilot)**:
   * 2-hour soak test with real client devices, continuous `tegrastats` monitoring, and verification of zero CPU/GPU throttling, OOM panics, or swap thrashing.
@@ -200,12 +249,12 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-### ⏳ Week 10 — General Rehearsal, Documentation & Release v1.0 (Both as Pilots)
+### <a id="week-10"></a>⏳ Week 10 — General Rehearsal, Documentation & Release v1.0 (Both as Co-Leads)
 * **Focus**: Final system integration, user rehearsal, complete operational documentation, and release tagging.
-* **Student A (Co-Pilot)**:
+* **Student A (Co-Lead)**:
   * Full rehearsal with adult participants executing scripted student scenarios across all 3 modes.
   * Audit log analysis and generation of anonymized data export for capstone thesis.
-* **Student B (Co-Pilot)**:
+* **Student B (Co-Lead)**:
   * Cold-rebuild runbook verified via blind cross-execution (executed by Student A without external guidance).
   * Teacher quick-start manual ($\le 10$ pages), 3-minute video walkthrough, and Git release tag `v1.0` with SHA-256 checksums.
 * **Tuesday Defense (Presented by Both)**: *"Final Demonstration and Lessons Learned"*
@@ -218,7 +267,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-## 4. Ownership Balance at Closing
+## 5. Ownership Balance at Closing
 
 | Engineer | Modules Piloted | Modules Co-Piloted | Total Subsystems Covered |
 | :--- | :--- | :--- | :--- |

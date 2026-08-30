@@ -17,8 +17,8 @@ This document summarizes the technical deliverables, architectural implementatio
 
 ## 1. Executive Summary & Verification Metrics
 * **Status**: **100% Complete & Green (Both Student A and Student B)**
-* **Backend Test Suite**: **135 / 135 passing tests**
-* **Statement Coverage**: **100.00% coverage** across all 28 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Backend Test Suite**: **144 / 144 passing tests**
+* **Statement Coverage**: **100.00% coverage** across all 30 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 149$ LoC** ($\le 150$ LoC rule) and **100% of test files $\le 295$ LoC** ($\le 300$ LoC rule).
 * **Hardware & Appliance Baseline**:
@@ -31,9 +31,9 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 2. Implemented Subsystems by Lead
 
 ### A. Student A: Backend, Database & CI Infrastructure
-1. **SQLite Database & Migrations (001–006)**:
+1. **SQLite Database & Migrations (001–007)**:
    * Engine Pragmas: `PRAGMA foreign_keys = ON;`, `PRAGMA journal_mode = WAL;`, `PRAGMA busy_timeout = 5000;`.
-   * Migrations: `001_initial_schema.sql` through `006_add_audit_logs.sql`.
+   * Migrations: `001_initial_schema.sql` through `007_add_devices.sql`.
 2. **Security & RBAC Infrastructure**:
    * Multi-role hierarchy (`student`, `teacher`, `admin`).
    * UUIDv4 Bearer session token management.
@@ -41,8 +41,8 @@ This document summarizes the technical deliverables, architectural implementatio
    * Anti-oracle cryptographic verification order.
    * Dual rate limiting (exponential lockout + sliding window).
    * 7 verified security proofs against plaintext credential leakage.
-3. **13 Production REST Endpoints**:
-   * Health check, login/logout, user profile & credentials, staff user management, PIN reset, soft deletion & recovery, audit trail.
+3. **18 Production REST Endpoints**:
+   * Health check, login/logout, user profile & credentials, staff user management, PIN reset, soft deletion & recovery, audit trail, and physical ESP32 clicker fleet registration & 1:1 student pairing (`/devices`).
 
 ### B. Student B: Appliance Provisioning, Hardware & Networking
 1. **Jetson Orin Nano Base Configuration**:
