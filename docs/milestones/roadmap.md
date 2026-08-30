@@ -74,7 +74,7 @@ gantt
 ## <a id="3-weekly-milestone-summary-table"></a>3. Weekly Milestone Summary Table
 
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
-| :---: | :--- | :--- | :--- | :---: |
+| :---: | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | Quiz Contract & Diagnostic Distractors | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ⏳ | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
