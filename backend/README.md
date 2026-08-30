@@ -111,7 +111,7 @@ Choose the installation mode matching your target environment:
 
 ### <a id="a-development-mode-local-coding--testing"></a>A. Development Mode (Local Coding & Testing)
 
-Installs the package in **editable mode** (`-e`) along with development dependencies (`pytest`, `pytest-cov`, `ruff`, `pre-commit`):
+Installs the package in **editable mode** (`-e`) along with development dependencies (`pytest`, `pytest-cov`, `pytest-env`, `pytest-xdist`, `ruff`, `pre-commit`):
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -154,7 +154,7 @@ The database `tutorbox.db` will be initialized and migrated automatically on sta
 ## <a id="5-testing--quality-assurance"></a>5. Testing & Quality Assurance
 
 ### Running the Test Suite:
-Run pytest with code coverage across the entire test suite:
+Run pytest with parallel execution (`pytest-xdist`) and code coverage across the entire test suite:
 ```bash
 python -m pytest
 ```

@@ -1,4 +1,5 @@
 import os
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -13,6 +14,21 @@ from src.db.database import get_db_connection
 from src.db.migrations import apply_migrations
 from src.main import app
 from src.security.auth import hash_pin
+
+# Cache pre-hashed default test PIN ('1234') across fixtures
+PRE_HASHED_PIN_1234 = hash_pin("1234")
+
+
+@pytest.fixture(scope="session")
+def _migrated_template_db(tmp_path_factory: pytest.TempPathFactory) -> str:
+    """
+    Creates a single migrated SQLite template database per test session/worker.
+    Individual tests copy this template in <1ms instead of reapplying migrations.
+    """
+    temp_dir = tmp_path_factory.mktemp("db_template")
+    template_path = str(temp_dir / "template.db")
+    apply_migrations(template_path)
+    return template_path
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +52,7 @@ def _reset_rate_limiters():
 
 
 @pytest.fixture
-def temp_db(monkeypatch: pytest.MonkeyPatch):
+def temp_db(monkeypatch: pytest.MonkeyPatch, _migrated_template_db: str):
     """
     Creates an isolated temporary SQLite database with all migrations applied.
     Uses monkeypatch for DATABASE_PATH so the environment is always restored,
@@ -45,8 +61,9 @@ def temp_db(monkeypatch: pytest.MonkeyPatch):
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
+    shutil.copyfile(_migrated_template_db, db_path)
+
     monkeypatch.setenv("DATABASE_PATH", db_path)
-    apply_migrations(db_path)
 
     conn = get_db_connection(db_path)
 
@@ -63,11 +80,10 @@ def seeded_db(temp_db):
     Pre-seeds a test user: username='student1', pin='1234'.
     """
     db_path, conn = temp_db
-    hashed = hash_pin("1234")
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO users (username, hashed_pin) VALUES (?, ?)",
-        ("student1", hashed),
+        ("student1", PRE_HASHED_PIN_1234),
     )
     conn.commit()
     return db_path, conn
@@ -93,13 +109,12 @@ def staff_db(temp_db):
     - admin1   (pin: 1234, role: admin)
     """
     db_path, conn = temp_db
-    hashed = hash_pin("1234")
     cursor = conn.cursor()
     users = [
-        ("student1", hashed, "student"),
-        ("student2", hashed, "student"),
-        ("teacher1", hashed, "teacher"),
-        ("admin1", hashed, "admin"),
+        ("student1", PRE_HASHED_PIN_1234, "student"),
+        ("student2", PRE_HASHED_PIN_1234, "student"),
+        ("teacher1", PRE_HASHED_PIN_1234, "teacher"),
+        ("admin1", PRE_HASHED_PIN_1234, "admin"),
     ]
     cursor.executemany(
         "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, ?)",
