@@ -34,7 +34,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-## 1. Operating Rules & Team Rotation
+### <a id="1-operating-rules--team-rotation"></a>1. Operating Rules & Team Rotation
 
 * **The Rotation Rule (Weeks 2–10)**: Each week has a **Pilot** (owner of architectural decisions and design) and a **Copilot** (implements substantial components of the same subsystem and code-reviews all of the Pilot's pull requests).
 * **The Tuesday Presentation Rule**: The **Copilot** defends the weekly milestone to the evaluation jury. Because the engineer who did not lead the design must present, this guarantees deep cross-system understanding across both team members.
@@ -42,7 +42,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ---
 
-## 2. Engineering Schedule Gantt Chart
+## <a id="2-engineering-schedule-gantt-chart"></a>2. Engineering Schedule Gantt Chart
 
 ```mermaid
 gantt
@@ -71,10 +71,10 @@ gantt
 
 ---
 
-## 3. Weekly Milestone Summary Table
+## <a id="3-weekly-milestone-summary-table"></a>3. Weekly Milestone Summary Table
 
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
-| :---: | :--- | :--- | :---: |
+| :---: | :--- | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | Quiz Contract & Diagnostic Distractors | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ⏳ | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
@@ -88,7 +88,7 @@ gantt
 
 ---
 
-## 4. Detailed Weekly Milestone Breakdown
+## <a id="4-detailed-weekly-milestone-breakdown"></a>4. Detailed Weekly Milestone Breakdown
 
 ### <a id="week-1"></a>✅ Week 1 — Appliance Baseline & Storage Infrastructure (Completed)
 * **Focus**: Establish foundational offline infrastructure — headless Jetson Orin Nano, isolated classroom AP, and backend auth/storage.
@@ -267,7 +267,7 @@ gantt
 
 ---
 
-## 5. Ownership Balance at Closing
+## <a id="5-ownership-balance-at-closing"></a>5. Ownership Balance at Closing
 
 | Engineer | Modules Piloted | Modules Co-Piloted | Total Subsystems Covered |
 | :--- | :--- | :--- | :--- |

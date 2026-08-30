@@ -33,7 +33,7 @@ Comprehensive engineering specification for the **TutorBox Physical Clicker Subs
 
 ---
 
-## 1. Subsystem Overview & Pedagogical Purpose
+## <a id="1-subsystem-overview--pedagogical-purpose"></a>1. Subsystem Overview & Pedagogical Purpose
 
 In rural and primary classroom environments (grades 1–6, ages 6–12), asking students to type alphanumeric usernames and PINs on small screens is a significant pedagogical friction point.
 
@@ -46,7 +46,7 @@ The **TutorBox Physical Clicker Subsystem** provides a dedicated, tactile 4-butt
 
 ---
 
-## 2. Hardware Specifications & Bill of Materials
+## <a id="2-hardware-specifications--bill-of-materials"></a>2. Hardware Specifications & Bill of Materials
 
 ```mermaid
 graph LR
@@ -86,7 +86,7 @@ graph LR
 
 ---
 
-## 3. Wi-Fi AP Association & Provisioning Mechanisms
+## <a id="3-wi-fi-ap-association--provisioning-mechanisms"></a>3. Wi-Fi AP Association & Provisioning Mechanisms
 
 A common question in offline hardware design is: **How does each physical clicker connect to the appliance's local Wi-Fi Access Point without a screen or keyboard?**
 
@@ -143,7 +143,7 @@ graph TD
 
 ---
 
-## 4. End-to-End Communication Flow & Pairing Model
+## <a id="4-end-to-end-communication-flow--pairing-model"></a>4. End-to-End Communication Flow & Pairing Model
 
 TutorBox utilizes a **Teacher-Delegated Trust Model** to eliminate student authentication barriers on hardware clickers while maintaining strict tenant isolation.
 
@@ -178,7 +178,7 @@ sequenceDiagram
 
 ---
 
-## 5. Abstract `VoteTransport` Architecture (Week 3 & Week 7 Bridge)
+## <a id="5-abstract-votetransport-architecture-week-3--week-7-bridge"></a>5. Abstract `VoteTransport` Architecture (Week 3 & Week 7 Bridge)
 
 To enforce **System Guardrail #5 (Hardware-Agnostic Transport)**, voting logic is completely decoupled behind an abstract `VoteTransport` interface:
 
@@ -215,7 +215,7 @@ classDiagram
 
 ---
 
-## 6. Visual Feedback & Dual LED State Machines
+## <a id="6-visual-feedback--dual-led-state-machines"></a>6. Visual Feedback & Dual LED State Machines
 
 The clicker incorporates two separate visual indicators: a **Primary RGB Vote LED** (front-facing for student quiz feedback) and a **Secondary Status LED** (for connection and power diagnostics).
 
@@ -238,7 +238,7 @@ The clicker incorporates two separate visual indicators: a **Primary RGB Vote LE
 
 ---
 
-## 7. Fleet Health Telemetry & Teacher PWA Dashboard
+## <a id="7-fleet-health-telemetry--teacher-pwa-dashboard"></a>7. Fleet Health Telemetry & Teacher PWA Dashboard
 
 While the physical clicker has local LED warnings, **primary school students should not be responsible for diagnosing battery or network issues**.
 
@@ -273,7 +273,7 @@ In the Teacher Device Management view (`GET /devices`), the teacher sees a live 
 
 ---
 
-## 8. Concurrency, Latency & Edge Case Resilience
+## <a id="8-concurrency-latency--edge-case-resilience"></a>8. Concurrency, Latency & Edge Case Resilience
 
 ### 1. Button Debounce & Lockout
 * Clicker firmware enforces a **200ms hardware debounce** timer to eliminate contact bounce jitter.
@@ -291,7 +291,7 @@ In the Teacher Device Management view (`GET /devices`), the teacher sees a live 
 
 ---
 
-## 9. Implementation Roadmap & Milestones
+## <a id="9-implementation-roadmap--milestones"></a>9. Implementation Roadmap & Milestones
 
 ```mermaid
 gantt
