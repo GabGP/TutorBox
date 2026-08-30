@@ -154,9 +154,17 @@ The database `tutorbox.db` will be initialized and migrated automatically on sta
 ## <a id="5-testing--quality-assurance"></a>5. Testing & Quality Assurance
 
 ### Running the Test Suite:
-Run pytest with parallel execution (`pytest-xdist`) and code coverage across the entire test suite:
+Run pytest with code coverage across the entire test suite:
 ```bash
 python -m pytest
+```
+
+### Running Parallel Tests (`pytest-xdist`):
+Distribute test execution across multiple CPU workers (useful as test volume scales):
+```bash
+python -m pytest -n auto
+# Or specify worker count:
+python -m pytest -n 4
 ```
 
 ### Running Scoped Subpackage Tests:

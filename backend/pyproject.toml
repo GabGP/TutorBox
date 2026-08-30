@@ -30,7 +30,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-n auto --strict-markers --cov=src --cov-report=term-missing --cov-fail-under=80"
+addopts = "--strict-markers --cov=src --cov-report=term-missing --cov-fail-under=80"
 cache_dir = "../.cache/pytest"
 
 [tool.pytest_env]
