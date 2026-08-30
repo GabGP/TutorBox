@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Architecture** › **Socratic Pedagogy** • **Related:** [Three Modes](three-modes.md) • [Hardware Topology](hardware-topology.md)
+📍 **Docs** › **Architecture** › **Socratic Pedagogy** • **Related:** [Three Modes](three-modes.md) • [ESP32 Clicker Transport](esp32-clicker-transport.md) • [Hardware Topology](hardware-topology.md)
 
 </div>
 

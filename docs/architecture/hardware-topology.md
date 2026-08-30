@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Architecture** › **Hardware Topology** • **Related:** [Three Modes](three-modes.md) • [Socratic Pedagogy](socratic-pedagogy.md) • [Infra Guide](../../infra/README.md)
+📍 **Docs** › **Architecture** › **Hardware Topology** • **Related:** [Three Modes](three-modes.md) • [ESP32 Clicker Transport](esp32-clicker-transport.md) • [Socratic Pedagogy](socratic-pedagogy.md) • [Infra Guide](../../infra/README.md)
 
 </div>
 
@@ -59,7 +59,8 @@ graph TD
 | Node | Hardware Specs | Responsibilities & Software |
 | :--- | :--- | :--- |
 | **Core AI Appliance** | **NVIDIA Jetson Orin Nano** (8GB Unified RAM) | Hosts all software services: Nginx reverse proxy, static PWA hosting, FastAPI backend, `llama.cpp` SLM inference, offline Spanish & K'iche' neural TTS, SymPy validation engine, SQLite database, and direct HDMI classroom display/audio. |
-| **Wireless AP** | **GL.iNet GL-AR300M16 Router** | Isolated local router broadcasting SSID `TutorBox` with local DHCP IP assignment for student devices. |
+| **Wireless AP** | **GL.iNet GL-AR300M16 Router** | Isolated local router broadcasting SSID `TutorBox` with local DHCP IP assignment for student devices and ESP32 clickers. |
+| **Physical Clickers** | **ESP32 Microcontroller Node** (C3/WROOM) | 4 tactile buttons (A–D), RGB confirmation LED, LiPo/AAA power, and delegated `VoteTransport` packet transmission. (See [ESP32 Clicker Transport](esp32-clicker-transport.md)). |
 
 ---
 
