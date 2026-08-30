@@ -137,7 +137,7 @@ Stores student and staff credentials, roles, and lifecycle states.
 ### Table: `devices`
 Registry of physical ESP32 clickers and active 1:1 classroom pairings to student accounts.
 
-> **Related API Operations**: Created by [`POST /devices`](api-reference.md#66-hardware-clicker--device-fleet-management); queried by [`GET /devices`](api-reference.md#66-hardware-clicker--device-fleet-management); paired by [`POST /devices/{id}/assign`](api-reference.md#66-hardware-clicker--device-fleet-management); unpaired by [`POST /devices/{id}/unassign`](api-reference.md#66-hardware-clicker--device-fleet-management); removed by [`DELETE /devices/{id}`](api-reference.md#66-hardware-clicker--device-fleet-management).
+> **Related API Operations**: Created by [`POST /devices`](api-reference.md#post-devices); queried by [`GET /devices`](api-reference.md#get-devices); paired by [`POST /devices/{device_id}/assign`](api-reference.md#post-devicesdevice_idassign); unpaired by [`POST /devices/{device_id}/unassign`](api-reference.md#post-devicesdevice_idunassign); removed by [`DELETE /devices/{device_id}`](api-reference.md#delete-devicesdevice_id).
 
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -198,15 +198,15 @@ Append-only audit trail recording sensitive operational, staff, and hardware pai
 #### Valid Audit Action Strings:
 * `signup`: Student self-registration via [`POST /signup`](api-reference.md#post-signup).
 * `user_created`: Account created by staff via [`POST /users`](api-reference.md#post-users).
-* `pin_reset`: Temporary PIN issued by staff via [`POST /users/{id}/reset-pin`](api-reference.md#post-usersuser_idreset-pin).
+* `pin_reset`: Temporary PIN issued by staff via [`POST /users/{user_id}/reset-pin`](api-reference.md#post-usersuser_idreset-pin).
 * `username_changed`: Username changed by user via [`PATCH /users/me/username`](api-reference.md#patch-usersmeusername).
 * `pin_changed`: PIN rotated by user via [`PATCH /users/me/pin`](api-reference.md#patch-usersmepin).
-* `account_deleted`: Account soft-deleted via [`DELETE /users/{id}`](api-reference.md#delete-usersuser_id).
-* `account_recovered`: Soft-deleted account restored via [`POST /users/{id}/recover`](api-reference.md#post-usersuser_idrecover).
-* `device_registered`: Hardware clicker registered into appliance fleet via [`POST /devices`](api-reference.md#66-hardware-clicker--device-fleet-management).
-* `device_assigned`: Clicker linked to student via [`POST /devices/{id}/assign`](api-reference.md#66-hardware-clicker--device-fleet-management).
-* `device_unassigned`: Clicker unlinked via [`POST /devices/{id}/unassign`](api-reference.md#66-hardware-clicker--device-fleet-management).
-* `device_deleted`: Clicker removed from fleet via [`DELETE /devices/{id}`](api-reference.md#66-hardware-clicker--device-fleet-management).
+* `account_deleted`: Account soft-deleted via [`DELETE /users/{user_id}`](api-reference.md#delete-usersuser_id).
+* `account_recovered`: Soft-deleted account restored via [`POST /users/{user_id}/recover`](api-reference.md#post-usersuser_idrecover).
+* `device_registered`: Hardware clicker registered into appliance fleet via [`POST /devices`](api-reference.md#post-devices).
+* `device_assigned`: Clicker linked to student via [`POST /devices/{device_id}/assign`](api-reference.md#post-devicesdevice_idassign).
+* `device_unassigned`: Clicker unlinked via [`POST /devices/{device_id}/unassign`](api-reference.md#post-devicesdevice_idunassign).
+* `device_deleted`: Clicker removed from fleet via [`DELETE /devices/{device_id}`](api-reference.md#delete-devicesdevice_id).
 
 ---
 
