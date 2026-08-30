@@ -16,27 +16,34 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [1. Components & Architecture](#1-components--architecture)
-- [2. API Surface Summary](#2-api-surface-summary)
-- [3. Environment Setup](#3-environment-setup)
-- [4. Installation & Workflow](#4-installation--workflow)
-  - [A. Development Mode](#a-development-mode-local-coding--testing)
-  - [B. Production Mode](#b-production-mode)
-- [5. Testing & Quality Assurance](#5-testing--quality-assurance)
-- [6. Project Structure](#6-project-structure)
-- [Next Steps](#next-steps)
+- [TutorBox Backend](#tutorbox-backend)
+  - [Table of Contents](#table-of-contents)
+  - [1. Components \& Architecture](#1-components--architecture)
+  - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
+  - [3. Environment Setup](#3-environment-setup)
+    - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
+      - [Windows (PowerShell)](#windows-powershell)
+      - [Linux](#linux)
+      - [Conda (Windows or Linux)](#conda-windows-or-linux)
+  - [4. Installation \& Workflow](#4-installation--workflow)
+    - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
+      - [Running in Development:](#running-in-development)
+    - [B. Production Mode](#b-production-mode)
+      - [Running in Production:](#running-in-production)
+  - [5. Testing \& Quality Assurance](#5-testing--quality-assurance)
+    - [Running the Test Suite:](#running-the-test-suite)
+    - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
+    - [Code Formatting \& Static Analysis:](#code-formatting--static-analysis)
+  - [6. Project Structure](#6-project-structure)
+  - [Next Steps](#next-steps)
 
 ---
 
 ## 1. Components & Architecture
 
-- **FastAPI REST API**:
-  - Health checks (`/health`)
-  - Authentication (`/login`, `/logout`)
-  - Student self-service lifecycle (`/signup`, `/users/me`, `/users/me/pin`, `/users/me/username`)
-  - Staff user management (`/users`, `/users/{id}/reset-pin`, `/users/{id}`, `/users/{id}/recover`)
-  - ESP32 hardware clicker fleet pairing (`/devices`, `/devices/{id}/assign`, `/devices/{id}/unassign`)
-  - Privileged system audit trail (`/audit-logs`)
+- **FastAPI Core Application**:
+  - Modular sub-routers for health probes, authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
+  - OpenAPI automated documentation generator (`/docs` and `/openapi.json`).
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
   - Forced PIN rotation enforcement and policy validation (4–8 numeric digits).
@@ -45,44 +52,26 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Database & Migrations**:
   - SQLite database with foreign keys, index optimization, and WAL mode.
-  - Numbered, idempotent schema migrations (`001` through `007`).
+  - Numbered, idempotent schema migrations.
   - Append-only `audit_logs` table tracking privileged user, account, and hardware pairing mutations.
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Classroom Quiz Engine (Weeks 2–4)**: JSON schema with diagnostic distractors, deterministic SymPy validator, session engine with >51% threshold, and Jetson offline Spanish & K'iche' voice feedback.
-- **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine ($0 \to 3$) and SymPy math containment guardrail.
+- **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
 
-## 2. API Surface Summary
+## 2. API Contracts & Specifications
 
-> [!TIP]
-> For complete request/response JSON schemas, error trigger matrices, and Swagger instructions, see the **[REST API Reference](../docs/api-reference.md)**. For the Entity-Relationship model and table dictionaries, see the **[Database Schema Reference](../docs/database-schema.md)**.
+For further details check these documents:
 
-| Method | Path | Auth / Role | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Public | System and SQLite health check |
-| `POST` | `/signup` | Public (Rate-limited) | Student self-registration |
-| `POST` | `/login` | Public (Rate-limited) | Authenticate with username and PIN; returns session token |
-| `POST` | `/logout` | Bearer Token | Invalidate current caller session |
-| `GET` | `/users/me` | Bearer Token | Return profile of authenticated user |
-| `PATCH` | `/users/me/pin` | Bearer Token | Self-service PIN change (clears forced rotation flag) |
-| `PATCH` | `/users/me/username` | Bearer Token | Self-service username change |
-| `GET` | `/users` | Teacher, Admin | List active accounts, or deleted accounts with `?include_deleted=true` |
-| `POST` | `/users` | Teacher, Admin | Staff user creation (Teachers: student/teacher; Admins: any role) |
-| `POST` | `/users/{id}/reset-pin` | Teacher, Admin | Issue 6-digit temp PIN, invalidate sessions, and require PIN rotation |
-| `DELETE` | `/users/{id}` | Teacher, Admin | Soft-delete user, anonymize username, preserve telemetry, last-admin guard |
-| `POST` | `/users/{id}/recover` | Teacher, Admin | Restore soft-deleted account under new username with temporary PIN |
-| `GET` | `/audit-logs` | Admin Only | View up to 500 append-only audit trail records |
-| `GET` | `/devices` | Teacher, Admin | List all registered physical clickers and student pairings |
-| `POST` | `/devices` | Teacher, Admin | Register a new clicker device identifier into the fleet |
-| `POST` | `/devices/{id}/assign` | Teacher, Admin | Link a physical clicker to an active student account |
-| `POST` | `/devices/{id}/unassign` | Teacher, Admin | Unlink a physical clicker from any student |
-| `DELETE` | `/devices/{id}` | Teacher, Admin | Remove a physical clicker from the fleet |
+* **[REST API Reference & Contracts (`docs/api-reference.md`)](../docs/api-reference.md)**: Authoritative specification for all REST endpoints, complete request/response JSON schemas, Role-Based Access Control (RBAC) matrix, error status triggers, and anti-oracle validation rules.
+* **[Database Schema & ER Model (`docs/database-schema.md`)](../docs/database-schema.md)**: Authoritative specification for SQLite tables, columns, constraints, performance indexes, data lifecycle policies, and migration logs.
+* **Interactive OpenAPI Swagger UI**: When running the backend server locally, navigate to <http://127.0.0.1:8000/docs> for live interactive testing or <http://127.0.0.1:8000/openapi.json> for the machine-readable schema.
 
 ---
 
