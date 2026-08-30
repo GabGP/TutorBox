@@ -33,7 +33,7 @@
 
 ---
 
-## 1. Project Architecture
+## <a id="1-project-architecture"></a>1. Project Architecture
 
 TutorBox operates on a local network topology consisting of an isolated Access Point and an integrated Edge AI Core Appliance.
 
@@ -74,7 +74,7 @@ graph TD
 
 ---
 
-## 2. Hardware Topology
+## <a id="2-hardware-topology"></a>2. Hardware Topology
 
 All components operate **100% offline** without WAN connectivity.
 
@@ -85,7 +85,7 @@ All components operate **100% offline** without WAN connectivity.
 
 ---
 
-## 3. Software & AI Stack
+## <a id="3-software--ai-stack"></a>3. Software & AI Stack
 
 * **Backend**: Python 3.10+, FastAPI, WebSockets (real-time chat & room management), SQLite (with idempotent SQL migrations).
 * **Frontend**: React / Vite Progressive Web App (PWA), mobile-first, hosted directly on the Jetson appliance via Nginx.
@@ -96,7 +96,7 @@ All components operate **100% offline** without WAN connectivity.
 
 ---
 
-## 4. System Constraints & Guardrails
+## <a id="4-system-constraints--guardrails"></a>4. System Constraints & Guardrails
 
 1. **No LLM Math**: The LLM is strictly prohibited from evaluating mathematical accuracy. SymPy is the sole authority for verification.
 2. **Containment Guardrail**: Before any LLM response is returned to the user, SymPy solves the mathematical problem. If the generated text contains the final solution or an equivalent symbolic answer, the response is intercepted and regenerated.
@@ -106,7 +106,7 @@ All components operate **100% offline** without WAN connectivity.
 
 ---
 
-## 5. Repository Structure
+## <a id="5-repository-structure"></a>5. Repository Structure
 
 ```text
 TutorBox/
@@ -118,7 +118,7 @@ TutorBox/
 
 ---
 
-## 6. Technical Documentation
+## <a id="6-technical-documentation"></a>6. Technical Documentation
 
 * **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications.
 * **[Database Schema & ER Model](docs/database-schema.md)**: SQLite schema dictionaries, indexes, and migration log.

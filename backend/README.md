@@ -39,7 +39,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 ---
 
-## 1. Components & Architecture
+## <a id="1-components--architecture"></a>1. Components & Architecture
 
 - **FastAPI Core Application**:
   - Modular sub-routers for health probes, authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
@@ -65,7 +65,7 @@ The following items are planned deliverables across upcoming milestone phases:
 
 ---
 
-## 2. API Contracts & Specifications
+## <a id="2-api-contracts--specifications"></a>2. API Contracts & Specifications
 
 For further details check these documents:
 
@@ -75,7 +75,7 @@ For further details check these documents:
 
 ---
 
-## 3. Environment Setup
+## <a id="3-environment-setup"></a>3. Environment Setup
 
 Ensure you are using Python 3.10 or newer.
 
@@ -105,11 +105,11 @@ python -m pip install --upgrade pip
 
 ---
 
-## 4. Installation & Workflow
+## <a id="4-installation--workflow"></a>4. Installation & Workflow
 
 Choose the installation mode matching your target environment:
 
-### A. Development Mode (Local Coding & Testing)
+### <a id="a-development-mode-local-coding--testing"></a>A. Development Mode (Local Coding & Testing)
 
 Installs the package in **editable mode** (`-e`) along with development dependencies (`pytest`, `pytest-cov`, `ruff`, `pre-commit`):
 
@@ -133,7 +133,7 @@ The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
 ---
 
-### B. Production Mode
+### <a id="b-production-mode"></a>B. Production Mode
 
 Installs a **static production package** with minimal runtime dependencies (excluding dev tools and test suites):
 
@@ -151,7 +151,7 @@ The database `tutorbox.db` will be initialized and migrated automatically on sta
 
 ---
 
-## 5. Testing & Quality Assurance
+## <a id="5-testing--quality-assurance"></a>5. Testing & Quality Assurance
 
 ### Running the Test Suite:
 Run pytest with code coverage across the entire test suite:
@@ -166,7 +166,7 @@ python -m pytest tests/api/staff/ -o addopts="--strict-markers"
 python -m pytest tests/security/ -o addopts="--strict-markers"
 ```
 
-### Code Formatting & Static Analysis:
+### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:
 Run Ruff linter and formatter checks manually:
 ```bash
 ruff check .
@@ -180,7 +180,7 @@ ruff format .
 
 ---
 
-## 6. Project Structure
+## <a id="6-project-structure"></a>6. Project Structure
 
 Generated environments, caches, and build artifacts are omitted from this overview.
 

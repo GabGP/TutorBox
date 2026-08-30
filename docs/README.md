@@ -31,7 +31,7 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 
 ---
 
-## 1. Core Technical References
+## <a id="1-core-technical-references"></a>1. Core Technical References
 
 ### <a id="database-schema--er-model"></a>[Database Schema & ER Model](database-schema.md)
 Complete documentation for the SQLite edge database engine in **[`database-schema.md`](database-schema.md)**:
@@ -61,7 +61,7 @@ Integration contracts and communication protocols for the FastAPI backend in **[
 
 ---
 
-## 2. System Architecture & Modes
+## <a id="2-system-architecture--modes"></a>2. System Architecture & Modes
 
 ### <a id="the-three-appliance-modes--transversal-telemetry"></a>[The Three Appliance Modes & Transversal Telemetry](architecture/three-modes.md)
 * **Mode 1: Classroom Quiz**: Teacher-led classroom quiz with diagnostic distractors and the >51% offline audio explanation rule.
@@ -84,7 +84,7 @@ Integration contracts and communication protocols for the FastAPI backend in **[
 
 ---
 
-## 3. Project Milestones & Roadmap
+## <a id="3-project-milestones--roadmap"></a>3. Project Milestones & Roadmap
 
 ### <a id="10-week-engineering-roadmap"></a>[10-Week Engineering Roadmap](milestones/roadmap.md)
 Sequential delivery schedule balancing development between Student A and Student B with weekly Pilot / Copilot rotations.
