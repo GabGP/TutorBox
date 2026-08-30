@@ -26,9 +26,9 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.1 System & Health (`GET /health`)](#61-system--health)
   - [6.2 Authentication (`POST /login`, `POST /logout`)](#62-authentication)
   - [6.3 User Self-Service (`POST /signup`, `GET /users/me`, `PATCH /users/me/pin`, `PATCH /users/me/username`)](#63-user-self-service)
-  - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{id}/reset-pin`, `DELETE /users/{id}`, `POST /users/{id}/recover`)](#64-staff-administration)
+  - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{user_id}/reset-pin`, `DELETE /users/{user_id}`, `POST /users/{user_id}/recover`)](#64-staff-administration)
   - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
-  - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{id}/assign`, `POST /devices/{id}/unassign`, `DELETE /devices/{id}`)](#66-hardware-clicker--device-fleet-management)
+  - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{device_id}/assign`, `POST /devices/{device_id}/unassign`, `DELETE /devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
 - [Next Steps](#next-steps)
 
 ---
@@ -97,15 +97,15 @@ TutorBox enforces strict role-based access across three user roles:
 | `/users/me/username` | `PATCH` | ❌ | ✅ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/users` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/users` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{id}/reset-pin` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{id}` | `DELETE` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{id}/recover` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/users/{user_id}/reset-pin` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/users/{user_id}` | `DELETE` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/users/{user_id}/recover` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
 | `/audit-logs` | `GET` | ❌ | ❌ | ❌ | ✅ | **Yes (403 if rotation pending)** |
 | `/devices` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/devices` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{device_id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{device_id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/devices/{device_id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 
 
 ---

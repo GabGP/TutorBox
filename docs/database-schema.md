@@ -226,6 +226,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 
 | Index Name | Target Table | Target Columns | Purpose |
 | :--- | :--- | :--- | :--- |
+| `idx_sessions_user_id` | `sessions` | `(user_id)` | Fast lookup of active sessions by user ID during auth and logout. |
 | `idx_turn_logs_session_id` | `turn_logs` | `(session_id)` | Fast lookup of dialogue history per student session. |
 | `idx_audit_logs_actor` | `audit_logs` | `(actor_user_id)` | Fast filtering of audit logs by acting administrator/teacher. |
 | `idx_audit_logs_target` | `audit_logs` | `(target_user_id)` | Fast filtering of audit logs by target account. |
@@ -236,7 +237,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 ## 5. Data Lifecycle & Integrity Policies
 
 ### A. Soft-Deletion & Username Freeing
-When [`DELETE /users/{id}`](api-reference.md#delete-usersuser_id) is executed:
+When [`DELETE /users/{user_id}`](api-reference.md#delete-usersuser_id) is executed:
 1. `deleted_at` is set to `CURRENT_TIMESTAMP`.
 2. `former_username` preserves the user's original username for roster display.
 3. `username` is renamed to an anonymized placeholder (`deleted_user_{id}_{hex}`) to **immediately free** the original username for new registrations.
@@ -258,7 +259,7 @@ Schema migrations are applied automatically at application startup in sequential
 
 * **[`001_initial_schema.sql`](../backend/migrations/001_initial_schema.sql)**: Baseline schema establishing `schema_migrations`, `users`, `sessions`, and `turn_logs`.
 * **[`002_add_user_role.sql`](../backend/migrations/002_add_user_role.sql)**: Adds `role` column with check constraint (`'student'`, `'teacher'`, `'admin'`).
-* **[`003_add_lookup_indexes.sql`](../backend/migrations/003_add_lookup_indexes.sql)**: Adds `idx_turn_logs_session_id`.
+* **[`003_add_lookup_indexes.sql`](../backend/migrations/003_add_lookup_indexes.sql)**: Adds foreign-key lookup indexes `idx_sessions_user_id` and `idx_turn_logs_session_id`.
 * **[`004_add_must_change_pin.sql`](../backend/migrations/004_add_must_change_pin.sql)**: Adds `must_change_pin` column (`0` / `1`).
 * **[`005_add_users_deleted_at.sql`](../backend/migrations/005_add_users_deleted_at.sql)**: Adds `deleted_at` and `former_username` columns.
 * **[`006_add_audit_logs.sql`](../backend/migrations/006_add_audit_logs.sql)**: Creates `audit_logs` table and lookup indexes `idx_audit_logs_actor` and `idx_audit_logs_target`.
