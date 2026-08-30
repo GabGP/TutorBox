@@ -122,7 +122,8 @@ TutorBox/
 
 * **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications.
 * **[Database Schema & ER Model](docs/database-schema.md)**: SQLite schema dictionaries, indexes, and migration log.
-* **[REST API Reference & Contracts](docs/api-reference.md)**: RBAC matrix, auth flows, error formats, and 13 endpoint specifications.
+* **[REST API Reference & Contracts](docs/api-reference.md)**: RBAC matrix, auth flows, error formats, and 18 endpoint specifications.
+* **[ESP32 Clicker Transport Specification](docs/architecture/esp32-clicker-transport.md)**: Physical hardware, network transport, dual LEDs, and `VoteTransport` interface.
 * **[Backend Developer Guide](backend/README.md)**: Backend installation, local execution, and testing guide.
 
 ---

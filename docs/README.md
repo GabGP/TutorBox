@@ -20,6 +20,7 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 - [2. System Architecture & Modes](#2-system-architecture--modes)
   - [The Three Appliance Modes & Transversal Telemetry](#the-three-appliance-modes--transversal-telemetry)
   - [Hardware Architecture & Offline Topology](#hardware-architecture--offline-topology)
+  - [ESP32 Hardware Clicker Architecture & Transport](#esp32-hardware-clicker-architecture--transport)
   - [Socratic Pedagogical Model & Containment](#socratic-pedagogical-model--containment)
 - [3. Project Milestones & Roadmap](#3-project-milestones--roadmap)
   - [10-Week Engineering Roadmap](#10-week-engineering-roadmap)
@@ -33,11 +34,11 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 ### [Database Schema & ER Model](database-schema.md)
 Complete documentation for the SQLite edge database engine in **[`database-schema.md`](database-schema.md)**:
 * **Engine Configuration**: WAL mode, foreign key enforcement, and busy timeout pragmas.
-* **Mermaid Entity-Relationship (ER) Diagram**: Visual model of `users`, `sessions`, `turn_logs`, `audit_logs`, and `schema_migrations`.
-* **Data Dictionaries**: Field-by-field definitions, constraints, and defaults for all 5 schema tables.
+* **Mermaid Entity-Relationship (ER) Diagram**: Visual model of `users`, `devices`, `sessions`, `turn_logs`, `audit_logs`, and `schema_migrations`.
+* **Data Dictionaries**: Field-by-field definitions, constraints, and defaults for all 6 schema tables.
 * **Performance Indexes**: Optimization strategies for edge NVMe/eMMC storage.
-* **Data Lifecycle Policies**: Soft-deletion, username freeing, telemetry preservation, and the Last-Admin Guard.
-* **Migration Changelog**: Full record of migrations `001` through `006`.
+* **Data Lifecycle Policies**: Soft-deletion, username freeing, device unlinking, telemetry preservation, and the Last-Admin Guard.
+* **Migration Changelog**: Full record of migrations `001` through `007`.
 
 ---
 
@@ -48,12 +49,13 @@ Integration contracts and communication protocols for the FastAPI backend in **[
 * **Role-Based Access Control (RBAC) Matrix**: Permissions grid across `student`, `teacher`, and `admin` roles.
 * **Security Policies & Protections**: Forced PIN rotation allowlists, anti-oracle validation order, and dual-layer rate limiting (exponential lockout + sliding window).
 * **Unified Error Matrix**: Standardized error schema and HTTP status code triggers (`401`, `403`, `404`, `409`, `422`, `429`).
-* **Detailed Endpoint Contracts (13 Routes)**:
+* **Detailed Endpoint Contracts (18 Routes)**:
   * **System & Health**: `GET /health`
   * **Authentication**: `POST /login`, `POST /logout`
   * **User Self-Service**: `POST /signup`, `GET /users/me`, `PATCH /users/me/pin`, `PATCH /users/me/username`
   * **Staff Administration**: `GET /users`, `POST /users`, `POST /users/{id}/reset-pin`, `DELETE /users/{id}`, `POST /users/{id}/recover`
   * **System Audit**: `GET /audit-logs`
+  * **Hardware Fleet & Pairing**: `GET /devices`, `POST /devices`, `POST /devices/{id}/assign`, `POST /devices/{id}/unassign`, `DELETE /devices/{id}`
 
 ---
 
@@ -68,6 +70,11 @@ Integration contracts and communication protocols for the FastAPI backend in **[
 ### [Hardware Architecture & Offline Topology](architecture/hardware-topology.md)
 * **Offline Network Layout**: Isolated Access Point (GL.iNet) and Jetson Orin Nano Core Appliance.
 * **Unified Memory Budget**: 8GB RAM allocation breakdown for concurrent multi-mode operations.
+
+### [ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)
+* **Delegated Authentication**: Eliminating credentials for primary school students via teacher-managed 1:1 clicker pairing.
+* **Abstract `VoteTransport`**: Decoupled interface supporting both Web PWA clients and ESP32 hardware clickers.
+* **Dual Feedback Loop**: RGB LED hardware state machine (Yellow TX $\to$ Green confirmed / Red error) and HDMI classroom display.
 
 ### [Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)
 * **Socratic Dialogue Principle**: Never revealing direct solutions; guiding students through misconception diagnosis.
