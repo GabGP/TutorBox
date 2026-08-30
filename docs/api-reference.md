@@ -33,7 +33,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
 
 ---
 
-## 1. System Overview & Base URL
+## <a id="1-system-overview--base-url"></a>1. System Overview & Base URL
 
 The TutorBox API runs on the NVIDIA Jetson Orin Nano edge appliance and communicates with the React/Vite Progressive Web Application (PWA) over the local classroom WLAN/Ethernet network.
 
@@ -44,7 +44,7 @@ The TutorBox API runs on the NVIDIA Jetson Orin Nano edge appliance and communic
 
 ---
 
-## 2. Authentication & Session Flow
+## <a id="2-authentication--session-flow"></a>2. Authentication & Session Flow
 
 TutorBox uses stateful **Bearer Session Tokens** stored in the local SQLite database.
 
@@ -79,7 +79,7 @@ Authorization: Bearer <session_id>
 
 ---
 
-## 3. Role-Based Access Control (RBAC) Matrix
+## <a id="3-role-based-access-control-rbac-matrix"></a>3. Role-Based Access Control (RBAC) Matrix
 
 TutorBox enforces strict role-based access across three user roles:
 * **`student`**: Self-service learner account.
@@ -110,27 +110,27 @@ TutorBox enforces strict role-based access across three user roles:
 
 ---
 
-## 4. Security Policies & Guards
+## <a id="4-security-policies--guards"></a>4. Security Policies & Guards
 
-### A. Forced PIN Rotation Policy
+### <a id="a-forced-pin-rotation-policy"></a>A. Forced PIN Rotation Policy
 * When a staff member resets an account's PIN or recovers an account, `must_change_pin` is set to `1` in SQLite.
 * Upon login, the client receives `"must_change_pin": true`.
 * **Allowlist Routes**: The user can **only** call `GET /users/me`, `PATCH /users/me/pin`, and `POST /logout`.
 * **Gated Routes**: All other operational and administrative endpoints immediately reject the request with `403 Forbidden` (`{"detail": "PIN change required."}`).
 * Once `PATCH /users/me/pin` succeeds, `must_change_pin` is cleared to `0`.
 
-### B. Anti-Oracle Check Ordering
+### <a id="b-anti-oracle-check-ordering"></a>B. Anti-Oracle Check Ordering
 To prevent timing or side-channel oracle attacks during credential modifications:
 1. The backend **first** verifies the caller's `current_pin`. If incorrect, it immediately returns `401 Unauthorized`.
 2. Only after `current_pin` is cryptographically validated does the backend compare whether `new_pin == current_pin` or `new_username == current_username` (returning `422 Unprocessable Entity`).
 
-### C. Rate Limiting Protection
+### <a id="c-rate-limiting-protection"></a>C. Rate Limiting Protection
 * **Credential Lockout (`InMemoryRateLimiter`)**: 5 consecutive failed login/credential attempts result in a temporary lockout on the targeted username (returning `429 Too Many Requests`).
 * **Registration Throttle (`SlidingWindowLimiter`)**: Global signup requests are capped to prevent brute-force storage exhaustion on edge hardware.
 
 ---
 
-## 5. Unified Error Response Format
+## <a id="5-unified-error-response-format"></a>5. Unified Error Response Format
 
 All error responses return a standardized JSON object:
 
@@ -154,9 +154,9 @@ All error responses return a standardized JSON object:
 
 ---
 
-## 6. Detailed Endpoint Contracts
+## <a id="6-detailed-endpoint-contracts"></a>6. Detailed Endpoint Contracts
 
-### 6.1 System & Health
+### <a id="61-system--health"></a>6.1 System & Health
 
 #### `GET /health`
 System and database diagnostic probe.
@@ -174,7 +174,7 @@ System and database diagnostic probe.
 
 ---
 
-### 6.2 Authentication
+### <a id="62-authentication"></a>6.2 Authentication
 
 #### `POST /login`
 Authenticate a user with username and PIN to obtain a session token.
@@ -216,7 +216,7 @@ Invalidate the current caller's active session.
 
 ---
 
-### 6.3 User Self-Service
+### <a id="63-user-self-service"></a>6.3 User Self-Service
 
 #### `POST /signup`
 Public student self-registration.
@@ -303,7 +303,7 @@ Change personal username. Frees the old username and invalidates the current ses
 
 ---
 
-### 6.4 Staff Administration
+### <a id="64-staff-administration"></a>6.4 Staff Administration
 
 #### `GET /users`
 List accounts in the school roster.
@@ -425,7 +425,7 @@ Restore a soft-deleted account under a new username with a temporary PIN.
 
 ---
 
-### 6.5 System Audit
+### <a id="65-system-audit"></a>6.5 System Audit
 
 #### `GET /audit-logs`
 Read up to 500 append-only audit trail records.
@@ -457,7 +457,7 @@ Read up to 500 append-only audit trail records.
 
 ---
 
-### 6.6 Hardware Clicker & Device Fleet Management
+### <a id="66-hardware-clicker--device-fleet-management"></a>6.6 Hardware Clicker & Device Fleet Management
 
 #### `GET /devices`
 List all registered physical ESP32 clickers with current student pairing info.

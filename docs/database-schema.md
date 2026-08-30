@@ -33,7 +33,7 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
 
 ---
 
-## 1. Engine Configuration & Pragmas
+## <a id="1-engine-configuration--pragmas"></a>1. Engine Configuration & Pragmas
 
 TutorBox utilizes a local SQLite database (`tutorbox.db`) optimized for high-concurrency, offline edge execution on the NVIDIA Jetson Orin Nano (supporting 15–20 concurrent classroom users).
 
@@ -51,7 +51,7 @@ PRAGMA busy_timeout = 5000;
 
 ---
 
-## 2. Entity-Relationship (ER) Diagram
+## <a id="2-entity-relationship-er-diagram"></a>2. Entity-Relationship (ER) Diagram
 
 ```mermaid
 erDiagram
@@ -114,7 +114,7 @@ erDiagram
 
 ---
 
-## 3. Data Dictionary
+## <a id="3-data-dictionary"></a>3. Data Dictionary
 
 ### Table: `users`
 Stores student and staff credentials, roles, and lifecycle states.
@@ -220,7 +220,7 @@ Internal schema migration tracker for automated migrations.
 
 ---
 
-## 4. Performance Indexes
+## <a id="4-performance-indexes"></a>4. Performance Indexes
 
 To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema includes the following indexes:
 
@@ -234,9 +234,9 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 
 ---
 
-## 5. Data Lifecycle & Integrity Policies
+## <a id="5-data-lifecycle--integrity-policies"></a>5. Data Lifecycle & Integrity Policies
 
-### A. Soft-Deletion & Username Freeing
+### <a id="a-soft-deletion--username-freeing"></a>A. Soft-Deletion & Username Freeing
 When [`DELETE /users/{user_id}`](api-reference.md#delete-usersuser_id) is executed:
 1. `deleted_at` is set to `CURRENT_TIMESTAMP`.
 2. `former_username` preserves the user's original username for roster display.
@@ -245,15 +245,15 @@ When [`DELETE /users/{user_id}`](api-reference.md#delete-usersuser_id) is execut
 5. All active sessions in `sessions` are deactivated (`is_active = 0`).
 6. **Telemetry Preservation**: Rows in `turn_logs` remain intact and joinable to `users` via `sessions.user_id`.
 
-### B. Last-Admin Guard
+### <a id="b-last-admin-guard"></a>B. Last-Admin Guard
 The application enforces that the appliance must never lose its final administrator. Deleting the last active user with `role = 'admin'` is rejected with `409 Conflict`.
 
-### C. Device Unlinking on Deletion
+### <a id="c-device-unlinking-on-deletion"></a>C. Device Unlinking on Deletion
 When an account is deleted or soft-deleted, any associated hardware clicker has `assigned_user_id` set to `NULL`, automatically freeing the device for reassignment to another student.
 
 ---
 
-## 6. Migration Changelog
+## <a id="6-migration-changelog"></a>6. Migration Changelog
 
 Schema migrations are applied automatically at application startup in sequential order:
 
