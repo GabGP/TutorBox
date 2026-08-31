@@ -271,3 +271,19 @@ def test_migrations_rollback_on_failure(tmp_path):
     tables = [r[0] for r in cursor.fetchall()]
     assert "table_before_fail" not in tables
     conn.close()
+
+
+def test_apply_migrations_creates_parent_directory(tmp_path):
+    """
+    Test that apply_migrations automatically creates non-existent parent directories.
+    """
+    nested_db = str(tmp_path / "deep" / "dir" / "mig.db")
+    apply_migrations(nested_db)
+    conn = sqlite3.connect(nested_db)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [r[0] for r in cursor.fetchall()]
+        assert "schema_migrations" in tables
+    finally:
+        conn.close()

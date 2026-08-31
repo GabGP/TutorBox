@@ -17,6 +17,8 @@ def apply_migrations(db_path: str) -> None:
     """
     Applies numbered SQL migration files idempotently to the SQLite database.
     """
+    if db_path != ":memory:":
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     try:
         cursor = conn.cursor()

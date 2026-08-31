@@ -149,7 +149,7 @@ Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 ```
 
-The database `tutorbox.db` will be initialized and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
+The database `tutorbox.db` will be initialized inside `.cache/db/` and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
 
 ---
 

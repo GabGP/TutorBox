@@ -62,3 +62,60 @@ def test_database_tables_exist(temp_db):
 
     expected_tables = {"schema_migrations", "users", "sessions", "turn_logs"}
     assert expected_tables.issubset(tables)
+
+
+def test_default_db_path_points_to_root_cache_dir(monkeypatch):
+    """
+    Test that get_db_path defaults to <repo-root>/.cache/db/tutorbox.db when env var is unset.
+    """
+    from pathlib import Path
+
+    from src.db.database import DEFAULT_DB_PATH, get_db_path
+
+    monkeypatch.delenv("DATABASE_PATH", raising=False)
+    resolved_path = get_db_path()
+    assert resolved_path == DEFAULT_DB_PATH
+    expected_suffix = str(Path(".cache") / "db" / "tutorbox.db")
+    assert resolved_path.endswith(expected_suffix)
+
+
+def test_get_db_connection_auto_creates_parent_directories(tmp_path):
+    """
+    Test that get_db_connection automatically creates non-existent parent directories.
+    """
+    nested_db_path = str(tmp_path / "deep" / "nested" / "cache" / "test.db")
+    conn = get_db_connection(nested_db_path)
+    try:
+        assert conn is not None
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        assert cursor.fetchone()[0] == 1
+    finally:
+        conn.close()
+
+
+def test_get_db_connection_memory():
+    """
+    Test that get_db_connection handles :memory: databases without filesystem errors.
+    """
+    conn = get_db_connection(":memory:")
+    try:
+        assert conn is not None
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        assert cursor.fetchone()[0] == 1
+    finally:
+        conn.close()
+
+
+def test_get_db_context_manager(temp_db):
+    """
+    Test that get_db context manager yields open connection and closes it upon exit.
+    """
+    from src.db.database import get_db
+
+    db_path, _ = temp_db
+    with get_db(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        assert cursor.fetchone()[0] == 1
