@@ -3,6 +3,7 @@
 from math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
+    evaluate_percentage_expression,
     extract_and_solve_problem,
     parse_option_expression,
     solve_linear_equation,
@@ -11,6 +12,7 @@ from math_engine.parser import (
 __all__ = [
     "are_values_equivalent",
     "evaluate_arithmetic_expression",
+    "evaluate_percentage_expression",
     "extract_and_solve_problem",
     "parse_option_expression",
     "solve_linear_equation",

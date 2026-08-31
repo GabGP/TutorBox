@@ -1,6 +1,7 @@
 from math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
+    evaluate_percentage_expression,
     extract_and_solve_problem,
     parse_option_expression,
     solve_linear_equation,
@@ -33,10 +34,12 @@ from quiz.generation import (
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
+from quiz.seed_data import SEED_QUESTIONS, seed_question_bank
 from quiz.validation import MathValidatorInterface, SymPyMathValidator
 
 __all__ = [
     "CURRICULUM_TAXONOMY",
+    "SEED_QUESTIONS",
     "DistractorDetail",
     "GenerateQuestionRequest",
     "GenerationError",
@@ -59,12 +62,14 @@ __all__ = [
     "build_quiz_system_prompt",
     "build_quiz_user_prompt",
     "evaluate_arithmetic_expression",
+    "evaluate_percentage_expression",
     "extract_and_solve_problem",
     "get_available_topics",
     "get_quiz_question_json_schema",
     "is_valid_subconcept",
     "is_valid_topic",
     "parse_option_expression",
+    "seed_question_bank",
     "solve_linear_equation",
     "validate_quiz_question_dict",
 ]

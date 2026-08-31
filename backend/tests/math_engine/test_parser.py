@@ -1,6 +1,7 @@
 from src.math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
+    evaluate_percentage_expression,
     extract_and_solve_problem,
     parse_option_expression,
     solve_linear_equation,
@@ -14,10 +15,12 @@ def test_parse_option_expression():
     assert parse_option_expression("x = 12") == 12
     assert parse_option_expression("x = -5") == -5
 
-    # Spanish operators
+    # Spanish operators & notation
     assert parse_option_expression("8 ÷ 2") == 4
     assert parse_option_expression("4 × 3") == 12
     assert parse_option_expression("2 · 5") == 10
+    assert parse_option_expression("12 : 3") == 4
+    assert parse_option_expression("3,5") == 3.5
 
     # Invalid strings safely return None
     assert parse_option_expression("+++ * invalid") is None
@@ -59,14 +62,33 @@ def test_evaluate_arithmetic_standard_and_parentheses():
     assert evaluate_arithmetic_expression("Calcula 3 + (4 * 5") is None
 
 
+def test_evaluate_percentage():
+    assert evaluate_percentage_expression("20% de 50") == 10
+    assert evaluate_percentage_expression("25% * 80") == 20
+    assert evaluate_percentage_expression("12.5% de 50") == 6.25
+    assert evaluate_percentage_expression("sin porcentaje") is None
+
+
 def test_extract_and_solve_problem():
     eq_sol, mode = extract_and_solve_problem("¿Cuál es el valor de x en 2x + 4 = 12?")
     assert mode == "equation"
     assert eq_sol == 4
 
+    pct_sol, mode = extract_and_solve_problem("¿Cuál es el 20% de 50?")
+    assert mode == "percentage"
+    assert pct_sol == 10
+
     arith_sol, mode = extract_and_solve_problem("¿Cuánto es 10 + 5 * 2?")
     assert mode == "arithmetic"
     assert arith_sol == 20
+
+    colon_sol, mode = extract_and_solve_problem("¿Cuánto es 36 : 4?")
+    assert mode == "arithmetic"
+    assert colon_sol == 9
+
+    comma_sol, mode = extract_and_solve_problem("¿Cuánto es 3,5 + 2,15?")
+    assert mode == "arithmetic"
+    assert comma_sol == 5.65
 
     none_sol, mode = extract_and_solve_problem("¿Qué es un número primo?")
     assert mode == "none"

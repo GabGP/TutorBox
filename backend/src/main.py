@@ -9,6 +9,7 @@ from api.staff import router as staff_router
 from api.users import router as users_router
 from db.database import get_db_path
 from db.migrations import apply_migrations
+from quiz.seed_data import seed_question_bank
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +25,9 @@ async def lifespan(app: FastAPI):
     logger.info("Running database migrations on %s...", db_path)
     apply_migrations(db_path)
     logger.info("Database migrations complete.")
+    logger.info("Verifying and seeding default quiz question bank...")
+    seeded_count = seed_question_bank(db_path)
+    logger.info("Question bank ready (newly seeded questions: %d).", seeded_count)
     yield
     logger.info("Shutting down TutorBox backend appliance...")
 

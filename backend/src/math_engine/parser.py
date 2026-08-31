@@ -12,6 +12,8 @@ def parse_option_expression(option_text: str) -> sp.Expr | None:
     normalized_text = (
         option_text.strip().replace("÷", "/").replace("×", "*").replace("·", "*")
     )
+    normalized_text = re.sub(r"(\d),(\d)", r"\1.\2", normalized_text)
+    normalized_text = re.sub(r"(\d)\s*:\s*(\d)", r"\1/\2", normalized_text)
     if equation_match := re.search(r"=\s*(-?\d+(?:/\d+)?(?:\.\d+)?)", normalized_text):
         normalized_text = equation_match.group(1)
     try:
@@ -79,6 +81,19 @@ def evaluate_arithmetic_expression(question_text: str) -> sp.Expr | None:
     return None
 
 
+def evaluate_percentage_expression(question_text: str) -> sp.Expr | None:
+    """Attempts to extract and evaluate a percentage expression (e.g. 20% de 50)."""
+    percentage_pattern = r"(\d+(?:\.\d+)?)\s*%\s*(?:de|\*)\s*(\d+(?:\.\d+)?)"
+    if match := re.search(percentage_pattern, question_text, re.IGNORECASE):
+        percentage_value = float(match.group(1))
+        base_value = float(match.group(2))
+        computed = (percentage_value / 100.0) * base_value
+        return (
+            sp.Integer(int(computed)) if computed.is_integer() else sp.Float(computed)
+        )
+    return None
+
+
 def extract_and_solve_problem(question_text: str) -> tuple[sp.Expr | None, str]:
     """Extracts math problem from text and computes expected solution truth."""
     normalized_text = (
@@ -89,6 +104,12 @@ def extract_and_solve_problem(question_text: str) -> tuple[sp.Expr | None, str]:
         .replace("·", "*")
         .strip()
     )
+    normalized_text = re.sub(r"(\d),(\d)", r"\1.\2", normalized_text)
+    normalized_text = re.sub(r"(\d)\s*:\s*(\d)", r"\1/\2", normalized_text)
+    if (
+        percentage_solution := evaluate_percentage_expression(normalized_text)
+    ) is not None:
+        return percentage_solution, "percentage"
     if (equation_solution := solve_linear_equation(normalized_text)) is not None:
         return equation_solution, "equation"
     if (
