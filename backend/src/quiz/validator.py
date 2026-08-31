@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
 import sympy as sp
-
-from quiz.math_parser import (
+from math_engine.parser import (
     are_values_equivalent,
     extract_and_solve_problem,
     parse_option_expression,
 )
+
 from quiz.models import MathValidationResult, QuizQuestion
 
 

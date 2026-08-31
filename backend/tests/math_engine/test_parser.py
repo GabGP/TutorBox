@@ -1,4 +1,4 @@
-from src.quiz.math_parser import (
+from src.math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
     extract_and_solve_problem,

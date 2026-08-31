@@ -1,12 +1,13 @@
-from quiz.generator import GenerationError, QuizQuestionGenerator
-from quiz.llm_client import LLMClient, LocalSLMClient, MockLLMClient
-from quiz.math_parser import (
+from math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
     extract_and_solve_problem,
     parse_option_expression,
     solve_linear_equation,
 )
+
+from quiz.generator import GenerationError, QuizQuestionGenerator
+from quiz.llm_client import LLMClient, LocalSLMClient, MockLLMClient
 from quiz.models import (
     DistractorDetail,
     GenerateQuestionRequest,
