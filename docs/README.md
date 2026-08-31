@@ -19,6 +19,7 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
   - [REST API Reference & Contracts](#rest-api-reference--contracts)
 - [2. System Architecture & Modes](#2-system-architecture--modes)
   - [The Three Appliance Modes & Transversal Telemetry](#the-three-appliance-modes--transversal-telemetry)
+  - [Diagnostic Distractors & Misconception Taxonomy](#diagnostic-distractors--misconception-taxonomy)
   - [Hardware Architecture & Offline Topology](#hardware-architecture--offline-topology)
   - [ESP32 Hardware Clicker Architecture & Transport](#esp32-hardware-clicker-architecture--transport)
   - [Socratic Pedagogical Model & Containment](#socratic-pedagogical-model--containment)
@@ -44,6 +45,9 @@ Integration contracts and communication protocols for the FastAPI backend, cover
 
 ### <a id="the-three-appliance-modes--transversal-telemetry"></a>[The Three Appliance Modes & Transversal Telemetry](architecture/three-modes.md)
 Overview of the three operational modes (Classroom Quiz, Socratic Tutor, and Offline Primary Games) and the transversal error logging system.
+
+### <a id="diagnostic-distractors--misconception-taxonomy"></a>[Diagnostic Distractors & Misconception Taxonomy](architecture/diagnostic-misconceptions.md)
+Pedagogical architecture, 4-domain curriculum taxonomy, and 32 validated misconception error slugs powering Quiz mode feedback, Socratic tutoring, and weekly teacher reporting.
 
 ### <a id="hardware-architecture--offline-topology"></a>[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)
 Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance, including the 8GB Unified RAM memory budget.
