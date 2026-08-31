@@ -244,6 +244,10 @@ Append-only audit trail recording sensitive operational, staff, and hardware pai
 * `device_assigned`: Clicker linked to student via [`POST /devices/{device_id}/assign`](api-reference.md#post-devicesdevice_idassign).
 * `device_unassigned`: Clicker unlinked via [`POST /devices/{device_id}/unassign`](api-reference.md#post-devicesdevice_idunassign).
 * `device_deleted`: Clicker removed from fleet via [`DELETE /devices/{device_id}`](api-reference.md#delete-devicesdevice_id).
+* `quiz_question_generated`: Diagnostic question generated via [`POST /quiz/generate`](api-reference.md#post-quizgenerate).
+* `quiz_question_created`: Question authored manually via [`POST /quiz/questions`](api-reference.md#post-quizquestions).
+* `quiz_question_deleted`: Question soft-deleted via [`DELETE /quiz/questions/{id}`](api-reference.md#delete-quizquestionsquestion_id).
+
 
 ---
 

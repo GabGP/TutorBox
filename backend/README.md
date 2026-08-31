@@ -16,24 +16,27 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [1. Components & Architecture](#1-components--architecture)
-- [2. API Contracts & Specifications](#2-api-contracts--specifications)
-- [3. Environment Setup](#3-environment-setup)
-  - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
-    - [Windows (PowerShell)](#windows-powershell)
-    - [Linux](#linux)
-    - [Conda (Windows or Linux)](#conda-windows-or-linux)
-- [4. Installation & Workflow](#4-installation--workflow)
-  - [A. Development Mode (Local Coding & Testing)](#a-development-mode-local-coding--testing)
-    - [Running in Development:](#running-in-development)
-  - [B. Production Mode](#b-production-mode)
-    - [Running in Production:](#running-in-production)
-- [5. Testing & Quality Assurance](#5-testing--quality-assurance)
-  - [Running the Test Suite:](#running-the-test-suite)
-  - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
-  - [Code Formatting & Static Analysis:](#code-formatting--static-analysis)
-- [6. Project Structure](#6-project-structure)
-- [Next Steps](#next-steps)
+- [TutorBox Backend](#tutorbox-backend)
+  - [Table of Contents](#table-of-contents)
+  - [1. Components \& Architecture](#1-components--architecture)
+  - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
+  - [3. Environment Setup](#3-environment-setup)
+    - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
+      - [Windows (PowerShell)](#windows-powershell)
+      - [Linux](#linux)
+      - [Conda (Windows or Linux)](#conda-windows-or-linux)
+  - [4. Installation \& Workflow](#4-installation--workflow)
+    - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
+      - [Running in Development:](#running-in-development)
+    - [B. Production Mode](#b-production-mode)
+      - [Running in Production:](#running-in-production)
+  - [5. Testing \& Quality Assurance](#5-testing--quality-assurance)
+    - [Running the Test Suite:](#running-the-test-suite)
+    - [Running Parallel Tests (`pytest-xdist`):](#running-parallel-tests-pytest-xdist)
+    - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
+    - [Code Formatting \& Static Analysis:](#code-formatting--static-analysis)
+  - [6. Project Structure](#6-project-structure)
+  - [Next Steps](#next-steps)
 
 ---
 
@@ -195,10 +198,10 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 backend/
 ├── migrations/        # Idempotent SQLite schema migration scripts
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, users, staff administration, devices)
-│   ├── db/            # SQLite connection manager, runtime pragmas, and audit logger
+│   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users)
+│   ├── db/            # SQLite connection manager, runtime pragmas, quiz repository, and audit logger
 │   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
-│   ├── quiz/          # Diagnostic distractor generator, SymPy validator, and LLM client
+│   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline, seed dataset, and SymPy validator
 │   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters
 ├── tests/             # Pytest test suite mirroring src/ with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)

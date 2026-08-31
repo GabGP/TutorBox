@@ -29,6 +29,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{user_id}/reset-pin`, `DELETE /users/{user_id}`, `POST /users/{user_id}/recover`)](#64-staff-administration)
   - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
   - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{device_id}/assign`, `POST /devices/{device_id}/unassign`, `DELETE /devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
+  - [6.7 Quiz & Diagnostic Question Bank (`GET /quiz/topics`, `POST /quiz/validate`, `POST /quiz/generate`, `GET /quiz/questions`, `GET /quiz/questions/{id}`, `POST /quiz/questions`, `DELETE /quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
 - [Next Steps](#next-steps)
 
 ---
@@ -106,6 +107,14 @@ TutorBox enforces strict role-based access across three user roles:
 | `/devices/{device_id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/devices/{device_id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/devices/{device_id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+
 
 
 ---
@@ -565,6 +574,286 @@ Remove a physical clicker from the appliance fleet.
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
   * `404 Not Found`: Device not found.
+
+---
+
+### <a id="67-quiz--diagnostic-question-bank"></a>6.7 Quiz & Diagnostic Question Bank
+
+#### `GET /quiz/topics`
+Retrieve the full primary mathematics curriculum taxonomy including topics, subconcepts, and diagnostic misconception codes.
+
+* **Authorization**: Public
+* **Responses**:
+  * `200 OK`:
+    ```json
+    [
+      {
+        "name": "arithmetic",
+        "subconcepts": [
+          {
+            "name": "addition_subtraction",
+            "misconceptions": [
+              "sign_error",
+              "borrowing_error",
+              "alignment_error",
+              "added_instead_of_subtracted"
+            ]
+          },
+          {
+            "name": "order_of_operations",
+            "misconceptions": [
+              "left_to_right_precedence",
+              "addition_before_multiplication",
+              "ignored_parentheses"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "fractions",
+        "subconcepts": [
+          {
+            "name": "addition_subtraction",
+            "misconceptions": [
+              "added_denominators",
+              "ignored_common_denominator",
+              "subtracted_denominators"
+            ]
+          }
+        ]
+      }
+    ]
+    ```
+
+#### `POST /quiz/validate`
+Execute deterministic SymPy validation on an arbitrary multiple-choice diagnostic item without persisting it.
+
+* **Authorization**: Public
+* **Request Body**:
+  ```json
+  {
+    "question": {
+      "id": "q_val_001",
+      "topic": "pre_algebra",
+      "subconcept": "one_step_equations",
+      "question_text": "¿Cuál es el valor de x en la ecuación x + 4 = 10?",
+      "options": {
+        "A": "6",
+        "B": "14",
+        "C": "4",
+        "D": "5"
+      },
+      "correct_option": "A",
+      "distractors": {
+        "B": {
+          "misconception": "sign_flip_error",
+          "explanation": "Sumaste 4 a 10 en vez de restar 4."
+        },
+        "C": {
+          "misconception": "wrong_inverse_operation",
+          "explanation": "Restaste 6 en vez de restar 4."
+        },
+        "D": {
+          "misconception": "table_lookup_error",
+          "explanation": "Error menor al calcular 10 - 4."
+        }
+      }
+    }
+  }
+  ```
+* **Responses**:
+  * `200 OK` (Valid Math):
+    ```json
+    {
+      "is_valid": true,
+      "errors": [],
+      "details": {
+        "eval_mode": "equation",
+        "target_solution": "6"
+      }
+    }
+    ```
+  * `200 OK` (Invalid Math):
+    ```json
+    {
+      "is_valid": false,
+      "errors": [
+        "Correct option 'A' ('99') does not equal computed truth '6'"
+      ],
+      "details": {
+        "eval_mode": "equation",
+        "target_solution": "6"
+      }
+    }
+    ```
+  * `422 Unprocessable Entity`: JSON schema violation (missing distractor, invalid option key).
+
+#### `POST /quiz/generate`
+Generate a new diagnostic question on-demand using the rejection and retry pipeline.
+
+* **Authorization**: Teacher, Admin
+* **Request Body**:
+  ```json
+  {
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "save_to_bank": true
+  }
+  ```
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "id": "q_gen_a1b2c3d4",
+      "topic": "arithmetic",
+      "subconcept": "addition_subtraction",
+      "question_text": "¿Cuánto es 54 + 38?",
+      "options": {
+        "A": "82",
+        "B": "16",
+        "C": "92",
+        "D": "812"
+      },
+      "correct_option": "C",
+      "distractors": {
+        "A": {
+          "misconception": "alignment_error",
+          "explanation": "Olvidaste sumar la decena que llevabas."
+        },
+        "B": {
+          "misconception": "added_instead_of_subtracted",
+          "explanation": "Restaste 54 - 38 en vez de sumarlos."
+        },
+        "D": {
+          "misconception": "borrowing_error",
+          "explanation": "Escribiste el 12 completo al lado de la suma de decenas."
+        }
+      },
+      "source": "llm",
+      "sympy_verified": true,
+      "created_at": "2026-08-31 12:00:00"
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
+  * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
+  * `502 Bad Gateway`: SLM generation failed all retry attempts.
+
+#### `GET /quiz/questions`
+Query and filter diagnostic questions from the question bank.
+
+* **Authorization**: Teacher, Admin
+* **Query Parameters**:
+  * `topic` (`string`, optional): Filter by curriculum topic slug.
+  * `subconcept` (`string`, optional): Filter by subconcept slug.
+  * `limit` (`integer`, optional, default: `50`, min: `1`, max: `200`): Pagination limit.
+  * `offset` (`integer`, optional, default: `0`, min: `0`): Pagination offset.
+  * `include_deleted` (`bool`, optional, default: `false`): Include soft-deleted questions.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "questions": [
+        {
+          "id": "seed_arith_add_01",
+          "topic": "arithmetic",
+          "subconcept": "addition_subtraction",
+          "question_text": "¿Cuánto es 54 + 38?",
+          "options": {
+            "A": "82",
+            "B": "16",
+            "C": "92",
+            "D": "812"
+          },
+          "correct_option": "C",
+          "distractors": {
+            "A": {
+              "misconception": "alignment_error",
+              "explanation": "Olvidaste sumar la decena que llevabas."
+            },
+            "B": {
+              "misconception": "added_instead_of_subtracted",
+              "explanation": "Restaste 54 - 38 en vez de sumarlos."
+            },
+            "D": {
+              "misconception": "borrowing_error",
+              "explanation": "Escribiste el 12 completo al lado de la suma de decenas."
+            }
+          },
+          "source": "seed",
+          "sympy_verified": true,
+          "created_at": "2026-08-31 10:00:00"
+        }
+      ],
+      "total": 66
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
+
+#### `GET /quiz/questions/{id}`
+Fetch a single diagnostic question by its unique identifier.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `id` (`string`, required): Unique question identifier.
+* **Responses**:
+  * `200 OK`: Question JSON model.
+  * `404 Not Found`: Question ID does not exist or is soft-deleted.
+
+#### `POST /quiz/questions`
+Manually create a teacher-authored diagnostic question with deterministic SymPy verification.
+
+* **Authorization**: Teacher, Admin
+* **Request Body**:
+  ```json
+  {
+    "id": "q_teacher_manual_01",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/4 + 2/4?",
+    "options": {
+      "A": "3/4",
+      "B": "3/8",
+      "C": "2/8",
+      "D": "1/2"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los denominadores 4+4=8 en vez de mantener el común denominador."
+      },
+      "C": {
+        "misconception": "multiplied_only_numerators",
+        "explanation": "Multiplicaste los numeradores y sumaste denominadores."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Confundiste 3/4 con 1/2."
+      }
+    }
+  }
+  ```
+* **Responses**:
+  * `201 Created`: Created `QuizQuestionResponse`.
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
+  * `409 Conflict`: Question with specified `id` already exists in the bank.
+  * `422 Unprocessable Content`: Mathematical validation failure or schema/taxonomy error.
+
+#### `DELETE /quiz/questions/{id}`
+Soft-delete a diagnostic question from the question bank while retaining telemetry integrity.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `id` (`string`, required): Question identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "detail": "Question deleted."
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
+  * `404 Not Found`: Question not found or already deleted.
 
 ---
 
