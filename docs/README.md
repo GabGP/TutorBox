@@ -14,20 +14,18 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 ---
 
 ## Table of Contents
-- [TutorBox Technical Documentation](#tutorbox-technical-documentation)
-  - [Table of Contents](#table-of-contents)
-  - [1. Core Technical References](#1-core-technical-references)
-    - [Database Schema \& ER Model](#database-schema--er-model)
-    - [REST API Reference \& Contracts](#rest-api-reference--contracts)
-  - [2. System Architecture \& Modes](#2-system-architecture--modes)
-    - [The Three Appliance Modes \& Transversal Telemetry](#the-three-appliance-modes--transversal-telemetry)
-    - [Hardware Architecture \& Offline Topology](#hardware-architecture--offline-topology)
-    - [ESP32 Hardware Clicker Architecture \& Transport](#esp32-hardware-clicker-architecture--transport)
-    - [Socratic Pedagogical Model \& Containment](#socratic-pedagogical-model--containment)
-  - [3. Project Milestones \& Roadmap](#3-project-milestones--roadmap)
-    - [10-Week Engineering Roadmap](#10-week-engineering-roadmap)
-    - [Week 1 Milestone Synthesis](#week-1-milestone-synthesis)
-  - [Next Steps](#next-steps)
+- [1. Core Technical References](#1-core-technical-references)
+  - [Database Schema & ER Model](#database-schema--er-model)
+  - [REST API Reference & Contracts](#rest-api-reference--contracts)
+- [2. System Architecture & Modes](#2-system-architecture--modes)
+  - [The Three Appliance Modes & Transversal Telemetry](#the-three-appliance-modes--transversal-telemetry)
+  - [Hardware Architecture & Offline Topology](#hardware-architecture--offline-topology)
+  - [ESP32 Hardware Clicker Architecture & Transport](#esp32-hardware-clicker-architecture--transport)
+  - [Socratic Pedagogical Model & Containment](#socratic-pedagogical-model--containment)
+- [3. Project Milestones & Roadmap](#3-project-milestones--roadmap)
+  - [10-Week Engineering Roadmap](#10-week-engineering-roadmap)
+  - [Week 1 Milestone Synthesis](#week-1-milestone-synthesis)
+- [Next Steps](#next-steps)
 
 ---
 

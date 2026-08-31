@@ -14,23 +14,21 @@
 This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
 ## Table of Contents
-- [TutorBox Engineering Roadmap (10-Week Plan)](#tutorbox-engineering-roadmap-10-week-plan)
-  - [Table of Contents](#table-of-contents)
-  - [1. Operating Rules \& Team Rotation](#1-operating-rules--team-rotation)
-  - [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
-  - [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
-  - [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
-    - [✅ Week 1 — Appliance Baseline & Storage Infrastructure (Completed)](#week-1)
-    - [⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)](#week-2)
-    - [⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)](#week-3)
-    - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#week-4)
-    - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#week-5)
-    - [⏳ Week 6 — Offline Primary Games & Log Synchronization (Pilot: A · Copilot: B)](#week-6)
-    - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#week-7)
-    - [⏳ Week 8 — Unified Analytics & Weekly Teacher Report (Pilot: A · Copilot: B)](#week-8)
-    - [⏳ Week 9 — Concurrency & Full System Stress Testing (Pilot: B · Copilot: A)](#week-9)
-    - [⏳ Week 10 — General Rehearsal, Documentation & Release v1.0 (Both as Co-Leads)](#week-10)
-  - [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
+- [1. Operating Rules & Team Rotation](#1-operating-rules--team-rotation)
+- [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
+- [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
+- [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
+  - [✅ Week 1 — Appliance Baseline & Storage Infrastructure (Completed)](#week-1)
+  - [⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)](#week-2)
+  - [⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)](#week-3)
+  - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#week-4)
+  - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#week-5)
+  - [⏳ Week 6 — Offline Primary Games & Log Synchronization (Pilot: A · Copilot: B)](#week-6)
+  - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#week-7)
+  - [⏳ Week 8 — Unified Analytics & Weekly Teacher Report (Pilot: A · Copilot: B)](#week-8)
+  - [⏳ Week 9 — Concurrency & Full System Stress Testing (Pilot: B · Copilot: A)](#week-9)
+  - [⏳ Week 10 — General Rehearsal, Documentation & Release v1.0 (Both as Co-Leads)](#week-10)
+- [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
 
 ---
 

@@ -21,15 +21,13 @@
 ---
 
 ## Table of Contents
-- [TutorBox: Autonomous Offline Edge AI Socratic Educational Platform](#tutorbox-autonomous-offline-edge-ai-socratic-educational-platform)
-  - [Table of Contents](#table-of-contents)
-  - [1. Project Architecture](#1-project-architecture)
-  - [2. Hardware Topology](#2-hardware-topology)
-  - [3. Software \& AI Stack](#3-software--ai-stack)
-  - [4. System Constraints \& Guardrails](#4-system-constraints--guardrails)
-  - [5. Repository Structure](#5-repository-structure)
-  - [6. Technical Documentation](#6-technical-documentation)
-  - [Next Steps](#next-steps)
+- [1. Project Architecture](#1-project-architecture)
+- [2. Hardware Topology](#2-hardware-topology)
+- [3. Software & AI Stack](#3-software--ai-stack)
+- [4. System Constraints & Guardrails](#4-system-constraints--guardrails)
+- [5. Repository Structure](#5-repository-structure)
+- [6. Technical Documentation](#6-technical-documentation)
+- [Next Steps](#next-steps)
 
 ---
 
