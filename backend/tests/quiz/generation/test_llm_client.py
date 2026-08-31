@@ -66,3 +66,34 @@ def test_local_slm_client_failure_raises_runtime_error():
         pytest.raises(RuntimeError, match="LocalSLM request failed"),
     ):
         client.generate("sys_prompt", "user_prompt")
+
+
+def test_local_slm_client_http_error_extracts_body():
+    import io
+    import urllib.error
+
+    client = LocalSLMClient()
+    fake_fp = io.BytesIO(b'{"error": "model not found"}')
+    http_error = urllib.error.HTTPError(
+        url="http://127.0.0.1:8080/v1/chat/completions",
+        code=400,
+        msg="Bad Request",
+        hdrs={},
+        fp=fake_fp,
+    )
+
+    with (
+        patch("urllib.request.urlopen", side_effect=http_error),
+        pytest.raises(
+            RuntimeError, match="LocalSLM HTTP 400 \\(Bad Request\\):.*model not found"
+        ),
+    ):
+        client.generate("sys_prompt", "user_prompt")
+
+
+def test_local_slm_client_reads_env_vars(monkeypatch):
+    monkeypatch.setenv("SLM_BASE_URL", "http://10.0.0.99:11434/v1")
+    monkeypatch.setenv("SLM_MODEL_NAME", "qwen2.5:3b")
+    client = LocalSLMClient()
+    assert client.base_url == "http://10.0.0.99:11434/v1"
+    assert client.model == "qwen2.5:3b"

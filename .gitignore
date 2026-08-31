@@ -3,6 +3,12 @@
 
 # Database files
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

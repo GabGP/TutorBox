@@ -55,7 +55,15 @@ class QuizQuestionGenerator:
         accumulated_errors: list[str] = []
 
         for _ in range(max_retries):
-            raw_response = self.llm_client.generate(system_prompt, current_user_prompt)
+            try:
+                raw_response = self.llm_client.generate(
+                    system_prompt, current_user_prompt
+                )
+            except Exception as llm_err:
+                raise GenerationError(
+                    f"SLM completion request failed: {llm_err}"
+                ) from llm_err
+
             step_errors: list[str] = []
 
             try:
@@ -70,8 +78,10 @@ class QuizQuestionGenerator:
                 )
                 continue
 
-            if not parsed_json.get("id"):
-                parsed_json["id"] = question_id or f"q_gen_{uuid.uuid4().hex[:8]}"
+            if question_id:
+                parsed_json["id"] = question_id
+            elif not parsed_json.get("id") or parsed_json.get("id") == "gen_sample_01":
+                parsed_json["id"] = f"q_gen_{uuid.uuid4().hex[:12]}"
 
             try:
                 question = validate_quiz_question_dict(parsed_json)

@@ -130,6 +130,16 @@ def test_generator_auto_assign_custom_id():
     assert question.id == "custom_id_123"
 
 
+def test_generator_auto_assign_uuid_when_no_id():
+    payload = valid_question_dict()
+    del payload["id"]
+    client = MockLLMClient([json.dumps(payload)])
+    generator = QuizQuestionGenerator(client)
+
+    question = generator.generate("arithmetic")
+    assert question.id.startswith("q_gen_")
+
+
 def test_generator_nested_json_extraction_with_commentary():
     payload = valid_question_dict()
     raw_llm = (
@@ -144,3 +154,14 @@ def test_generator_nested_json_extraction_with_commentary():
     assert question.id == "q_test_1"
     assert question.options["A"] == "11"
     assert len(question.distractors) == 3
+
+
+def test_generator_llm_request_failure_raises_generation_error():
+    class FailingLLMClient(MockLLMClient):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            raise RuntimeError("Connection refused")
+
+    client = FailingLLMClient()
+    generator = QuizQuestionGenerator(client)
+    with pytest.raises(GenerationError, match="SLM completion request failed"):
+        generator.generate("arithmetic")

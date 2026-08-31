@@ -1,4 +1,5 @@
 import json
+import os
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
@@ -38,12 +39,14 @@ class LocalSLMClient(LLMClient):
 
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:8080/v1",
-        model: str = "default",
+        base_url: str | None = None,
+        model: str | None = None,
         timeout_seconds: float = 30.0,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.model = model
+        self.base_url = (
+            base_url or os.environ.get("SLM_BASE_URL", "http://127.0.0.1:8080/v1")
+        ).rstrip("/")
+        self.model = model or os.environ.get("SLM_MODEL_NAME", "default")
         self.timeout = timeout_seconds
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -68,6 +71,11 @@ class LocalSLMClient(LLMClient):
             ) as http_response:
                 response_data = json.loads(http_response.read().decode("utf-8"))
                 return response_data["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as http_error:
+            error_body = http_error.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"LocalSLM HTTP {http_error.code} ({http_error.reason}): {error_body}"
+            ) from http_error
         except Exception as request_error:
             raise RuntimeError(
                 f"LocalSLM request failed: {request_error}"

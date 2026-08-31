@@ -43,7 +43,6 @@ def build_quiz_user_prompt(
     )
 
     example_json: dict[str, Any] = {
-        "id": "gen_sample_01",
         "topic": topic,
         "subconcept": subconcept or "general",
         "question_text": "¿Cuál es el resultado de 3 + 4 * 2?",
