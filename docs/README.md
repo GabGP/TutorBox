@@ -25,6 +25,7 @@ Welcome to the **TutorBox** documentation portal. This directory contains detail
 - [3. Project Milestones & Roadmap](#3-project-milestones--roadmap)
   - [10-Week Engineering Roadmap](#10-week-engineering-roadmap)
   - [Week 1 Milestone Synthesis](#week-1-milestone-synthesis)
+  - [Week 2 Milestone Tracking (Quiz Contract)](#week-2-milestone-tracking)
 - [Next Steps](#next-steps)
 
 ---
@@ -63,10 +64,14 @@ Complete 10-week engineering schedule, weekly Pilot/Copilot rotation rules, and 
 ### <a id="week-1-milestone-synthesis"></a>[Week 1 Milestone Synthesis](milestones/week-1-auth-storage.md)
 Architecture review, security proofs, and verification summary for the Week 1 baseline.
 
+### <a id="week-2-milestone-tracking"></a>[Week 2 Milestone Tracking (Quiz Contract & Diagnostic Distractors)](milestones/week-2-quiz-contract.md)
+Technical specifications, verification metrics, and Student B Copilot work package slots for Week 2.
+
 ---
 
 ## Next Steps
 
 * **[The Three Appliance Modes](architecture/three-modes.md)**: Understand the Quiz, Tutor, and Offline Games architecture.
-* **[10-Week Engineering Roadmap](milestones/roadmap.md)**: Explore the Week 2 Quiz Contract & Diagnostic Distractor requirements.
+* **[Week 2 Milestone Tracking](milestones/week-2-quiz-contract.md)**: Review Quiz Contract deliverables and Student B work packages.
+* **[10-Week Engineering Roadmap](milestones/roadmap.md)**: Explore the full 10-week milestone plan.
 * **[Backend Developer Guide](../backend/README.md)**: Local developer setup, virtual environment, and testing instructions.

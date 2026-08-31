@@ -74,7 +74,7 @@ gantt
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
 | :---: | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
-| **2** ⏳ | Quiz Contract & Diagnostic Distractors | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
+| **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ⏳ | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
 | **4** ⏳ | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
@@ -100,12 +100,15 @@ gantt
 
 ### <a id="week-2"></a>⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)
 * **Focus**: Establish the core data format uniting the quiz appliance and generate pedagogically valid questions with diagnostic error mapping.
-* **Student A (Pilot)**:
+* **Student A (Pilot - Completed)**:
   * Formal JSON Schema specification for quiz questions (1 correct option + 3 diagnostic distractors, each mapping to a concrete conceptual misconception and primary-school explanation).
   * LLM generation prompt and automated rejection/regeneration cycle when distractors lack diagnostics or fail schema validation.
-* **Student B (Copilot)**:
+  * Curated seed bank of 66 verified diagnostic questions across 4 domains.
+  * SQLite Migration 008, repository layer, and 6 REST API endpoints.
+* **Student B (Copilot - In Progress)**:
   * Deterministic SymPy validation pipeline (verifying correct answer is mathematically true and all distractors are false).
   * Handwritten golden test set of 20 benchmark questions for validation baseline; cross-review of prompt engineering.
+  * Quality assessment of distractor explanations ($\ge 90\%$ quality threshold).
 * **Tuesday Defense (Presented by Copilot B)**: *"Diagnostic Distractors: Wrong answers are the pedagogical content"*
   1. Why random distractors lack educational value.
   2. Forcing LLM generation to target concrete arithmetic and pre-algebra misconceptions.
@@ -113,6 +116,7 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Versioned JSON Schema with green automated validation test suite.
   * $\ge 50$ generated questions, with $\ge 90\%$ of distractors classified as valid in human pedagogical review.
+* **Detailed Milestone Tracking**: [Week 2 Milestone Tracking](week-2-quiz-contract.md).
 
 ---
 
