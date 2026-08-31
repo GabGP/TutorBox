@@ -5,7 +5,6 @@ from math_engine.parser import (
     parse_option_expression,
     solve_linear_equation,
 )
-
 from quiz.contracts import (
     CURRICULUM_TAXONOMY,
     DistractorDetail,
