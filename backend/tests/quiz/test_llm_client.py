@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.quiz.llm_client import LLMClient, LocalSLMClient, MockLLMClient
+from src.quiz.generation.llm_client import LLMClient, LocalSLMClient, MockLLMClient
 
 
 def test_mock_llm_client_basic_flow():

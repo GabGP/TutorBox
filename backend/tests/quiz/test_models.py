@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.quiz.models import (
+from src.quiz.contracts.models import (
     DistractorDetail,
     GenerateQuestionRequest,
     MathValidationResult,

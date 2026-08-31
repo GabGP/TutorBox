@@ -6,9 +6,8 @@ from math_engine.parser import (
     solve_linear_equation,
 )
 
-from quiz.generator import GenerationError, QuizQuestionGenerator
-from quiz.llm_client import LLMClient, LocalSLMClient, MockLLMClient
-from quiz.models import (
+from quiz.contracts import (
+    CURRICULUM_TAXONOMY,
     DistractorDetail,
     GenerateQuestionRequest,
     MathValidationResult,
@@ -19,20 +18,23 @@ from quiz.models import (
     QuizQuestionCreate,
     QuizQuestionResponse,
     ValidateQuestionRequest,
+    get_available_topics,
+    get_quiz_question_json_schema,
+    is_valid_subconcept,
+    is_valid_topic,
+    validate_quiz_question_dict,
 )
-from quiz.prompt import (
+from quiz.generation import (
+    GenerationError,
+    LLMClient,
+    LocalSLMClient,
+    MockLLMClient,
+    QuizQuestionGenerator,
     build_feedback_prompt,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
-from quiz.schema import get_quiz_question_json_schema, validate_quiz_question_dict
-from quiz.taxonomy import (
-    CURRICULUM_TAXONOMY,
-    get_available_topics,
-    is_valid_subconcept,
-    is_valid_topic,
-)
-from quiz.validator import MathValidatorInterface, SymPyMathValidator
+from quiz.validation import MathValidatorInterface, SymPyMathValidator
 
 __all__ = [
     "CURRICULUM_TAXONOMY",

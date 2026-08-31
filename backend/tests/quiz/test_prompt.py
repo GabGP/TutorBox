@@ -1,4 +1,4 @@
-from src.quiz.prompt import (
+from src.quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_system_prompt,
     build_quiz_user_prompt,

@@ -6,7 +6,7 @@ import tempfile
 
 import pytest
 
-from quiz.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
+from quiz.contracts.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
 from src.db.database import get_db_connection
 from src.db.migrations import apply_migrations
 from src.db.quiz import (

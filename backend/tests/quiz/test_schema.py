@@ -3,7 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from src.quiz.schema import (
+from src.quiz.contracts.schema import (
     get_quiz_question_json_schema,
     get_quiz_question_schema_json,
     validate_quiz_question_dict,

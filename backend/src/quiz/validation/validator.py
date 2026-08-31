@@ -7,7 +7,7 @@ from math_engine.parser import (
     parse_option_expression,
 )
 
-from quiz.models import MathValidationResult, QuizQuestion
+from quiz.contracts.models import MathValidationResult, QuizQuestion
 
 
 class MathValidatorInterface(ABC):

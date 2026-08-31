@@ -5,15 +5,15 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from quiz.llm_client import LLMClient
-from quiz.models import QuizQuestion
-from quiz.prompt import (
+from quiz.contracts.models import QuizQuestion
+from quiz.contracts.schema import validate_quiz_question_dict
+from quiz.generation.llm_client import LLMClient
+from quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
-from quiz.schema import validate_quiz_question_dict
-from quiz.validator import MathValidatorInterface, SymPyMathValidator
+from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
 class GenerationError(Exception):

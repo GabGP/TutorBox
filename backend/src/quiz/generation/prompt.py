@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from quiz.taxonomy import CURRICULUM_TAXONOMY
+from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
 
 
 def build_quiz_system_prompt() -> str:

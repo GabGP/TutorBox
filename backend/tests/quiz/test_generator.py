@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from src.quiz.generator import GenerationError, QuizQuestionGenerator
-from src.quiz.llm_client import MockLLMClient
-from src.quiz.validator import SymPyMathValidator
+from src.quiz.generation.generator import GenerationError, QuizQuestionGenerator
+from src.quiz.generation.llm_client import MockLLMClient
+from src.quiz.validation.validator import SymPyMathValidator
 
 
 def valid_question_dict(id_str: str = "q_test_1") -> dict:

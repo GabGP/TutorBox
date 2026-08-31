@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from quiz.models import QuizQuestion
+from quiz.contracts.models import QuizQuestion
 
 
 def get_quiz_question_json_schema() -> dict[str, Any]:

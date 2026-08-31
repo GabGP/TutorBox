@@ -1,4 +1,4 @@
-from src.quiz.taxonomy import (
+from src.quiz.contracts.taxonomy import (
     CURRICULUM_TAXONOMY,
     get_available_topics,
     is_valid_subconcept,
