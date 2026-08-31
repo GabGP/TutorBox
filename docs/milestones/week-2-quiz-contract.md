@@ -47,11 +47,38 @@ This document summarizes the technical deliverables, architectural implementatio
    * `/quiz/topics`, `/quiz/validate`, `/quiz/generate`, and `/quiz/questions` CRUD endpoints with RBAC enforcement and audit logging.
 
 ### B. Student B (Copilot): Mathematical Benchmarks, Validation & Jury Defense
+
+**Interface Contracts Provided by Student A for Student B Extension:**
+
+* **`MathValidatorInterface`** (`backend/src/quiz/validation/validator.py`):
+  ```python
+  class MathValidatorInterface(ABC):
+      @abstractmethod
+      def validate_question_math(
+          self, question: QuizQuestionBase
+      ) -> MathValidationResult:
+          """Validates mathematical correctness of question and diagnostic distractors."""
+  ```
+  * **Input**: `QuizQuestionBase` — contains `question_text`, `options` (dict `{A, B, C, D}`), `correct_option`, and `distractors`.
+  * **Output**: `MathValidationResult(is_valid: bool, errors: list[str], details: dict)`.
+  * **Baseline**: `SymPyMathValidator` already verifies computed solution truth, distractor non-equivalence, and duplicate/collision detection. Student B may subclass it or implement `MathValidatorInterface` directly.
+
+* **Math Engine Extension Points** (`backend/src/math_engine/parser.py`):
+  * `parse_option_expression(option_text: str) -> sp.Expr | None` — Parses an option value to a SymPy expression. Handles `÷`, `×`, Spanish decimal commas (`1,5`), colon division (`6:2`).
+  * `are_values_equivalent(expr_a, expr_b) -> bool` — Numeric/symbolic equivalence via float comparison ($\epsilon < 10^{-6}$) with SymPy `simplify` fallback.
+  * `extract_and_solve_problem(question_text: str) -> tuple[sp.Expr | None, str]` — Extracts and computes expected mathematical truth from question text. Returns `(solution, eval_mode)` where `eval_mode ∈ {percentage, equation, arithmetic, none}`.
+  * Student B may extend these functions to handle nested fractions, negative number precedence, or advanced primary-school expressions.
+
+**Work Packages** *[In Progress / Student B to complete]*:
+
 1. **20 Handwritten Golden Benchmark Tests**:
-   * *[In Progress / Student B to complete]*: 20 challenging test cases covering edge-case arithmetic precedence, unlike denominator fractions, and multi-step equations with fractions/negative numbers.
+   * 20 challenging edge-case test cases covering arithmetic precedence ambiguities, unlike denominator fractions, and multi-step equations with fractions/negative numbers.
+   * Target file: `backend/tests/quiz/validation/test_golden_benchmarks.py`.
 2. **Deep Symbolic Parser Extensions**:
-   * *[In Progress / Student B to complete]*: Symbolic parsing enhancements in `parser.py` / `validator.py` for advanced primary-school expressions.
+   * Symbolic parsing enhancements in `math_engine/parser.py` and/or `quiz/validation/validator.py` for complex primary-school expressions beyond the baseline coverage.
 3. **Pedagogical Distractor Quality Review**:
-   * *[In Progress / Student B to complete]*: Human review of seed and generated question bank targeting $\ge 90\%$ pedagogical distractor validity.
-4. **Tuesday Jury Defense**:
-   * *[In Progress / Student B to complete]*: Presentation defense on *"Diagnostic Distractors: Wrong answers are the pedagogical content"*.
+   * Human review of the 66-question seed bank and LLM-generated questions targeting $\ge 90\%$ pedagogical distractor validity.
+4. **Tuesday Jury Defense**: *"Diagnostic Distractors: Wrong answers are the pedagogical content"*
+   1. Why random distractors lack educational value.
+   2. Forcing LLM generation to target concrete arithmetic and pre-algebra misconceptions.
+   3. Qualitative results and error taxonomy from human review of the generated question pool.
