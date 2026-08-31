@@ -2,6 +2,9 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "tutorbox-backend"
 version = "0.1.0"
@@ -43,7 +46,7 @@ data_file = "../.cache/.coverage"
 line-length = 88
 target-version = "py310"
 cache-dir = "../.cache/ruff"
-src = ["src", "backend/src", "."]
+src = ["src", "."]
 
 [tool.ruff.lint.isort]
-known-first-party = ["api", "db", "security", "src", "tests"]
+known-first-party = ["api", "db", "security", "src", "tests", "quiz"]
