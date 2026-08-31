@@ -192,89 +192,15 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 
 ```text
 backend/
-├── migrations/
-│   ├── 001_initial_schema.sql
-│   ├── 002_add_user_role.sql
-│   ├── 003_add_lookup_indexes.sql
-│   ├── 004_add_must_change_pin.sql
-│   ├── 005_add_users_deleted_at.sql
-│   ├── 006_add_audit_logs.sql
-│   └── 007_add_devices.sql
+├── migrations/        # Idempotent SQLite schema migration scripts
 ├── src/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── auth/
-│   │   │   ├── __init__.py
-│   │   │   ├── login.py
-│   │   │   └── logout.py
-│   │   ├── health.py
-│   │   ├── staff/
-│   │   │   ├── __init__.py
-│   │   │   ├── audit.py
-│   │   │   ├── delete.py
-│   │   │   ├── device_pairing.py
-│   │   │   ├── devices.py
-│   │   │   ├── recover.py
-│   │   │   ├── reset_pin.py
-│   │   │   └── users.py
-│   │   └── users/
-│   │       ├── __init__.py
-│   │       ├── credentials.py
-│   │       ├── profile.py
-│   │       └── signup.py
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── audit.py
-│   │   ├── database.py
-│   │   └── migrations.py
-│   └── security/
-│       ├── __init__.py
-│       ├── auth.py
-│       ├── rate_limit/
-│       │   ├── __init__.py
-│       │   ├── lockout.py
-│       │   └── sliding_window.py
-│       ├── session.py
-│       └── validation.py
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── auth/
-│   │   │   ├── __init__.py
-│   │   │   ├── test_login.py
-│   │   │   └── test_logout.py
-│   │   ├── staff/
-│   │   │   ├── __init__.py
-│   │   │   ├── test_audit.py
-│   │   │   ├── test_delete.py
-│   │   │   ├── test_devices.py
-│   │   │   ├── test_recover.py
-│   │   │   ├── test_reset_pin.py
-│   │   │   └── test_users.py
-│   │   ├── users/
-│   │   │   ├── __init__.py
-│   │   │   ├── test_change_pin.py
-│   │   │   ├── test_change_username.py
-│   │   │   ├── test_profile.py
-│   │   │   └── test_signup.py
-│   │   └── test_health.py
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── test_audit.py
-│   │   ├── test_database.py
-│   │   └── test_migrations.py
-│   └── security/
-│       ├── __init__.py
-│       ├── test_auth_pin.py
-│       ├── test_rate_limit.py
-│       ├── test_security_pin.py
-│       └── test_session_auth.py
-├── pyproject.toml
-└── README.md
+│   ├── api/           # FastAPI route modules (auth, users, staff administration, devices)
+│   ├── db/            # SQLite connection manager, runtime pragmas, and audit logger
+│   ├── quiz/          # Diagnostic distractor generator, SymPy validator, and LLM client
+│   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters
+├── tests/             # Pytest test suite mirroring src/ with 100% coverage
+├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
+└── README.md          # Backend developer documentation and local setup guide
 ```
 
 ---
