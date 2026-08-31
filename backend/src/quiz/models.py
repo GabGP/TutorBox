@@ -31,8 +31,7 @@ class QuestionOptions(BaseModel):
         return {"A": self.A, "B": self.B, "C": self.C, "D": self.D}
 
 
-class QuizQuestion(BaseModel):
-    id: str = Field(..., min_length=1, max_length=64)
+class QuizQuestionBase(BaseModel):
     topic: str = Field(..., min_length=2, max_length=64)
     subconcept: str = Field(..., min_length=2, max_length=64)
     question_text: str = Field(..., min_length=5, max_length=500)
@@ -41,16 +40,16 @@ class QuizQuestion(BaseModel):
     distractors: dict[str, DistractorDetail]
 
     @model_validator(mode="after")
-    def validate_diagnostic_structure(self) -> "QuizQuestion":
-        opt_keys = set(self.options.keys())
-        if opt_keys != VALID_OPTIONS:
+    def validate_diagnostic_structure(self) -> "QuizQuestionBase":
+        option_keys = set(self.options.keys())
+        if option_keys != VALID_OPTIONS:
             raise ValueError(
-                f"Options must contain exactly keys A, B, C, D; got {sorted(opt_keys)}"
+                f"Options must contain exactly keys A, B, C, D; got {sorted(option_keys)}"
             )
 
-        for key, val in self.options.items():
-            if not str(val).strip():
-                raise ValueError(f"Option {key} text cannot be empty")
+        for option_key, option_text in self.options.items():
+            if not str(option_text).strip():
+                raise ValueError(f"Option {option_key} text cannot be empty")
 
         expected_distractors = VALID_OPTIONS - {self.correct_option}
         distractor_keys = set(self.distractors.keys())
@@ -62,14 +61,12 @@ class QuizQuestion(BaseModel):
         return self
 
 
-class QuizQuestionCreate(BaseModel):
+class QuizQuestionCreate(QuizQuestionBase):
     id: str | None = None
-    topic: str = Field(..., min_length=2, max_length=64)
-    subconcept: str = Field(..., min_length=2, max_length=64)
-    question_text: str = Field(..., min_length=5, max_length=500)
-    options: dict[str, str]
-    correct_option: OptionKey
-    distractors: dict[str, DistractorDetail]
+
+
+class QuizQuestion(QuizQuestionBase):
+    id: str = Field(..., min_length=1, max_length=64)
 
 
 class QuizQuestionResponse(QuizQuestion):

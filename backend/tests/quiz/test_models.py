@@ -118,11 +118,22 @@ def test_distractor_missing_entry():
 
 def test_quiz_question_create_and_response_models():
     payload = sample_quiz_payload()
+    del payload["id"]
     create_req = QuizQuestionCreate.model_validate(payload)
+    assert create_req.id is None
     assert create_req.topic == "pre_algebra"
 
+    # Test that QuizQuestionCreate enforces option non-empty validation
+    invalid_create = sample_quiz_payload()
+    invalid_create["options"]["A"] = "   "
+    with pytest.raises(ValidationError):
+        QuizQuestionCreate.model_validate(invalid_create)
+
     res = QuizQuestionResponse(
-        **payload, source="seed", sympy_verified=True, created_at="2026-08-30T00:00:00Z"
+        **sample_quiz_payload(),
+        source="seed",
+        sympy_verified=True,
+        created_at="2026-08-30T00:00:00Z",
     )
     assert res.source == "seed"
     assert res.sympy_verified is True
