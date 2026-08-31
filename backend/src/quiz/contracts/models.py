@@ -89,3 +89,12 @@ class MathValidationResult(BaseModel):
     is_valid: bool
     errors: list[str] = Field(default_factory=list)
     details: dict[str, str] = Field(default_factory=dict)
+
+
+class QuestionListResponse(BaseModel):
+    questions: list[QuizQuestionResponse]
+    total: int
+
+
+class QuizDeleteResponse(BaseModel):
+    detail: str = "Question deleted."

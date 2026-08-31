@@ -7,14 +7,16 @@ from math_engine.parser import (
     extract_and_solve_problem,
     parse_option_expression,
 )
-from quiz.contracts.models import MathValidationResult, QuizQuestion
+from quiz.contracts.models import MathValidationResult, QuizQuestionBase
 
 
 class MathValidatorInterface(ABC):
     """Abstract interface for quiz math verification (Student B extension point)."""
 
     @abstractmethod
-    def validate_question_math(self, question: QuizQuestion) -> MathValidationResult:
+    def validate_question_math(
+        self, question: QuizQuestionBase
+    ) -> MathValidationResult:
         """Validates mathematical correctness of question and diagnostic distractors."""
 
 
@@ -49,7 +51,9 @@ class SymPyMathValidator(MathValidatorInterface):
                     )
         return errors
 
-    def validate_question_math(self, question: QuizQuestion) -> MathValidationResult:
+    def validate_question_math(
+        self, question: QuizQuestionBase
+    ) -> MathValidationResult:
         """Validates mathematical correctness of correct answer and distractors."""
         parsed_options = {
             option_key: parse_option_expression(option_text)

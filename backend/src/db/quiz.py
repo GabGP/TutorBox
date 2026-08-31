@@ -3,15 +3,15 @@
 import sqlite3
 import uuid
 
+from db.quiz_mapper import (
+    build_quiz_filter_clauses,
+    row_to_quiz_question,
+    serialize_options_and_distractors,
+)
 from quiz.contracts.models import (
     QuizQuestion,
     QuizQuestionCreate,
     QuizQuestionResponse,
-)
-from src.db.quiz_mapper import (
-    build_quiz_filter_clauses,
-    row_to_quiz_question,
-    serialize_options_and_distractors,
 )
 
 

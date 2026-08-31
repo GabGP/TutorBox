@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from api.auth import router as auth_router
 from api.health import router as health_router
+from api.quiz import router as quiz_router
 from api.staff import router as staff_router
 from api.users import router as users_router
 from db.database import get_db_path
@@ -43,3 +44,4 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(staff_router)
+app.include_router(quiz_router)
