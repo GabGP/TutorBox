@@ -52,6 +52,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - SQLite database with foreign keys, index optimization, and WAL mode.
   - Numbered, idempotent schema migrations.
   - Append-only `audit_logs` table tracking privileged user, account, and hardware pairing mutations.
+  - Persistent `quiz_questions` repository with diagnostic distractors and SymPy mathematical verification flags.
 
 The following items are planned deliverables across upcoming milestone phases:
 
