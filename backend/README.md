@@ -197,6 +197,7 @@ backend/
 ├── src/
 │   ├── api/           # FastAPI route modules (auth, users, staff administration, devices)
 │   ├── db/            # SQLite connection manager, runtime pragmas, and audit logger
+│   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   ├── quiz/          # Diagnostic distractor generator, SymPy validator, and LLM client
 │   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters
 ├── tests/             # Pytest test suite mirroring src/ with 100% coverage
