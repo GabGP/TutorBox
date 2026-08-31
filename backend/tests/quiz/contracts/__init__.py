@@ -1,0 +1,1 @@
+"""Quiz contracts test package."""
