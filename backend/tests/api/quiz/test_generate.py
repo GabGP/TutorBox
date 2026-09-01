@@ -3,10 +3,10 @@
 import json
 
 from fastapi.testclient import TestClient
+from llm import MockLLMClient
 
 from api.quiz.dependencies import get_quiz_generator
 from quiz.generation.generator import QuizQuestionGenerator
-from quiz.generation.llm_client import MockLLMClient
 from src.main import app
 from tests.conftest import auth_headers
 

@@ -1,4 +1,4 @@
-"""Abstract LLM client interface for quiz generation."""
+"""Abstract LLM client interface for local and remote language model completions."""
 
 from abc import ABC, abstractmethod
 

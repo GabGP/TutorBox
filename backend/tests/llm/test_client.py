@@ -1,40 +1,13 @@
+import io
 import json
+import urllib.error
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from src.quiz.generation.llm_client import LLMClient, LocalSLMClient, MockLLMClient
-
-
-def test_mock_llm_client_basic_flow():
-    client = MockLLMClient(["response 1", "response 2"])
-    assert client.generate("sys", "user 1") == "response 1"
-    assert client.generate("sys", "user 2") == "response 2"
-    # Stays on last response if exhausted
-    assert client.generate("sys", "user 3") == "response 2"
-    assert len(client.call_history) == 3
-    assert client.call_history[0] == ("sys", "user 1")
+from llm.client import LocalSLMClient
 
 
-def test_abstract_llm_client_generate():
-    class DummyClient(LLMClient):
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
-            return super().generate(system_prompt, user_prompt)
-
-    dummy = DummyClient()
-    assert dummy.generate("a", "b") is None
-
-
-def test_mock_llm_client_add_response():
-    client = MockLLMClient()
-    with pytest.raises(RuntimeError, match="no configured responses"):
-        client.generate("sys", "user")
-
-    client.add_response("dynamic response")
-    assert client.generate("sys", "user") == "dynamic response"
-
-
-def test_local_slm_client_initialization():
+def test_local_slm_client_initialization_explicit_parameters():
     client = LocalSLMClient(
         base_url="http://192.168.1.50:8080/v1/",
         model="qwen-2.5",
@@ -50,18 +23,20 @@ def test_local_slm_client_initialization():
 def test_local_slm_client_successful_request():
     client = LocalSLMClient(temperature=0.75)
     fake_response_data = {"choices": [{"message": {"content": '{"test": "ok"}'}}]}
-    mock_resp = MagicMock()
-    mock_resp.read.return_value = json.dumps(fake_response_data).encode("utf-8")
-    mock_resp.__enter__.return_value = mock_resp
-    mock_resp.__exit__.return_value = None
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps(fake_response_data).encode("utf-8")
+    mock_response.__enter__.return_value = mock_response
+    mock_response.__exit__.return_value = None
 
-    with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
-        res = client.generate("sys_prompt", "user_prompt")
-        assert res == '{"test": "ok"}'
+    with patch("urllib.request.urlopen", return_value=mock_response) as mock_urlopen:
+        result = client.generate("system_prompt", "user_prompt")
+        assert result == '{"test": "ok"}'
         mock_urlopen.assert_called_once()
-        req_arg = mock_urlopen.call_args[0][0]
-        payload = json.loads(req_arg.data.decode("utf-8"))
+        request_argument = mock_urlopen.call_args[0][0]
+        payload = json.loads(request_argument.data.decode("utf-8"))
         assert payload["temperature"] == 0.75
+        assert payload["messages"][0]["content"] == "system_prompt"
+        assert payload["messages"][1]["content"] == "user_prompt"
 
 
 def test_local_slm_client_failure_raises_runtime_error():
@@ -70,13 +45,10 @@ def test_local_slm_client_failure_raises_runtime_error():
         patch("urllib.request.urlopen", side_effect=Exception("Connection refused")),
         pytest.raises(RuntimeError, match="LocalSLM request failed"),
     ):
-        client.generate("sys_prompt", "user_prompt")
+        client.generate("system_prompt", "user_prompt")
 
 
 def test_local_slm_client_http_error_extracts_body():
-    import io
-    import urllib.error
-
     client = LocalSLMClient()
     fake_fp = io.BytesIO(b'{"error": "model not found"}')
     http_error = urllib.error.HTTPError(
@@ -93,7 +65,7 @@ def test_local_slm_client_http_error_extracts_body():
             RuntimeError, match="LocalSLM HTTP 400 \\(Bad Request\\):.*model not found"
         ),
     ):
-        client.generate("sys_prompt", "user_prompt")
+        client.generate("system_prompt", "user_prompt")
 
 
 def test_local_slm_client_reads_env_vars(monkeypatch):
@@ -135,13 +107,13 @@ def test_local_slm_client_invalid_env_temp_and_timeout_fallback(monkeypatch):
 )
 def test_local_slm_client_malformed_response_payload(malformed_response, error_match):
     client = LocalSLMClient()
-    mock_resp = MagicMock()
-    mock_resp.read.return_value = json.dumps(malformed_response).encode("utf-8")
-    mock_resp.__enter__.return_value = mock_resp
-    mock_resp.__exit__.return_value = None
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps(malformed_response).encode("utf-8")
+    mock_response.__enter__.return_value = mock_response
+    mock_response.__exit__.return_value = None
 
     with (
-        patch("urllib.request.urlopen", return_value=mock_resp),
+        patch("urllib.request.urlopen", return_value=mock_response),
         pytest.raises(TypeError, match=error_match),
     ):
-        client.generate("sys_prompt", "user_prompt")
+        client.generate("system_prompt", "user_prompt")

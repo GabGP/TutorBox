@@ -1,4 +1,6 @@
-from .client_interface import LLMClient
+"""Mock LLM client implementation for testing and simulation."""
+
+from llm.base import LLMClient
 
 
 class MockLLMClient(LLMClient):

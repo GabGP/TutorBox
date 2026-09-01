@@ -1,11 +1,12 @@
+"""Concrete LLM client for local llama.cpp / OpenAI-compatible completion server."""
+
 import json
 import os
 import urllib.error
 import urllib.request
 from typing import Any
 
-from .client_interface import LLMClient
-from .mock_client import MockLLMClient
+from llm.base import LLMClient
 
 DEFAULT_SLM_BASE_URL: str = "http://127.0.0.1:8080/v1"
 DEFAULT_SLM_MODEL_NAME: str = "default"
@@ -17,9 +18,7 @@ __all__ = [
     "DEFAULT_SLM_MODEL_NAME",
     "DEFAULT_SLM_TEMPERATURE",
     "DEFAULT_SLM_TIMEOUT_SECONDS",
-    "LLMClient",
     "LocalSLMClient",
-    "MockLLMClient",
 ]
 
 

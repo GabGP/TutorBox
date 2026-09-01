@@ -33,9 +33,6 @@ from quiz.contracts import (
 )
 from quiz.generation import (
     GenerationError,
-    LLMClient,
-    LocalSLMClient,
-    MockLLMClient,
     QuizQuestionGenerator,
     build_feedback_prompt,
     build_quiz_system_prompt,
@@ -53,11 +50,8 @@ __all__ = [
     "DistractorDetail",
     "GenerateQuestionRequest",
     "GenerationError",
-    "LLMClient",
-    "LocalSLMClient",
     "MathValidationResult",
     "MathValidatorInterface",
-    "MockLLMClient",
     "OptionKey",
     "QuestionListResponse",
     "QuestionOptions",

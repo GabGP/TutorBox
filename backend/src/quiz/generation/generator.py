@@ -3,8 +3,9 @@
 import json
 import random
 
+from llm import LLMClient
+
 from quiz.contracts.models import QuizQuestion
-from quiz.generation.llm_client import LLMClient
 from quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_system_prompt,
