@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
+from quiz.generation.exemplars import get_canonical_exemplar
 
 
 def build_quiz_system_prompt() -> str:
@@ -43,27 +44,7 @@ def build_quiz_user_prompt(
         else ""
     )
 
-    example_json: dict[str, Any] = {
-        "topic": topic,
-        "subconcept": subconcept or "general",
-        "question_text": "¿Cuál es el resultado de 3 + 4 * 2?",
-        "options": {"A": "11", "B": "14", "C": "10", "D": "24"},
-        "correct_option": "A",
-        "distractors": {
-            "B": {
-                "misconception": "left_to_right_precedence",
-                "explanation": "Sumaste 3 + 4 antes de multiplicar por 2.",
-            },
-            "C": {
-                "misconception": "multiplication_error",
-                "explanation": "Cometiste un error al multiplicar 4 por 2.",
-            },
-            "D": {
-                "misconception": "multiplied_all",
-                "explanation": "Multiplicaste todos los números en vez de seguir la jerarquía.",
-            },
-        },
-    }
+    example_json: dict[str, Any] = get_canonical_exemplar(topic, subconcept)
 
     return (
         f"Generate 1 diagnostic quiz question for topic '{topic}'"

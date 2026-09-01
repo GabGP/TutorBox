@@ -1,3 +1,5 @@
+from src.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
+from src.quiz.generation.exemplars import get_canonical_exemplar
 from src.quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_system_prompt,
@@ -24,6 +26,15 @@ def test_build_quiz_user_prompt_with_topic_and_subconcept():
     assert "Required JSON format" in prompt
 
 
+def test_build_quiz_user_prompt_pre_algebra_two_step():
+    prompt = build_quiz_user_prompt("pre_algebra", "two_step_equations")
+    assert "pre_algebra" in prompt
+    assert "two_step_equations" in prompt
+    assert "2*x + 4 = 12" in prompt
+    assert "divided_before_subtracting" in prompt
+    assert "forgot_division" in prompt
+
+
 def test_build_quiz_user_prompt_with_topic_only():
     prompt = build_quiz_user_prompt("fractions")
     assert "fractions" in prompt
@@ -32,9 +43,23 @@ def test_build_quiz_user_prompt_with_topic_only():
 
 def test_build_quiz_user_prompt_with_custom_misconceptions():
     custom = ["custom_error_1", "custom_error_2"]
-    prompt = build_quiz_user_prompt("geometry", recognized_misconceptions=custom)
-    assert "geometry" in prompt
-    assert "custom_error_1, custom_error_2" in prompt
+    prompt = build_quiz_user_prompt(
+        "arithmetic", "order_of_operations", recognized_misconceptions=custom
+    )
+    assert "custom_error_1" in prompt
+    assert "custom_error_2" in prompt
+
+
+def test_get_canonical_exemplar_unknown_topic_fallback():
+    from src.quiz.generation.exemplars import get_canonical_exemplar
+
+    exemplar_fallback = get_canonical_exemplar("unknown_topic", "unknown_subconcept")
+    assert exemplar_fallback["topic"] == "unknown_topic"
+
+    exemplar_topic_match = get_canonical_exemplar(
+        "arithmetic", "nonexistent_subconcept"
+    )
+    assert exemplar_topic_match["topic"] == "arithmetic"
 
 
 def test_build_quiz_user_prompt_unknown_topic():
@@ -54,3 +79,26 @@ def test_build_feedback_prompt():
     assert "ATTENTION: Your previous response was rejected" in feedback
     assert "- Distractors must contain 3 items." in feedback
     assert "- Option B is missing 'explanation'." in feedback
+
+
+def test_all_taxonomy_pairs_have_canonical_exemplars():
+    for topic_name, subconcept_dict in CURRICULUM_TAXONOMY.items():
+        for subconcept_name in subconcept_dict:
+            exemplar = get_canonical_exemplar(topic_name, subconcept_name)
+            assert exemplar["topic"] == topic_name
+            assert exemplar["subconcept"] == subconcept_name
+            assert len(exemplar["options"]) == 4
+            assert len(exemplar["distractors"]) == 3
+            for distractor_info in exemplar["distractors"].values():
+                assert (
+                    distractor_info["misconception"] in subconcept_dict[subconcept_name]
+                )
+
+
+def test_get_canonical_exemplar_fallbacks():
+    generic_arithmetic = get_canonical_exemplar("arithmetic", None)
+    assert generic_arithmetic["topic"] == "arithmetic"
+
+    unknown_topic = get_canonical_exemplar("unknown_topic", "unknown_subconcept")
+    assert unknown_topic["topic"] == "unknown_topic"
+    assert unknown_topic["subconcept"] == "unknown_subconcept"
