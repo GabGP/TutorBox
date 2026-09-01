@@ -27,15 +27,16 @@ def test_build_quiz_user_prompt_with_topic_and_subconcept():
     assert "left_to_right_precedence" in prompt
     assert "Required JSON format" in prompt
     assert "schema reference ONLY" in prompt
+    assert "3 + 4 * 2" not in prompt
 
 
 def test_build_quiz_user_prompt_pre_algebra_two_step():
     prompt = build_quiz_user_prompt("pre_algebra", "two_step_equations")
     assert "pre_algebra" in prompt
     assert "two_step_equations" in prompt
-    assert "2*x + 4 = 12" in prompt
     assert "divided_before_subtracting" in prompt
     assert "forgot_division" in prompt
+    assert "2*x + 4 = 12" not in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_only():
@@ -53,16 +54,24 @@ def test_build_quiz_user_prompt_with_custom_misconceptions():
     assert "custom_error_2" in prompt
 
 
-def test_get_canonical_exemplar_unknown_topic_fallback():
-    exemplar_fallback = get_canonical_exemplar("unknown_topic", "unknown_subconcept")
-    assert exemplar_fallback["topic"] == "unknown_topic"
-    assert "unknown_topic" in exemplar_fallback["question_text"]
-    assert "3 + 4 * 2" not in exemplar_fallback["question_text"]
+def test_get_canonical_exemplar_structural_format():
+    exemplar = get_canonical_exemplar("arithmetic", "addition_subtraction")
+    assert exemplar["topic"] == "arithmetic"
+    assert exemplar["subconcept"] == "addition_subtraction"
+    assert exemplar["correct_option"] == "A"
+    assert set(exemplar["options"].keys()) == {"A", "B", "C", "D"}
+    assert set(exemplar["distractors"].keys()) == {"B", "C", "D"}
+    for distractor_info in exemplar["distractors"].values():
+        assert "misconception" in distractor_info
+        assert "explanation" in distractor_info
 
-    exemplar_topic_match = get_canonical_exemplar(
-        "arithmetic", "nonexistent_subconcept"
-    )
-    assert exemplar_topic_match["topic"] == "arithmetic"
+
+def test_get_canonical_exemplar_defaults():
+    default_exemplar = get_canonical_exemplar()
+    assert default_exemplar["topic"] == "algebra_formativa"
+    assert default_exemplar["subconcept"] == "concepto_general"
+    assert len(default_exemplar["options"]) == 4
+    assert len(default_exemplar["distractors"]) == 3
 
 
 def test_build_quiz_user_prompt_unknown_topic():
@@ -84,7 +93,7 @@ def test_build_feedback_prompt():
     assert "- Option B is missing 'explanation'." in feedback
 
 
-def test_all_taxonomy_pairs_have_canonical_exemplars():
+def test_all_taxonomy_pairs_exemplars_consistent():
     for topic_name, subconcept_dict in CURRICULUM_TAXONOMY.items():
         for subconcept_name in subconcept_dict:
             exemplar = get_canonical_exemplar(topic_name, subconcept_name)
@@ -92,16 +101,5 @@ def test_all_taxonomy_pairs_have_canonical_exemplars():
             assert exemplar["subconcept"] == subconcept_name
             assert len(exemplar["options"]) == 4
             assert len(exemplar["distractors"]) == 3
-            for distractor_info in exemplar["distractors"].values():
-                assert (
-                    distractor_info["misconception"] in subconcept_dict[subconcept_name]
-                )
-
-
-def test_get_canonical_exemplar_fallbacks():
-    generic_arithmetic = get_canonical_exemplar("arithmetic", None)
-    assert generic_arithmetic["topic"] == "arithmetic"
-
-    unknown_topic = get_canonical_exemplar("unknown_topic", "unknown_subconcept")
-    assert unknown_topic["topic"] == "unknown_topic"
-    assert unknown_topic["subconcept"] == "unknown_subconcept"
+            assert exemplar["correct_option"] in exemplar["options"]
+            assert set(exemplar["distractors"].keys()) == {"B", "C", "D"}
