@@ -114,6 +114,7 @@ def test_validator_equation_option_with_variable_prefix():
         options={"A": "x = 22", "B": "x = 8", "C": "x = 10", "D": "x = -8"},
         correct="A",
         topic="pre_algebra",
+        subconcept="one_step_equations",
     )
     result = validator.validate_question_math(q)
     assert result.is_valid is True
@@ -130,6 +131,8 @@ def test_validator_conceptual_question_without_formula():
             "D": "Elemento Neutro",
         },
         correct="A",
+        topic="math_concepts",
+        subconcept="properties",
     )
     result = validator.validate_question_math(q)
     assert result.is_valid is True
@@ -147,10 +150,26 @@ def test_validator_conceptual_duplicate_options_detected():
             "D": "Elemento Neutro",
         },
         correct="A",
+        topic="math_concepts",
+        subconcept="properties",
     )
     result = validator.validate_question_math(q)
     assert result.is_valid is False
     assert any("Duplicate option values" in err for err in result.errors)
+
+
+def test_validator_rejects_arithmetic_drift_in_algebra_subconcept():
+    validator = SymPyMathValidator()
+    q = create_question(
+        text="¿Cuál es el resultado de 3 + 4 * 2?",
+        options={"A": "11", "B": "14", "C": "10", "D": "24"},
+        correct="A",
+        topic="pre_algebra",
+        subconcept="two_step_equations",
+    )
+    result = validator.validate_question_math(q)
+    assert result.is_valid is False
+    assert any("Pedagogical mismatch" in err for err in result.errors)
 
 
 def test_validator_interface_abstract():

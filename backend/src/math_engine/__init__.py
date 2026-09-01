@@ -1,5 +1,10 @@
-"""Deterministic mathematical parsing and symbolic evaluation engine."""
+"""SymPy-based mathematical parsing, symbolic solving, and AST inspection engine."""
 
+from math_engine.ast_inspector import (
+    extract_linear_polynomial,
+    is_two_step_linear,
+    validate_math_structure,
+)
 from math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
@@ -14,6 +19,9 @@ __all__ = [
     "evaluate_arithmetic_expression",
     "evaluate_percentage_expression",
     "extract_and_solve_problem",
+    "extract_linear_polynomial",
+    "is_two_step_linear",
     "parse_option_expression",
     "solve_linear_equation",
+    "validate_math_structure",
 ]

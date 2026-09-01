@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import sympy as sp
 
+from math_engine.ast_inspector import validate_math_structure
 from math_engine.parser import (
     are_values_equivalent,
     extract_and_solve_problem,
@@ -64,8 +65,18 @@ class SymPyMathValidator(MathValidatorInterface):
         expected_solution, eval_mode = extract_and_solve_problem(question.question_text)
         details = {
             "eval_mode": eval_mode,
-            "target_solution": str(expected_solution) if expected_solution else "none",
+            "target_solution": str(expected_solution)
+            if expected_solution is not None
+            else "none",
         }
+
+        structural_errors = validate_math_structure(
+            question_text=question.question_text,
+            topic=question.topic,
+            subconcept=question.subconcept,
+            eval_mode=eval_mode,
+        )
+        errors.extend(structural_errors)
 
         if expected_solution is not None:
             correct_expr = parsed_options[question.correct_option]
