@@ -18,6 +18,9 @@ def test_build_quiz_system_prompt():
     assert "Spanish" in prompt
     assert "NOVELTY RULE" in prompt
     assert "NEVER copy or reuse" in prompt
+    assert "LaTeX math delimiters" in prompt
+    assert "$x$" in prompt
+    assert "plain text" in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_and_subconcept():

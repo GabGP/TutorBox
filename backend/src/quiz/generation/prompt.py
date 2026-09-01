@@ -19,7 +19,8 @@ def build_quiz_system_prompt() -> str:
         '5. The "question_text" and distractor "explanation" fields MUST be in Spanish.\n'
         "6. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
         "7. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients. "
-        "NEVER copy or reuse the numbers, equation, or text from the format reference example."
+        "NEVER copy or reuse the numbers, equation, or text from the format reference example.\n"
+        "8. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs."
     )
 
 
