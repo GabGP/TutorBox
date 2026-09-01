@@ -22,21 +22,26 @@ def get_canonical_exemplar(topic: str, subconcept: str | None = None) -> dict[st
     return {
         "topic": topic,
         "subconcept": subconcept or "general",
-        "question_text": "¿Cuál es el resultado de 3 + 4 * 2?",
-        "options": {"A": "11", "B": "14", "C": "10", "D": "24"},
+        "question_text": f"Pregunta de diagnóstico para {topic}.",
+        "options": {
+            "A": "Opción correcta",
+            "B": "Distractor 1",
+            "C": "Distractor 2",
+            "D": "Distractor 3",
+        },
         "correct_option": "A",
         "distractors": {
             "B": {
-                "misconception": "left_to_right_precedence",
-                "explanation": "Sumaste 3 + 4 antes de multiplicar por 2.",
+                "misconception": "error_conceptual_1",
+                "explanation": "Explicación del error conceptual 1.",
             },
             "C": {
-                "misconception": "addition_before_multiplication",
-                "explanation": "Sumaste antes de resolver la multiplicación prioritaria.",
+                "misconception": "error_conceptual_2",
+                "explanation": "Explicación del error conceptual 2.",
             },
             "D": {
-                "misconception": "ignored_parentheses",
-                "explanation": "Ignoraste la jerarquía de las operaciones.",
+                "misconception": "error_conceptual_3",
+                "explanation": "Explicación del error conceptual 3.",
             },
         },
     }

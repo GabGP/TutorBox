@@ -51,10 +51,10 @@ def test_build_quiz_user_prompt_with_custom_misconceptions():
 
 
 def test_get_canonical_exemplar_unknown_topic_fallback():
-    from src.quiz.generation.exemplars import get_canonical_exemplar
-
     exemplar_fallback = get_canonical_exemplar("unknown_topic", "unknown_subconcept")
     assert exemplar_fallback["topic"] == "unknown_topic"
+    assert "unknown_topic" in exemplar_fallback["question_text"]
+    assert "3 + 4 * 2" not in exemplar_fallback["question_text"]
 
     exemplar_topic_match = get_canonical_exemplar(
         "arithmetic", "nonexistent_subconcept"
