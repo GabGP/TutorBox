@@ -2,10 +2,10 @@
 
 import json
 import random
+import time
 
 from llm import LLMClient
-
-from quiz.contracts.models import QuizQuestion
+from quiz.contracts.models import GenerationMetadata
 from quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_system_prompt,
@@ -16,15 +16,14 @@ from quiz.generation.response_processor import (
     process_generated_response,
 )
 from quiz.generation.shuffler import shuffle_quiz_question
+from quiz.generation.types import (
+    DEFAULT_MAX_RETRIES,
+    GenerationError,
+    GenerationResult,
+)
 from quiz.validation.deduplication import DeduplicationValidator
 from quiz.validation.taxonomy_validator import TaxonomyValidator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
-
-DEFAULT_MAX_RETRIES: int = 3
-
-
-class GenerationError(Exception):
-    """Raised when the question generation and retry pipeline fails."""
 
 
 class QuizQuestionGenerator:
@@ -44,44 +43,46 @@ class QuizQuestionGenerator:
         self.dedup_validator = deduplication_validator or DeduplicationValidator()
         self.rng = rng
 
+    def _resolve_model_name(self) -> str:
+        """Extracts the model identifier from the underlying LLM client."""
+        return (
+            getattr(self.llm_client, "model", None)
+            or getattr(self.llm_client, "model_name", None)
+            or "unknown"
+        )
+
     def generate(
         self,
         topic: str,
         subconcept: str | None = None,
         max_retries: int = DEFAULT_MAX_RETRIES,
         question_id: str | None = None,
-    ) -> QuizQuestion:
-        """Generates a validated diagnostic quiz question using a feedback-driven retry loop.
-
-        Args:
-            topic: The mathematics curriculum domain (e.g., 'pre_algebra', 'arithmetic').
-            subconcept: The specific subtopic (e.g., 'two_step_equations').
-            max_retries: Maximum number of generation attempts with feedback injection.
-            question_id: Optional explicit question ID.
-
-        Returns:
-            A fully validated, SymPy-verified, shuffled QuizQuestion.
-
-        Raises:
-            GenerationError: If the SLM fails or candidate cannot be validated within max_retries.
-        """
+    ) -> GenerationResult:
+        """Generates a validated diagnostic quiz question using a feedback-driven retry loop."""
         system_prompt = build_quiz_system_prompt()
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         current_user_prompt = base_user_prompt
         accumulated_errors: list[str] = []
+        model_name = self._resolve_model_name()
+        start_time = time.perf_counter()
 
         for attempt in range(1, max_retries + 1):
-            # 1. Request completion from local SLM
+            # 1. Query local SLM completion endpoint
             try:
                 raw_response = self.llm_client.generate(
                     system_prompt, current_user_prompt
                 )
             except Exception as llm_err:
+                duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
                 raise GenerationError(
-                    f"SLM completion request failed on attempt {attempt}: {llm_err}"
+                    f"SLM completion request failed on attempt {attempt}: {llm_err}",
+                    attempts=attempt,
+                    duration_ms=duration_ms,
+                    model_name=model_name,
+                    accumulated_errors=accumulated_errors,
                 ) from llm_err
 
-            # 2. Extract and parse JSON structure from model output
+            # 2. Extract and parse root JSON object
             try:
                 parsed_json = extract_json_dict(raw_response)
                 if not isinstance(parsed_json, dict):
@@ -93,7 +94,7 @@ class QuizQuestionGenerator:
                 )
                 continue
 
-            # 3. Execute 4-stage validation (Schema -> Taxonomy -> SymPy Math -> Deduplication)
+            # 3. Execute 4-stage validation (Schema, Taxonomy, SymPy Math, Deduplication)
             validated_question, stage_errors = process_generated_response(
                 parsed_json=parsed_json,
                 topic=topic,
@@ -104,7 +105,7 @@ class QuizQuestionGenerator:
                 dedup_validator=self.dedup_validator,
             )
 
-            # 4. Handle validation failures by injecting error feedback for regeneration
+            # 4. If validation failed, accumulate feedback and retry
             if stage_errors:
                 accumulated_errors.extend(stage_errors)
                 current_user_prompt = build_feedback_prompt(
@@ -112,11 +113,25 @@ class QuizQuestionGenerator:
                 )
                 continue
 
-            # 5. Permute option keys and distractor order to prevent student guessing patterns
+            # 5. Success: shuffle options to avoid positional bias and package result
             if validated_question is not None:
-                return shuffle_quiz_question(validated_question, rng=self.rng)
+                duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+                shuffled = shuffle_quiz_question(validated_question, rng=self.rng)
+                metadata = GenerationMetadata(
+                    model_name=model_name,
+                    attempts=attempt,
+                    duration_ms=duration_ms,
+                    rejection_history=accumulated_errors,
+                )
+                return GenerationResult(question=shuffled, metadata=metadata)
 
+        # 6. Pipeline exhausted max retries without producing a valid question
+        duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         raise GenerationError(
             f"Failed to generate a valid quiz question after {max_retries} attempts. "
-            f"Errors: {'; '.join(accumulated_errors)}"
+            f"Errors: {'; '.join(accumulated_errors)}",
+            attempts=max_retries,
+            duration_ms=duration_ms,
+            model_name=model_name,
+            accumulated_errors=accumulated_errors,
         )

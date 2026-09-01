@@ -120,3 +120,20 @@ class QuestionListResponse(BaseModel):
 
 class QuizDeleteResponse(BaseModel):
     detail: str = "Question deleted."
+
+
+class GenerationMetadata(BaseModel):
+    model_name: str = Field(..., min_length=1, description="LLM/SLM model identifier")
+    attempts: int = Field(..., ge=1, description="Total generation attempts executed")
+    duration_ms: float = Field(
+        ..., ge=0.0, description="Total wall-clock generation latency in milliseconds"
+    )
+    rejection_history: list[str] = Field(
+        default_factory=list,
+        description="Chronological errors captured during intermediate rejection stages",
+    )
+
+
+class GenerateQuestionResponse(BaseModel):
+    question: QuizQuestionResponse
+    metadata: GenerationMetadata

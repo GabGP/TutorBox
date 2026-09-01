@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from llm import MockLLMClient
 
+from llm import MockLLMClient
 from quiz.generation.generator import GenerationError, QuizQuestionGenerator
 from quiz.validation.validator import SymPyMathValidator
 

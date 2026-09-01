@@ -3,6 +3,8 @@
 from quiz.contracts.models import (
     DistractorDetail,
     GenerateQuestionRequest,
+    GenerateQuestionResponse,
+    GenerationMetadata,
     MathValidationResult,
     OptionKey,
     QuestionListResponse,
@@ -43,6 +45,8 @@ __all__ = [
     "SCHEMA_VERSION",
     "DistractorDetail",
     "GenerateQuestionRequest",
+    "GenerateQuestionResponse",
+    "GenerationMetadata",
     "MathValidationResult",
     "OptionKey",
     "QuestionListResponse",

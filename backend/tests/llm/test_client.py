@@ -1,9 +1,11 @@
 import io
 import json
 import urllib.error
+from email.message import Message
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from llm.client import LocalSLMClient
 
 
@@ -55,7 +57,7 @@ def test_local_slm_client_http_error_extracts_body():
         url="http://127.0.0.1:8080/v1/chat/completions",
         code=400,
         msg="Bad Request",
-        hdrs={},
+        hdrs=Message(),
         fp=fake_fp,
     )
 

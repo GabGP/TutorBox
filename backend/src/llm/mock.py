@@ -6,10 +6,16 @@ from llm.base import LLMClient
 class MockLLMClient(LLMClient):
     """Mock LLM client for unit tests and local simulation."""
 
-    def __init__(self, responses: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        responses: list[str] | None = None,
+        *,
+        model: str = "mock-model",
+    ) -> None:
         self._responses: list[str] = list(responses) if responses else []
         self._index: int = 0
         self.call_history: list[tuple[str, str]] = []
+        self.model: str = model
 
     def add_response(self, response: str) -> None:
         self._responses.append(response)
