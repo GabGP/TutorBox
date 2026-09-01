@@ -12,6 +12,9 @@ class TaxonomyValidationResult(BaseModel):
 class TaxonomyValidator:
     """Deterministically validates topic, subconcept, and distractor misconception whitelist."""
 
+    def __init__(self, allow_unknown_topics: bool = False) -> None:
+        self.allow_unknown_topics = allow_unknown_topics
+
     def validate_question_taxonomy(
         self,
         question: QuizQuestionBase,
@@ -70,5 +73,10 @@ class TaxonomyValidator:
                         f"is invalid for subconcept '{question.subconcept}'. "
                         f"Allowed: {sorted(allowed_misconceptions)}."
                     )
+        elif not self.allow_unknown_topics:
+            errors.append(
+                f"Topic '{expected_topic}' is not recognized in curriculum taxonomy. "
+                f"Allowed: {sorted(CURRICULUM_TAXONOMY.keys())}."
+            )
 
         return TaxonomyValidationResult(is_valid=len(errors) == 0, errors=errors)

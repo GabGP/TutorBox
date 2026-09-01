@@ -166,7 +166,7 @@ def test_taxonomy_validator_general_topic_misconception_pool():
     assert result.is_valid is True
 
 
-def test_taxonomy_validator_unknown_custom_topic():
+def test_taxonomy_validator_unknown_custom_topic_allowed():
     question = QuizQuestion(
         id="q_custom_topic",
         topic="advanced_calculus",
@@ -188,10 +188,23 @@ def test_taxonomy_validator_unknown_custom_topic():
             ),
         },
     )
-    validator = TaxonomyValidator()
+    validator = TaxonomyValidator(allow_unknown_topics=True)
     result = validator.validate_question_taxonomy(
         question,
         expected_topic="advanced_calculus",
         expected_subconcept="integrals",
     )
     assert result.is_valid is True
+
+
+def test_taxonomy_validator_unknown_topic_rejected_by_default(
+    valid_two_step_question: QuizQuestion,
+):
+    validator = TaxonomyValidator()
+    result = validator.validate_question_taxonomy(
+        valid_two_step_question,
+        expected_topic="unknown_math_topic",
+        expected_subconcept=None,
+    )
+    assert result.is_valid is False
+    assert any("not recognized in curriculum taxonomy" in err for err in result.errors)
