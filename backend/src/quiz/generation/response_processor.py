@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from quiz.contracts.models import QuizQuestion
+from quiz.contracts.sanitizer import sanitize_quiz_dict
 from quiz.contracts.schema import validate_quiz_question_dict
 from quiz.validation.deduplication import DeduplicationValidator
 from quiz.validation.taxonomy_validator import TaxonomyValidator
@@ -53,9 +54,11 @@ def process_generated_response(
         3. SymPy Math Validation: Proves mathematical truth and ensures distinct distractors.
         4. Deduplication Gate: Rejects candidate questions matching existing question bank items.
     """
+    parsed_json = sanitize_quiz_dict(parsed_json)
     parsed_json["id"] = resolve_question_id(parsed_json, question_id)
 
     # Stage 1: Pydantic schema structure validation
+
     try:
         candidate = validate_quiz_question_dict(parsed_json)
     except (ValidationError, ValueError, TypeError) as schema_error:

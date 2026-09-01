@@ -91,6 +91,13 @@ def test_invalid_option_keys_missing_key():
     assert "Options must contain exactly keys A, B, C, D" in str(exc.value)
 
 
+def test_invalid_options_non_dict_raises_error():
+    payload = sample_quiz_payload()
+    payload["options"] = "not_a_dict"
+    with pytest.raises(ValidationError):
+        QuizQuestion.model_validate(payload)
+
+
 def test_empty_option_text_raises_error():
     payload = sample_quiz_payload()
     payload["options"]["A"] = "   "
@@ -169,3 +176,45 @@ def test_math_validation_result():
     res = MathValidationResult(is_valid=True, errors=[], details={"calc": "4"})
     assert res.is_valid is True
     assert res.details["calc"] == "4"
+
+
+def test_quiz_models_auto_sanitize_latex_delimiters():
+    payload = {
+        "id": "q_math_latex",
+        "topic": "pre_algebra",
+        "subconcept": "two_step_equations",
+        "question_text": "¿Cuál es el valor de $x$ en la ecuación: $3x + 5 = 17$?",
+        "options": {"A": "$4$", "B": "$8$", "C": "$3$", "D": "$$6$$"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {
+                "misconception": "forgot_division",
+                "explanation": "Restaste $5$ pero olvidaste dividir entre $3$.",
+            },
+            "C": {
+                "misconception": "subtracted_instead_of_divided",
+                "explanation": "Restaste $$3$$ en vez de dividir.",
+            },
+            "D": {
+                "misconception": "divided_before_subtracting",
+                "explanation": "Dividiste antes de restar.",
+            },
+        },
+    }
+    question = QuizQuestion.model_validate(payload)
+    assert (
+        question.question_text == "¿Cuál es el valor de x en la ecuación: 3x + 5 = 17?"
+    )
+    assert question.options == {"A": "4", "B": "8", "C": "3", "D": "6"}
+    assert (
+        question.distractors["B"].explanation
+        == "Restaste 5 pero olvidaste dividir entre 3."
+    )
+    assert question.distractors["C"].explanation == "Restaste 3 en vez de dividir."
+
+    # Test DistractorDetail standalone sanitization
+    detail = DistractorDetail(
+        misconception="dummy_slug",
+        explanation="Explicación con variable $y$ y valor $$10$$.",
+    )
+    assert detail.explanation == "Explicación con variable y y valor 10."

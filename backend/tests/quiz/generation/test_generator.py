@@ -250,3 +250,39 @@ def test_generator_llm_request_failure_raises_generation_error():
     generator = QuizQuestionGenerator(client)
     with pytest.raises(GenerationError, match="SLM completion request failed"):
         generator.generate("arithmetic")
+
+
+def test_generator_auto_sanitizes_latex_math_delimiters():
+    payload_with_latex = {
+        "id": "q_latex_gen",
+        "topic": "pre_algebra",
+        "subconcept": "two_step_equations",
+        "question_text": "¿Cuál es el valor de $x$ en $7*x - 5 = 30$?",
+        "options": {"A": "$5$", "B": "$35$", "C": "$2$", "D": "$25$"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {
+                "misconception": "forgot_division",
+                "explanation": "Olvidaste dividir por $7$.",
+            },
+            "C": {
+                "misconception": "subtracted_instead_of_divided",
+                "explanation": "Restaste en vez de dividir.",
+            },
+            "D": {
+                "misconception": "divided_before_subtracting",
+                "explanation": "Dividiste antes de restar.",
+            },
+        },
+    }
+    client = MockLLMClient([json.dumps(payload_with_latex)])
+    generator = QuizQuestionGenerator(client)
+
+    question = generator.generate("pre_algebra", "two_step_equations")
+    assert question.id == "q_latex_gen"
+    assert question.question_text == "¿Cuál es el valor de x en 7*x - 5 = 30?"
+    assert "$" not in question.question_text
+    assert question.options[question.correct_option] == "5"
+    assert set(question.options.values()) == {"5", "35", "2", "25"}
+    assert all("$" not in opt for opt in question.options.values())
+    assert "$" not in question.distractors["B"].explanation

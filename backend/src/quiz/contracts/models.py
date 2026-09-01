@@ -1,6 +1,8 @@
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from quiz.contracts.sanitizer import sanitize_options_dict, strip_math_delimiters
 
 OptionKey = Literal["A", "B", "C", "D"]
 VALID_OPTIONS: set[str] = {"A", "B", "C", "D"}
@@ -19,6 +21,11 @@ class DistractorDetail(BaseModel):
         max_length=500,
         description="Primary-school friendly explanation",
     )
+
+    @field_validator("explanation", mode="before")
+    @classmethod
+    def sanitize_explanation_text(cls, value: Any) -> Any:
+        return strip_math_delimiters(value)
 
 
 class QuestionOptions(BaseModel):
@@ -43,6 +50,16 @@ class QuizQuestionBase(BaseModel):
     options: dict[str, str]
     correct_option: OptionKey
     distractors: dict[str, DistractorDetail]
+
+    @field_validator("question_text", mode="before")
+    @classmethod
+    def sanitize_question_text(cls, value: Any) -> Any:
+        return strip_math_delimiters(value)
+
+    @field_validator("options", mode="before")
+    @classmethod
+    def sanitize_options(cls, value: Any) -> Any:
+        return sanitize_options_dict(value) if isinstance(value, dict) else value
 
     @model_validator(mode="after")
     def validate_diagnostic_structure(self) -> "QuizQuestionBase":

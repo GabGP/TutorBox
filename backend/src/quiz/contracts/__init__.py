@@ -14,6 +14,12 @@ from quiz.contracts.models import (
     QuizQuestionResponse,
     ValidateQuestionRequest,
 )
+from quiz.contracts.sanitizer import (
+    sanitize_distractors_dict,
+    sanitize_options_dict,
+    sanitize_quiz_dict,
+    strip_math_delimiters,
+)
 from quiz.contracts.schema import (
     JSON_SCHEMA_DRAFT,
     SCHEMA_ID,
@@ -53,5 +59,9 @@ __all__ = [
     "get_quiz_question_schema_json",
     "is_valid_subconcept",
     "is_valid_topic",
+    "sanitize_distractors_dict",
+    "sanitize_options_dict",
+    "sanitize_quiz_dict",
+    "strip_math_delimiters",
     "validate_quiz_question_dict",
 ]
