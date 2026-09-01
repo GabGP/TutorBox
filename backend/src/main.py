@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from api.auth import router as auth_router
 from api.health import router as health_router
@@ -64,8 +64,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+api_v1_router = APIRouter(prefix="/api/v1")
+api_v1_router.include_router(auth_router, prefix="/auth")
+api_v1_router.include_router(users_router, prefix="/users")
+api_v1_router.include_router(staff_router, prefix="/staff")
+api_v1_router.include_router(quiz_router, prefix="/quiz")
+
 app.include_router(health_router)
-app.include_router(auth_router)
-app.include_router(users_router)
-app.include_router(staff_router)
-app.include_router(quiz_router)
+app.include_router(api_v1_router)

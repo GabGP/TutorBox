@@ -18,7 +18,7 @@ class UserProfileResponse(BaseModel):
     must_change_pin: bool
 
 
-@router.get("/users/me", response_model=UserProfileResponse)
+@router.get("/me", response_model=UserProfileResponse)
 def get_me(ctx: Annotated[AuthContext, Depends(get_current_session)]):
     """
     Returns caller's profile. Permitted during pending rotation (allowlist).

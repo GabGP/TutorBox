@@ -1,10 +1,10 @@
-"""Tests for POST /quiz/validate endpoint."""
+"""Tests for POST /api/v1/quiz/validate endpoint."""
 
 from fastapi.testclient import TestClient
 
 
 def test_validate_question_success(client: TestClient):
-    """POST /quiz/validate succeeds for a mathematically valid diagnostic question."""
+    """POST /api/v1/quiz/validate succeeds for a mathematically valid diagnostic question."""
     valid_payload = {
         "question": {
             "id": "q_test_val_01",
@@ -29,7 +29,7 @@ def test_validate_question_success(client: TestClient):
             },
         }
     }
-    response = client.post("/quiz/validate", json=valid_payload)
+    response = client.post("/api/v1/quiz/validate", json=valid_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["is_valid"] is True
@@ -37,7 +37,7 @@ def test_validate_question_success(client: TestClient):
 
 
 def test_validate_question_math_error(client: TestClient):
-    """POST /quiz/validate detects incorrect math in correct_option."""
+    """POST /api/v1/quiz/validate detects incorrect math in correct_option."""
     invalid_math_payload = {
         "question": {
             "id": "q_test_val_02",
@@ -62,7 +62,7 @@ def test_validate_question_math_error(client: TestClient):
             },
         }
     }
-    response = client.post("/quiz/validate", json=invalid_math_payload)
+    response = client.post("/api/v1/quiz/validate", json=invalid_math_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["is_valid"] is False
@@ -70,7 +70,7 @@ def test_validate_question_math_error(client: TestClient):
 
 
 def test_validate_question_distractor_collision(client: TestClient):
-    """POST /quiz/validate detects distractor evaluating to correct answer."""
+    """POST /api/v1/quiz/validate detects distractor evaluating to correct answer."""
     collision_payload = {
         "question": {
             "id": "q_test_val_03",
@@ -95,7 +95,7 @@ def test_validate_question_distractor_collision(client: TestClient):
             },
         }
     }
-    response = client.post("/quiz/validate", json=collision_payload)
+    response = client.post("/api/v1/quiz/validate", json=collision_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["is_valid"] is False
@@ -103,7 +103,7 @@ def test_validate_question_distractor_collision(client: TestClient):
 
 
 def test_validate_question_schema_failure(client: TestClient):
-    """POST /quiz/validate returns 422 if the JSON structure violates schema rules."""
+    """POST /api/v1/quiz/validate returns 422 if the JSON structure violates schema rules."""
     bad_schema_payload = {
         "question": {
             "id": "q_bad",
@@ -115,5 +115,5 @@ def test_validate_question_schema_failure(client: TestClient):
             "distractors": {},
         }
     }
-    response = client.post("/quiz/validate", json=bad_schema_payload)
+    response = client.post("/api/v1/quiz/validate", json=bad_schema_payload)
     assert response.status_code == 422

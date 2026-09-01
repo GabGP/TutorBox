@@ -15,7 +15,9 @@ def test_teacher_resets_student_pin(staff_db, client: TestClient):
     student_id = get_user_id(conn, "student1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
-    res = client.post(f"/users/{student_id}/reset-pin", headers=teacher_headers)
+    res = client.post(
+        f"/api/v1/staff/users/{student_id}/reset-pin", headers=teacher_headers
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["username"] == "student1"
@@ -29,11 +31,15 @@ def test_teacher_resets_student_pin(staff_db, client: TestClient):
     assert cursor.fetchone()["must_change_pin"] == 1
 
     # Old PIN must fail
-    old_login = client.post("/login", json={"username": "student1", "pin": "1234"})
+    old_login = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert old_login.status_code == 401
 
     # Temp PIN must succeed and indicate must_change_pin=True
-    new_login = client.post("/login", json={"username": "student1", "pin": temp_pin})
+    new_login = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": temp_pin}
+    )
     assert new_login.status_code == 200
     assert new_login.json()["must_change_pin"] is True
 
@@ -48,21 +54,25 @@ def test_teacher_resets_target_invalidates_all_target_sessions(
     student_id = get_user_id(conn, "student1")
 
     # Student logs in
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     student_token = login_res.json()["session_id"]
     student_headers = {"Authorization": f"Bearer {student_token}"}
 
     # Verify student session works
-    me_res = client.get("/users/me", headers=student_headers)
+    me_res = client.get("/api/v1/users/me", headers=student_headers)
     assert me_res.status_code == 200
 
     # Teacher resets student PIN
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    reset_res = client.post(f"/users/{student_id}/reset-pin", headers=teacher_headers)
+    reset_res = client.post(
+        f"/api/v1/staff/users/{student_id}/reset-pin", headers=teacher_headers
+    )
     assert reset_res.status_code == 200
 
     # Student's prior session is now invalid (401 Unauthorized)
-    me_after = client.get("/users/me", headers=student_headers)
+    me_after = client.get("/api/v1/users/me", headers=student_headers)
     assert me_after.status_code == 401
 
 
@@ -74,7 +84,9 @@ def test_teacher_resetting_admin_returns_403(staff_db, client: TestClient):
     admin_id = get_user_id(conn, "admin1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
-    res = client.post(f"/users/{admin_id}/reset-pin", headers=teacher_headers)
+    res = client.post(
+        f"/api/v1/staff/users/{admin_id}/reset-pin", headers=teacher_headers
+    )
     assert res.status_code == 403
     assert res.json()["detail"] == "Only admins may reset admin PINs."
 
@@ -88,14 +100,16 @@ def test_teacher_resets_another_teacher(staff_db, client: TestClient):
 
     # Create teacher2
     create_res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=teacher_headers,
         json={"username": "teacher2", "pin": "1234", "role": "teacher"},
     )
     assert create_res.status_code == 201
     teacher2_id = get_user_id(conn, "teacher2")
 
-    reset_res = client.post(f"/users/{teacher2_id}/reset-pin", headers=teacher_headers)
+    reset_res = client.post(
+        f"/api/v1/staff/users/{teacher2_id}/reset-pin", headers=teacher_headers
+    )
     assert reset_res.status_code == 200
     assert reset_res.json()["username"] == "teacher2"
     assert len(reset_res.json()["temporary_pin"]) == 6
@@ -110,22 +124,28 @@ def test_admin_resets_any_account(staff_db, client: TestClient):
 
     # Admin resets student
     student_id = get_user_id(conn, "student1")
-    res_s = client.post(f"/users/{student_id}/reset-pin", headers=admin_headers)
+    res_s = client.post(
+        f"/api/v1/staff/users/{student_id}/reset-pin", headers=admin_headers
+    )
     assert res_s.status_code == 200
 
     # Admin resets teacher
     teacher_id = get_user_id(conn, "teacher1")
-    res_t = client.post(f"/users/{teacher_id}/reset-pin", headers=admin_headers)
+    res_t = client.post(
+        f"/api/v1/staff/users/{teacher_id}/reset-pin", headers=admin_headers
+    )
     assert res_t.status_code == 200
 
     # Admin creates and resets another admin
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=admin_headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
     admin2_id = get_user_id(conn, "admin2")
-    res_a = client.post(f"/users/{admin2_id}/reset-pin", headers=admin_headers)
+    res_a = client.post(
+        f"/api/v1/staff/users/{admin2_id}/reset-pin", headers=admin_headers
+    )
     assert res_a.status_code == 200
 
 
@@ -134,7 +154,7 @@ def test_reset_pin_target_not_found(staff_db, client: TestClient):
     Resetting a non-existent user returns 404 Not Found.
     """
     admin_headers = auth_headers(client, "admin1", "1234")
-    res = client.post("/users/99999/reset-pin", headers=admin_headers)
+    res = client.post("/api/v1/staff/users/99999/reset-pin", headers=admin_headers)
     assert res.status_code == 404
     assert res.json()["detail"] == "User not found."
 
@@ -153,7 +173,9 @@ def test_reset_pin_target_soft_deleted(staff_db, client: TestClient):
     conn.commit()
 
     admin_headers = auth_headers(client, "admin1", "1234")
-    res = client.post(f"/users/{student2_id}/reset-pin", headers=admin_headers)
+    res = client.post(
+        f"/api/v1/staff/users/{student2_id}/reset-pin", headers=admin_headers
+    )
     assert res.status_code == 404
     assert res.json()["detail"] == "User not found."
 
@@ -166,7 +188,9 @@ def test_reset_pin_forbidden_for_students(staff_db, client: TestClient):
     student2_id = get_user_id(conn, "student2")
     student_headers = auth_headers(client, "student1", "1234")
 
-    res = client.post(f"/users/{student2_id}/reset-pin", headers=student_headers)
+    res = client.post(
+        f"/api/v1/staff/users/{student2_id}/reset-pin", headers=student_headers
+    )
     assert res.status_code == 403
     assert res.json()["detail"] == "Insufficient permissions."
 
@@ -175,7 +199,7 @@ def test_reset_pin_unauthenticated(client: TestClient):
     """
     Unauthenticated caller receives 401 Unauthorized.
     """
-    res = client.post("/users/1/reset-pin")
+    res = client.post("/api/v1/staff/users/1/reset-pin")
     assert res.status_code == 401
 
 
@@ -201,11 +225,13 @@ def test_reset_pin_blocked_during_pending_rotation(temp_db, client: TestClient):
     cursor.execute("SELECT id FROM users WHERE username = 'target_stud'")
     target_id = cursor.fetchone()["id"]
 
-    login_res = client.post("/login", json={"username": "teacher_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "teacher_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    res = client.post(f"/users/{target_id}/reset-pin", headers=headers)
+    res = client.post(f"/api/v1/staff/users/{target_id}/reset-pin", headers=headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "PIN change required."
 
@@ -220,7 +246,9 @@ def test_reset_pin_temporary_pin_never_logged(staff_db, client: TestClient, capl
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     with caplog.at_level(logging.DEBUG):
-        res = client.post(f"/users/{student_id}/reset-pin", headers=teacher_headers)
+        res = client.post(
+            f"/api/v1/staff/users/{student_id}/reset-pin", headers=teacher_headers
+        )
 
     assert res.status_code == 200
     temp_pin = res.json()["temporary_pin"]

@@ -1,4 +1,4 @@
-"""Tests for /quiz/questions CRUD endpoints."""
+"""Tests for /api/v1/quiz/questions CRUD endpoints."""
 
 from fastapi.testclient import TestClient
 
@@ -31,27 +31,29 @@ SAMPLE_QUESTION = QuizQuestion(
 
 
 def test_list_questions_rbac(staff_db, client: TestClient):
-    """GET /quiz/questions enforces RBAC."""
-    assert client.get("/quiz/questions").status_code == 401
+    """GET /api/v1/quiz/questions enforces RBAC."""
+    assert client.get("/api/v1/quiz/questions").status_code == 401
     student_headers = auth_headers(client, "student1", "1234")
-    assert client.get("/quiz/questions", headers=student_headers).status_code == 403
+    assert (
+        client.get("/api/v1/quiz/questions", headers=student_headers).status_code == 403
+    )
 
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    res = client.get("/quiz/questions", headers=teacher_headers)
+    res = client.get("/api/v1/quiz/questions", headers=teacher_headers)
     assert res.status_code == 200
     assert "questions" in res.json()
     assert "total" in res.json()
 
 
 def test_list_questions_filtering_and_pagination(staff_db, client: TestClient):
-    """GET /quiz/questions supports filtering and pagination."""
+    """GET /api/v1/quiz/questions supports filtering and pagination."""
     _, conn = staff_db
     create_question(conn, question=SAMPLE_QUESTION, source="seed", sympy_verified=True)
     conn.commit()
 
     teacher_headers = auth_headers(client, "teacher1", "1234")
     res = client.get(
-        "/quiz/questions?topic=arithmetic&limit=10&offset=0",
+        "/api/v1/quiz/questions?topic=arithmetic&limit=10&offset=0",
         headers=teacher_headers,
     )
     assert res.status_code == 200
@@ -60,7 +62,7 @@ def test_list_questions_filtering_and_pagination(staff_db, client: TestClient):
     assert any(q["id"] == "q_crud_sample_01" for q in data["questions"])
 
     res_empty = client.get(
-        "/quiz/questions?topic=nonexistent",
+        "/api/v1/quiz/questions?topic=nonexistent",
         headers=teacher_headers,
     )
     assert res_empty.status_code == 200
@@ -69,28 +71,28 @@ def test_list_questions_filtering_and_pagination(staff_db, client: TestClient):
 
 
 def test_get_question_by_id(staff_db, client: TestClient):
-    """GET /quiz/questions/{id} returns single question or 404."""
+    """GET /api/v1/quiz/questions/{id} returns single question or 404."""
     _, conn = staff_db
     create_question(conn, question=SAMPLE_QUESTION, source="seed", sympy_verified=True)
     conn.commit()
 
     teacher_headers = auth_headers(client, "teacher1", "1234")
     res_found = client.get(
-        "/quiz/questions/q_crud_sample_01",
+        "/api/v1/quiz/questions/q_crud_sample_01",
         headers=teacher_headers,
     )
     assert res_found.status_code == 200
     assert res_found.json()["id"] == "q_crud_sample_01"
 
     res_not_found = client.get(
-        "/quiz/questions/nonexistent_id",
+        "/api/v1/quiz/questions/nonexistent_id",
         headers=teacher_headers,
     )
     assert res_not_found.status_code == 404
 
 
 def test_create_question_success(staff_db, client: TestClient):
-    """POST /quiz/questions allows teacher to create a mathematically verified question."""
+    """POST /api/v1/quiz/questions allows teacher to create a mathematically verified question."""
     _, conn = staff_db
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
@@ -117,7 +119,7 @@ def test_create_question_success(staff_db, client: TestClient):
         },
     }
 
-    res = client.post("/quiz/questions", headers=teacher_headers, json=payload)
+    res = client.post("/api/v1/quiz/questions", headers=teacher_headers, json=payload)
     assert res.status_code == 201
     data = res.json()
     assert data["id"] == "q_teacher_01"
@@ -132,14 +134,14 @@ def test_create_question_success(staff_db, client: TestClient):
 
     # Test duplicate ID returns 409 Conflict
     res_duplicate = client.post(
-        "/quiz/questions", headers=teacher_headers, json=payload
+        "/api/v1/quiz/questions", headers=teacher_headers, json=payload
     )
     assert res_duplicate.status_code == 409
     assert "already exists" in res_duplicate.json()["detail"]
 
 
 def test_create_question_invalid_topic_or_math(staff_db, client: TestClient):
-    """POST /quiz/questions rejects invalid taxonomy or math errors with 422."""
+    """POST /api/v1/quiz/questions rejects invalid taxonomy or math errors with 422."""
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     bad_math_payload = {
@@ -156,41 +158,41 @@ def test_create_question_invalid_topic_or_math(staff_db, client: TestClient):
         },
     }
     res_math = client.post(
-        "/quiz/questions", headers=teacher_headers, json=bad_math_payload
+        "/api/v1/quiz/questions", headers=teacher_headers, json=bad_math_payload
     )
     assert res_math.status_code == 422
 
     bad_topic_payload = dict(bad_math_payload)
     bad_topic_payload["topic"] = "invalid_topic"
     res_topic = client.post(
-        "/quiz/questions", headers=teacher_headers, json=bad_topic_payload
+        "/api/v1/quiz/questions", headers=teacher_headers, json=bad_topic_payload
     )
     assert res_topic.status_code == 422
 
     bad_subconcept_payload = dict(bad_math_payload)
     bad_subconcept_payload["subconcept"] = "invalid_subconcept"
     res_sub = client.post(
-        "/quiz/questions", headers=teacher_headers, json=bad_subconcept_payload
+        "/api/v1/quiz/questions", headers=teacher_headers, json=bad_subconcept_payload
     )
     assert res_sub.status_code == 422
 
 
 def test_delete_question(staff_db, client: TestClient):
-    """DELETE /quiz/questions/{id} soft deletes question and records audit."""
+    """DELETE /api/v1/quiz/questions/{id} soft deletes question and records audit."""
     _, conn = staff_db
     create_question(conn, question=SAMPLE_QUESTION, source="seed", sympy_verified=True)
     conn.commit()
 
     teacher_headers = auth_headers(client, "teacher1", "1234")
     res_del = client.delete(
-        "/quiz/questions/q_crud_sample_01",
+        "/api/v1/quiz/questions/q_crud_sample_01",
         headers=teacher_headers,
     )
     assert res_del.status_code == 200
     assert res_del.json()["detail"] == "Question deleted."
 
     res_del_again = client.delete(
-        "/quiz/questions/q_crud_sample_01",
+        "/api/v1/quiz/questions/q_crud_sample_01",
         headers=teacher_headers,
     )
     assert res_del_again.status_code == 404
@@ -204,7 +206,7 @@ def test_delete_question(staff_db, client: TestClient):
 def test_create_question_retrieval_failure_returns_500(
     staff_db, client: TestClient, monkeypatch
 ):
-    """POST /quiz/questions returns 500 if question retrieval fails after creation."""
+    """POST /api/v1/quiz/questions returns 500 if question retrieval fails after creation."""
     from api.quiz import questions_write
 
     teacher_headers = auth_headers(client, "teacher1", "1234")
@@ -225,6 +227,6 @@ def test_create_question_retrieval_failure_returns_500(
             "D": {"misconception": "sign_error", "explanation": "Explicación."},
         },
     }
-    res = client.post("/quiz/questions", headers=teacher_headers, json=payload)
+    res = client.post("/api/v1/quiz/questions", headers=teacher_headers, json=payload)
     assert res.status_code == 500
     assert "Failed to retrieve created question" in res.json()["detail"]

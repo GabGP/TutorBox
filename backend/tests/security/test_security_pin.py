@@ -53,13 +53,15 @@ def test_plain_text_pin_never_logged_during_login(
 
     with caplog.at_level(logging.DEBUG):
         # 1. Attempt successful login
-        client.post("/login", json={"username": "student1", "pin": "1234"})
+        client.post("/api/v1/auth/login", json={"username": "student1", "pin": "1234"})
 
         # 2. Attempt failed login (wrong PIN)
-        client.post("/login", json={"username": "student1", "pin": "9999"})
+        client.post("/api/v1/auth/login", json={"username": "student1", "pin": "9999"})
 
         # 3. Attempt failed login (unknown user)
-        client.post("/login", json={"username": "unknown_student", "pin": "8888"})
+        client.post(
+            "/api/v1/auth/login", json={"username": "unknown_student", "pin": "8888"}
+        )
 
     # Inspect all captured log messages
     for record in caplog.records:
@@ -127,7 +129,9 @@ def test_plain_text_pin_never_logged_during_credential_change(
     neither current nor new plain-text PINs are logged.
     """
     sensitive_pins = ["1234", "9876", "1111"]
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -194,17 +198,19 @@ def test_session_id_never_logged_across_endpoints(
     """
     with caplog.at_level(logging.DEBUG):
         # 1. Login
-        login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+        login_res = client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+        )
         assert login_res.status_code == 200
         session_id = login_res.json()["session_id"]
         headers = {"Authorization": f"Bearer {session_id}"}
 
         # 2. Profile
-        profile_res = client.get("/users/me", headers=headers)
+        profile_res = client.get("/api/v1/users/me", headers=headers)
         assert profile_res.status_code == 200
 
         # 3. Logout
-        logout_res = client.post("/logout", headers=headers)
+        logout_res = client.post("/api/v1/auth/logout", headers=headers)
         assert logout_res.status_code == 200
 
     for record in caplog.records:

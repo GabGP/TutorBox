@@ -7,11 +7,15 @@ def test_get_me_success(seeded_db, client: TestClient):
     """
     GET /users/me returns authenticated caller profile.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert login_res.status_code == 200
     token = login_res.json()["session_id"]
 
-    response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+    response = client.get(
+        "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "student1"
@@ -24,7 +28,7 @@ def test_get_me_unauthenticated(client: TestClient):
     """
     GET /users/me without Bearer header returns 401.
     """
-    response = client.get("/users/me")
+    response = client.get("/api/v1/users/me")
     assert response.status_code == 401
 
 
@@ -41,11 +45,15 @@ def test_get_me_permitted_during_pending_rotation(temp_db, client: TestClient):
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "must_rotate", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "must_rotate", "pin": "1234"}
+    )
     assert login_res.status_code == 200
     token = login_res.json()["session_id"]
 
-    response = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+    response = client.get(
+        "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "must_rotate"

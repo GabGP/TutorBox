@@ -24,12 +24,12 @@ Comprehensive technical specification and integration contracts for the **TutorB
 - [5. Unified Error Response Format](#5-unified-error-response-format)
 - [6. Detailed Endpoint Contracts](#6-detailed-endpoint-contracts)
   - [6.1 System & Health (`GET /health`)](#61-system--health)
-  - [6.2 Authentication (`POST /login`, `POST /logout`)](#62-authentication)
-  - [6.3 User Self-Service (`POST /signup`, `GET /users/me`, `PATCH /users/me/pin`, `PATCH /users/me/username`)](#63-user-self-service)
-  - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{user_id}/reset-pin`, `DELETE /users/{user_id}`, `POST /users/{user_id}/recover`)](#64-staff-administration)
-  - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
-  - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{device_id}/assign`, `POST /devices/{device_id}/unassign`, `DELETE /devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
-  - [6.7 Quiz & Diagnostic Question Bank (`GET /quiz/topics`, `GET /quiz/schema`, `POST /quiz/validate`, `POST /quiz/generate`, `GET /quiz/questions`, `GET /quiz/questions/{id}`, `POST /quiz/questions`, `DELETE /quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
+  - [6.2 Authentication (`POST /api/v1/auth/login`, `POST /api/v1/auth/logout`)](#62-authentication)
+  - [6.3 User Self-Service (`POST /api/v1/users/signup`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/pin`, `PATCH /api/v1/users/me/username`)](#63-user-self-service)
+  - [6.4 Staff Administration (`GET /api/v1/staff/users`, `POST /api/v1/staff/users`, `POST /api/v1/staff/users/{user_id}/reset-pin`, `DELETE /api/v1/staff/users/{user_id}`, `POST /api/v1/staff/users/{user_id}/recover`)](#64-staff-administration)
+  - [6.5 System Audit (`GET /api/v1/staff/audit-logs`)](#65-system-audit)
+  - [6.6 Hardware Clicker & Device Fleet Management (`GET /api/v1/staff/devices`, `POST /api/v1/staff/devices`, `POST /api/v1/staff/devices/{device_id}/assign`, `POST /api/v1/staff/devices/{device_id}/unassign`, `DELETE /api/v1/staff/devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
+  - [6.7 Quiz & Diagnostic Question Bank (`GET /api/v1/quiz/topics`, `GET /api/v1/quiz/schema`, `POST /api/v1/quiz/validate`, `POST /api/v1/quiz/generate`, `GET /api/v1/quiz/questions`, `GET /api/v1/quiz/questions/{id}`, `POST /api/v1/quiz/questions`, `DELETE /api/v1/quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
 - [Next Steps](#next-steps)
 
 ---
@@ -39,6 +39,8 @@ Comprehensive technical specification and integration contracts for the **TutorB
 The TutorBox API runs on the NVIDIA Jetson Orin Nano edge appliance and communicates with the React/Vite Progressive Web Application (PWA) over the local classroom WLAN/Ethernet network.
 
 * **Base URL**: `http://<appliance-ip>:8000` (e.g., `http://127.0.0.1:8000` in local development)
+* **API v1 Prefix**: `/api/v1` (e.g., `/api/v1/auth/login`, `/api/v1/quiz/generate`)
+* **Unversioned Probes**: `/health`
 * **Interactive Swagger UI**: `http://<appliance-ip>:8000/docs`
 * **Raw OpenAPI JSON Schema**: `http://<appliance-ip>:8000/openapi.json`
 * **Content-Type**: `application/json` (unless otherwise noted)
@@ -56,17 +58,17 @@ sequenceDiagram
     participant API as FastAPI Backend
     participant DB as SQLite DB
 
-    Client->>API: POST /login {"username": "student1", "pin": "1234"}
+    Client->>API: POST /api/v1/auth/login {"username": "student1", "pin": "1234"}
     API->>DB: Query user & verify bcrypt hash
     API->>DB: INSERT INTO sessions (id, user_id, is_active) VALUES (uuid, id, 1)
     API-->>Client: 200 OK {"session_id": "<uuid4>", "username": "student1", "must_change_pin": false}
 
     Note over Client,API: Subsequent requests include Bearer Header
-    Client->>API: GET /users/me (Authorization: Bearer <uuid4>)
+    Client->>API: GET /api/v1/users/me (Authorization: Bearer <uuid4>)
     API->>DB: Query sessions JOIN users WHERE id = uuid AND is_active = 1
     API-->>Client: 200 OK {"user_id": 1, "username": "student1", "role": "student", ...}
 
-    Client->>API: POST /logout (Authorization: Bearer <uuid4>)
+    Client->>API: POST /api/v1/auth/logout (Authorization: Bearer <uuid4>)
     API->>DB: UPDATE sessions SET is_active = 0 WHERE id = uuid
     API-->>Client: 200 OK {"detail": "Logged out."}
 ```
@@ -90,31 +92,31 @@ TutorBox enforces strict role-based access across three user roles:
 | Endpoint | Method | Public | Student | Teacher | Admin | Gated by Pending Rotation? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | `/health` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/signup` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/login` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/logout` | `POST` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
-| `/users/me` | `GET` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
-| `/users/me/pin` | `PATCH` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
-| `/users/me/username` | `PATCH` | ❌ | ✅ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/users` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/users` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{user_id}/reset-pin` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{user_id}` | `DELETE` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/users/{user_id}/recover` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
-| `/audit-logs` | `GET` | ❌ | ❌ | ❌ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{device_id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{device_id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/devices/{device_id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
-| `/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
-| `/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/users/signup` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/auth/login` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/auth/logout` | `POST` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
+| `/api/v1/users/me` | `GET` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
+| `/api/v1/users/me/pin` | `PATCH` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) |
+| `/api/v1/users/me/username` | `PATCH` | ❌ | ✅ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/users` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/users` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/users/{user_id}/reset-pin` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/users/{user_id}` | `DELETE` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/users/{user_id}/recover` | `POST` | ❌ | ❌ | ✅ (student/teacher) | ✅ (any role) | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/audit-logs` | `GET` | ❌ | ❌ | ❌ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/devices` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/devices` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/devices/{device_id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/devices/{device_id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/staff/devices/{device_id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 
 
 
@@ -125,9 +127,9 @@ TutorBox enforces strict role-based access across three user roles:
 ### <a id="a-forced-pin-rotation-policy"></a>A. Forced PIN Rotation Policy
 * When a staff member resets an account's PIN or recovers an account, `must_change_pin` is set to `1` in SQLite.
 * Upon login, the client receives `"must_change_pin": true`.
-* **Allowlist Routes**: The user can **only** call `GET /users/me`, `PATCH /users/me/pin`, and `POST /logout`.
+* **Allowlist Routes**: The user can **only** call `GET /api/v1/users/me`, `PATCH /api/v1/users/me/pin`, and `POST /api/v1/auth/logout`.
 * **Gated Routes**: All other operational and administrative endpoints immediately reject the request with `403 Forbidden` (`{"detail": "PIN change required."}`).
-* Once `PATCH /users/me/pin` succeeds, `must_change_pin` is cleared to `0`.
+* Once `PATCH /api/v1/users/me/pin` succeeds, `must_change_pin` is cleared to `0`.
 
 ### <a id="b-anti-oracle-check-ordering"></a>B. Anti-Oracle Check Ordering
 To prevent timing or side-channel oracle attacks during credential modifications:
@@ -186,7 +188,7 @@ System and database diagnostic probe.
 
 ### <a id="62-authentication"></a>6.2 Authentication
 
-#### `POST /login`
+#### `POST /api/v1/auth/login`
 Authenticate a user with username and PIN to obtain a session token.
 
 * **Authorization**: Public (Rate-limited)
@@ -211,7 +213,7 @@ Authenticate a user with username and PIN to obtain a session token.
   * `422 Unprocessable Entity`: Username format or PIN digits invalid.
   * `429 Too Many Requests`: Account locked due to repeated failed attempts.
 
-#### `POST /logout`
+#### `POST /api/v1/auth/logout`
 Invalidate the current caller's active session.
 
 * **Authorization**: Bearer Token
@@ -228,7 +230,7 @@ Invalidate the current caller's active session.
 
 ### <a id="63-user-self-service"></a>6.3 User Self-Service
 
-#### `POST /signup`
+#### `POST /api/v1/users/signup`
 Public student self-registration.
 
 * **Authorization**: Public (Rate-limited)
@@ -251,7 +253,7 @@ Public student self-registration.
   * `422 Unprocessable Entity`: Validation constraint violated.
   * `429 Too Many Requests`: Global signup rate limit exceeded.
 
-#### `GET /users/me`
+#### `GET /api/v1/users/me`
 Retrieve profile metadata for the authenticated user.
 
 * **Authorization**: Bearer Token (Permitted during pending rotation)
@@ -267,7 +269,7 @@ Retrieve profile metadata for the authenticated user.
     ```
   * `401 Unauthorized`: Invalid or expired session.
 
-#### `PATCH /users/me/pin`
+#### `PATCH /api/v1/users/me/pin`
 Change personal PIN. Clears forced rotation flag and invalidates the current session.
 
 * **Authorization**: Bearer Token (Permitted during pending rotation)
@@ -288,7 +290,7 @@ Change personal PIN. Clears forced rotation flag and invalidates the current ses
   * `401 Unauthorized`: Invalid `current_pin`.
   * `422 Unprocessable Entity`: `new_pin` equals `current_pin` or fails validation.
 
-#### `PATCH /users/me/username`
+#### `PATCH /api/v1/users/me/username`
 Change personal username. Frees the old username and invalidates the current session.
 
 * **Authorization**: Bearer Token (Gated by pending rotation)
@@ -315,7 +317,7 @@ Change personal username. Frees the old username and invalidates the current ses
 
 ### <a id="64-staff-administration"></a>6.4 Staff Administration
 
-#### `GET /users`
+#### `GET /api/v1/staff/users`
 List accounts in the school roster.
 
 * **Authorization**: Teacher, Admin
@@ -351,7 +353,7 @@ List accounts in the school roster.
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
 
-#### `POST /users`
+#### `POST /api/v1/staff/users`
 Create a new user account.
 
 * **Authorization**: Teacher (can create `student`, `teacher`), Admin (can create any role)
@@ -374,7 +376,7 @@ Create a new user account.
   * `403 Forbidden`: Teacher attempting to create an admin account.
   * `409 Conflict`: Username already taken.
 
-#### `POST /users/{user_id}/reset-pin`
+#### `POST /api/v1/staff/users/{user_id}/reset-pin`
 Issue a random 6-digit temporary PIN and require rotation.
 
 * **Authorization**: Teacher (targets `student`, `teacher`), Admin (targets any role)
@@ -391,7 +393,7 @@ Issue a random 6-digit temporary PIN and require rotation.
   * `403 Forbidden`: Teacher attempting to reset an admin PIN.
   * `404 Not Found`: User not found or soft-deleted.
 
-#### `DELETE /users/{user_id}`
+#### `DELETE /api/v1/staff/users/{user_id}`
 Soft-delete an account, anonymize username, deactivate sessions, and retain educational logs.
 
 * **Authorization**: Teacher (targets `student`, `teacher`), Admin (targets any role)
@@ -408,7 +410,7 @@ Soft-delete an account, anonymize username, deactivate sessions, and retain educ
   * `404 Not Found`: Target user ID not found or already deleted.
   * `409 Conflict`: Attempting to delete the last remaining admin.
 
-#### `POST /users/{user_id}/recover`
+#### `POST /api/v1/staff/users/{user_id}/recover`
 Restore a soft-deleted account under a new username with a temporary PIN.
 
 * **Authorization**: Teacher (targets `student`, `teacher`), Admin (targets any role)
@@ -437,7 +439,7 @@ Restore a soft-deleted account under a new username with a temporary PIN.
 
 ### <a id="65-system-audit"></a>6.5 System Audit
 
-#### `GET /audit-logs`
+#### `GET /api/v1/staff/audit-logs`
 Read up to 500 append-only audit trail records.
 
 * **Authorization**: Admin Only
@@ -469,7 +471,7 @@ Read up to 500 append-only audit trail records.
 
 ### <a id="66-hardware-clicker--device-fleet-management"></a>6.6 Hardware Clicker & Device Fleet Management
 
-#### `GET /devices`
+#### `GET /api/v1/staff/devices`
 List all registered physical ESP32 clickers with current student pairing info.
 
 * **Authorization**: Teacher, Admin
@@ -495,7 +497,7 @@ List all registered physical ESP32 clickers with current student pairing info.
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
 
-#### `POST /devices`
+#### `POST /api/v1/staff/devices`
 Register a new physical clicker identifier into the appliance fleet.
 
 * **Authorization**: Teacher, Admin
@@ -519,7 +521,7 @@ Register a new physical clicker identifier into the appliance fleet.
   * `409 Conflict`: `device_id` is already registered.
   * `422 Unprocessable Entity`: `device_id` is empty or invalid format.
 
-#### `POST /devices/{device_id}/assign`
+#### `POST /api/v1/staff/devices/{device_id}/assign`
 Link a physical clicker to an active student user account.
 
 * **Authorization**: Teacher, Admin
@@ -544,7 +546,7 @@ Link a physical clicker to an active student user account.
   * `404 Not Found`: Device or student account not found.
   * `422 Unprocessable Entity`: Target user is not a student account.
 
-#### `POST /devices/{device_id}/unassign`
+#### `POST /api/v1/staff/devices/{device_id}/unassign`
 Unlink a physical clicker from any student.
 
 * **Authorization**: Teacher, Admin
@@ -560,7 +562,7 @@ Unlink a physical clicker from any student.
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
   * `404 Not Found`: Device not found.
 
-#### `DELETE /devices/{device_id}`
+#### `DELETE /api/v1/staff/devices/{device_id}`
 Remove a physical clicker from the appliance fleet.
 
 * **Authorization**: Teacher, Admin
@@ -580,7 +582,7 @@ Remove a physical clicker from the appliance fleet.
 
 ### <a id="67-quiz--diagnostic-question-bank"></a>6.7 Quiz & Diagnostic Question Bank
 
-#### `GET /quiz/topics`
+#### `GET /api/v1/quiz/topics`
 Retrieve the full primary mathematics curriculum taxonomy including topics, subconcepts, and diagnostic misconception codes.
 
 * **Authorization**: Public
@@ -626,7 +628,7 @@ Retrieve the full primary mathematics curriculum taxonomy including topics, subc
     ]
     ```
 
-#### `GET /quiz/schema`
+#### `GET /api/v1/quiz/schema`
 Retrieve the canonical versioned JSON Schema (Draft 2020-12) for diagnostic quiz questions. Used by frontend PWAs, offline clickers, and sync engines for dynamic schema discovery and client-side payload validation.
 
 * **Authorization**: Public
@@ -682,7 +684,7 @@ Retrieve the canonical versioned JSON Schema (Draft 2020-12) for diagnostic quiz
     }
     ```
 
-#### `POST /quiz/validate`
+#### `POST /api/v1/quiz/validate`
 Execute deterministic SymPy validation on an arbitrary multiple-choice diagnostic item without persisting it.
 
 * **Authorization**: Public
@@ -745,7 +747,7 @@ Execute deterministic SymPy validation on an arbitrary multiple-choice diagnosti
     ```
   * `422 Unprocessable Entity`: JSON schema violation (missing distractor, invalid option key).
 
-#### `POST /quiz/generate`
+#### `POST /api/v1/quiz/generate`
 Generate a new diagnostic question on-demand using the rejection and retry pipeline.
 
 * **Authorization**: Teacher, Admin
@@ -795,7 +797,7 @@ Generate a new diagnostic question on-demand using the rejection and retry pipel
   * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
   * `502 Bad Gateway`: SLM generation failed all retry attempts.
 
-#### `GET /quiz/questions`
+#### `GET /api/v1/quiz/questions`
 Query and filter diagnostic questions from the question bank.
 
 * **Authorization**: Teacher, Admin
@@ -846,7 +848,7 @@ Query and filter diagnostic questions from the question bank.
     ```
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
 
-#### `GET /quiz/questions/{id}`
+#### `GET /api/v1/quiz/questions/{id}`
 Fetch a single diagnostic question by its unique identifier.
 
 * **Authorization**: Teacher, Admin
@@ -856,7 +858,7 @@ Fetch a single diagnostic question by its unique identifier.
   * `200 OK`: Question JSON model.
   * `404 Not Found`: Question ID does not exist or is soft-deleted.
 
-#### `POST /quiz/questions`
+#### `POST /api/v1/quiz/questions`
 Manually create a teacher-authored diagnostic question with deterministic SymPy verification.
 
 * **Authorization**: Teacher, Admin
@@ -896,7 +898,7 @@ Manually create a teacher-authored diagnostic question with deterministic SymPy 
   * `409 Conflict`: Question with specified `id` already exists in the bank.
   * `422 Unprocessable Content`: Mathematical validation failure or schema/taxonomy error.
 
-#### `DELETE /quiz/questions/{id}`
+#### `DELETE /api/v1/quiz/questions/{id}`
 Soft-delete a diagnostic question from the question bank while retaining telemetry integrity.
 
 * **Authorization**: Teacher, Admin

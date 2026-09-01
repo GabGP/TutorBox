@@ -18,26 +18,32 @@ def test_teacher_deletes_student_success(staff_db, client: TestClient):
     student_id = get_user_id(conn, "student1")
 
     # Log student1 in to create an active session
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert login_res.status_code == 200
     student_token = login_res.json()["session_id"]
     student_headers = {"Authorization": f"Bearer {student_token}"}
 
     # Verify session works
-    assert client.get("/users/me", headers=student_headers).status_code == 200
+    assert client.get("/api/v1/users/me", headers=student_headers).status_code == 200
 
     # Teacher deletes student1
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    del_res = client.delete(f"/users/{student_id}", headers=teacher_headers)
+    del_res = client.delete(
+        f"/api/v1/staff/users/{student_id}", headers=teacher_headers
+    )
     assert del_res.status_code == 200
     assert del_res.json() == {"detail": "Account deleted."}
 
     # Active session is immediately invalidated (401)
-    assert client.get("/users/me", headers=student_headers).status_code == 401
+    assert client.get("/api/v1/users/me", headers=student_headers).status_code == 401
 
     # Login fails
     assert (
-        client.post("/login", json={"username": "student1", "pin": "1234"}).status_code
+        client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+        ).status_code
         == 401
     )
 
@@ -64,13 +70,15 @@ def test_teacher_deletes_another_teacher_success(staff_db, client: TestClient):
 
     # Create teacher2
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=teacher_headers,
         json={"username": "teacher2", "pin": "1234", "role": "teacher"},
     )
     teacher2_id = get_user_id(conn, "teacher2")
 
-    del_res = client.delete(f"/users/{teacher2_id}", headers=teacher_headers)
+    del_res = client.delete(
+        f"/api/v1/staff/users/{teacher2_id}", headers=teacher_headers
+    )
     assert del_res.status_code == 200
     assert del_res.json() == {"detail": "Account deleted."}
 
@@ -83,7 +91,7 @@ def test_teacher_deleting_admin_returns_403(staff_db, client: TestClient):
     admin_id = get_user_id(conn, "admin1")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
-    res = client.delete(f"/users/{admin_id}", headers=teacher_headers)
+    res = client.delete(f"/api/v1/staff/users/{admin_id}", headers=teacher_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Only admins may delete admin accounts."
 
@@ -98,24 +106,33 @@ def test_admin_deletes_anyone_success(staff_db, client: TestClient):
     # Admin deletes student
     student_id = get_user_id(conn, "student1")
     assert (
-        client.delete(f"/users/{student_id}", headers=admin_headers).status_code == 200
+        client.delete(
+            f"/api/v1/staff/users/{student_id}", headers=admin_headers
+        ).status_code
+        == 200
     )
 
     # Admin deletes teacher
     teacher_id = get_user_id(conn, "teacher1")
     assert (
-        client.delete(f"/users/{teacher_id}", headers=admin_headers).status_code == 200
+        client.delete(
+            f"/api/v1/staff/users/{teacher_id}", headers=admin_headers
+        ).status_code
+        == 200
     )
 
     # Admin creates second admin and deletes them
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=admin_headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
     admin2_id = get_user_id(conn, "admin2")
     assert (
-        client.delete(f"/users/{admin2_id}", headers=admin_headers).status_code == 200
+        client.delete(
+            f"/api/v1/staff/users/{admin2_id}", headers=admin_headers
+        ).status_code
+        == 200
     )
 
 
@@ -128,7 +145,7 @@ def test_admin_cannot_delete_last_remaining_admin(staff_db, client: TestClient):
     admin_headers = auth_headers(client, "admin1", "1234")
 
     # Only admin1 exists
-    res = client.delete(f"/users/{admin_id}", headers=admin_headers)
+    res = client.delete(f"/api/v1/staff/users/{admin_id}", headers=admin_headers)
     assert res.status_code == 409
     assert res.json()["detail"] == "Cannot delete the last remaining admin account."
 
@@ -138,7 +155,7 @@ def test_delete_user_not_found(staff_db, client: TestClient):
     Deleting a non-existent user returns 404 Not Found.
     """
     admin_headers = auth_headers(client, "admin1", "1234")
-    res = client.delete("/users/99999", headers=admin_headers)
+    res = client.delete("/api/v1/staff/users/99999", headers=admin_headers)
     assert res.status_code == 404
     assert res.json()["detail"] == "User not found."
 
@@ -153,11 +170,14 @@ def test_delete_already_deleted_user_returns_404(staff_db, client: TestClient):
 
     # First delete succeeds
     assert (
-        client.delete(f"/users/{student1_id}", headers=admin_headers).status_code == 200
+        client.delete(
+            f"/api/v1/staff/users/{student1_id}", headers=admin_headers
+        ).status_code
+        == 200
     )
 
     # Second delete returns 404
-    res = client.delete(f"/users/{student1_id}", headers=admin_headers)
+    res = client.delete(f"/api/v1/staff/users/{student1_id}", headers=admin_headers)
     assert res.status_code == 404
     assert res.json()["detail"] == "User not found."
 
@@ -170,7 +190,7 @@ def test_delete_user_forbidden_for_students(staff_db, client: TestClient):
     student2_id = get_user_id(conn, "student2")
     student_headers = auth_headers(client, "student1", "1234")
 
-    res = client.delete(f"/users/{student2_id}", headers=student_headers)
+    res = client.delete(f"/api/v1/staff/users/{student2_id}", headers=student_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Insufficient permissions."
 
@@ -179,7 +199,7 @@ def test_delete_user_unauthenticated(client: TestClient):
     """
     Unauthenticated caller receives 401 Unauthorized.
     """
-    assert client.delete("/users/1").status_code == 401
+    assert client.delete("/api/v1/staff/users/1").status_code == 401
 
 
 def test_delete_user_blocked_during_pending_rotation(temp_db, client: TestClient):
@@ -202,11 +222,13 @@ def test_delete_user_blocked_during_pending_rotation(temp_db, client: TestClient
     cursor.execute("SELECT id FROM users WHERE username = 'target_stud'")
     target_id = cursor.fetchone()["id"]
 
-    login_res = client.post("/login", json={"username": "teacher_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "teacher_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    res = client.delete(f"/users/{target_id}", headers=headers)
+    res = client.delete(f"/api/v1/staff/users/{target_id}", headers=headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "PIN change required."
 
@@ -232,7 +254,9 @@ def test_soft_delete_preserves_telemetry_turn_logs(staff_db, client: TestClient)
 
     # Teacher deletes student1
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    del_res = client.delete(f"/users/{student_id}", headers=teacher_headers)
+    del_res = client.delete(
+        f"/api/v1/staff/users/{student_id}", headers=teacher_headers
+    )
     assert del_res.status_code == 200
 
     # Verify telemetry is intact
@@ -262,11 +286,15 @@ def test_original_username_reusable_after_deletion(staff_db, client: TestClient)
 
     # Delete student1
     assert (
-        client.delete(f"/users/{student_id}", headers=teacher_headers).status_code
+        client.delete(
+            f"/api/v1/staff/users/{student_id}", headers=teacher_headers
+        ).status_code
         == 200
     )
 
     # Re-register with 'student1'
-    signup_res = client.post("/signup", json={"username": "student1", "pin": "5678"})
+    signup_res = client.post(
+        "/api/v1/users/signup", json={"username": "student1", "pin": "5678"}
+    )
     assert signup_res.status_code == 201
     assert signup_res.json()["username"] == "student1"

@@ -7,25 +7,20 @@ from tests.conftest import auth_headers, get_user_id
 
 
 def test_teacher_recovers_student_success(staff_db, client: TestClient):
-    """
-    Teacher can recover a soft-deleted student account with a new username.
-    - Returns 200 OK with RecoverUserResponse.
-    - Database row has deleted_at cleared and must_change_pin=1.
-    - Student can log in with temporary PIN and is prompted for rotation.
-    """
+    """Teacher can recover a soft-deleted student account with a new username."""
     _, conn = staff_db
     student2_id = get_user_id(conn, "student2")
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     # Soft-delete student2
-    assert (
-        client.delete(f"/users/{student2_id}", headers=teacher_headers).status_code
-        == 200
+    del_res = client.delete(
+        f"/api/v1/staff/users/{student2_id}", headers=teacher_headers
     )
+    assert del_res.status_code == 200
 
     # Recover student2 under new username 'student2_restored'
     rec_res = client.post(
-        f"/users/{student2_id}/recover",
+        f"/api/v1/staff/users/{student2_id}/recover",
         headers=teacher_headers,
         json={"username": "student2_restored"},
     )
@@ -50,7 +45,7 @@ def test_teacher_recovers_student_success(staff_db, client: TestClient):
 
     # Login with temp PIN works and flags must_change_pin=True
     login_res = client.post(
-        "/login", json={"username": "student2_restored", "pin": temp_pin}
+        "/api/v1/auth/login", json={"username": "student2_restored", "pin": temp_pin}
     )
     assert login_res.status_code == 200
     assert login_res.json()["must_change_pin"] is True
@@ -65,18 +60,18 @@ def test_teacher_recovers_another_teacher_success(staff_db, client: TestClient):
 
     # Create teacher2
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=teacher_headers,
         json={"username": "teacher2", "pin": "1234", "role": "teacher"},
     )
     teacher2_id = get_user_id(conn, "teacher2")
 
     # Delete teacher2
-    client.delete(f"/users/{teacher2_id}", headers=teacher_headers)
+    client.delete(f"/api/v1/staff/users/{teacher2_id}", headers=teacher_headers)
 
     # Recover teacher2
     rec_res = client.post(
-        f"/users/{teacher2_id}/recover",
+        f"/api/v1/staff/users/{teacher2_id}/recover",
         headers=teacher_headers,
         json={"username": "teacher2_new"},
     )
@@ -94,16 +89,16 @@ def test_teacher_recovering_admin_returns_403(staff_db, client: TestClient):
 
     # Create and delete admin2
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=admin_headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
     admin2_id = get_user_id(conn, "admin2")
-    client.delete(f"/users/{admin2_id}", headers=admin_headers)
+    client.delete(f"/api/v1/staff/users/{admin2_id}", headers=admin_headers)
 
     # Teacher attempts recovery
     rec_res = client.post(
-        f"/users/{admin2_id}/recover",
+        f"/api/v1/staff/users/{admin2_id}/recover",
         headers=teacher_headers,
         json={"username": "admin2_restored"},
     )
@@ -120,16 +115,16 @@ def test_admin_recovers_any_account(staff_db, client: TestClient):
 
     # Create and delete admin2
     client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=admin_headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
     admin2_id = get_user_id(conn, "admin2")
-    client.delete(f"/users/{admin2_id}", headers=admin_headers)
+    client.delete(f"/api/v1/staff/users/{admin2_id}", headers=admin_headers)
 
     # Admin recovers admin2
     rec_res = client.post(
-        f"/users/{admin2_id}/recover",
+        f"/api/v1/staff/users/{admin2_id}/recover",
         headers=admin_headers,
         json={"username": "admin2_restored"},
     )
@@ -146,11 +141,11 @@ def test_recover_username_conflict_returns_409(staff_db, client: TestClient):
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     # Soft-delete student2
-    client.delete(f"/users/{student2_id}", headers=teacher_headers)
+    client.delete(f"/api/v1/staff/users/{student2_id}", headers=teacher_headers)
 
     # Attempt to recover with taken username 'student1'
     rec_res = client.post(
-        f"/users/{student2_id}/recover",
+        f"/api/v1/staff/users/{student2_id}/recover",
         headers=teacher_headers,
         json={"username": "student1"},
     )
@@ -171,7 +166,7 @@ def test_recover_target_not_found_or_not_deleted(staff_db, client: TestClient):
 
     # Non-existent ID
     res_nonexistent = client.post(
-        "/users/99999/recover",
+        "/api/v1/staff/users/99999/recover",
         headers=admin_headers,
         json={"username": "some_user"},
     )
@@ -180,7 +175,7 @@ def test_recover_target_not_found_or_not_deleted(staff_db, client: TestClient):
 
     # Active user (not deleted)
     res_active = client.post(
-        f"/users/{student1_id}/recover",
+        f"/api/v1/staff/users/{student1_id}/recover",
         headers=admin_headers,
         json={"username": "some_user"},
     )
@@ -195,11 +190,11 @@ def test_recover_validation_errors(staff_db, client: TestClient):
     _, conn = staff_db
     student2_id = get_user_id(conn, "student2")
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    client.delete(f"/users/{student2_id}", headers=teacher_headers)
+    client.delete(f"/api/v1/staff/users/{student2_id}", headers=teacher_headers)
 
     # Invalid username with space
     res = client.post(
-        f"/users/{student2_id}/recover",
+        f"/api/v1/staff/users/{student2_id}/recover",
         headers=teacher_headers,
         json={"username": "bad name"},
     )
@@ -215,7 +210,7 @@ def test_recover_user_forbidden_for_students(staff_db, client: TestClient):
     student_headers = auth_headers(client, "student1", "1234")
 
     res = client.post(
-        f"/users/{student2_id}/recover",
+        f"/api/v1/staff/users/{student2_id}/recover",
         headers=student_headers,
         json={"username": "new_student2"},
     )
@@ -228,7 +223,9 @@ def test_recover_user_unauthenticated(client: TestClient):
     Unauthenticated caller receives 401 Unauthorized.
     """
     assert (
-        client.post("/users/1/recover", json={"username": "new_student"}).status_code
+        client.post(
+            "/api/v1/staff/users/1/recover", json={"username": "new_student"}
+        ).status_code
         == 401
     )
 
@@ -253,12 +250,14 @@ def test_recover_user_blocked_during_pending_rotation(temp_db, client: TestClien
     cursor.execute("SELECT id FROM users WHERE username = 'deleted_stud'")
     deleted_id = cursor.fetchone()["id"]
 
-    login_res = client.post("/login", json={"username": "teacher_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "teacher_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
     res = client.post(
-        f"/users/{deleted_id}/recover",
+        f"/api/v1/staff/users/{deleted_id}/recover",
         headers=headers,
         json={"username": "restored_stud"},
     )
@@ -276,12 +275,12 @@ def test_recover_temporary_pin_never_logged(staff_db, client: TestClient, caplog
     teacher_headers = auth_headers(client, "teacher1", "1234")
 
     # Soft-delete student2
-    client.delete(f"/users/{student2_id}", headers=teacher_headers)
+    client.delete(f"/api/v1/staff/users/{student2_id}", headers=teacher_headers)
 
     # Recover student2 under caplog
     with caplog.at_level(logging.DEBUG):
         rec_res = client.post(
-            f"/users/{student2_id}/recover",
+            f"/api/v1/staff/users/{student2_id}/recover",
             headers=teacher_headers,
             json={"username": "student2_restored"},
         )

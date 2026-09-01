@@ -1,4 +1,4 @@
-"""Tests for POST /quiz/generate endpoint."""
+"""Tests for POST /api/v1/quiz/generate endpoint."""
 
 import json
 
@@ -37,19 +37,19 @@ VALID_LLM_OUTPUT = json.dumps(
 
 
 def test_generate_question_rbac_unauthenticated(client: TestClient):
-    """POST /quiz/generate returns 401 Unauthorized for unauthenticated callers."""
+    """POST /api/v1/quiz/generate returns 401 Unauthorized for unauthenticated callers."""
     response = client.post(
-        "/quiz/generate",
+        "/api/v1/quiz/generate",
         json={"topic": "arithmetic", "subconcept": "addition_subtraction"},
     )
     assert response.status_code == 401
 
 
 def test_generate_question_rbac_student_forbidden(staff_db, client: TestClient):
-    """POST /quiz/generate returns 403 Forbidden for students."""
+    """POST /api/v1/quiz/generate returns 403 Forbidden for students."""
     headers = auth_headers(client, "student1", "1234")
     response = client.post(
-        "/quiz/generate",
+        "/api/v1/quiz/generate",
         headers=headers,
         json={"topic": "arithmetic", "subconcept": "addition_subtraction"},
     )
@@ -57,7 +57,7 @@ def test_generate_question_rbac_student_forbidden(staff_db, client: TestClient):
 
 
 def test_generate_question_rbac_rotation_pending_forbidden(temp_db, client: TestClient):
-    """POST /quiz/generate returns 403 Forbidden when PIN rotation is pending."""
+    """POST /api/v1/quiz/generate returns 403 Forbidden when PIN rotation is pending."""
     from security.auth import hash_pin
 
     _, conn = temp_db
@@ -68,12 +68,14 @@ def test_generate_question_rbac_rotation_pending_forbidden(temp_db, client: Test
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "teacher_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "teacher_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
     response = client.post(
-        "/quiz/generate",
+        "/api/v1/quiz/generate",
         headers=headers,
         json={"topic": "arithmetic", "subconcept": "addition_subtraction"},
     )
@@ -91,7 +93,7 @@ def test_generate_question_success_no_save(staff_db, client: TestClient):
     try:
         headers = auth_headers(client, "teacher1", "1234")
         response = client.post(
-            "/quiz/generate",
+            "/api/v1/quiz/generate",
             headers=headers,
             json={
                 "topic": "arithmetic",
@@ -120,7 +122,7 @@ def test_generate_question_success_and_save_to_bank(staff_db, client: TestClient
     try:
         headers = auth_headers(client, "teacher1", "1234")
         response = client.post(
-            "/quiz/generate",
+            "/api/v1/quiz/generate",
             headers=headers,
             json={
                 "topic": "arithmetic",
@@ -151,18 +153,18 @@ def test_generate_question_success_and_save_to_bank(staff_db, client: TestClient
 
 
 def test_generate_question_invalid_topic_subconcept(staff_db, client: TestClient):
-    """POST /quiz/generate validates topic and subconcept existence."""
+    """POST /api/v1/quiz/generate validates topic and subconcept existence."""
     headers = auth_headers(client, "teacher1", "1234")
 
     bad_topic_res = client.post(
-        "/quiz/generate",
+        "/api/v1/quiz/generate",
         headers=headers,
         json={"topic": "nonexistent_topic"},
     )
     assert bad_topic_res.status_code == 422
 
     bad_sub_res = client.post(
-        "/quiz/generate",
+        "/api/v1/quiz/generate",
         headers=headers,
         json={"topic": "arithmetic", "subconcept": "nonexistent_subconcept"},
     )
@@ -170,7 +172,7 @@ def test_generate_question_invalid_topic_subconcept(staff_db, client: TestClient
 
 
 def test_generate_question_llm_failure_returns_502(staff_db, client: TestClient):
-    """POST /quiz/generate returns 502 when LLM outputs unrecoverable malformed text."""
+    """POST /api/v1/quiz/generate returns 502 when LLM outputs unrecoverable malformed text."""
     mock_llm = MockLLMClient(["invalid text"] * 5)
     app.dependency_overrides[get_quiz_generator] = lambda: QuizQuestionGenerator(
         llm_client=mock_llm
@@ -179,7 +181,7 @@ def test_generate_question_llm_failure_returns_502(staff_db, client: TestClient)
     try:
         headers = auth_headers(client, "admin1", "1234")
         response = client.post(
-            "/quiz/generate",
+            "/api/v1/quiz/generate",
             headers=headers,
             json={"topic": "arithmetic", "subconcept": "addition_subtraction"},
         )

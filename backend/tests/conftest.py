@@ -128,7 +128,9 @@ def auth_headers(
     client: TestClient, username: str, pin: str = "1234"
 ) -> dict[str, str]:
     """Helper to log in and return Bearer authorization headers."""
-    response = client.post("/login", json={"username": username, "pin": pin})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": username, "pin": pin}
+    )
     assert response.status_code == 200, (
         f"Login failed for {username}: {response.json()}"
     )

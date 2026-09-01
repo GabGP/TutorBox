@@ -8,7 +8,9 @@ def test_signup_success(temp_db, client: TestClient):
     POST /signup creates an active student account and returns 201 Created.
     """
     db_path, _ = temp_db
-    response = client.post("/signup", json={"username": "new_student", "pin": "1234"})
+    response = client.post(
+        "/api/v1/users/signup", json={"username": "new_student", "pin": "1234"}
+    )
     assert response.status_code == 201
     data = response.json()
     assert data["username"] == "new_student"
@@ -33,7 +35,9 @@ def test_signup_duplicate_username_returns_409(seeded_db, client: TestClient):
     """
     POST /signup with an existing username returns 409 Conflict.
     """
-    response = client.post("/signup", json={"username": "student1", "pin": "5678"})
+    response = client.post(
+        "/api/v1/users/signup", json={"username": "student1", "pin": "5678"}
+    )
     assert response.status_code == 409
     assert response.json()["detail"] == "Username already taken."
 
@@ -50,7 +54,9 @@ def test_signup_rate_limiting_triggers_429(temp_db, client: TestClient, monkeypa
                 sys.modules[mod_name].signup_rate_limiter, "allow", lambda: False
             )
 
-    res = client.post("/signup", json={"username": "flood_blocked", "pin": "1234"})
+    res = client.post(
+        "/api/v1/users/signup", json={"username": "flood_blocked", "pin": "1234"}
+    )
     assert res.status_code == 429
     assert "Too many signup attempts" in res.json()["detail"]
 
@@ -61,20 +67,24 @@ def test_signup_validation_errors(temp_db, client: TestClient):
     """
     # Oversized username
     assert (
-        client.post("/signup", json={"username": "a" * 33, "pin": "1234"}).status_code
+        client.post(
+            "/api/v1/users/signup", json={"username": "a" * 33, "pin": "1234"}
+        ).status_code
         == 422
     )
 
     # Undersized username
     assert (
-        client.post("/signup", json={"username": "ab", "pin": "1234"}).status_code
+        client.post(
+            "/api/v1/users/signup", json={"username": "ab", "pin": "1234"}
+        ).status_code
         == 422
     )
 
     # Invalid characters in username
     assert (
         client.post(
-            "/signup", json={"username": "user space", "pin": "1234"}
+            "/api/v1/users/signup", json={"username": "user space", "pin": "1234"}
         ).status_code
         == 422
     )
@@ -82,7 +92,7 @@ def test_signup_validation_errors(temp_db, client: TestClient):
     # Non-numeric PIN
     assert (
         client.post(
-            "/signup", json={"username": "valid_user", "pin": "abcd"}
+            "/api/v1/users/signup", json={"username": "valid_user", "pin": "abcd"}
         ).status_code
         == 422
     )
@@ -90,7 +100,7 @@ def test_signup_validation_errors(temp_db, client: TestClient):
     # Short PIN (<4)
     assert (
         client.post(
-            "/signup", json={"username": "valid_user", "pin": "123"}
+            "/api/v1/users/signup", json={"username": "valid_user", "pin": "123"}
         ).status_code
         == 422
     )
@@ -98,7 +108,7 @@ def test_signup_validation_errors(temp_db, client: TestClient):
     # Long PIN (>8)
     assert (
         client.post(
-            "/signup", json={"username": "valid_user", "pin": "123456789"}
+            "/api/v1/users/signup", json={"username": "valid_user", "pin": "123456789"}
         ).status_code
         == 422
     )

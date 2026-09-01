@@ -1,11 +1,11 @@
-"""Tests for GET /quiz/topics taxonomy endpoint."""
+"""Tests for GET /api/v1/quiz/topics taxonomy endpoint."""
 
 from fastapi.testclient import TestClient
 
 
 def test_get_quiz_topics_structure(client: TestClient):
-    """GET /quiz/topics returns the curriculum taxonomy hierarchy."""
-    response = client.get("/quiz/topics")
+    """GET /api/v1/quiz/topics returns the curriculum taxonomy hierarchy."""
+    response = client.get("/api/v1/quiz/topics")
     assert response.status_code == 200
     topics_list = response.json()
     assert isinstance(topics_list, list)

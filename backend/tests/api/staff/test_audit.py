@@ -8,7 +8,7 @@ def test_read_audit_logs_admin_success(staff_db, client: TestClient):
     Admin can read audit logs (200 OK).
     """
     admin_headers = auth_headers(client, "admin1", "1234")
-    res = client.get("/audit-logs", headers=admin_headers)
+    res = client.get("/api/v1/staff/audit-logs", headers=admin_headers)
     assert res.status_code == 200
     data = res.json()
     assert "logs" in data
@@ -20,7 +20,7 @@ def test_read_audit_logs_teacher_forbidden(staff_db, client: TestClient):
     Teachers are forbidden from viewing audit logs (403 Forbidden).
     """
     teacher_headers = auth_headers(client, "teacher1", "1234")
-    res = client.get("/audit-logs", headers=teacher_headers)
+    res = client.get("/api/v1/staff/audit-logs", headers=teacher_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Insufficient permissions."
 
@@ -30,7 +30,7 @@ def test_read_audit_logs_student_forbidden(staff_db, client: TestClient):
     Students are forbidden from viewing audit logs (403 Forbidden).
     """
     student_headers = auth_headers(client, "student1", "1234")
-    res = client.get("/audit-logs", headers=student_headers)
+    res = client.get("/api/v1/staff/audit-logs", headers=student_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Insufficient permissions."
 
@@ -39,7 +39,7 @@ def test_read_audit_logs_unauthenticated(client: TestClient):
     """
     Unauthenticated caller receives 401 Unauthorized.
     """
-    res = client.get("/audit-logs")
+    res = client.get("/api/v1/staff/audit-logs")
     assert res.status_code == 401
 
 
@@ -58,11 +58,13 @@ def test_read_audit_logs_blocked_during_pending_rotation(temp_db, client: TestCl
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "admin_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "admin_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    res = client.get("/audit-logs", headers=headers)
+    res = client.get("/api/v1/staff/audit-logs", headers=headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "PIN change required."
 
@@ -86,14 +88,14 @@ def test_audit_trail_captures_all_lifecycle_actions(staff_db, client: TestClient
 
     # 1. Signup
     signup_res = client.post(
-        "/signup", json={"username": "audit_student", "pin": "1234"}
+        "/api/v1/users/signup", json={"username": "audit_student", "pin": "1234"}
     )
     assert signup_res.status_code == 201
     audit_student_id = get_user_id(conn, "audit_student")
 
     # 2. Staff user creation
     create_res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=admin_headers,
         json={"username": "audit_staff_user", "pin": "1234", "role": "student"},
     )
@@ -102,18 +104,18 @@ def test_audit_trail_captures_all_lifecycle_actions(staff_db, client: TestClient
 
     # 3. Staff reset PIN
     reset_res = client.post(
-        f"/users/{audit_staff_user_id}/reset-pin",
+        f"/api/v1/staff/users/{audit_staff_user_id}/reset-pin",
         headers=teacher_headers,
     )
     assert reset_res.status_code == 200
 
     # 4. Username changed
     stud_login = client.post(
-        "/login", json={"username": "audit_student", "pin": "1234"}
+        "/api/v1/auth/login", json={"username": "audit_student", "pin": "1234"}
     )
     stud_token = stud_login.json()["session_id"]
     change_user_res = client.patch(
-        "/users/me/username",
+        "/api/v1/users/me/username",
         headers={"Authorization": f"Bearer {stud_token}"},
         json={"current_pin": "1234", "new_username": "audit_student_renamed"},
     )
@@ -121,11 +123,11 @@ def test_audit_trail_captures_all_lifecycle_actions(staff_db, client: TestClient
 
     # 5. PIN changed
     renamed_login = client.post(
-        "/login", json={"username": "audit_student_renamed", "pin": "1234"}
+        "/api/v1/auth/login", json={"username": "audit_student_renamed", "pin": "1234"}
     )
     renamed_token = renamed_login.json()["session_id"]
     change_pin_res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {renamed_token}"},
         json={"current_pin": "1234", "new_pin": "9876"},
     )
@@ -133,21 +135,21 @@ def test_audit_trail_captures_all_lifecycle_actions(staff_db, client: TestClient
 
     # 6. Account deleted
     del_res = client.delete(
-        f"/users/{audit_staff_user_id}",
+        f"/api/v1/staff/users/{audit_staff_user_id}",
         headers=admin_headers,
     )
     assert del_res.status_code == 200
 
     # 7. Account recovered
     rec_res = client.post(
-        f"/users/{audit_staff_user_id}/recover",
+        f"/api/v1/staff/users/{audit_staff_user_id}/recover",
         headers=admin_headers,
         json={"username": "audit_staff_recovered"},
     )
     assert rec_res.status_code == 200
 
     # Read audit logs as admin
-    audit_res = client.get("/audit-logs", headers=admin_headers)
+    audit_res = client.get("/api/v1/staff/audit-logs", headers=admin_headers)
     assert audit_res.status_code == 200
     logs = audit_res.json()["logs"]
 

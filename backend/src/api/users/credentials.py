@@ -126,7 +126,7 @@ def _change_credential(
     return CredentialChangeResponse()
 
 
-@router.patch("/users/me/username", response_model=CredentialChangeResponse)
+@router.patch("/me/username", response_model=CredentialChangeResponse)
 def change_username(
     payload: ChangeUsernameRequest,
     ctx: Annotated[AuthContext, Depends(ensure_no_pending_rotation)],
@@ -137,7 +137,7 @@ def change_username(
     return _change_credential(ctx, payload, kind="username")
 
 
-@router.patch("/users/me/pin", response_model=CredentialChangeResponse)
+@router.patch("/me/pin", response_model=CredentialChangeResponse)
 def change_pin(
     payload: ChangePinRequest,
     ctx: Annotated[AuthContext, Depends(get_current_session)],

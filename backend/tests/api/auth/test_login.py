@@ -11,7 +11,9 @@ def test_login_success(seeded_db, client: TestClient):
     """
     Test successful student login returns 200 OK and session_id.
     """
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert "session_id" in data
@@ -23,7 +25,9 @@ def test_login_incorrect_pin(seeded_db, client: TestClient):
     """
     Test login with incorrect PIN returns 401 Unauthorized.
     """
-    response = client.post("/login", json={"username": "student1", "pin": "9999"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "9999"}
+    )
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Invalid username or PIN."
@@ -33,7 +37,9 @@ def test_login_user_not_found(seeded_db, client: TestClient):
     """
     Test login with non-existent user returns 401 Unauthorized.
     """
-    response = client.post("/login", json={"username": "unknown_user", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "unknown_user", "pin": "1234"}
+    )
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Invalid username or PIN."
@@ -44,7 +50,9 @@ def test_login_creates_database_session(seeded_db, client: TestClient):
     Test that successful login persists an active session row in sessions table.
     """
     db_path, _ = seeded_db
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 200
     session_id = response.json()["session_id"]
 
@@ -67,7 +75,9 @@ def test_session_id_never_logged(seeded_db, client: TestClient, caplog):
     log output (it is a bearer credential).
     """
     with caplog.at_level(logging.DEBUG):
-        response = client.post("/login", json={"username": "student1", "pin": "1234"})
+        response = client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+        )
 
     assert response.status_code == 200
     session_id = response.json()["session_id"]
@@ -84,16 +94,22 @@ def test_login_rate_limiting_triggers_429(seeded_db, client: TestClient):
     """
     # 5 failed attempts with wrong PIN
     for _ in range(5):
-        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        response = client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "9999"}
+        )
         assert response.status_code == 401
 
     # 6th attempt should be blocked with 429 Too Many Requests
-    response = client.post("/login", json={"username": "student1", "pin": "9999"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "9999"}
+    )
     assert response.status_code == 429
     assert "Too many failed login attempts" in response.json()["detail"]
 
     # Even with correct PIN, user is locked out
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 429
 
 
@@ -107,10 +123,12 @@ def test_login_rate_limiting_lockout_expires(
 
     # Trigger lockout
     for _ in range(5):
-        client.post("/login", json={"username": "student1", "pin": "9999"})
+        client.post("/api/v1/auth/login", json={"username": "student1", "pin": "9999"})
 
     # Verify locked out
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 429
 
     # Advance time past the lockout duration (constant-driven: survives recalibration)
@@ -120,7 +138,9 @@ def test_login_rate_limiting_lockout_expires(
     )
 
     # Now login with correct PIN should succeed
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 200
     assert response.json()["status"] == "authenticated"
 
@@ -131,16 +151,22 @@ def test_login_rate_limiting_resets_on_success(seeded_db, client: TestClient):
     """
     # 4 failed attempts (less than max of 5)
     for _ in range(4):
-        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        response = client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "9999"}
+        )
         assert response.status_code == 401
 
     # Successful login resets the counter
-    response = client.post("/login", json={"username": "student1", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert response.status_code == 200
 
     # 4 more failed attempts shouldn't lock out (needs 5 new consecutive ones)
     for _ in range(4):
-        response = client.post("/login", json={"username": "student1", "pin": "9999"})
+        response = client.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "9999"}
+        )
         assert response.status_code == 401
 
 
@@ -148,7 +174,9 @@ def test_login_rejects_oversized_username(seeded_db, client: TestClient):
     """
     Usernames longer than 32 characters must fail validation with 422.
     """
-    response = client.post("/login", json={"username": "x" * 33, "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "x" * 33, "pin": "1234"}
+    )
     assert response.status_code == 422
 
 
@@ -157,7 +185,9 @@ def test_login_rejects_invalid_username_characters(seeded_db, client: TestClient
     Usernames with characters outside [A-Za-z0-9_.-] must be rejected
     (log-injection guard).
     """
-    response = client.post("/login", json={"username": "bad\nuser", "pin": "1234"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "bad\nuser", "pin": "1234"}
+    )
     assert response.status_code == 422
 
 
@@ -165,7 +195,9 @@ def test_login_rejects_non_numeric_pin(seeded_db, client: TestClient):
     """
     Pins must be numeric digits only.
     """
-    response = client.post("/login", json={"username": "student1", "pin": "abcd"})
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "abcd"}
+    )
     assert response.status_code == 422
 
 
@@ -173,8 +205,12 @@ def test_login_rejects_wrong_pin_length(seeded_db, client: TestClient):
     """
     Pins shorter than 4 or longer than 8 digits must be rejected.
     """
-    short = client.post("/login", json={"username": "student1", "pin": "123"})
-    long_pin = client.post("/login", json={"username": "student1", "pin": "1" * 9})
+    short = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "123"}
+    )
+    long_pin = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1" * 9}
+    )
     assert short.status_code == 422
     assert long_pin.status_code == 422
 
@@ -198,12 +234,16 @@ def test_login_response_surfaces_must_change_pin(temp_db, client: TestClient):
     conn.commit()
 
     # User with rotation pending
-    res1 = client.post("/login", json={"username": "rotate_user", "pin": "1234"})
+    res1 = client.post(
+        "/api/v1/auth/login", json={"username": "rotate_user", "pin": "1234"}
+    )
     assert res1.status_code == 200
     assert res1.json()["must_change_pin"] is True
 
     # User with no rotation pending
-    res2 = client.post("/login", json={"username": "normal_user", "pin": "1234"})
+    res2 = client.post(
+        "/api/v1/auth/login", json={"username": "normal_user", "pin": "1234"}
+    )
     assert res2.status_code == 200
     assert res2.json()["must_change_pin"] is False
 
@@ -222,7 +262,7 @@ def test_login_soft_deleted_user_returns_401(temp_db, client: TestClient):
     conn.commit()
 
     response = client.post(
-        "/login", json={"username": "deleted_student", "pin": "1234"}
+        "/api/v1/auth/login", json={"username": "deleted_student", "pin": "1234"}
     )
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid username or PIN."

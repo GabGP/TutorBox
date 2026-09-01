@@ -206,8 +206,9 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users)
+│   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users) mounted under /api/v1
 │   ├── db/            # SQLite connection manager, runtime pragmas, quiz repository, and audit logger
+│   ├── llm/           # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline with anti-guessing shuffler, seed dataset, and SymPy validator
 │   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters

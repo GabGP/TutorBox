@@ -16,7 +16,7 @@ def test_list_users_active_only(staff_db, client: TestClient):
     conn.commit()
 
     headers = auth_headers(client, "teacher1", "1234")
-    res = client.get("/users", headers=headers)
+    res = client.get("/api/v1/staff/users", headers=headers)
     assert res.status_code == 200
     usernames = [u["username"] for u in res.json()["users"]]
     assert "student1" in usernames
@@ -38,7 +38,7 @@ def test_list_users_include_deleted(staff_db, client: TestClient):
     conn.commit()
 
     headers = auth_headers(client, "teacher1", "1234")
-    res = client.get("/users?include_deleted=true", headers=headers)
+    res = client.get("/api/v1/staff/users?include_deleted=true", headers=headers)
     assert res.status_code == 200
     users = res.json()["users"]
     assert len(users) == 1
@@ -56,7 +56,7 @@ def test_create_student_by_teacher(staff_db, client: TestClient):
     _, conn = staff_db
     headers = auth_headers(client, "teacher1", "1234")
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "new_student", "pin": "1234", "role": "student"},
     )
@@ -80,7 +80,7 @@ def test_create_teacher_by_teacher(staff_db, client: TestClient):
     """
     headers = auth_headers(client, "teacher1", "1234")
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "teacher2", "pin": "1234", "role": "teacher"},
     )
@@ -94,7 +94,7 @@ def test_teacher_creating_admin_returns_403(staff_db, client: TestClient):
     """
     headers = auth_headers(client, "teacher1", "1234")
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "admin2", "pin": "1234", "role": "admin"},
     )
@@ -110,7 +110,7 @@ def test_create_any_role_by_admin(staff_db, client: TestClient):
 
     # Admin creates student
     res_student = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "adm_student", "pin": "1234", "role": "student"},
     )
@@ -118,7 +118,7 @@ def test_create_any_role_by_admin(staff_db, client: TestClient):
 
     # Admin creates teacher
     res_teacher = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "adm_teacher", "pin": "1234", "role": "teacher"},
     )
@@ -126,7 +126,7 @@ def test_create_any_role_by_admin(staff_db, client: TestClient):
 
     # Admin creates admin
     res_admin = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "adm_admin", "pin": "1234", "role": "admin"},
     )
@@ -139,7 +139,7 @@ def test_create_user_duplicate_returns_409(staff_db, client: TestClient):
     """
     headers = auth_headers(client, "admin1", "1234")
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "student1", "pin": "1234", "role": "student"},
     )
@@ -155,7 +155,7 @@ def test_create_user_validation_errors(staff_db, client: TestClient):
 
     # Invalid username format
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "bad name", "pin": "1234", "role": "student"},
     )
@@ -163,7 +163,7 @@ def test_create_user_validation_errors(staff_db, client: TestClient):
 
     # Invalid PIN format
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "valid_user", "pin": "abcd", "role": "student"},
     )
@@ -171,7 +171,7 @@ def test_create_user_validation_errors(staff_db, client: TestClient):
 
     # Invalid role
     res = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "valid_user", "pin": "1234", "role": "superadmin"},
     )
@@ -184,12 +184,12 @@ def test_staff_endpoints_forbidden_for_students(staff_db, client: TestClient):
     """
     headers = auth_headers(client, "student1", "1234")
 
-    res_get = client.get("/users", headers=headers)
+    res_get = client.get("/api/v1/staff/users", headers=headers)
     assert res_get.status_code == 403
     assert res_get.json()["detail"] == "Insufficient permissions."
 
     res_post = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "another_user", "pin": "1234", "role": "student"},
     )
@@ -201,10 +201,10 @@ def test_staff_endpoints_unauthenticated(client: TestClient):
     """
     Unauthenticated callers receive 401 Unauthorized.
     """
-    assert client.get("/users").status_code == 401
+    assert client.get("/api/v1/staff/users").status_code == 401
     assert (
         client.post(
-            "/users",
+            "/api/v1/staff/users",
             json={"username": "another_user", "pin": "1234", "role": "student"},
         ).status_code
         == 401
@@ -226,16 +226,18 @@ def test_staff_endpoints_blocked_during_pending_rotation(temp_db, client: TestCl
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "teacher_rot", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "teacher_rot", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    res_get = client.get("/users", headers=headers)
+    res_get = client.get("/api/v1/staff/users", headers=headers)
     assert res_get.status_code == 403
     assert res_get.json()["detail"] == "PIN change required."
 
     res_post = client.post(
-        "/users",
+        "/api/v1/staff/users",
         headers=headers,
         json={"username": "some_user", "pin": "1234", "role": "student"},
     )

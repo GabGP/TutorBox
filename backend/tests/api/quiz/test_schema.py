@@ -1,11 +1,11 @@
-"""Tests for GET /quiz/schema contract endpoint."""
+"""Tests for GET /api/v1/quiz/schema contract endpoint."""
 
 from fastapi.testclient import TestClient
 
 
 def test_get_quiz_schema_success(client: TestClient):
-    """GET /quiz/schema returns the canonical versioned JSON schema Draft 2020-12."""
-    response = client.get("/quiz/schema")
+    """GET /api/v1/quiz/schema returns the canonical versioned JSON schema Draft 2020-12."""
+    response = client.get("/api/v1/quiz/schema")
     assert response.status_code == 200
 
     schema_payload = response.json()

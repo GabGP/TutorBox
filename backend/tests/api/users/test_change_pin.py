@@ -11,12 +11,14 @@ def test_change_pin_success(seeded_db, client: TestClient):
     """
     PATCH /users/me/pin changes PIN, clears must_change_pin, and deactivates caller's session.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert login_res.status_code == 200
     token = login_res.json()["session_id"]
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "1234", "new_pin": "5678"},
     )
@@ -24,15 +26,21 @@ def test_change_pin_success(seeded_db, client: TestClient):
     assert res.json()["detail"] == "Credentials updated. Please sign in again."
 
     # Caller's old session is now inactive
-    me_res = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+    me_res = client.get(
+        "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
+    )
     assert me_res.status_code == 401
 
     # Old PIN rejected
-    login_old = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_old = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert login_old.status_code == 401
 
     # New PIN accepted with must_change_pin = False
-    login_new = client.post("/login", json={"username": "student1", "pin": "5678"})
+    login_new = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "5678"}
+    )
     assert login_new.status_code == 200
     assert login_new.json()["must_change_pin"] is False
 
@@ -50,17 +58,21 @@ def test_change_pin_clears_must_change_pin(temp_db, client: TestClient):
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "rotate_user", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "rotate_user", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "1234", "new_pin": "9876"},
     )
     assert res.status_code == 200
 
-    login_new = client.post("/login", json={"username": "rotate_user", "pin": "9876"})
+    login_new = client.post(
+        "/api/v1/auth/login", json={"username": "rotate_user", "pin": "9876"}
+    )
     assert login_new.status_code == 200
     assert login_new.json()["must_change_pin"] is False
 
@@ -70,11 +82,13 @@ def test_anti_oracle_pin_change_order(seeded_db, client: TestClient):
     Anti-oracle check ordering: wrong current_pin with new_pin == current_pin
     MUST return 401 Unauthorized, never 422.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "9999", "new_pin": "9999"},
     )
@@ -86,11 +100,13 @@ def test_change_pin_same_pin_returns_422(seeded_db, client: TestClient):
     """
     Correct current_pin but new_pin == current_pin returns 422 Unprocessable Entity.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "1234", "new_pin": "1234"},
     )
@@ -102,11 +118,13 @@ def test_change_pin_wrong_current_pin_returns_401(seeded_db, client: TestClient)
     """
     Wrong current_pin on PIN change returns 401.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "0000", "new_pin": "5678"},
     )
@@ -118,13 +136,15 @@ def test_credential_change_rate_limiting(seeded_db, client: TestClient):
     """
     Repeated bad current PIN on credential change increments login rate limiter and triggers 429.
     """
-    login_res = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     # 4 bad attempts return 401
     for _ in range(4):
         res = client.patch(
-            "/users/me/pin",
+            "/api/v1/users/me/pin",
             headers={"Authorization": f"Bearer {token}"},
             json={"current_pin": "0000", "new_pin": "5678"},
         )
@@ -132,7 +152,7 @@ def test_credential_change_rate_limiting(seeded_db, client: TestClient):
 
     # 5th bad attempt triggers lockout
     res_5th = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "0000", "new_pin": "5678"},
     )
@@ -140,7 +160,7 @@ def test_credential_change_rate_limiting(seeded_db, client: TestClient):
 
     # 6th attempt is blocked by rate limiter with 429
     res_6th = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "0000", "new_pin": "5678"},
     )
@@ -148,7 +168,9 @@ def test_credential_change_rate_limiting(seeded_db, client: TestClient):
     assert "Too many failed login attempts" in res_6th.json()["detail"]
 
     # /login is also locked out uniformly
-    login_locked = client.post("/login", json={"username": "student1", "pin": "1234"})
+    login_locked = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
     assert login_locked.status_code == 429
 
 
@@ -165,7 +187,9 @@ def test_change_credential_user_deleted_returns_401(temp_db, client: TestClient)
     )
     conn.commit()
 
-    login_res = client.post("/login", json={"username": "temp_user", "pin": "1234"})
+    login_res = client.post(
+        "/api/v1/auth/login", json={"username": "temp_user", "pin": "1234"}
+    )
     token = login_res.json()["session_id"]
 
     # Soft-delete the user directly in SQLite
@@ -175,7 +199,7 @@ def test_change_credential_user_deleted_returns_401(temp_db, client: TestClient)
     conn.commit()
 
     res = client.patch(
-        "/users/me/pin",
+        "/api/v1/users/me/pin",
         headers={"Authorization": f"Bearer {token}"},
         json={"current_pin": "1234", "new_pin": "5678"},
     )
