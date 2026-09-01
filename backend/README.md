@@ -25,6 +25,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
       - [Windows (PowerShell)](#windows-powershell)
       - [Linux](#linux)
       - [Conda (Windows or Linux)](#conda-windows-or-linux)
+    - [Environment Variables \& Configuration (`.env`)](#environment-variables--configuration-env)
   - [4. Installation \& Workflow](#4-installation--workflow)
     - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
       - [Running in Development:](#running-in-development)
@@ -104,6 +105,11 @@ conda create -n tutorbox-backend python=3.10
 conda activate tutorbox-backend
 python -m pip install --upgrade pip
 ```
+
+### Environment Variables & Configuration (`.env`)
+
+Copy the template `.env.example` to `.env` in the repository root to customize database paths, bcrypt work factors, rate limits, and SLM inference parameters:
+
 
 ---
 
