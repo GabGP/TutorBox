@@ -49,6 +49,17 @@ def test_solve_linear_equation_standard_and_parentheses():
     # Text without solvable equation
     assert solve_linear_equation("Texto sin ecuacion") is None
     assert solve_linear_equation("x + = invalid") is None
+    assert solve_linear_equation("x = x + 1") is None
+
+
+def test_solve_linear_equation_solver_exception(monkeypatch):
+    import sympy as sp
+
+    def mock_solve(*args, **kwargs):
+        raise sp.SympifyError("Solver failed")
+
+    monkeypatch.setattr(sp, "solve", mock_solve)
+    assert solve_linear_equation("2x + 4 = 12") is None
 
 
 def test_evaluate_arithmetic_standard_and_parentheses():

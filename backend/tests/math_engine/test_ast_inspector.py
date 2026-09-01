@@ -186,6 +186,7 @@ def test_ast_inspector_pre_algebra_unparseable_equation():
 
 def test_ast_inspector_extract_polynomial_fallback():
     assert extract_linear_polynomial("No equation") is None
+    assert extract_linear_polynomial("2/x + 4 = 12") is None
 
 
 def test_ast_inspector_unknown_topic_returns_empty():

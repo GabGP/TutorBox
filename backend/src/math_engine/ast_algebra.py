@@ -1,32 +1,23 @@
-import re
-
 import sympy as sp
 
-EQUATION_PATTERN = re.compile(
-    r"([0-9a-zA-Z\s\+\-\*/\(\)\^]+)\s*=\s*([0-9a-zA-Z\s\+\-\*/\(\)\^]+)"
-)
+from math_engine.equation_parser import parse_equation_components
 
 
 def extract_linear_polynomial(
     question_text: str,
 ) -> tuple[sp.Poly, sp.Symbol] | None:
     """Extracts a linear polynomial and variable symbol from equation text."""
-    for match in EQUATION_PATTERN.finditer(question_text):
-        left_raw, right_raw = match.group(1).strip(), match.group(2).strip()
-        tokens = re.findall(r"[\d\w\+\-\*/\(\)\^]+", left_raw)
-        for i in range(len(tokens)):
-            cand_left = re.sub(r"(\d)\s*([a-zA-Z\(])", r"\1*\2", " ".join(tokens[i:]))
-            norm_right = re.sub(r"(\d)\s*([a-zA-Z\(])", r"\1*\2", right_raw)
-            var_match = re.search(r"[a-zA-Z]", cand_left + norm_right)
-            symbol = sp.Symbol(var_match.group(0) if var_match else "x")
-            try:
-                left_expr = sp.parse_expr(cand_left)
-                right_expr = sp.parse_expr(norm_right)
-                var_side = left_expr if symbol in left_expr.free_symbols else right_expr
-                return sp.Poly(var_side, symbol), symbol
-            except (sp.SympifyError, SyntaxError, TypeError, ValueError):
-                continue
-    return None
+    components = parse_equation_components(question_text)
+    if components is None:
+        return None
+    left_expr, right_expr, variable_symbol = components
+    variable_side = (
+        left_expr if variable_symbol in left_expr.free_symbols else right_expr
+    )
+    poly = variable_side.as_poly(variable_symbol)
+    if poly is None:
+        return None
+    return poly, variable_symbol
 
 
 def is_two_step_linear(poly: sp.Poly) -> bool:

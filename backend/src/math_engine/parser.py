@@ -1,10 +1,12 @@
 import re
-from tokenize import TokenError
 from typing import Any
 
 import sympy as sp
 
-PARSE_ERRORS = (sp.SympifyError, SyntaxError, TypeError, ValueError, TokenError)
+from math_engine.equation_parser import (
+    PARSE_ERRORS,
+    parse_equation_components,
+)
 
 
 def parse_option_expression(option_text: str) -> sp.Expr | None:
@@ -39,30 +41,15 @@ def are_values_equivalent(expr_a: Any, expr_b: Any) -> bool:
 
 def solve_linear_equation(question_text: str) -> sp.Expr | None:
     """Attempts to extract and solve a 1-variable linear equation (e.g. 2x + 4 = 12)."""
-    equation_pattern = (
-        r"([0-9a-zA-Z\s\+\-\*/\(\)\^]+)\s*=\s*([0-9a-zA-Z\s\+\-\*/\(\)\^]+)"
-    )
-    for match in re.finditer(equation_pattern, question_text):
-        left_raw, right_raw = match.group(1).strip(), match.group(2).strip()
-        tokens = re.findall(r"[\d\w\+\-\*/\(\)\^]+", left_raw)
-        for i in range(len(tokens)):
-            candidate_left = re.sub(
-                r"(\d)\s*([a-zA-Z\(])", r"\1*\2", " ".join(tokens[i:])
-            )
-            normalized_right = re.sub(r"(\d)\s*([a-zA-Z\(])", r"\1*\2", right_raw)
-            variable_match = re.search(r"[a-zA-Z]", candidate_left + normalized_right)
-            variable_name = variable_match.group(0) if variable_match else "x"
-            try:
-                left_expr = sp.parse_expr(candidate_left)
-                right_expr = sp.parse_expr(normalized_right)
-                solutions = sp.solve(
-                    sp.Eq(left_expr, right_expr), sp.Symbol(variable_name)
-                )
-                if solutions:
-                    return solutions[0]
-            except PARSE_ERRORS:
-                pass
-    return None
+    components = parse_equation_components(question_text)
+    if components is None:
+        return None
+    left_expr, right_expr, variable_symbol = components
+    try:
+        solutions = sp.solve(sp.Eq(left_expr, right_expr), variable_symbol)
+        return solutions[0] if solutions else None
+    except PARSE_ERRORS:
+        return None
 
 
 def evaluate_arithmetic_expression(question_text: str) -> sp.Expr | None:
