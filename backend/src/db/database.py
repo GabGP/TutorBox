@@ -12,6 +12,17 @@ DEFAULT_DB_PATH = str(
 )
 
 
+DEFAULT_BUSY_TIMEOUT_MS: int = 5000
+
+
+def get_busy_timeout_ms() -> int:
+    """Returns the SQLite busy timeout in milliseconds with environment override."""
+    try:
+        return int(os.getenv("DB_BUSY_TIMEOUT_MS", str(DEFAULT_BUSY_TIMEOUT_MS)))
+    except ValueError:
+        return DEFAULT_BUSY_TIMEOUT_MS
+
+
 def get_db_path() -> str:
     return os.getenv("DATABASE_PATH", DEFAULT_DB_PATH)
 
@@ -24,7 +35,7 @@ def get_db_connection(db_path: str | None = None) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.execute("PRAGMA journal_mode = WAL;")
-    conn.execute("PRAGMA busy_timeout = 5000;")
+    conn.execute(f"PRAGMA busy_timeout = {get_busy_timeout_ms()};")
     return conn
 
 

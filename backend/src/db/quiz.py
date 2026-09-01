@@ -14,6 +14,9 @@ from quiz.contracts.models import (
     QuizQuestionResponse,
 )
 
+DEFAULT_QUESTION_LIMIT: int = 50
+DEFAULT_RANDOM_QUESTIONS_COUNT: int = 5
+
 
 def create_question(
     conn: sqlite3.Connection,
@@ -72,7 +75,7 @@ def list_questions(
     *,
     topic: str | None = None,
     subconcept: str | None = None,
-    limit: int = 50,
+    limit: int = DEFAULT_QUESTION_LIMIT,
     offset: int = 0,
     include_deleted: bool = False,
 ) -> list[QuizQuestionResponse]:
@@ -95,7 +98,7 @@ def get_random_questions(
     *,
     topic: str | None = None,
     subconcept: str | None = None,
-    count: int = 5,
+    count: int = DEFAULT_RANDOM_QUESTIONS_COUNT,
 ) -> list[QuizQuestionResponse]:
     """Samples random quiz questions for session generation."""
     where_sql, params = build_quiz_filter_clauses(

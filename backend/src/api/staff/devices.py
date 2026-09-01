@@ -14,6 +14,7 @@ from security import (
 )
 
 logger = logging.getLogger(__name__)
+DEFAULT_DEVICE_LIST_LIMIT: int = 1000
 router = APIRouter()
 
 
@@ -46,7 +47,8 @@ def list_devices(
         cursor.execute(
             "SELECT d.device_id, d.assigned_user_id, d.created_at, u.username AS assigned_username "
             "FROM devices d LEFT JOIN users u ON d.assigned_user_id = u.id "
-            "ORDER BY d.device_id LIMIT 1000"
+            "ORDER BY d.device_id LIMIT ?",
+            (DEFAULT_DEVICE_LIST_LIMIT,),
         )
         rows = cursor.fetchall()
 

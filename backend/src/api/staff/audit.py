@@ -14,6 +14,8 @@ from security import (
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_AUDIT_LOG_LIMIT: int = 500
+
 router = APIRouter()
 
 
@@ -35,7 +37,8 @@ def read_audit_logs(
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, actor_user_id, action, target_user_id, created_at "
-            "FROM audit_logs ORDER BY id DESC LIMIT 500"
+            "FROM audit_logs ORDER BY id DESC LIMIT ?",
+            (DEFAULT_AUDIT_LOG_LIMIT,),
         )
         rows = cursor.fetchall()
 

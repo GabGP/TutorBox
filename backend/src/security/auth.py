@@ -1,7 +1,10 @@
 import logging
 import os
+import secrets
 
 import bcrypt
+
+from security.validation import DEFAULT_TEMP_PIN_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +14,11 @@ DEFAULT_BCRYPT_ROUNDS = 12
 def get_bcrypt_rounds() -> int:
     """Returns configured bcrypt rounds, falling back to production constant (12)."""
     return int(os.getenv("BCRYPT_ROUNDS", str(DEFAULT_BCRYPT_ROUNDS)))
+
+
+def generate_temporary_pin(length: int = DEFAULT_TEMP_PIN_LENGTH) -> str:
+    """Generates a cryptographically secure random numeric temporary PIN."""
+    return f"{secrets.randbelow(10**length):0{length}d}"
 
 
 def hash_pin(pin: str, rounds: int | None = None) -> str:

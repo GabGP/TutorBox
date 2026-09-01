@@ -8,6 +8,9 @@ from math_engine.equation_parser import (
     parse_equation_components,
 )
 
+FLOAT_TOLERANCE: float = 1e-6
+PERCENTAGE_BASE: float = 100.0
+
 
 def parse_option_expression(option_text: str) -> sp.Expr | None:
     """Extracts and parses a numeric or algebraic expression from option text."""
@@ -29,7 +32,7 @@ def are_values_equivalent(expr_a: Any, expr_b: Any) -> bool:
     if expr_a is None or expr_b is None:
         return False
     try:
-        return abs(float(expr_a) - float(expr_b)) < 1e-6
+        return abs(float(expr_a) - float(expr_b)) < FLOAT_TOLERANCE
     except (TypeError, ValueError):
         pass
     try:
@@ -74,7 +77,7 @@ def evaluate_percentage_expression(question_text: str) -> sp.Expr | None:
     if match := re.search(percentage_pattern, question_text, re.IGNORECASE):
         percentage_value = float(match.group(1))
         base_value = float(match.group(2))
-        computed = (percentage_value / 100.0) * base_value
+        computed = (percentage_value / PERCENTAGE_BASE) * base_value
         return (
             sp.Integer(int(computed)) if computed.is_integer() else sp.Float(computed)
         )

@@ -119,3 +119,16 @@ def test_get_db_context_manager(temp_db):
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         assert cursor.fetchone()[0] == 1
+
+
+def test_busy_timeout_env_and_fallback(monkeypatch):
+    """
+    Test that get_busy_timeout_ms respects environment override and falls back on invalid values.
+    """
+    from src.db.database import DEFAULT_BUSY_TIMEOUT_MS, get_busy_timeout_ms
+
+    monkeypatch.setenv("DB_BUSY_TIMEOUT_MS", "8000")
+    assert get_busy_timeout_ms() == 8000
+
+    monkeypatch.setenv("DB_BUSY_TIMEOUT_MS", "not_a_number")
+    assert get_busy_timeout_ms() == DEFAULT_BUSY_TIMEOUT_MS

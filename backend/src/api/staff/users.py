@@ -18,6 +18,8 @@ from security import (
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_USER_LIST_LIMIT: int = 1000
+
 router = APIRouter()
 
 
@@ -41,15 +43,14 @@ def list_users(
     ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
     include_deleted: bool = False,
 ):
-    """
-    Roster view. Lists active users, or minimal metadata for deleted accounts when include_deleted=True.
-    """
+    """Roster view. Lists active users or minimal metadata for deleted accounts."""
     with get_db() as conn:
         cursor = conn.cursor()
         if include_deleted:
             cursor.execute(
                 "SELECT id, role, former_username, deleted_at FROM users "
-                "WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT 1000"
+                "WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT ?",
+                (DEFAULT_USER_LIST_LIMIT,),
             )
             return UserListResponse(
                 users=[
@@ -66,7 +67,8 @@ def list_users(
         cursor.execute(
             "SELECT id, username, role, created_at, must_change_pin "
             "FROM users WHERE deleted_at IS NULL "
-            "ORDER BY username LIMIT 1000"
+            "ORDER BY username LIMIT ?",
+            (DEFAULT_USER_LIST_LIMIT,),
         )
         rows = cursor.fetchall()
 
@@ -93,9 +95,7 @@ def create_user(
     payload: CreateUserRequest,
     ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
 ):
-    """
-    Staff user creation. Teachers can create student and teacher accounts. Admins can create any account.
-    """
+    """Staff user creation: teachers create students/teachers; admins create all."""
     # Teachers create students AND teachers; only admins create admins.
     if ctx.role == "teacher" and payload.role == "admin":
         raise HTTPException(

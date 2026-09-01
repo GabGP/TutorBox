@@ -4,31 +4,44 @@ import time
 
 from fastapi import HTTPException, status
 
+from .config import (
+    DEFAULT_LOCKOUT_DURATION_SECONDS,
+    DEFAULT_MAX_ATTEMPTS,
+    DEFAULT_MAX_TRACKED_KEYS,
+    get_auth_lockout_seconds,
+    get_auth_max_attempts,
+    get_auth_max_tracked_keys,
+)
+
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 5
-LOCKOUT_DURATION_SECONDS = 30
-MAX_TRACKED_KEYS = 10_000
+MAX_ATTEMPTS = DEFAULT_MAX_ATTEMPTS
+LOCKOUT_DURATION_SECONDS = DEFAULT_LOCKOUT_DURATION_SECONDS
+MAX_TRACKED_KEYS = DEFAULT_MAX_TRACKED_KEYS
 
 
 class InMemoryRateLimiter:
-    """
-    Lightweight in-memory rate limiter for failed authentication attempts.
-
-    Thread-safe: all public methods serialize on an internal lock. Private
-    helpers (_evict_stale, _enforce_cap) MUST only be called while holding
-    self._lock — they do not acquire it themselves.
-    """
+    """Lightweight in-memory rate limiter for failed authentication attempts."""
 
     def __init__(
         self,
-        max_attempts: int = MAX_ATTEMPTS,
-        lockout_seconds: int = LOCKOUT_DURATION_SECONDS,
-        max_tracked_keys: int = MAX_TRACKED_KEYS,
+        max_attempts: int | None = None,
+        lockout_seconds: int | None = None,
+        max_tracked_keys: int | None = None,
     ):
-        self.max_attempts = max_attempts
-        self.lockout_seconds = lockout_seconds
-        self.max_tracked_keys = max_tracked_keys
+        self.max_attempts = (
+            max_attempts if max_attempts is not None else get_auth_max_attempts()
+        )
+        self.lockout_seconds = (
+            lockout_seconds
+            if lockout_seconds is not None
+            else get_auth_lockout_seconds()
+        )
+        self.max_tracked_keys = (
+            max_tracked_keys
+            if max_tracked_keys is not None
+            else get_auth_max_tracked_keys()
+        )
         self._failed_attempts: dict[str, int] = {}
         self._lockout_until: dict[str, float] = {}
         self._lock = threading.Lock()

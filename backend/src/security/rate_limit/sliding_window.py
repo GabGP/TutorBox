@@ -2,8 +2,15 @@ import threading
 import time
 from collections import deque
 
-SIGNUP_MAX_EVENTS = 30
-SIGNUP_WINDOW_SECONDS = 60
+from .config import (
+    DEFAULT_SIGNUP_MAX_EVENTS,
+    DEFAULT_SIGNUP_WINDOW_SECONDS,
+    get_signup_max_events,
+    get_signup_window_seconds,
+)
+
+SIGNUP_MAX_EVENTS = DEFAULT_SIGNUP_MAX_EVENTS
+SIGNUP_WINDOW_SECONDS = DEFAULT_SIGNUP_WINDOW_SECONDS
 
 
 class SlidingWindowLimiter:
@@ -14,11 +21,17 @@ class SlidingWindowLimiter:
 
     def __init__(
         self,
-        max_events: int = SIGNUP_MAX_EVENTS,
-        window_seconds: int = SIGNUP_WINDOW_SECONDS,
+        max_events: int | None = None,
+        window_seconds: int | None = None,
     ):
-        self.max_events = max_events
-        self.window_seconds = window_seconds
+        self.max_events = (
+            max_events if max_events is not None else get_signup_max_events()
+        )
+        self.window_seconds = (
+            window_seconds
+            if window_seconds is not None
+            else get_signup_window_seconds()
+        )
         self._events: deque[float] = deque()
         self._lock = threading.Lock()
 

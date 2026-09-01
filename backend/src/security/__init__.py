@@ -1,7 +1,7 @@
 """TutorBox Security package."""
 
 from . import auth, rate_limit, session, validation
-from .auth import hash_pin, verify_pin
+from .auth import generate_temporary_pin, hash_pin, verify_pin
 from .rate_limit import (
     InMemoryRateLimiter,
     SlidingWindowLimiter,
@@ -17,6 +17,7 @@ from .session import (
 )
 from .validation import (
     ALLOWED_ROLES,
+    DEFAULT_TEMP_PIN_LENGTH,
     DEVICE_ID_MAX_LENGTH,
     DEVICE_ID_MIN_LENGTH,
     DEVICE_ID_PATTERN,
@@ -34,6 +35,7 @@ from .validation import (
 
 __all__ = [
     "ALLOWED_ROLES",
+    "DEFAULT_TEMP_PIN_LENGTH",
     "DEVICE_ID_MAX_LENGTH",
     "DEVICE_ID_MIN_LENGTH",
     "DEVICE_ID_PATTERN",
@@ -53,6 +55,7 @@ __all__ = [
     "auth",
     "check_rate_limit",
     "ensure_no_pending_rotation",
+    "generate_temporary_pin",
     "get_current_session",
     "hash_pin",
     "login_rate_limiter",

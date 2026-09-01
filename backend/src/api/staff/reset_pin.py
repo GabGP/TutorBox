@@ -1,5 +1,4 @@
 import logging
-import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,6 +8,7 @@ from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
+    generate_temporary_pin,
     hash_pin,
     require_roles,
 )
@@ -56,7 +56,7 @@ def reset_pin(
                 detail="Only admins may reset admin PINs.",
             )
 
-        temp_pin = f"{secrets.randbelow(10**6):06d}"
+        temp_pin = generate_temporary_pin()
         cursor.execute(
             "UPDATE users SET hashed_pin = ?, must_change_pin = 1 WHERE id = ?",
             (hash_pin(temp_pin), user_id),

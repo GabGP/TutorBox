@@ -105,3 +105,47 @@ def test_sliding_window_limiter_clear():
     assert limiter.allow() is False
     limiter.clear()
     assert limiter.allow() is True
+
+
+def test_rate_limit_config_resolvers_and_fallbacks(monkeypatch):
+    """
+    Tests environment variable resolution and invalid format fallbacks.
+    """
+    from src.security.rate_limit.config import (
+        DEFAULT_LOCKOUT_DURATION_SECONDS,
+        DEFAULT_MAX_ATTEMPTS,
+        DEFAULT_MAX_TRACKED_KEYS,
+        DEFAULT_SIGNUP_MAX_EVENTS,
+        DEFAULT_SIGNUP_WINDOW_SECONDS,
+        get_auth_lockout_seconds,
+        get_auth_max_attempts,
+        get_auth_max_tracked_keys,
+        get_signup_max_events,
+        get_signup_window_seconds,
+    )
+
+    # Test valid env overrides
+    monkeypatch.setenv("AUTH_MAX_ATTEMPTS", "10")
+    monkeypatch.setenv("AUTH_LOCKOUT_SECONDS", "60")
+    monkeypatch.setenv("AUTH_MAX_TRACKED_KEYS", "5000")
+    monkeypatch.setenv("SIGNUP_RATE_LIMIT_MAX_EVENTS", "50")
+    monkeypatch.setenv("SIGNUP_RATE_LIMIT_WINDOW_SECONDS", "120")
+
+    assert get_auth_max_attempts() == 10
+    assert get_auth_lockout_seconds() == 60
+    assert get_auth_max_tracked_keys() == 5000
+    assert get_signup_max_events() == 50
+    assert get_signup_window_seconds() == 120
+
+    # Test invalid env overrides fall back to defaults
+    monkeypatch.setenv("AUTH_MAX_ATTEMPTS", "invalid")
+    monkeypatch.setenv("AUTH_LOCKOUT_SECONDS", "invalid")
+    monkeypatch.setenv("AUTH_MAX_TRACKED_KEYS", "invalid")
+    monkeypatch.setenv("SIGNUP_RATE_LIMIT_MAX_EVENTS", "invalid")
+    monkeypatch.setenv("SIGNUP_RATE_LIMIT_WINDOW_SECONDS", "invalid")
+
+    assert get_auth_max_attempts() == DEFAULT_MAX_ATTEMPTS
+    assert get_auth_lockout_seconds() == DEFAULT_LOCKOUT_DURATION_SECONDS
+    assert get_auth_max_tracked_keys() == DEFAULT_MAX_TRACKED_KEYS
+    assert get_signup_max_events() == DEFAULT_SIGNUP_MAX_EVENTS
+    assert get_signup_window_seconds() == DEFAULT_SIGNUP_WINDOW_SECONDS

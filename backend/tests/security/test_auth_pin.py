@@ -46,3 +46,18 @@ def test_verify_pin_invalid_hash_format():
     Test verify_pin handles invalid hash string format gracefully without crashing.
     """
     assert verify_pin("1234", "not_a_valid_bcrypt_hash") is False
+
+
+def test_generate_temporary_pin():
+    """
+    Test generate_temporary_pin creates numeric strings of expected length.
+    """
+    from src.security.auth import generate_temporary_pin
+
+    pin_default = generate_temporary_pin()
+    assert len(pin_default) == 6
+    assert pin_default.isdigit()
+
+    pin_custom = generate_temporary_pin(8)
+    assert len(pin_custom) == 8
+    assert pin_custom.isdigit()

@@ -1,5 +1,4 @@
 import logging
-import secrets
 import sqlite3
 from typing import Annotated
 
@@ -11,6 +10,7 @@ from db.database import get_db
 from security import (
     AuthContext,
     UsernameField,
+    generate_temporary_pin,
     hash_pin,
     require_roles,
 )
@@ -40,7 +40,7 @@ def recover_user(
     payload: RecoverUserRequest,
     ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
 ):
-    temp_pin = f"{secrets.randbelow(10**6):06d}"
+    temp_pin = generate_temporary_pin()
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(

@@ -11,6 +11,9 @@ from quiz.contracts.models import QuestionListResponse, QuizQuestionResponse
 from security import AuthContext, require_roles
 
 logger = logging.getLogger(__name__)
+DEFAULT_QUESTION_LIMIT: int = 50
+MAX_QUESTION_LIMIT: int = 200
+
 router = APIRouter()
 
 
@@ -19,7 +22,7 @@ def get_questions(
     ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
     topic: str | None = None,
     subconcept: str | None = None,
-    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    limit: Annotated[int, Query(ge=1, le=MAX_QUESTION_LIMIT)] = DEFAULT_QUESTION_LIMIT,
     offset: Annotated[int, Query(ge=0)] = 0,
     include_deleted: bool = False,
 ) -> QuestionListResponse:
