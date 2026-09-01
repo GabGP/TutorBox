@@ -17,74 +17,40 @@ def test_migrations_applied_successfully():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT version FROM schema_migrations ORDER BY version")
-        rows = cursor.fetchall()
-        versions = [r[0] for r in rows]
-        assert 1 in versions
-        assert 2 in versions
-        assert 3 in versions
-        assert 4 in versions
-        assert 5 in versions
-        assert 6 in versions
-        assert 7 in versions
-        assert 8 in versions
+        versions = {r[0] for r in cursor.fetchall()}
+        assert {1, 2, 3, 4, 5, 6, 7, 8, 9}.issubset(versions)
 
         # Verify columns added by migrations 002, 004, 005 exist on users
         cursor.execute("PRAGMA table_info(users)")
         columns = {col[1] for col in cursor.fetchall()}
-        assert "role" in columns
-        assert "must_change_pin" in columns
-        assert "deleted_at" in columns
-        assert "former_username" in columns
-
-        # Verify FK lookup indexes added by migration 003 exist
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' "
-            "AND name='idx_turn_logs_session_id'"
+        assert {"role", "must_change_pin", "deleted_at", "former_username"}.issubset(
+            columns
         )
-        assert cursor.fetchone() is not None
 
-        # Verify audit_logs table and indexes added by migration 006 exist
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='audit_logs'"
-        )
-        assert cursor.fetchone() is not None
+        # Verify expected tables exist
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        existing_tables = {r[0] for r in cursor.fetchall()}
+        assert {
+            "audit_logs",
+            "devices",
+            "quiz_questions",
+            "quiz_generation_logs",
+        }.issubset(existing_tables)
 
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_logs_actor'"
-        )
-        assert cursor.fetchone() is not None
-
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_logs_target'"
-        )
-        assert cursor.fetchone() is not None
-
-        # Verify devices table and index added by migration 007 exist
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='devices'"
-        )
-        assert cursor.fetchone() is not None
-
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_devices_assigned_user'"
-        )
-        assert cursor.fetchone() is not None
-
-        # Verify quiz_questions table and indexes added by migration 008 exist
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='quiz_questions'"
-        )
-        assert cursor.fetchone() is not None
-
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_quiz_questions_topic'"
-        )
-        assert cursor.fetchone() is not None
-
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_quiz_questions_created'"
-        )
-        assert cursor.fetchone() is not None
+        # Verify expected indexes exist
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
+        existing_indexes = {r[0] for r in cursor.fetchall()}
+        assert {
+            "idx_turn_logs_session_id",
+            "idx_audit_logs_actor",
+            "idx_audit_logs_target",
+            "idx_devices_assigned_user",
+            "idx_quiz_questions_topic",
+            "idx_quiz_questions_created",
+            "idx_quiz_gen_logs_user",
+            "idx_quiz_gen_logs_topic",
+            "idx_quiz_gen_logs_created",
+        }.issubset(existing_indexes)
         conn.close()
     finally:
         if os.path.exists(db_path):
