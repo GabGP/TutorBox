@@ -22,6 +22,7 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
   - [Table: `devices`](#table-devices)
   - [Table: `turn_logs`](#table-turn_logs)
   - [Table: `quiz_questions`](#table-quiz_questions)
+  - [Table: `quiz_generation_logs`](#table-quiz_generation_logs)
   - [Table: `audit_logs`](#table-audit_logs)
   - [Table: `schema_migrations`](#table-schema_migrations)
 - [4. Performance Indexes](#4-performance-indexes)
@@ -47,7 +48,7 @@ PRAGMA journal_mode = WAL;
 PRAGMA busy_timeout = 5000;
 ```
 
-* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`, `devices -> users`).
+* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`, `devices -> users`, `quiz_generation_logs -> users / quiz_questions`).
 * **`journal_mode = WAL`**: Write-Ahead Logging allows simultaneous non-blocking concurrent readers while a write transaction is committed.
 * **`busy_timeout = 5000`**: Sets a 5-second lock acquisition timeout to prevent immediate busy errors under concurrent student load.
 
@@ -59,6 +60,8 @@ PRAGMA busy_timeout = 5000;
 erDiagram
     users ||--o{ sessions : "has"
     users ||--o| devices : "assigned to"
+    users ||--o{ quiz_generation_logs : "initiates"
+    quiz_questions ||--o{ quiz_generation_logs : "records"
     sessions ||--o{ turn_logs : "records"
     users ||--o{ audit_logs : "actor / target"
 
@@ -112,6 +115,20 @@ erDiagram
         TEXT source "llm | seed | teacher"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
         TIMESTAMP deleted_at "NULL: Active | TIMESTAMP: Soft-deleted"
+    }
+
+    quiz_generation_logs {
+        INTEGER id PK "AUTOINCREMENT"
+        TEXT question_id FK "REFERENCES quiz_questions(id) ON DELETE SET NULL"
+        INTEGER user_id FK "REFERENCES users(id)"
+        TEXT topic "Curriculum topic slug"
+        TEXT subconcept "Curriculum subconcept slug"
+        TEXT model_name "LLM/SLM model identifier"
+        INTEGER attempts "Generation retry count (>= 1)"
+        REAL duration_ms "Wall-clock generation latency (ms)"
+        INTEGER success "1: Success | 0: Failure"
+        TEXT rejection_history_json "JSON serialized intermediate rejection errors"
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
     audit_logs {
@@ -219,6 +236,27 @@ Question bank repository storing generated, seeded, and teacher-authored diagnos
 
 ---
 
+### Table: `quiz_generation_logs`
+Dedicated telemetry trail capturing model identifiers, latency, retry counts, and rejection histories for every on-demand quiz generation request.
+
+> **Related API Operations**: Recorded automatically on [`POST /quiz/generate`](api-reference.md#post-quizgenerate); queried by [`GET /quiz/generation-logs`](api-reference.md#get-quizgeneration-logs) and [`GET /quiz/generation-metrics`](api-reference.md#get-quizgeneration-metrics).
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | — | Unique generation log identifier. |
+| `question_id` | `TEXT` | `NULL`, `FOREIGN KEY -> quiz_questions(id) ON DELETE SET NULL` | `NULL` | Foreign key referencing generated question if persisted (`NULL` for transient generations or failures). |
+| `user_id` | `INTEGER` | `NOT NULL`, `FOREIGN KEY -> users(id)` | — | User ID of the teacher/admin who requested generation. |
+| `topic` | `TEXT` | `NOT NULL` | — | Target mathematics curriculum topic slug. |
+| `subconcept` | `TEXT` | `NULL` | `NULL` | Target curriculum subconcept slug. |
+| `model_name` | `TEXT` | `NOT NULL` | — | Identifier of the SLM/LLM model executed. |
+| `attempts` | `INTEGER` | `NOT NULL`, `CHECK(attempts >= 1)` | — | Number of generation attempts executed ($1$ to $N$). |
+| `duration_ms` | `REAL` | `NOT NULL`, `CHECK(duration_ms >= 0.0)` | — | Total wall-clock execution time in milliseconds. |
+| `success` | `INTEGER` | `NOT NULL`, `CHECK(success IN (0, 1))` | — | `1` if generation succeeded within max retries; `0` on unrecoverable failure. |
+| `rejection_history_json` | `TEXT` | `NULL` | `NULL` | JSON-serialized list of chronological stage errors captured during intermediate rejection cycles. |
+| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp when generation request was executed. |
+
+---
+
 ### Table: `audit_logs`
 Append-only audit trail recording sensitive operational, staff, and hardware pairing actions.
 
@@ -274,6 +312,9 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | `idx_devices_assigned_user` | `devices` | `(assigned_user_id)` | Fast reverse-lookup of clicker assignment by student ID. |
 | `idx_quiz_questions_topic` | `quiz_questions` | `(topic, subconcept)` | Fast filtering and random sampling by curriculum topic and subconcept. |
 | `idx_quiz_questions_created` | `quiz_questions` | `(created_at)` | Fast pagination and chronological ordering of question banks. |
+| `idx_quiz_gen_logs_user` | `quiz_generation_logs` | `(user_id)` | Fast filtering of generation telemetry by teacher user ID. |
+| `idx_quiz_gen_logs_topic` | `quiz_generation_logs` | `(topic, subconcept)` | Fast aggregation and filtering of generation latency and retry counts by topic. |
+| `idx_quiz_gen_logs_created` | `quiz_generation_logs` | `(created_at)` | Fast chronological sorting and time-window analytics. |
 
 ---
 
@@ -314,6 +355,7 @@ Schema migrations are applied automatically at application startup in sequential
 * **[`006_add_audit_logs.sql`](../backend/migrations/006_add_audit_logs.sql)**: Creates `audit_logs` table and lookup indexes `idx_audit_logs_actor` and `idx_audit_logs_target`.
 * **[`007_add_devices.sql`](../backend/migrations/007_add_devices.sql)**: Creates `devices` table and lookup index `idx_devices_assigned_user` for ESP32 clicker fleet pairing.
 * **[`008_add_quiz_questions.sql`](../backend/migrations/008_add_quiz_questions.sql)**: Creates `quiz_questions` table and composite indexes `idx_quiz_questions_topic` and `idx_quiz_questions_created` for persistent question bank storage.
+* **[`009_add_quiz_generation_logs.sql`](../backend/migrations/009_add_quiz_generation_logs.sql)**: Creates `quiz_generation_logs` table and lookup indexes `idx_quiz_gen_logs_user`, `idx_quiz_gen_logs_topic`, and `idx_quiz_gen_logs_created` for tracking SLM telemetry, latency, and rejection histories.
 
 ## Next Steps
 

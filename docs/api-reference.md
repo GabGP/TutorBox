@@ -29,7 +29,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.4 Staff Administration (`GET /api/v1/staff/users`, `POST /api/v1/staff/users`, `POST /api/v1/staff/users/{user_id}/reset-pin`, `DELETE /api/v1/staff/users/{user_id}`, `POST /api/v1/staff/users/{user_id}/recover`)](#64-staff-administration)
   - [6.5 System Audit (`GET /api/v1/staff/audit-logs`)](#65-system-audit)
   - [6.6 Hardware Clicker & Device Fleet Management (`GET /api/v1/staff/devices`, `POST /api/v1/staff/devices`, `POST /api/v1/staff/devices/{device_id}/assign`, `POST /api/v1/staff/devices/{device_id}/unassign`, `DELETE /api/v1/staff/devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
-  - [6.7 Quiz & Diagnostic Question Bank (`GET /api/v1/quiz/topics`, `GET /api/v1/quiz/schema`, `POST /api/v1/quiz/validate`, `POST /api/v1/quiz/generate`, `GET /api/v1/quiz/questions`, `GET /api/v1/quiz/questions/{id}`, `POST /api/v1/quiz/questions`, `DELETE /api/v1/quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
+  - [6.7 Quiz & Diagnostic Question Bank (`GET /api/v1/quiz/topics`, `GET /api/v1/quiz/schema`, `POST /api/v1/quiz/validate`, `POST /api/v1/quiz/generate`, `GET /api/v1/quiz/generation-logs`, `GET /api/v1/quiz/generation-metrics`, `GET /api/v1/quiz/questions`, `GET /api/v1/quiz/questions/{id}`, `POST /api/v1/quiz/questions`, `DELETE /api/v1/quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
 - [Next Steps](#next-steps)
 
 ---
@@ -113,6 +113,8 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
 | `/api/v1/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
 | `/api/v1/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/generation-logs` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/quiz/generation-metrics` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/api/v1/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/api/v1/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/api/v1/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
@@ -763,39 +765,102 @@ Generate a new diagnostic question on-demand using the rejection and retry pipel
   * `200 OK`:
     ```json
     {
-      "id": "q_gen_a1b2c3d4",
-      "topic": "arithmetic",
-      "subconcept": "addition_subtraction",
-      "question_text": "¿Cuánto es 54 + 38?",
-      "options": {
-        "A": "82",
-        "B": "16",
-        "C": "92",
-        "D": "812"
-      },
-      "correct_option": "C",
-      "distractors": {
-        "A": {
-          "misconception": "alignment_error",
-          "explanation": "Olvidaste sumar la decena que llevabas."
+      "question": {
+        "id": "q_gen_a1b2c3d4",
+        "topic": "arithmetic",
+        "subconcept": "addition_subtraction",
+        "question_text": "¿Cuánto es 54 + 38?",
+        "options": {
+          "A": "82",
+          "B": "16",
+          "C": "92",
+          "D": "812"
         },
-        "B": {
-          "misconception": "added_instead_of_subtracted",
-          "explanation": "Restaste 54 - 38 en vez de sumarlos."
+        "correct_option": "C",
+        "distractors": {
+          "A": {
+            "misconception": "alignment_error",
+            "explanation": "Olvidaste sumar la decena que llevabas."
+          },
+          "B": {
+            "misconception": "added_instead_of_subtracted",
+            "explanation": "Restaste 54 - 38 en vez de sumarlos."
+          },
+          "D": {
+            "misconception": "borrowing_error",
+            "explanation": "Escribiste el 12 completo al lado de la suma de decenas."
+          }
         },
-        "D": {
-          "misconception": "borrowing_error",
-          "explanation": "Escribiste el 12 completo al lado de la suma de decenas."
-        }
+        "source": "llm",
+        "sympy_verified": true,
+        "created_at": "2026-08-31 12:00:00"
       },
-      "source": "llm",
-      "sympy_verified": true,
-      "created_at": "2026-08-31 12:00:00"
+      "metadata": {
+        "model_name": "qwen2.5-coder-1.5b",
+        "attempts": 1,
+        "duration_ms": 342.15,
+        "rejection_history": []
+      }
     }
     ```
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
   * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
-  * `502 Bad Gateway`: SLM generation failed all retry attempts.
+  * `502 Bad Gateway`: SLM generation failed all retry attempts (persists failure log to telemetry database).
+
+#### `GET /api/v1/quiz/generation-logs`
+Query historical telemetry trails of SLM quiz generation attempts, latency profiling, and rejection histories.
+
+* **Authorization**: Teacher, Admin
+* **Query Parameters**:
+  * `topic` (`string`, optional): Filter by curriculum topic slug.
+  * `user_id` (`integer`, optional): Filter by teacher/admin user ID.
+  * `success` (`bool`, optional): Filter by generation outcome (`true` for success, `false` for failure).
+  * `limit` (`integer`, optional, default: `50`, min: `1`, max: `100`): Pagination limit.
+  * `offset` (`integer`, optional, default: `0`, min: `0`): Pagination offset.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "logs": [
+        {
+          "id": 1,
+          "question_id": "q_gen_a1b2c3d4",
+          "user_id": 2,
+          "topic": "arithmetic",
+          "subconcept": "addition_subtraction",
+          "model_name": "qwen2.5-coder-1.5b",
+          "attempts": 1,
+          "duration_ms": 342.15,
+          "success": true,
+          "rejection_history": [],
+          "created_at": "2026-08-31 12:00:00"
+        }
+      ],
+      "total": 1
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
+
+#### `GET /api/v1/quiz/generation-metrics`
+Calculate aggregated generation reliability, latency, and retry metrics for observability dashboards.
+
+* **Authorization**: Teacher, Admin
+* **Query Parameters**:
+  * `topic` (`string`, optional): Filter metrics by curriculum topic slug.
+  * `model_name` (`string`, optional): Filter metrics by SLM model identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "total_generations": 24,
+      "successful_generations": 22,
+      "failed_generations": 2,
+      "success_rate": 0.9167,
+      "avg_attempts": 1.25,
+      "avg_duration_ms": 412.50
+    }
+    ```
+  * `403 Forbidden`: Caller is a student or has pending PIN rotation.
 
 #### `GET /api/v1/quiz/questions`
 Query and filter diagnostic questions from the question bank.
