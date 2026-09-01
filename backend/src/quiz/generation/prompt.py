@@ -17,7 +17,9 @@ def build_quiz_system_prompt() -> str:
         '3. "distractors" must be a dictionary with exactly 3 keys for the non-correct options.\n'
         '4. Each distractor MUST include "misconception" (slug) and "explanation" (a friendly Spanish explanation for primary school).\n'
         '5. The "question_text" and distractor "explanation" fields MUST be in Spanish.\n'
-        "6. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary."
+        "6. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
+        "7. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients. "
+        "NEVER copy or reuse the numbers, equation, or text from the format reference example."
     )
 
 
@@ -50,7 +52,7 @@ def build_quiz_user_prompt(
         f"Generate 1 diagnostic quiz question for topic '{topic}'"
         + (f" and subconcept '{subconcept}'" if subconcept else "")
         + f".{misconception_guide}\n\n"
-        "Required JSON format:\n"
+        "Required JSON format (schema reference ONLY - do NOT copy these numbers or equation):\n"
         f"{json.dumps(example_json, ensure_ascii=False, indent=2)}"
     )
 

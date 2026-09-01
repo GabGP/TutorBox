@@ -16,6 +16,8 @@ def test_build_quiz_system_prompt():
     assert '"misconception"' in prompt
     assert '"explanation"' in prompt
     assert "Spanish" in prompt
+    assert "NOVELTY RULE" in prompt
+    assert "NEVER copy or reuse" in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_and_subconcept():
@@ -24,6 +26,7 @@ def test_build_quiz_user_prompt_with_topic_and_subconcept():
     assert "order_of_operations" in prompt
     assert "left_to_right_precedence" in prompt
     assert "Required JSON format" in prompt
+    assert "schema reference ONLY" in prompt
 
 
 def test_build_quiz_user_prompt_pre_algebra_two_step():
