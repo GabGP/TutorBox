@@ -18,8 +18,8 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **316 / 316 passing tests** (172 new tests added in Week 2, a 119.4% expansion from Week 1).
-* **Statement Coverage**: **100.00% coverage** across all 65 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Backend Test Suite**: **357 / 357 passing tests** (213 new tests added in Week 2, a 147.9% expansion from Week 1).
+* **Statement Coverage**: **100.00% coverage** across all 71 source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
 * **Seed Question Bank**: **66 curated, 100% SymPy-verified diagnostic questions** across 4 primary mathematics domains (exceeding the milestone target of $\ge 50$ questions).
@@ -32,14 +32,16 @@ This document summarizes the technical deliverables, architectural implementatio
 1. **Diagnostic Contract & Pedagogical Taxonomy**:
    * Pydantic validation models (`models.py`, `schema.py`) enforcing the 1-correct + 3-distractor rule with non-empty misconception slugs and age-appropriate Spanish explanations.
    * Standardized curriculum taxonomy (`taxonomy.py`) across 4 domains (`arithmetic`, `fractions`, `pre_algebra`, `decimals_percentages`), 10 subconcepts, and 32 validated misconception error slugs.
-2. **LLM Generation & Rejection Pipeline**:
-   * Structured prompt builder with few-shot diagnostic examples and corrective error feedback generator (`prompt.py`).
+2. **Multi-Layer Deterministic Alignment & Generation Pipeline**:
+   * Dynamic few-shot prompt builder (`prompt.py`, `exemplars.py`) retrieving topic-specific canonical few-shot exemplars directly from the verified seed bank to eliminate prompt anchoring drift without duplicating data.
+   * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
    * Hardware-agnostic `LLMClient` protocol with `MockLLMClient` (for CI/CD testing) and `LocalSLMClient` (connecting to local `llama.cpp` OpenAI-compatible endpoint) (`llm_client.py`).
-   * Automated 3-stage validation pipeline (`generator.py`) retrying up to 3 times with error feedback upon receiving malformed JSON or mathematically invalid items.
+   * Automated 3-stage validation pipeline (`generator.py`) retrying up to 3 times with error feedback upon receiving malformed JSON, taxonomy mismatches, or mathematically invalid items.
    * Anti-guessing option and misconception shuffler (`shuffler.py`) ensuring uniform random distribution of the correct answer across `{"A", "B", "C", "D"}` and random permutation of distractor misconception ordering while strictly preserving diagnostic bindings.
-3. **Mathematical AST Engine & Validator Contract**:
+3. **Universal Mathematical AST Engine (`math_engine`)**:
    * Deterministic SymPy AST parser (`parser.py`) supporting arithmetic, fractions, percentages, Spanish decimal commas (`1,5`), colon division (`6 : 2`), and linear equations.
-   * Decoupled `MathValidatorInterface` protocol and baseline `SymPyMathValidator` (`validator.py`) verifying mathematical truth, non-equality of distractors, and collision detection.
+   * Universal mathematical AST & expression structure inspector (`ast_inspector.py`, `ast_algebra.py`, `ast_arithmetic.py`) providing shared equation classification ($ax+b=c$, degree 1 polynomial analysis, operator precedence) reusable across both Classroom Quiz Mode and Socratic Tutor Mode (Week 5).
+   * Decoupled `MathValidatorInterface` protocol and baseline `SymPyMathValidator` (`validator.py`) verifying mathematical truth, AST structural integrity, non-equality of distractors, and collision detection.
 4. **SQLite Persistence & Curated Seed Bank**:
    * Migration `008_add_quiz_questions.sql` with CHECK constraints and compound indexes on `(topic, subconcept)` and `created_at`.
    * Repository layer (`quiz.py`, `quiz_mapper.py`) supporting CRUD, pagination, topic filtering, random match sampling, and soft deletion.

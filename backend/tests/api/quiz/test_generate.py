@@ -20,15 +20,15 @@ VALID_LLM_OUTPUT = json.dumps(
         "correct_option": "A",
         "distractors": {
             "B": {
-                "misconception": "table_lookup_error",
-                "explanation": "Calculaste mal 2+5.",
+                "misconception": "borrowing_error",
+                "explanation": "Calculaste mal la suma de las unidades.",
             },
             "C": {
-                "misconception": "forgot_carry",
-                "explanation": "Sumaste una decena de más.",
+                "misconception": "alignment_error",
+                "explanation": "Alineaste mal las decenas.",
             },
             "D": {
-                "misconception": "subtraction_error",
+                "misconception": "added_instead_of_subtracted",
                 "explanation": "Restaste en vez de sumar.",
             },
         },

@@ -21,12 +21,12 @@ def valid_question_dict(id_str: str = "q_test_1") -> dict:
                 "explanation": "Sumaste antes de multiplicar.",
             },
             "C": {
-                "misconception": "multiplication_error",
-                "explanation": "Multiplicaste mal.",
+                "misconception": "addition_before_multiplication",
+                "explanation": "Sumaste antes de resolver la multiplicación.",
             },
             "D": {
-                "misconception": "multiplied_all",
-                "explanation": "Multiplicaste todo.",
+                "misconception": "ignored_parentheses",
+                "explanation": "Ignoraste el orden de precedencia.",
             },
         },
     }
@@ -156,6 +156,96 @@ def test_generator_nested_json_extraction_with_commentary():
     assert question.id == "q_test_1"
     assert question.options[question.correct_option] == "11"
     assert len(question.distractors) == 3
+
+
+def test_generator_retry_after_taxonomy_topic_mismatch():
+    drifted_payload = valid_question_dict()
+    drifted_payload["topic"] = "arithmetic"  # Requested pre_algebra, but got arithmetic
+    valid_algebra = {
+        "id": "q_test_algebra",
+        "topic": "pre_algebra",
+        "subconcept": "two_step_equations",
+        "question_text": "¿Cuál es el valor de x en 2x + 4 = 12?",
+        "options": {"A": "4", "B": "8", "C": "3", "D": "6"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {
+                "misconception": "forgot_division",
+                "explanation": "Olvidaste dividir.",
+            },
+            "C": {
+                "misconception": "subtracted_instead_of_divided",
+                "explanation": "Restaste en vez de dividir.",
+            },
+            "D": {
+                "misconception": "divided_before_subtracting",
+                "explanation": "Dividiste antes de restar.",
+            },
+        },
+    }
+    client = MockLLMClient([json.dumps(drifted_payload), json.dumps(valid_algebra)])
+    generator = QuizQuestionGenerator(client)
+
+    question = generator.generate("pre_algebra", "two_step_equations")
+    assert question.id == "q_test_algebra"
+    assert len(client.call_history) == 2
+    assert "Topic mismatch: requested 'pre_algebra'" in client.call_history[1][1]
+
+
+def test_generator_retry_after_taxonomy_misconception_mismatch():
+    invalid_misconception_payload = {
+        "id": "q_test_bad_misc",
+        "topic": "pre_algebra",
+        "subconcept": "two_step_equations",
+        "question_text": "¿Cuál es el valor de x en 2x + 4 = 12?",
+        "options": {"A": "4", "B": "8", "C": "3", "D": "6"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {
+                "misconception": "multiplied_all",  # Not in two_step_equations
+                "explanation": "Multiplicaste todo.",
+            },
+            "C": {
+                "misconception": "subtracted_instead_of_divided",
+                "explanation": "Restaste en vez de dividir.",
+            },
+            "D": {
+                "misconception": "divided_before_subtracting",
+                "explanation": "Dividiste antes de restar.",
+            },
+        },
+    }
+    valid_algebra = {
+        "id": "q_test_algebra_ok",
+        "topic": "pre_algebra",
+        "subconcept": "two_step_equations",
+        "question_text": "¿Cuál es el valor de x en 2x + 4 = 12?",
+        "options": {"A": "4", "B": "8", "C": "3", "D": "6"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {
+                "misconception": "forgot_division",
+                "explanation": "Olvidaste dividir.",
+            },
+            "C": {
+                "misconception": "subtracted_instead_of_divided",
+                "explanation": "Restaste en vez de dividir.",
+            },
+            "D": {
+                "misconception": "divided_before_subtracting",
+                "explanation": "Dividiste antes de restar.",
+            },
+        },
+    }
+    client = MockLLMClient(
+        [json.dumps(invalid_misconception_payload), json.dumps(valid_algebra)]
+    )
+    generator = QuizQuestionGenerator(client)
+
+    question = generator.generate("pre_algebra", "two_step_equations")
+    assert question.id == "q_test_algebra_ok"
+    assert len(client.call_history) == 2
+    assert "Misconception 'multiplied_all'" in client.call_history[1][1]
 
 
 def test_generator_llm_request_failure_raises_generation_error():

@@ -15,6 +15,7 @@ from quiz.generation.prompt import (
     build_quiz_user_prompt,
 )
 from quiz.generation.shuffler import shuffle_quiz_question
+from quiz.validation.taxonomy_validator import TaxonomyValidator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
@@ -29,10 +30,12 @@ class QuizQuestionGenerator:
         self,
         llm_client: LLMClient,
         validator: MathValidatorInterface | None = None,
+        taxonomy_validator: TaxonomyValidator | None = None,
         rng: random.Random | None = None,
     ) -> None:
         self.llm_client = llm_client
         self.validator = validator or SymPyMathValidator()
+        self.taxonomy_validator = taxonomy_validator or TaxonomyValidator()
         self.rng = rng
 
     def _extract_json_dict(self, raw_output: str) -> dict[str, Any]:
@@ -91,6 +94,18 @@ class QuizQuestionGenerator:
                 question = validate_quiz_question_dict(parsed_json)
             except (ValidationError, ValueError, TypeError) as schema_error:
                 step_errors.append(f"Schema violation: {schema_error}")
+                accumulated_errors.extend(step_errors)
+                current_user_prompt = build_feedback_prompt(
+                    base_user_prompt, accumulated_errors
+                )
+                continue
+            taxonomy_validation_result = (
+                self.taxonomy_validator.validate_question_taxonomy(
+                    question, expected_topic=topic, expected_subconcept=subconcept
+                )
+            )
+            if not taxonomy_validation_result.is_valid:
+                step_errors.extend(taxonomy_validation_result.errors)
                 accumulated_errors.extend(step_errors)
                 current_user_prompt = build_feedback_prompt(
                     base_user_prompt, accumulated_errors
