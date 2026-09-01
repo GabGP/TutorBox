@@ -123,6 +123,7 @@ def test_create_question_success(staff_db, client: TestClient):
     assert data["id"] == "q_teacher_01"
     assert data["source"] == "teacher"
     assert data["sympy_verified"] is True
+    assert data["schema_version"] == "1.0.0"
 
     audit_cursor = conn.execute(
         "SELECT * FROM audit_logs WHERE action = 'quiz_question_created'"

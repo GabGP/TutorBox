@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "DistractorDetail": {
+      "properties": {
+        "misconception": {
+          "description": "Slug of the diagnosed misconception",
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Misconception",
+          "type": "string"
+        },
+        "explanation": {
+          "description": "Primary-school friendly explanation",
+          "maxLength": 500,
+          "minLength": 5,
+          "title": "Explanation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "misconception",
+        "explanation"
+      ],
+      "title": "DistractorDetail",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "description": "Contract schema version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "topic": {
+      "maxLength": 64,
+      "minLength": 2,
+      "title": "Topic",
+      "type": "string"
+    },
+    "subconcept": {
+      "maxLength": 64,
+      "minLength": 2,
+      "title": "Subconcept",
+      "type": "string"
+    },
+    "question_text": {
+      "maxLength": 500,
+      "minLength": 5,
+      "title": "Question Text",
+      "type": "string"
+    },
+    "options": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Options",
+      "type": "object"
+    },
+    "correct_option": {
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "title": "Correct Option",
+      "type": "string"
+    },
+    "distractors": {
+      "additionalProperties": {
+        "$ref": "#/$defs/DistractorDetail"
+      },
+      "title": "Distractors",
+      "type": "object"
+    },
+    "id": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "topic",
+    "subconcept",
+    "question_text",
+    "options",
+    "correct_option",
+    "distractors",
+    "id"
+  ],
+  "title": "QuizQuestion",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tutorbox.local/schemas/v1/quiz_question.schema.json",
+  "version": "1.0.0",
+  "description": "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+}

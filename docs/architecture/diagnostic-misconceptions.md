@@ -159,8 +159,19 @@ All seed questions are automatically verified and seeded into SQLite on applianc
 
 ---
 
+## 5. Versioned JSON Schema Contract (`v1.0.0`)
+
+Every multiple-choice diagnostic quiz question in TutorBox is governed by an immutable JSON Schema contract (Draft 2020-12):
+* **Schema Version**: `1.0.0`
+* **Canonical Schema URI (`$id`)**: `https://tutorbox.local/schemas/v1/quiz_question.schema.json`
+* **Static Repository Artifact**: `backend/schemas/v1/quiz_question.schema.json`
+* **Dynamic Inspection Endpoint**: `GET /quiz/schema` (public, unauthenticated)
+* **Anti-Drift CI Gate**: Automated unit tests (`backend/tests/quiz/contracts/test_schema.py`) strictly guarantee that Pydantic contract definitions, static repository schema files, and API endpoints remain 100% synchronized.
+
+---
+
 ## Next Steps
 
-* **[REST API Reference](../api-reference.md)**: Explore the endpoint contracts for `/quiz/generate`, `/quiz/validate`, `/quiz/questions`, and `/quiz/topics`.
+* **[REST API Reference](../api-reference.md)**: Explore the endpoint contracts for `/quiz/schema`, `/quiz/generate`, `/quiz/validate`, `/quiz/questions`, and `/quiz/topics`.
 * **[Database Schema Reference](../database-schema.md)**: Inspect the `quiz_questions` table specification and migration changelog.
 * **[Backend Guide](../../backend/README.md)**: Run tests and inspect backend implementation details.

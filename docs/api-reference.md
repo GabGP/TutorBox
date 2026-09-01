@@ -29,7 +29,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.4 Staff Administration (`GET /users`, `POST /users`, `POST /users/{user_id}/reset-pin`, `DELETE /users/{user_id}`, `POST /users/{user_id}/recover`)](#64-staff-administration)
   - [6.5 System Audit (`GET /audit-logs`)](#65-system-audit)
   - [6.6 Hardware Clicker & Device Fleet Management (`GET /devices`, `POST /devices`, `POST /devices/{device_id}/assign`, `POST /devices/{device_id}/unassign`, `DELETE /devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
-  - [6.7 Quiz & Diagnostic Question Bank (`GET /quiz/topics`, `POST /quiz/validate`, `POST /quiz/generate`, `GET /quiz/questions`, `GET /quiz/questions/{id}`, `POST /quiz/questions`, `DELETE /quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
+  - [6.7 Quiz & Diagnostic Question Bank (`GET /quiz/topics`, `GET /quiz/schema`, `POST /quiz/validate`, `POST /quiz/generate`, `GET /quiz/questions`, `GET /quiz/questions/{id}`, `POST /quiz/questions`, `DELETE /quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
 - [Next Steps](#next-steps)
 
 ---
@@ -108,6 +108,7 @@ TutorBox enforces strict role-based access across three user roles:
 | `/devices/{device_id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/devices/{device_id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
 | `/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) |
 | `/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
@@ -623,6 +624,62 @@ Retrieve the full primary mathematics curriculum taxonomy including topics, subc
         ]
       }
     ]
+    ```
+
+#### `GET /quiz/schema`
+Retrieve the canonical versioned JSON Schema (Draft 2020-12) for diagnostic quiz questions. Used by frontend PWAs, offline clickers, and sync engines for dynamic schema discovery and client-side payload validation.
+
+* **Authorization**: Public
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "$defs": {
+        "DistractorDetail": {
+          "properties": {
+            "misconception": {
+              "description": "Slug of the diagnosed misconception",
+              "maxLength": 100,
+              "minLength": 2,
+              "title": "Misconception",
+              "type": "string"
+            },
+            "explanation": {
+              "description": "Primary-school friendly explanation",
+              "maxLength": 500,
+              "minLength": 5,
+              "title": "Explanation",
+              "type": "string"
+            }
+          },
+          "required": ["misconception", "explanation"],
+          "title": "DistractorDetail",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "schema_version": {
+          "default": "1.0.0",
+          "description": "Contract schema version",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "topic": { "maxLength": 64, "minLength": 2, "title": "Topic", "type": "string" },
+        "subconcept": { "maxLength": 64, "minLength": 2, "title": "Subconcept", "type": "string" },
+        "question_text": { "maxLength": 500, "minLength": 5, "title": "Question Text", "type": "string" },
+        "options": { "additionalProperties": { "type": "string" }, "title": "Options", "type": "object" },
+        "correct_option": { "enum": ["A", "B", "C", "D"], "title": "Correct Option", "type": "string" },
+        "distractors": { "additionalProperties": { "$ref": "#/$defs/DistractorDetail" }, "title": "Distractors", "type": "object" },
+        "id": { "maxLength": 64, "minLength": 1, "title": "Id", "type": "string" }
+      },
+      "required": ["topic", "subconcept", "question_text", "options", "correct_option", "distractors", "id"],
+      "title": "QuizQuestion",
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://tutorbox.local/schemas/v1/quiz_question.schema.json",
+      "version": "1.0.0",
+      "description": "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+    }
     ```
 
 #### `POST /quiz/validate`

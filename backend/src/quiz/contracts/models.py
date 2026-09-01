@@ -32,6 +32,11 @@ class QuestionOptions(BaseModel):
 
 
 class QuizQuestionBase(BaseModel):
+    schema_version: str = Field(
+        default="1.0.0",
+        pattern=r"^\d+\.\d+\.\d+$",
+        description="Contract schema version",
+    )
     topic: str = Field(..., min_length=2, max_length=64)
     subconcept: str = Field(..., min_length=2, max_length=64)
     question_text: str = Field(..., min_length=5, max_length=500)

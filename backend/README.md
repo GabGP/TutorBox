@@ -197,6 +197,8 @@ Generated environments, caches, and build artifacts are omitted from this overvi
 ```text
 backend/
 ├── migrations/        # Idempotent SQLite schema migration scripts
+├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
+│   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
 │   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users)
 │   ├── db/            # SQLite connection manager, runtime pragmas, quiz repository, and audit logger

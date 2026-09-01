@@ -60,9 +60,22 @@ def test_valid_quiz_question_creation():
     question = QuizQuestion.model_validate(payload)
     assert question.id == "q_math_001"
     assert question.correct_option == "A"
+    assert question.schema_version == "1.0.0"
     assert len(question.distractors) == 3
     assert "B" in question.distractors
     assert question.options["A"] == "4"
+
+    # Test explicit schema_version
+    payload_custom_version = sample_quiz_payload()
+    payload_custom_version["schema_version"] = "1.1.0"
+    custom_question = QuizQuestion.model_validate(payload_custom_version)
+    assert custom_question.schema_version == "1.1.0"
+
+    # Test invalid semver pattern raises ValidationError
+    payload_invalid_version = sample_quiz_payload()
+    payload_invalid_version["schema_version"] = "v1.0"
+    with pytest.raises(ValidationError):
+        QuizQuestion.model_validate(payload_invalid_version)
 
 
 def test_question_options_as_dict():

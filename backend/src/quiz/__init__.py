@@ -8,6 +8,9 @@ from math_engine.parser import (
 )
 from quiz.contracts import (
     CURRICULUM_TAXONOMY,
+    JSON_SCHEMA_DRAFT,
+    SCHEMA_ID,
+    SCHEMA_VERSION,
     DistractorDetail,
     GenerateQuestionRequest,
     MathValidationResult,
@@ -20,8 +23,10 @@ from quiz.contracts import (
     QuizQuestionCreate,
     QuizQuestionResponse,
     ValidateQuestionRequest,
+    export_quiz_question_schema,
     get_available_topics,
     get_quiz_question_json_schema,
+    get_quiz_question_schema_json,
     is_valid_subconcept,
     is_valid_topic,
     validate_quiz_question_dict,
@@ -41,6 +46,9 @@ from quiz.validation import MathValidatorInterface, SymPyMathValidator
 
 __all__ = [
     "CURRICULUM_TAXONOMY",
+    "JSON_SCHEMA_DRAFT",
+    "SCHEMA_ID",
+    "SCHEMA_VERSION",
     "SEED_QUESTIONS",
     "DistractorDetail",
     "GenerateQuestionRequest",
@@ -67,9 +75,11 @@ __all__ = [
     "build_quiz_user_prompt",
     "evaluate_arithmetic_expression",
     "evaluate_percentage_expression",
+    "export_quiz_question_schema",
     "extract_and_solve_problem",
     "get_available_topics",
     "get_quiz_question_json_schema",
+    "get_quiz_question_schema_json",
     "is_valid_subconcept",
     "is_valid_topic",
     "parse_option_expression",
