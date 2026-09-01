@@ -3,6 +3,7 @@ import os
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class LLMClient(ABC):
@@ -41,24 +42,46 @@ class LocalSLMClient(LLMClient):
         self,
         base_url: str | None = None,
         model: str | None = None,
+        temperature: float | None = None,
         timeout_seconds: float = 30.0,
     ) -> None:
         self.base_url = (
             base_url or os.environ.get("SLM_BASE_URL", "http://127.0.0.1:8080/v1")
         ).rstrip("/")
         self.model = model or os.environ.get("SLM_MODEL_NAME", "default")
+        self.temperature = self._resolve_temperature(temperature)
         self.timeout = timeout_seconds
 
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
-        endpoint_url = f"{self.base_url}/chat/completions"
-        payload = {
+    @staticmethod
+    def _resolve_temperature(temperature: float | None) -> float:
+        """Resolves sampling temperature with environment override and fallback."""
+        if temperature is not None:
+            return temperature
+        raw_env_temp = os.environ.get("SLM_TEMPERATURE")
+        if raw_env_temp is not None:
+            try:
+                return float(raw_env_temp)
+            except ValueError:
+                return 0.7
+        return 0.7
+
+    def _build_request_payload(
+        self, system_prompt: str, user_prompt: str
+    ) -> dict[str, Any]:
+        """Constructs OpenAI-compatible completion request body."""
+        return {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.2,
+            "temperature": self.temperature,
         }
+
+    def _execute_http_post(
+        self, endpoint_url: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Dispatches an HTTP POST request and parses the returned JSON payload."""
         encoded_body = json.dumps(payload).encode("utf-8")
         http_request = urllib.request.Request(
             endpoint_url,
@@ -69,8 +92,7 @@ class LocalSLMClient(LLMClient):
             with urllib.request.urlopen(
                 http_request, timeout=self.timeout
             ) as http_response:
-                response_data = json.loads(http_response.read().decode("utf-8"))
-                return response_data["choices"][0]["message"]["content"]
+                return json.loads(http_response.read().decode("utf-8"))
         except urllib.error.HTTPError as http_error:
             error_body = http_error.read().decode("utf-8", errors="replace")
             raise RuntimeError(
@@ -80,3 +102,27 @@ class LocalSLMClient(LLMClient):
             raise RuntimeError(
                 f"LocalSLM request failed: {request_error}"
             ) from request_error
+
+    @staticmethod
+    def _parse_completion_response(response_data: dict[str, Any]) -> str:
+        """Extracts the assistant message content from the API response payload."""
+        choices = response_data.get("choices")
+        if not choices or not isinstance(choices, list):
+            raise TypeError("Malformed response from LocalSLM: missing 'choices' list.")
+        first_choice = choices[0]
+        if not isinstance(first_choice, dict):
+            raise TypeError(
+                "Malformed response from LocalSLM: choice entry is not an object."
+            )
+        message = first_choice.get("message")
+        if not isinstance(message, dict) or "content" not in message:
+            raise TypeError(
+                "Malformed response from LocalSLM: missing 'message.content'."
+            )
+        return str(message["content"])
+
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        endpoint_url = f"{self.base_url}/chat/completions"
+        payload = self._build_request_payload(system_prompt, user_prompt)
+        response_data = self._execute_http_post(endpoint_url, payload)
+        return self._parse_completion_response(response_data)

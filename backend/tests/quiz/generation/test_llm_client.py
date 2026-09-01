@@ -38,15 +38,17 @@ def test_local_slm_client_initialization():
     client = LocalSLMClient(
         base_url="http://192.168.1.50:8080/v1/",
         model="qwen-2.5",
+        temperature=0.8,
         timeout_seconds=15.0,
     )
     assert client.base_url == "http://192.168.1.50:8080/v1"
     assert client.model == "qwen-2.5"
+    assert client.temperature == 0.8
     assert client.timeout == 15.0
 
 
 def test_local_slm_client_successful_request():
-    client = LocalSLMClient()
+    client = LocalSLMClient(temperature=0.75)
     fake_response_data = {"choices": [{"message": {"content": '{"test": "ok"}'}}]}
     mock_resp = MagicMock()
     mock_resp.read.return_value = json.dumps(fake_response_data).encode("utf-8")
@@ -57,6 +59,9 @@ def test_local_slm_client_successful_request():
         res = client.generate("sys_prompt", "user_prompt")
         assert res == '{"test": "ok"}'
         mock_urlopen.assert_called_once()
+        req_arg = mock_urlopen.call_args[0][0]
+        payload = json.loads(req_arg.data.decode("utf-8"))
+        assert payload["temperature"] == 0.75
 
 
 def test_local_slm_client_failure_raises_runtime_error():
@@ -94,6 +99,38 @@ def test_local_slm_client_http_error_extracts_body():
 def test_local_slm_client_reads_env_vars(monkeypatch):
     monkeypatch.setenv("SLM_BASE_URL", "http://10.0.0.99:11434/v1")
     monkeypatch.setenv("SLM_MODEL_NAME", "qwen2.5:3b")
+    monkeypatch.setenv("SLM_TEMPERATURE", "0.65")
     client = LocalSLMClient()
     assert client.base_url == "http://10.0.0.99:11434/v1"
     assert client.model == "qwen2.5:3b"
+    assert client.temperature == 0.65
+
+
+def test_local_slm_client_invalid_env_temp_fallback(monkeypatch):
+    monkeypatch.setenv("SLM_TEMPERATURE", "not_a_valid_float")
+    client = LocalSLMClient()
+    assert client.temperature == 0.7
+
+
+@pytest.mark.parametrize(
+    "malformed_response, error_match",
+    [
+        ({}, "missing 'choices' list"),
+        ({"choices": []}, "missing 'choices' list"),
+        ({"choices": ["not_a_dict"]}, "choice entry is not an object"),
+        ({"choices": [{}]}, "missing 'message.content'"),
+        ({"choices": [{"message": {}}]}, "missing 'message.content'"),
+    ],
+)
+def test_local_slm_client_malformed_response_payload(malformed_response, error_match):
+    client = LocalSLMClient()
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps(malformed_response).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with (
+        patch("urllib.request.urlopen", return_value=mock_resp),
+        pytest.raises(TypeError, match=error_match),
+    ):
+        client.generate("sys_prompt", "user_prompt")
