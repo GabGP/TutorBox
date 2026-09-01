@@ -11,7 +11,8 @@ def build_quiz_system_prompt() -> str:
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
         "MANDATORY RULES:\n"
         '1. The question must contain exactly 4 options: "A", "B", "C", "D".\n'
-        '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true.\n'
+        '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true. '
+        "Distribute the correct answer and distinct distractor misconceptions arbitrarily among options A through D.\n"
         '3. "distractors" must be a dictionary with exactly 3 keys for the non-correct options.\n'
         '4. Each distractor MUST include "misconception" (slug) and "explanation" (a friendly Spanish explanation for primary school).\n'
         '5. The "question_text" and distractor "explanation" fields MUST be in Spanish.\n'

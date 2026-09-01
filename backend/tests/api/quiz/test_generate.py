@@ -102,8 +102,8 @@ def test_generate_question_success_no_save(staff_db, client: TestClient):
         assert response.status_code == 200
         data = response.json()
         assert data["topic"] == "arithmetic"
-        assert data["correct_option"] == "A"
-        assert data["options"]["A"] == "27"
+        assert data["correct_option"] in {"A", "B", "C", "D"}
+        assert data["options"][data["correct_option"]] == "27"
         assert data["sympy_verified"] is True
     finally:
         app.dependency_overrides.pop(get_quiz_generator, None)

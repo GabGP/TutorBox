@@ -7,6 +7,7 @@ from quiz.generation.prompt import (
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
+from quiz.generation.shuffler import shuffle_quiz_question
 
 __all__ = [
     "GenerationError",
@@ -17,4 +18,5 @@ __all__ = [
     "build_feedback_prompt",
     "build_quiz_system_prompt",
     "build_quiz_user_prompt",
+    "shuffle_quiz_question",
 ]

@@ -110,6 +110,7 @@ sequenceDiagram
     participant Engine as QuizQuestionGenerator
     participant LLM as Local SLM (llama.cpp)
     participant SymPy as SymPy Math Engine
+    participant Shuffler as Option & Misconception Shuffler
     participant DB as SQLite DB
 
     Teacher->>Engine: POST /quiz/generate (topic, subconcept)
@@ -124,6 +125,8 @@ sequenceDiagram
             alt Math Error (wrong solution or distractor collision)
                 Engine->>Engine: Append mathematical contradiction details
             else Math Proved True & Distractors Distinct
+                Engine->>Shuffler: shuffle_quiz_question(question)
+                Shuffler-->>Engine: Permuted QuizQuestion (Keys A-D randomized)
                 Engine->>DB: INSERT INTO quiz_questions (sympy_verified = 1)
                 Engine-->>Teacher: 200 OK (QuizQuestionResponse)
             end
@@ -135,6 +138,12 @@ sequenceDiagram
 1. **Mathematical Truth**: `extract_and_solve_problem(question_text)` evaluates the canonical expected solution. The option marked `correct_option` must evaluate symbolically to this truth.
 2. **Distractor Collision Prevention**: No distractor expression may evaluate to the canonical expected solution.
 3. **No Duplicate Choices**: All 4 options ($A, B, C, D$) must evaluate to distinct mathematical or numerical values.
+
+### Anti-Guessing Option & Misconception Permutation
+To prevent students from inferring correct answers through positional biases (e.g. LLM few-shot template bias always emitting correct answers in option `A`) or predictable distractor ordering:
+* **Uniform Correct Option Distribution**: The correct answer key is randomly permuted across `{"A", "B", "C", "D"}` with uniform ~25% probability per option slot.
+* **Misconception De-Correlation**: The 3 diagnostic distractors and their underlying misconceptions are permuted randomly across the remaining keys, preventing predictable distractor sequencing.
+* **Diagnostic Binding Invariant**: The 1-to-1 association between each distractor option value, its misconception slug, and its pedagogical Spanish explanation is strictly preserved during permutation.
 
 ---
 

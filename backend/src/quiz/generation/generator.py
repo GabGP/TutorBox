@@ -1,4 +1,5 @@
 import json
+import random
 import re
 import uuid
 from typing import Any
@@ -13,6 +14,7 @@ from quiz.generation.prompt import (
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
+from quiz.generation.shuffler import shuffle_quiz_question
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
@@ -27,9 +29,11 @@ class QuizQuestionGenerator:
         self,
         llm_client: LLMClient,
         validator: MathValidatorInterface | None = None,
+        rng: random.Random | None = None,
     ) -> None:
         self.llm_client = llm_client
         self.validator = validator or SymPyMathValidator()
+        self.rng = rng
 
     def _extract_json_dict(self, raw_output: str) -> dict[str, Any]:
         """Extracts the outermost JSON dictionary from raw LLM output."""
@@ -102,7 +106,7 @@ class QuizQuestionGenerator:
                 )
                 continue
 
-            return question
+            return shuffle_quiz_question(question, rng=self.rng)
 
         raise GenerationError(
             f"Failed to generate a valid quiz question after {max_retries} attempts. "

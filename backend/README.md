@@ -201,7 +201,7 @@ backend/
 │   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users)
 │   ├── db/            # SQLite connection manager, runtime pragmas, quiz repository, and audit logger
 │   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
-│   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline, seed dataset, and SymPy validator
+│   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline with anti-guessing shuffler, seed dataset, and SymPy validator
 │   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters
 ├── tests/             # Pytest test suite mirroring src/ with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)

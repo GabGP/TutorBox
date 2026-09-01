@@ -39,7 +39,8 @@ def test_generator_one_shot_success():
 
     question = generator.generate("arithmetic", "order_of_operations")
     assert question.id == "q_test_1"
-    assert question.correct_option == "A"
+    assert question.options[question.correct_option] == "11"
+    assert question.correct_option in {"A", "B", "C", "D"}
     assert len(client.call_history) == 1
 
 
@@ -51,7 +52,8 @@ def test_generator_markdown_fence_extraction():
 
     question = generator.generate("arithmetic")
     assert question.id == "q_test_1"
-    assert question.options["A"] == "11"
+    assert question.options[question.correct_option] == "11"
+    assert set(question.options.values()) == {"11", "14", "10", "24"}
 
 
 def test_generator_retry_after_malformed_json():
@@ -152,7 +154,7 @@ def test_generator_nested_json_extraction_with_commentary():
 
     question = generator.generate("arithmetic")
     assert question.id == "q_test_1"
-    assert question.options["A"] == "11"
+    assert question.options[question.correct_option] == "11"
     assert len(question.distractors) == 3
 
 
