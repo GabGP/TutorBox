@@ -81,6 +81,17 @@ def test_generator_markdown_fence_extraction():
     assert set(question.options.values()) == {"17", "32", "20", "60"}
 
 
+def test_generator_think_tag_sanitization():
+    payload = valid_question_dict()
+    reasoning_output = f"<think>\nSolving 5 + 4 * 3 = 17.\nLet's format JSON: {{...}}\n</think>\n```json\n{json.dumps(payload)}\n```"
+    client = MockLLMClient([reasoning_output])
+    generator = QuizQuestionGenerator(client)
+
+    question = generator.generate("arithmetic")
+    assert question.id == "q_test_1"
+    assert question.options[question.correct_option] == "17"
+
+
 def test_generator_retry_after_malformed_json():
     payload = valid_question_dict()
     malformed = "Aquí está tu pregunta: { id: invalid json..."
@@ -123,28 +134,9 @@ def test_generator_retry_after_math_failure():
 
 
 def test_generator_retry_after_duplicate_seed_question():
-    duplicate_seed = {
-        "id": "q_dup",
-        "topic": "pre_algebra",
-        "subconcept": "two_step_equations",
-        "question_text": "¿Cuál es el valor de x en: 2*x + 4 = 12?",
-        "options": {"A": "4", "B": "8", "C": "2", "D": "6"},
-        "correct_option": "A",
-        "distractors": {
-            "B": {
-                "misconception": "forgot_division",
-                "explanation": "Olvidaste dividir.",
-            },
-            "C": {
-                "misconception": "divided_before_subtracting",
-                "explanation": "Dividiste antes de restar.",
-            },
-            "D": {
-                "misconception": "subtracted_instead_of_divided",
-                "explanation": "Restaste en vez de dividir.",
-            },
-        },
-    }
+    duplicate_seed = _valid_algebra_dict("q_dup")
+    duplicate_seed["question_text"] = "¿Cuál es el valor de x en: 2*x + 4 = 12?"
+    duplicate_seed["options"] = {"A": "4", "B": "8", "C": "2", "D": "6"}
     valid_unique = _valid_algebra_dict()
     client = MockLLMClient([json.dumps(duplicate_seed), json.dumps(valid_unique)])
     generator = QuizQuestionGenerator(client)
@@ -285,4 +277,4 @@ def test_generator_auto_sanitizes_latex_math_delimiters():
     assert question.options[question.correct_option] == "5"
     assert set(question.options.values()) == {"5", "35", "2", "25"}
     assert all("$" not in opt for opt in question.options.values())
-    assert "$" not in question.distractors["B"].explanation
+    assert all("$" not in dist.explanation for dist in question.distractors.values())

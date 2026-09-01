@@ -18,6 +18,7 @@ from quiz.validation.validator import MathValidatorInterface
 def extract_json_dict(raw_output: str) -> dict[str, Any]:
     """Extracts outermost JSON dictionary from Markdown code fences or raw curly braces."""
     cleaned = raw_output.strip()
+    cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL).strip()
     fenced_pat = r"```(?:json)?\s*(\{.*\})\s*```"
     match = re.search(fenced_pat, cleaned, re.DOTALL) or re.search(
         r"(\{.*\})", cleaned, re.DOTALL

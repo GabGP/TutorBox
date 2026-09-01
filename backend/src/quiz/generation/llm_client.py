@@ -2,37 +2,25 @@ import json
 import os
 import urllib.error
 import urllib.request
-from abc import ABC, abstractmethod
 from typing import Any
 
+from .client_interface import LLMClient
+from .mock_client import MockLLMClient
 
-class LLMClient(ABC):
-    """Abstract interface for LLM completions."""
+DEFAULT_SLM_BASE_URL: str = "http://127.0.0.1:8080/v1"
+DEFAULT_SLM_MODEL_NAME: str = "default"
+DEFAULT_SLM_TEMPERATURE: float = 0.7
+DEFAULT_SLM_TIMEOUT_SECONDS: float = 60.0
 
-    @abstractmethod
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
-        """Generates completion text given system and user prompts."""
-
-
-class MockLLMClient(LLMClient):
-    """Mock LLM client for unit tests and local simulation."""
-
-    def __init__(self, responses: list[str] | None = None) -> None:
-        self._responses: list[str] = list(responses) if responses else []
-        self._index: int = 0
-        self.call_history: list[tuple[str, str]] = []
-
-    def add_response(self, response: str) -> None:
-        self._responses.append(response)
-
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
-        self.call_history.append((system_prompt, user_prompt))
-        if not self._responses:
-            raise RuntimeError("MockLLMClient has no configured responses.")
-        response = self._responses[min(self._index, len(self._responses) - 1)]
-        if self._index < len(self._responses) - 1:
-            self._index += 1
-        return response
+__all__ = [
+    "DEFAULT_SLM_BASE_URL",
+    "DEFAULT_SLM_MODEL_NAME",
+    "DEFAULT_SLM_TEMPERATURE",
+    "DEFAULT_SLM_TIMEOUT_SECONDS",
+    "LLMClient",
+    "LocalSLMClient",
+    "MockLLMClient",
+]
 
 
 class LocalSLMClient(LLMClient):
@@ -43,14 +31,14 @@ class LocalSLMClient(LLMClient):
         base_url: str | None = None,
         model: str | None = None,
         temperature: float | None = None,
-        timeout_seconds: float = 30.0,
+        timeout_seconds: float | None = None,
     ) -> None:
         self.base_url = (
-            base_url or os.environ.get("SLM_BASE_URL", "http://127.0.0.1:8080/v1")
+            base_url or os.environ.get("SLM_BASE_URL", DEFAULT_SLM_BASE_URL)
         ).rstrip("/")
-        self.model = model or os.environ.get("SLM_MODEL_NAME", "default")
+        self.model = model or os.environ.get("SLM_MODEL_NAME", DEFAULT_SLM_MODEL_NAME)
         self.temperature = self._resolve_temperature(temperature)
-        self.timeout = timeout_seconds
+        self.timeout = self._resolve_timeout(timeout_seconds)
 
     @staticmethod
     def _resolve_temperature(temperature: float | None) -> float:
@@ -58,12 +46,31 @@ class LocalSLMClient(LLMClient):
         if temperature is not None:
             return temperature
         raw_env_temp = os.environ.get("SLM_TEMPERATURE")
-        if raw_env_temp is not None:
-            try:
-                return float(raw_env_temp)
-            except ValueError:
-                return 0.7
-        return 0.7
+        try:
+            return (
+                float(raw_env_temp)
+                if raw_env_temp is not None
+                else DEFAULT_SLM_TEMPERATURE
+            )
+        except ValueError:
+            return DEFAULT_SLM_TEMPERATURE
+
+    @staticmethod
+    def _resolve_timeout(timeout_seconds: float | None) -> float:
+        """Resolves request timeout with environment override and fallback."""
+        if timeout_seconds is not None:
+            return float(timeout_seconds)
+        raw_env_timeout = os.environ.get("SLM_TIMEOUT_SECONDS") or os.environ.get(
+            "SLM_TIMEOUT"
+        )
+        try:
+            return (
+                float(raw_env_timeout)
+                if raw_env_timeout is not None
+                else DEFAULT_SLM_TIMEOUT_SECONDS
+            )
+        except ValueError:
+            return DEFAULT_SLM_TIMEOUT_SECONDS
 
     def _build_request_payload(
         self, system_prompt: str, user_prompt: str

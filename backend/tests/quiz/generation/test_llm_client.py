@@ -100,16 +100,27 @@ def test_local_slm_client_reads_env_vars(monkeypatch):
     monkeypatch.setenv("SLM_BASE_URL", "http://10.0.0.99:11434/v1")
     monkeypatch.setenv("SLM_MODEL_NAME", "qwen2.5:3b")
     monkeypatch.setenv("SLM_TEMPERATURE", "0.65")
+    monkeypatch.setenv("SLM_TIMEOUT_SECONDS", "45.0")
     client = LocalSLMClient()
     assert client.base_url == "http://10.0.0.99:11434/v1"
     assert client.model == "qwen2.5:3b"
     assert client.temperature == 0.65
+    assert client.timeout == 45.0
 
 
-def test_local_slm_client_invalid_env_temp_fallback(monkeypatch):
+def test_local_slm_client_reads_slm_timeout_alias(monkeypatch):
+    monkeypatch.delenv("SLM_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setenv("SLM_TIMEOUT", "90.5")
+    client = LocalSLMClient()
+    assert client.timeout == 90.5
+
+
+def test_local_slm_client_invalid_env_temp_and_timeout_fallback(monkeypatch):
     monkeypatch.setenv("SLM_TEMPERATURE", "not_a_valid_float")
+    monkeypatch.setenv("SLM_TIMEOUT_SECONDS", "not_a_float")
     client = LocalSLMClient()
     assert client.temperature == 0.7
+    assert client.timeout == 60.0
 
 
 @pytest.mark.parametrize(

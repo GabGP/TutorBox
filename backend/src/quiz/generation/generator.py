@@ -19,6 +19,8 @@ from quiz.validation.deduplication import DeduplicationValidator
 from quiz.validation.taxonomy_validator import TaxonomyValidator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
+DEFAULT_MAX_RETRIES: int = 3
+
 
 class GenerationError(Exception):
     """Raised when the question generation and retry pipeline fails."""
@@ -45,7 +47,7 @@ class QuizQuestionGenerator:
         self,
         topic: str,
         subconcept: str | None = None,
-        max_retries: int = 3,
+        max_retries: int = DEFAULT_MAX_RETRIES,
         question_id: str | None = None,
     ) -> QuizQuestion:
         """Generates a validated diagnostic quiz question using a feedback-driven retry loop.
