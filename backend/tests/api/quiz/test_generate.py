@@ -3,9 +3,9 @@
 import json
 
 from fastapi.testclient import TestClient
-from llm import MockLLMClient
 
 from api.quiz.dependencies import get_quiz_generator
+from llm import MockLLMClient
 from quiz.generation.generator import QuizQuestionGenerator
 from src.main import app
 from tests.conftest import auth_headers
@@ -84,7 +84,8 @@ def test_generate_question_rbac_rotation_pending_forbidden(temp_db, client: Test
 
 
 def test_generate_question_success_no_save(staff_db, client: TestClient):
-    """Teacher generates question without saving to bank."""
+    """Teacher generates question without saving to bank; verifies envelope and telemetry."""
+    _, conn = staff_db
     mock_llm = MockLLMClient([VALID_LLM_OUTPUT])
     app.dependency_overrides[get_quiz_generator] = lambda: QuizQuestionGenerator(
         llm_client=mock_llm
@@ -103,16 +104,34 @@ def test_generate_question_success_no_save(staff_db, client: TestClient):
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["topic"] == "arithmetic"
-        assert data["correct_option"] in {"A", "B", "C", "D"}
-        assert data["options"][data["correct_option"]] == "27"
-        assert data["sympy_verified"] is True
+        assert "question" in data
+        assert "metadata" in data
+
+        question_data = data["question"]
+        assert question_data["topic"] == "arithmetic"
+        assert question_data["correct_option"] in {"A", "B", "C", "D"}
+        assert question_data["options"][question_data["correct_option"]] == "27"
+        assert question_data["sympy_verified"] is True
+
+        metadata = data["metadata"]
+        assert metadata["attempts"] == 1
+        assert metadata["duration_ms"] >= 0.0
+        assert metadata["rejection_history"] == []
+
+        # Verify telemetry row recorded
+        cursor = conn.execute(
+            "SELECT * FROM quiz_generation_logs WHERE topic = 'arithmetic' AND success = 1"
+        )
+        log_row = cursor.fetchone()
+        assert log_row is not None
+        assert log_row["question_id"] is None
+        assert log_row["attempts"] == 1
     finally:
         app.dependency_overrides.pop(get_quiz_generator, None)
 
 
 def test_generate_question_success_and_save_to_bank(staff_db, client: TestClient):
-    """Teacher generates question and persists it to question bank with audit log."""
+    """Teacher generates question and persists it to question bank with audit log and telemetry."""
     _, conn = staff_db
     mock_llm = MockLLMClient([VALID_LLM_OUTPUT])
     app.dependency_overrides[get_quiz_generator] = lambda: QuizQuestionGenerator(
@@ -132,9 +151,10 @@ def test_generate_question_success_and_save_to_bank(staff_db, client: TestClient
         )
         assert response.status_code == 200
         data = response.json()
-        question_id = data["id"]
-        assert data["source"] == "llm"
-        assert data["sympy_verified"] is True
+        question_data = data["question"]
+        question_id = question_data["id"]
+        assert question_data["source"] == "llm"
+        assert question_data["sympy_verified"] is True
 
         cursor = conn.execute(
             "SELECT * FROM quiz_questions WHERE id = ?", (question_id,)
@@ -148,6 +168,15 @@ def test_generate_question_success_and_save_to_bank(staff_db, client: TestClient
         )
         audit_row = audit_cursor.fetchone()
         assert audit_row is not None
+
+        # Verify telemetry row links to question_id
+        tel_cursor = conn.execute(
+            "SELECT * FROM quiz_generation_logs WHERE question_id = ?",
+            (question_id,),
+        )
+        tel_row = tel_cursor.fetchone()
+        assert tel_row is not None
+        assert tel_row["success"] == 1
     finally:
         app.dependency_overrides.pop(get_quiz_generator, None)
 
@@ -172,7 +201,8 @@ def test_generate_question_invalid_topic_subconcept(staff_db, client: TestClient
 
 
 def test_generate_question_llm_failure_returns_502(staff_db, client: TestClient):
-    """POST /api/v1/quiz/generate returns 502 when LLM outputs unrecoverable malformed text."""
+    """POST /api/v1/quiz/generate returns 502 and persists failure telemetry when SLM fails."""
+    _, conn = staff_db
     mock_llm = MockLLMClient(["invalid text"] * 5)
     app.dependency_overrides[get_quiz_generator] = lambda: QuizQuestionGenerator(
         llm_client=mock_llm
@@ -187,5 +217,16 @@ def test_generate_question_llm_failure_returns_502(staff_db, client: TestClient)
         )
         assert response.status_code == 502
         assert "Failed to generate valid quiz question" in response.json()["detail"]
+
+        # Verify failed telemetry row is persisted
+        cursor = conn.execute(
+            "SELECT * FROM quiz_generation_logs WHERE topic = 'arithmetic' AND success = 0"
+        )
+        tel_row = cursor.fetchone()
+        assert tel_row is not None
+        assert tel_row["success"] == 0
+        assert tel_row["question_id"] is None
+        assert tel_row["attempts"] == 3
+        assert tel_row["rejection_history_json"] is not None
     finally:
         app.dependency_overrides.pop(get_quiz_generator, None)

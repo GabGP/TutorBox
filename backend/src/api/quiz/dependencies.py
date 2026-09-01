@@ -3,8 +3,8 @@
 from typing import Annotated
 
 from fastapi import Depends
-from llm import LLMClient, LocalSLMClient
 
+from llm import LLMClient, LocalSLMClient
 from quiz.generation.generator import QuizQuestionGenerator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
