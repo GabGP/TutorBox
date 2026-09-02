@@ -120,6 +120,21 @@ def test_validator_equation_option_with_variable_prefix():
     assert result.is_valid is True
 
 
+def test_validator_rejects_unparseable_curriculum_question():
+    validator = SymPyMathValidator()
+    q = create_question(
+        text="¿Cuánto es tres cuartos más un medio en fracciones?",
+        options={"A": "cinco cuartos", "B": "un medio", "C": "dos tercios", "D": "uno"},
+        correct="A",
+        topic="fractions",
+        subconcept="addition_subtraction",
+    )
+    result = validator.validate_question_math(q)
+    assert result.is_valid is False
+    assert result.details["eval_mode"] == "none"
+    assert any("No verifiable math" in err for err in result.errors)
+
+
 def test_validator_conceptual_question_without_formula():
     validator = SymPyMathValidator()
     q = create_question(

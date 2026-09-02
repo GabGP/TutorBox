@@ -9,6 +9,7 @@ from math_engine.parser import (
     parse_option_expression,
 )
 from quiz.contracts.models import MathValidationResult, QuizQuestionBase
+from quiz.contracts.taxonomy import is_valid_topic
 
 
 class MathValidatorInterface(ABC):
@@ -77,6 +78,14 @@ class SymPyMathValidator(MathValidatorInterface):
             eval_mode=eval_mode,
         )
         errors.extend(structural_errors)
+
+        # Curriculum topics must be provable: without a derived solution neither the
+        # correct-answer nor the distractor-falsity check below can run at all.
+        if expected_solution is None and is_valid_topic(question.topic):
+            errors.append(
+                f"No verifiable math: SymPy could not derive a solution from the "
+                f"question text for curriculum topic '{question.topic}'."
+            )
 
         if expected_solution is not None:
             correct_expr = parsed_options[question.correct_option]

@@ -228,3 +228,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Agent instructions & directories
+agents/
+.agents/
+CLAUDE.md
+claude.md
