@@ -1,5 +1,6 @@
 """Quiz question generation pipeline, prompt engineering, and response validation."""
 
+from quiz.generation.generation_state import GenerationState
 from quiz.generation.generator import QuizQuestionGenerator
 from quiz.generation.prompt import (
     build_feedback_prompt,
@@ -22,6 +23,7 @@ __all__ = [
     "DEFAULT_MAX_RETRIES",
     "GenerationError",
     "GenerationResult",
+    "GenerationState",
     "QuizQuestionGenerator",
     "build_feedback_prompt",
     "build_quiz_system_prompt",

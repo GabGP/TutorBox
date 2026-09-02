@@ -4,6 +4,10 @@ from quiz.validation.deduplication import (
     DeduplicationValidationResult,
     DeduplicationValidator,
 )
+from quiz.validation.distractor_consistency import (
+    DistractorConsistencyResult,
+    DistractorConsistencyValidator,
+)
 from quiz.validation.taxonomy_validator import (
     TaxonomyValidationResult,
     TaxonomyValidator,
@@ -13,6 +17,8 @@ from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 __all__ = [
     "DeduplicationValidationResult",
     "DeduplicationValidator",
+    "DistractorConsistencyResult",
+    "DistractorConsistencyValidator",
     "MathValidatorInterface",
     "SymPyMathValidator",
     "TaxonomyValidationResult",

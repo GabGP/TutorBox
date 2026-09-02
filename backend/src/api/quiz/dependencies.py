@@ -6,6 +6,7 @@ from fastapi import Depends
 
 from llm import LLMClient, LocalSLMClient
 from quiz.generation.generator import QuizQuestionGenerator
+from quiz.validation.distractor_consistency import DistractorConsistencyValidator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
@@ -19,9 +20,21 @@ def get_math_validator() -> MathValidatorInterface:
     return SymPyMathValidator()
 
 
+def get_distractor_validator() -> DistractorConsistencyValidator:
+    """Returns the deterministic distractor consistency validator."""
+    return DistractorConsistencyValidator()
+
+
 def get_quiz_generator(
     llm_client: Annotated[LLMClient, Depends(get_llm_client)],
     validator: Annotated[MathValidatorInterface, Depends(get_math_validator)],
+    distractor_validator: Annotated[
+        DistractorConsistencyValidator, Depends(get_distractor_validator)
+    ],
 ) -> QuizQuestionGenerator:
     """Instantiates the quiz generation pipeline with injected dependencies."""
-    return QuizQuestionGenerator(llm_client=llm_client, validator=validator)
+    return QuizQuestionGenerator(
+        llm_client=llm_client,
+        validator=validator,
+        distractor_validator=distractor_validator,
+    )

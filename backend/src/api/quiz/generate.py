@@ -16,7 +16,8 @@ from quiz.contracts.models import (
     QuizQuestionResponse,
 )
 from quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
-from quiz.generation.generator import GenerationError, QuizQuestionGenerator
+from quiz.generation.generator import QuizQuestionGenerator
+from quiz.generation.types import GenerationError
 from security import AuthContext, require_roles
 
 logger = logging.getLogger(__name__)
