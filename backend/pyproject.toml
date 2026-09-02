@@ -49,4 +49,4 @@ cache-dir = "../.cache/ruff"
 src = ["src", "."]
 
 [tool.ruff.lint.isort]
-known-first-party = ["api", "db", "llm", "main", "math_engine", "quiz", "security", "src", "tests"]
+known-first-party = ["api", "config", "db", "llm", "main", "math_engine", "quiz", "security", "src", "tests"]
