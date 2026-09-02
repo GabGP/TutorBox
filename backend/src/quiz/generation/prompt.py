@@ -67,3 +67,65 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         f"{error_list}\n"
         "Please fix all listed errors and output the valid JSON object strictly."
     )
+
+
+def build_quiz_response_format() -> dict[str, Any]:
+    """Constructs OpenAI-compatible response_format dict for JSON schema constrained decoding."""
+    distractor_item = {
+        "type": "object",
+        "properties": {
+            "misconception": {"type": "string"},
+            "explanation": {"type": "string"},
+        },
+        "required": ["misconception", "explanation"],
+        "additionalProperties": False,
+    }
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "quiz_question",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "topic": {"type": "string"},
+                    "subconcept": {"type": "string"},
+                    "question_text": {"type": "string"},
+                    "options": {
+                        "type": "object",
+                        "properties": {
+                            "A": {"type": "string"},
+                            "B": {"type": "string"},
+                            "C": {"type": "string"},
+                            "D": {"type": "string"},
+                        },
+                        "required": ["A", "B", "C", "D"],
+                        "additionalProperties": False,
+                    },
+                    "correct_option": {
+                        "type": "string",
+                        "enum": ["A", "B", "C", "D"],
+                    },
+                    "distractors": {
+                        "type": "object",
+                        "properties": {
+                            "A": distractor_item,
+                            "B": distractor_item,
+                            "C": distractor_item,
+                            "D": distractor_item,
+                        },
+                        "additionalProperties": False,
+                    },
+                },
+                "required": [
+                    "topic",
+                    "subconcept",
+                    "question_text",
+                    "options",
+                    "correct_option",
+                    "distractors",
+                ],
+                "additionalProperties": False,
+            },
+        },
+    }

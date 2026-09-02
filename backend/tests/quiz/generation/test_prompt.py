@@ -2,6 +2,7 @@ from src.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
 from src.quiz.generation.exemplars import get_canonical_exemplar
 from src.quiz.generation.prompt import (
     build_feedback_prompt,
+    build_quiz_response_format,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
@@ -106,3 +107,34 @@ def test_all_taxonomy_pairs_exemplars_consistent():
             assert len(exemplar["distractors"]) == 3
             assert exemplar["correct_option"] in exemplar["options"]
             assert set(exemplar["distractors"].keys()) == {"B", "C", "D"}
+
+
+def test_build_quiz_response_format():
+    fmt = build_quiz_response_format()
+    assert fmt["type"] == "json_schema"
+    assert "json_schema" in fmt
+    schema = fmt["json_schema"]["schema"]
+    assert schema["type"] == "object"
+    assert "topic" in schema["properties"]
+    assert "subconcept" in schema["properties"]
+    assert "question_text" in schema["properties"]
+    assert "options" in schema["properties"]
+    assert "correct_option" in schema["properties"]
+    assert "distractors" in schema["properties"]
+    assert schema["properties"]["correct_option"]["enum"] == ["A", "B", "C", "D"]
+    assert schema["properties"]["options"]["required"] == ["A", "B", "C", "D"]
+    assert set(schema["properties"]["distractors"]["properties"].keys()) == {
+        "A",
+        "B",
+        "C",
+        "D",
+    }
+    assert schema["required"] == [
+        "topic",
+        "subconcept",
+        "question_text",
+        "options",
+        "correct_option",
+        "distractors",
+    ]
+    assert schema["additionalProperties"] is False

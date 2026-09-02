@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from llm import MockLLMClient
+from llm import LLMClient, MockLLMClient
 from quiz.generation.generator import GenerationError, QuizQuestionGenerator
 from quiz.validation.validator import SymPyMathValidator
 
@@ -67,6 +67,9 @@ def test_generator_one_shot_success():
     assert question.options[question.correct_option] == "17"
     assert question.correct_option in {"A", "B", "C", "D"}
     assert len(client.call_history) == 1
+    assert len(client.recorded_response_formats) == 1
+    assert client.recorded_response_formats[0] is not None
+    assert client.recorded_response_formats[0]["type"] == "json_schema"
 
 
 def test_generator_markdown_fence_extraction():
@@ -278,3 +281,15 @@ def test_generator_auto_sanitizes_latex_math_delimiters():
     assert set(question.options.values()) == {"5", "35", "2", "25"}
     assert all("$" not in opt for opt in question.options.values())
     assert all("$" not in dist.explanation for dist in question.distractors.values())
+
+
+def test_generator_handles_legacy_2_arg_llm_client():
+    payload = valid_question_dict()
+
+    class LegacyClient(LLMClient):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            return json.dumps(payload)
+
+    generator = QuizQuestionGenerator(LegacyClient())
+    question = generator.generate("arithmetic")
+    assert question.id == "q_test_1"

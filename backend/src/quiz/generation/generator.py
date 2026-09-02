@@ -8,6 +8,7 @@ from llm import LLMClient
 from quiz.contracts.models import GenerationMetadata
 from quiz.generation.prompt import (
     build_feedback_prompt,
+    build_quiz_response_format,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
@@ -51,6 +52,11 @@ class QuizQuestionGenerator:
             or "unknown"
         )
 
+    @staticmethod
+    def _elapsed_ms(start_time: float) -> float:
+        """Calculates elapsed milliseconds since start_time rounded to 2 decimals."""
+        return round((time.perf_counter() - start_time) * 1000.0, 2)
+
     def generate(
         self,
         topic: str,
@@ -65,22 +71,27 @@ class QuizQuestionGenerator:
         system_prompt = build_quiz_system_prompt()
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         current_user_prompt = base_user_prompt
+        response_format = build_quiz_response_format()
         accumulated_errors: list[str] = []
         model_name = self._resolve_model_name()
         start_time = time.perf_counter()
 
         for attempt in range(1, effective_max_retries + 1):
-            # 1. Query local SLM completion endpoint
+            # 1. Query local SLM completion endpoint with structured format
             try:
-                raw_response = self.llm_client.generate(
-                    system_prompt, current_user_prompt
-                )
+                try:
+                    raw_response = self.llm_client.generate(
+                        system_prompt, current_user_prompt, response_format
+                    )
+                except TypeError:
+                    raw_response = self.llm_client.generate(
+                        system_prompt, current_user_prompt
+                    )
             except Exception as llm_err:
-                duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
                 raise GenerationError(
                     f"SLM completion request failed on attempt {attempt}: {llm_err}",
                     attempts=attempt,
-                    duration_ms=duration_ms,
+                    duration_ms=self._elapsed_ms(start_time),
                     model_name=model_name,
                     accumulated_errors=accumulated_errors,
                 ) from llm_err
@@ -118,23 +129,21 @@ class QuizQuestionGenerator:
 
             # 5. Success: shuffle options to avoid positional bias and package result
             if validated_question is not None:
-                duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
                 shuffled = shuffle_quiz_question(validated_question, rng=self.rng)
                 metadata = GenerationMetadata(
                     model_name=model_name,
                     attempts=attempt,
-                    duration_ms=duration_ms,
+                    duration_ms=self._elapsed_ms(start_time),
                     rejection_history=accumulated_errors,
                 )
                 return GenerationResult(question=shuffled, metadata=metadata)
 
         # 6. Pipeline exhausted max retries without producing a valid question
-        duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         raise GenerationError(
             f"Failed to generate a valid quiz question after {effective_max_retries} attempts. "
             f"Errors: {'; '.join(accumulated_errors)}",
             attempts=effective_max_retries,
-            duration_ms=duration_ms,
+            duration_ms=self._elapsed_ms(start_time),
             model_name=model_name,
             accumulated_errors=accumulated_errors,
         )
