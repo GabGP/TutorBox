@@ -1,6 +1,6 @@
 """Unit tests for centralized typed settings (src/config/settings.py)."""
 
-from config.settings import (
+from config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,
@@ -14,6 +14,9 @@ from config.settings import (
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
+    PROJECT_ROOT,
+)
+from config.settings import (
     clear_settings_cache,
     get_settings,
 )
@@ -75,6 +78,19 @@ def test_database_settings_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("DB_BUSY_TIMEOUT_MS", "invalid_int")
     clear_settings_cache()
     assert get_settings().database.busy_timeout_ms == DEFAULT_BUSY_TIMEOUT_MS
+
+
+def test_database_settings_relative_and_memory(monkeypatch) -> None:
+    """Verifies that relative DATABASE_PATH resolves to PROJECT_ROOT and :memory: is kept."""
+    monkeypatch.setenv("DATABASE_PATH", ".cache/db/tutorbox.db")
+    clear_settings_cache()
+    assert get_settings().database.database_path == str(
+        (PROJECT_ROOT / ".cache/db/tutorbox.db").resolve()
+    )
+
+    monkeypatch.setenv("DATABASE_PATH", ":memory:")
+    clear_settings_cache()
+    assert get_settings().database.database_path == ":memory:"
 
 
 def test_security_settings_env_overrides(monkeypatch) -> None:

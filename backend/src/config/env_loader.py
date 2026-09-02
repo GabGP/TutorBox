@@ -3,6 +3,8 @@
 import os
 from pathlib import Path
 
+from config.constants import PROJECT_ROOT
+
 
 def load_env_file(custom_path: Path | None = None) -> None:
     """Loads environment variables from root or backend .env file if present."""
@@ -10,8 +12,8 @@ def load_env_file(custom_path: Path | None = None) -> None:
         search_paths = [custom_path]
     else:
         search_paths = [
-            Path(__file__).resolve().parent.parent.parent.parent / ".env",
-            Path(__file__).resolve().parent.parent.parent / ".env",
+            PROJECT_ROOT / ".env",
+            PROJECT_ROOT / "backend" / ".env",
         ]
     for env_path in search_paths:
         if env_path.is_file():

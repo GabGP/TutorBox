@@ -14,6 +14,7 @@ from config.constants import (
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
+    PROJECT_ROOT,
 )
 from config.env_loader import load_env_file
 from config.models import (
@@ -22,6 +23,11 @@ from config.models import (
     QuizConfig,
     SecurityConfig,
     Settings,
+)
+from config.parsers import (
+    parse_db_path,
+    parse_float,
+    parse_int,
 )
 from config.settings import (
     clear_settings_cache,
@@ -42,6 +48,7 @@ __all__ = [
     "DEFAULT_SLM_MODEL_NAME",
     "DEFAULT_SLM_TEMPERATURE",
     "DEFAULT_SLM_TIMEOUT_SECONDS",
+    "PROJECT_ROOT",
     "DatabaseConfig",
     "LLMConfig",
     "QuizConfig",
@@ -50,4 +57,7 @@ __all__ = [
     "clear_settings_cache",
     "get_settings",
     "load_env_file",
+    "parse_db_path",
+    "parse_float",
+    "parse_int",
 ]

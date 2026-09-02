@@ -2,12 +2,9 @@
 
 from pathlib import Path
 
-DEFAULT_DB_PATH: str = str(
-    Path(__file__).resolve().parent.parent.parent.parent
-    / ".cache"
-    / "db"
-    / "tutorbox.db"
-)
+PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
+
+DEFAULT_DB_PATH: str = str(PROJECT_ROOT / ".cache" / "db" / "tutorbox.db")
 DEFAULT_BUSY_TIMEOUT_MS: int = 5000
 
 DEFAULT_BCRYPT_ROUNDS: int = 12
