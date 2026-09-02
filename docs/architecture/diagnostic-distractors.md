@@ -101,48 +101,57 @@ flowchart TD
 
 ## 3. The Rejection & Regeneration Pipeline
 
-When a teacher requests on-demand question generation via `POST /quiz/generate`, the backend executes a 4-stage validation loop:
+When a teacher requests on-demand question generation via `POST /api/v1/quiz/generate`, the backend executes a **5-stage validation & rejection loop**:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Teacher as Teacher Client
+    participant Teacher as Teacher Client (PWA)
     participant Engine as QuizQuestionGenerator
     participant LLM as Local SLM (llama.cpp)
     participant Taxonomy as Taxonomy Validator
     participant SymPy as SymPy Math Engine
+    participant DistractorVal as Distractor Validator
     participant Dedup as Deduplication Gate
-    participant Shuffler as Option & Misconception Shuffler
+    participant Shuffler as Option Shuffler
     participant DB as SQLite DB
 
-    Teacher->>Engine: POST /quiz/generate (topic, subconcept)
-    loop Up to 3 Retries
-        Engine->>LLM: Generate Pure JSON (Structural Exemplar + Taxonomy Whitelist)
-        LLM-->>Engine: Raw String Output
-        Engine->>Engine: Stage 1: Extract JSON & Validate Pydantic Schema
-        alt Schema Error / Invalid JSON
-            Engine->>Engine: Append schema violation to feedback prompt
+    Teacher->>Engine: POST /api/v1/quiz/generate (topic, subconcept)
+    loop Retry Loop (Attempt 0 to Max Retries)
+        Engine->>LLM: POST /v1/chat/completions (Prompt + JSON Schema)
+        LLM-->>Engine: JSON Output Stream
+        Engine->>Engine: Stage 1: Pydantic Contract Validation
+        alt Invalid JSON Syntax or Missing Schema Fields
+            Engine->>Engine: Append schema error to feedback prompt
         else Valid Schema Structure
             Engine->>Taxonomy: Stage 2: validate_question_taxonomy(question)
-            alt Taxonomy Mismatch (topic/subconcept/misconception drift)
+            alt Taxonomy Mismatch (Topic / Subconcept / Misconception)
                 Engine->>Engine: Append taxonomy error to feedback prompt
-            else Valid Curriculum Taxonomy
+            else Valid Taxonomy
                 Engine->>SymPy: Stage 3: validate_question_math(question)
-                alt Math Error (wrong solution or distractor collision)
-                    Engine->>Engine: Append mathematical contradiction details
+                alt Math Contradiction or Distractor Collision
+                    Engine->>Engine: Append symbolic math error to feedback prompt
                 else Math Proved True & Distractors Distinct
-                    Engine->>Dedup: Stage 4: validate_question_novelty(question)
-                    alt Duplicate / Near-Duplicate Seed Match
-                        Engine->>Engine: Append deduplication error to feedback prompt
-                    else Unique & Novel Question
-                        Engine->>Shuffler: shuffle_quiz_question(question)
-                        Shuffler-->>Engine: Permuted QuizQuestion (Keys A-D randomized)
-                        Engine->>DB: INSERT INTO quiz_questions (sympy_verified = 1)
-                        Engine-->>Teacher: 200 OK (QuizQuestionResponse)
+                    Engine->>DistractorVal: Stage 4: validate_distractor_consistency(question)
+                    alt Contradiction (Explanation Calculation != Option Value)
+                        Engine->>Engine: Append distractor consistency error to feedback prompt
+                    else Distractor Explanations Consistent
+                        Engine->>Dedup: Stage 5: validate_question_novelty(question)
+                        alt Duplicate / Near-Duplicate Seed Match
+                            Engine->>Engine: Append deduplication error to feedback prompt
+                        else Unique & Novel Question
+                            Engine->>Shuffler: shuffle_quiz_question(question)
+                            Shuffler-->>Engine: Permuted QuizQuestion (Keys A-D randomized)
+                            Engine->>DB: INSERT INTO quiz_questions & telemetry
+                            Engine-->>Teacher: 200 OK (QuizQuestionResponse)
+                        end
                     end
                 end
             end
         end
+    end
+    opt Retries Exhausted Without Valid Question
+        Engine-->>Teacher: 422 Unprocessable Entity (Exhaustion Error)
     end
 ```
 
@@ -150,8 +159,9 @@ sequenceDiagram
 1. **Mathematical Truth**: `extract_and_solve_problem(question_text)` evaluates the canonical expected solution. The option marked `correct_option` must evaluate symbolically to this truth.
 2. **Distractor Collision Prevention**: No distractor expression may evaluate to the canonical expected solution.
 3. **No Duplicate Choices**: All 4 options ($A, B, C, D$) must evaluate to distinct mathematical or numerical values.
-4. **Anti-Anchoring Neutral Exemplar**: Prompts use abstract structural exemplars with generic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
-5. **Deterministic Deduplication Gate**: Every candidate question is checked against reference seed questions via text normalization and algebraic equation equivalence, rejecting any duplicate items and forcing question novelty.
+4. **Distractor Explanation Consistency**: The numerical value calculated and stated in a distractor explanation must strictly match the assigned option string value, preventing arithmetic contradictions.
+5. **Anti-Anchoring Neutral Exemplar**: Prompts use abstract structural exemplars with generic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
+6. **Deterministic Deduplication Gate**: Every candidate question is checked against reference seed questions via text normalization and algebraic equation equivalence, rejecting any duplicate items and forcing question novelty.
 
 ### Anti-Guessing Option & Misconception Permutation
 To prevent students from inferring correct answers through positional biases (e.g. LLM few-shot template bias always emitting correct answers in option `A`) or predictable distractor ordering:

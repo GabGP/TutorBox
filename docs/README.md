@@ -46,7 +46,7 @@ Integration contracts and communication protocols for the FastAPI backend, cover
 ### <a id="the-three-appliance-modes--transversal-telemetry"></a>[The Three Appliance Modes & Transversal Telemetry](architecture/three-modes.md)
 Overview of the three operational modes (Classroom Quiz, Socratic Tutor, and Offline Primary Games) and the transversal error logging system.
 
-### <a id="diagnostic-distractors--misconception-taxonomy"></a>[Diagnostic Distractors & Misconception Taxonomy](architecture/diagnostic-misconceptions.md)
+### <a id="diagnostic-distractors--misconception-taxonomy"></a>[Diagnostic Distractors & Misconception Taxonomy](architecture/diagnostic-distractors.md)
 Pedagogical architecture, 4-domain curriculum taxonomy, and 32 validated misconception error slugs powering Quiz mode feedback, Socratic tutoring, and weekly teacher reporting.
 
 ### <a id="hardware-architecture--offline-topology"></a>[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)

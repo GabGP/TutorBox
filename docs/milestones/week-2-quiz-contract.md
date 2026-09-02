@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Milestones** › **Week 2 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Diagnostic Distractors](../architecture/diagnostic-misconceptions.md)
+📍 **Docs** › **Milestones** › **Week 2 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Diagnostic Distractors](../architecture/diagnostic-distractors.md)
 
 </div>
 
@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **442 / 442 passing tests** (298 new tests added in Week 2, a 206.9% expansion from Week 1).
+* **Backend Test Suite**: **466 / 466 passing tests** (322 new tests added in Week 2, a 223.6% expansion from Week 1).
 * **Statement Coverage**: **100.00% coverage** across all source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
@@ -35,12 +35,13 @@ This document summarizes the technical deliverables, architectural implementatio
    * Standardized curriculum taxonomy (`taxonomy.py`) across 4 domains (`arithmetic`, `fractions`, `pre_algebra`, `decimals_percentages`), 10 subconcepts, and 32 validated misconception error slugs.
 2. **Multi-Layer Deterministic Alignment & Generation Pipeline**:
    * Structured JSON Schema constrained decoding (`prompt.py`, `client.py`) with OpenAI-compatible `response_format` strictly enforcing option keys `{"A", "B", "C", "D"}` and enum membership on local SLMs (`llama.cpp`), cutting schema hallucination and rejection latency.
-   * Plain-text math prompt rules (`prompt.py`) strictly forbidding LaTeX math delimiters while enforcing Spanish output and JSON validity.
-   * Neutral structural few-shot exemplar provider (`prompt.py`, `exemplars.py`) demonstrating JSON schema structure with generic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
+   * Cognitive derivation prompt sequencing & anti-contradiction constraints (`prompt.py`) enforcing a 3-step mental derivation chain (Truth $\to$ Distractor derivations $\to$ Option binding) prior to JSON emission.
+   * Neutral structural few-shot exemplar provider (`prompt.py`, `exemplars.py`) demonstrating JSON schema structure with generic semantic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
    * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
+   * Deterministic distractor explanation consistency validator (`distractor_consistency.py`, `distractor_patterns.py`) verifying that numbers calculated in pedagogical explanations match assigned option values, eliminating contradictory explanations.
    * Deterministic deduplication & novelty gate (`deduplication.py`) comparing candidate questions against reference questions via text normalization and algebraic equation equivalence, rejecting duplicates and forcing question novelty.
    * Hardware-agnostic shared LLM Client package (`src/llm/`) with abstract `LLMClient` protocol, `LocalSLMClient` (connecting to local `llama.cpp` OpenAI-compatible endpoint with configurable sampling temperature and structured `response_format`), and `MockLLMClient` (for CI/CD testing), ready for multi-mode reuse in Socratic Tutor (Week 5).
-   * Automated 4-stage validation pipeline (`generator.py`) retrying up to 3 times with error feedback upon receiving malformed JSON, taxonomy mismatches, mathematical errors, or duplicate seed questions.
+   * Automated 5-stage validation pipeline (`generator.py`) retrying up to an user-defined amount of times with error feedback upon receiving malformed JSON, taxonomy mismatches, mathematical errors, distractor explanation contradictions, or duplicate seed questions.
    * Anti-guessing option and misconception shuffler (`shuffler.py`) ensuring uniform random distribution of the correct answer across `{"A", "B", "C", "D"}` and random permutation of distractor misconception ordering while strictly preserving diagnostic bindings.
 3. **Universal Mathematical AST Engine (`math_engine`)**:
    * Deterministic SymPy AST parser (`parser.py`) supporting arithmetic, fractions, percentages, Spanish decimal commas (`1,5`), colon division (`6 : 2`), and linear equations.
