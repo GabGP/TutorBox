@@ -3,9 +3,15 @@
 from collections.abc import Iterator
 from typing import Any
 
+from config import DEFAULT_QUIZ_MAX_RETRIES, get_settings
 from quiz.contracts.models import GenerationMetadata, QuizQuestion
 
-DEFAULT_MAX_RETRIES: int = 3
+DEFAULT_MAX_RETRIES: int = DEFAULT_QUIZ_MAX_RETRIES
+
+
+def get_quiz_max_retries() -> int:
+    """Returns configured max generation retries from settings."""
+    return get_settings(reload=True).quiz.max_retries
 
 
 class GenerationResult:

@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from api.quiz.dependencies import get_quiz_generator
 from llm import MockLLMClient
 from quiz.generation.generator import QuizQuestionGenerator
+from quiz.generation.types import get_quiz_max_retries
 from src.main import app
 from tests.conftest import auth_headers
 
@@ -226,7 +227,7 @@ def test_generate_question_llm_failure_returns_502(staff_db, client: TestClient)
         assert tel_row is not None
         assert tel_row["success"] == 0
         assert tel_row["question_id"] is None
-        assert tel_row["attempts"] == 3
+        assert tel_row["attempts"] == get_quiz_max_retries()
         assert tel_row["rejection_history_json"] is not None
     finally:
         app.dependency_overrides.pop(get_quiz_generator, None)

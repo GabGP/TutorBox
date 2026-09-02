@@ -17,9 +17,9 @@ from quiz.generation.response_processor import (
 )
 from quiz.generation.shuffler import shuffle_quiz_question
 from quiz.generation.types import (
-    DEFAULT_MAX_RETRIES,
     GenerationError,
     GenerationResult,
+    get_quiz_max_retries,
 )
 from quiz.validation.deduplication import DeduplicationValidator
 from quiz.validation.taxonomy_validator import TaxonomyValidator
@@ -55,10 +55,13 @@ class QuizQuestionGenerator:
         self,
         topic: str,
         subconcept: str | None = None,
-        max_retries: int = DEFAULT_MAX_RETRIES,
+        max_retries: int | None = None,
         question_id: str | None = None,
     ) -> GenerationResult:
         """Generates a validated diagnostic quiz question using a feedback-driven retry loop."""
+        effective_max_retries = (
+            max_retries if max_retries is not None else get_quiz_max_retries()
+        )
         system_prompt = build_quiz_system_prompt()
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         current_user_prompt = base_user_prompt
@@ -66,7 +69,7 @@ class QuizQuestionGenerator:
         model_name = self._resolve_model_name()
         start_time = time.perf_counter()
 
-        for attempt in range(1, max_retries + 1):
+        for attempt in range(1, effective_max_retries + 1):
             # 1. Query local SLM completion endpoint
             try:
                 raw_response = self.llm_client.generate(
@@ -128,9 +131,9 @@ class QuizQuestionGenerator:
         # 6. Pipeline exhausted max retries without producing a valid question
         duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         raise GenerationError(
-            f"Failed to generate a valid quiz question after {max_retries} attempts. "
+            f"Failed to generate a valid quiz question after {effective_max_retries} attempts. "
             f"Errors: {'; '.join(accumulated_errors)}",
-            attempts=max_retries,
+            attempts=effective_max_retries,
             duration_ms=duration_ms,
             model_name=model_name,
             accumulated_errors=accumulated_errors,

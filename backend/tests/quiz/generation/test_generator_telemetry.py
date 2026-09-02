@@ -142,3 +142,17 @@ def test_generator_retry_after_math_failure_telemetry():
         "does not equal computed truth" in err
         for err in result.metadata.rejection_history
     )
+
+
+def test_generator_max_retries_configured_from_environment(monkeypatch):
+    """Verifies that QuizQuestionGenerator honors QUIZ_MAX_RETRIES environment variable."""
+    monkeypatch.setenv("QUIZ_MAX_RETRIES", "2")
+    client = MockLLMClient(["invalid json output"] * 5)
+    generator = QuizQuestionGenerator(client)
+
+    with pytest.raises(GenerationError) as exc_info:
+        generator.generate("arithmetic")
+
+    err = exc_info.value
+    assert err.attempts == 2
+    assert len(client.call_history) == 2
