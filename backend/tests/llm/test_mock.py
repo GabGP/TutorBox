@@ -28,3 +28,11 @@ def test_mock_llm_client_add_response_dynamically():
 
     client.add_response("dynamically added response")
     assert client.generate("system", "user") == "dynamically added response"
+
+
+def test_mock_llm_client_records_response_format():
+    client = MockLLMClient(["resp"])
+    schema = {"type": "json_object"}
+    client.generate("sys", "usr", response_format=schema)
+    assert len(client.recorded_response_formats) == 1
+    assert client.recorded_response_formats[0] == schema

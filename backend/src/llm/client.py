@@ -46,10 +46,13 @@ class LocalSLMClient(LLMClient):
         )
 
     def _build_request_payload(
-        self, system_prompt: str, user_prompt: str
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Constructs OpenAI-compatible completion request body."""
-        return {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -57,6 +60,9 @@ class LocalSLMClient(LLMClient):
             ],
             "temperature": self.temperature,
         }
+        if response_format is not None:
+            payload["response_format"] = response_format
+        return payload
 
     def _execute_http_post(
         self, endpoint_url: str, payload: dict[str, Any]
@@ -101,8 +107,15 @@ class LocalSLMClient(LLMClient):
             )
         return str(message["content"])
 
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
+    def generate(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict[str, Any] | None = None,
+    ) -> str:
         endpoint_url = f"{self.base_url}/chat/completions"
-        payload = self._build_request_payload(system_prompt, user_prompt)
+        payload = self._build_request_payload(
+            system_prompt, user_prompt, response_format=response_format
+        )
         response_data = self._execute_http_post(endpoint_url, payload)
         return self._parse_completion_response(response_data)

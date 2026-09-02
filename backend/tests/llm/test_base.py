@@ -15,8 +15,13 @@ def test_abstract_llm_client_generate_super_call():
     """Verifies default abstract generate method behavior via concrete subclass super call."""
 
     class DummyClient(LLMClient):
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
-            return super().generate(system_prompt, user_prompt)
+        def generate(
+            self,
+            system_prompt: str,
+            user_prompt: str,
+            response_format: dict | None = None,
+        ) -> str:
+            return super().generate(system_prompt, user_prompt, response_format)
 
     dummy_instance = DummyClient()
     assert dummy_instance.generate("system_prompt", "user_prompt") is None

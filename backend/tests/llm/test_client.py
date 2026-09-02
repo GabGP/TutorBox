@@ -39,6 +39,29 @@ def test_local_slm_client_successful_request():
         assert payload["temperature"] == 0.75
         assert payload["messages"][0]["content"] == "system_prompt"
         assert payload["messages"][1]["content"] == "user_prompt"
+        assert "response_format" not in payload
+
+
+def test_local_slm_client_successful_request_with_response_format():
+    client = LocalSLMClient(temperature=0.7)
+    fake_response_data = {
+        "choices": [{"message": {"content": '{"test": "structured"}'}}]
+    }
+    mock_response = MagicMock()
+    mock_response.read.return_value = json.dumps(fake_response_data).encode("utf-8")
+    mock_response.__enter__.return_value = mock_response
+    mock_response.__exit__.return_value = None
+
+    response_format = {"type": "json_object"}
+    with patch("urllib.request.urlopen", return_value=mock_response) as mock_urlopen:
+        result = client.generate(
+            "system_prompt", "user_prompt", response_format=response_format
+        )
+        assert result == '{"test": "structured"}'
+        mock_urlopen.assert_called_once()
+        request_argument = mock_urlopen.call_args[0][0]
+        payload = json.loads(request_argument.data.decode("utf-8"))
+        assert payload["response_format"] == {"type": "json_object"}
 
 
 def test_local_slm_client_failure_raises_runtime_error():
