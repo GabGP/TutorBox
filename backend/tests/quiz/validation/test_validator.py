@@ -1,4 +1,4 @@
-from src.quiz.contracts.models import QuizQuestion
+from src.quiz.contracts.models import QuizQuestion, QuizQuestionBase
 from src.quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
@@ -174,7 +174,7 @@ def test_validator_rejects_arithmetic_drift_in_algebra_subconcept():
 
 def test_validator_interface_abstract():
     class DummyValidator(MathValidatorInterface):
-        def validate_question_math(self, question: QuizQuestion):
+        def validate_question_math(self, question: QuizQuestionBase):
             return super().validate_question_math(question)
 
     q = create_question(
