@@ -1,13 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI
+from fastapi import FastAPI
 
-from api.auth import router as auth_router
-from api.health import router as health_router
-from api.quiz import router as quiz_router
-from api.staff import router as staff_router
-from api.users import router as users_router
+from api.router import root_router
 from config import load_env_file
 from db.database import get_db_path
 from db.migrations import apply_migrations
@@ -43,11 +39,4 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-api_v1_router = APIRouter(prefix="/api/v1")
-api_v1_router.include_router(auth_router, prefix="/auth")
-api_v1_router.include_router(users_router, prefix="/users")
-api_v1_router.include_router(staff_router, prefix="/staff")
-api_v1_router.include_router(quiz_router, prefix="/quiz")
-
-app.include_router(health_router)
-app.include_router(api_v1_router)
+app.include_router(root_router)
