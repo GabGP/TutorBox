@@ -16,8 +16,8 @@ def test_load_env_file_parses_unloaded_keys(monkeypatch):
     )
     monkeypatch.delenv("TEST_MAIN_CUSTOM_KEY", raising=False)
     with (
-        patch("main.Path.is_file", return_value=True),
-        patch("main.Path.read_text", return_value=fake_env_content),
+        patch("config.env_loader.Path.is_file", return_value=True),
+        patch("config.env_loader.Path.read_text", return_value=fake_env_content),
     ):
         load_env_file()
         assert os.environ.get("TEST_MAIN_CUSTOM_KEY") == "custom_value"
@@ -25,7 +25,7 @@ def test_load_env_file_parses_unloaded_keys(monkeypatch):
 
 def test_load_env_file_graceful_when_no_file():
     """Verifies that load_env_file handles missing .env files without error."""
-    with patch("main.Path.is_file", return_value=False):
+    with patch("config.env_loader.Path.is_file", return_value=False):
         load_env_file()
 
 

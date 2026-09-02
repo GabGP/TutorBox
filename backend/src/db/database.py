@@ -1,30 +1,28 @@
-import os
 import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-DEFAULT_DB_PATH = str(
-    Path(__file__).resolve().parent.parent.parent.parent
-    / ".cache"
-    / "db"
-    / "tutorbox.db"
-)
+from config import DEFAULT_BUSY_TIMEOUT_MS, DEFAULT_DB_PATH, get_settings
 
-
-DEFAULT_BUSY_TIMEOUT_MS: int = 5000
+__all__ = [
+    "DEFAULT_BUSY_TIMEOUT_MS",
+    "DEFAULT_DB_PATH",
+    "get_busy_timeout_ms",
+    "get_db",
+    "get_db_connection",
+    "get_db_path",
+]
 
 
 def get_busy_timeout_ms() -> int:
     """Returns the SQLite busy timeout in milliseconds with environment override."""
-    try:
-        return int(os.getenv("DB_BUSY_TIMEOUT_MS", str(DEFAULT_BUSY_TIMEOUT_MS)))
-    except ValueError:
-        return DEFAULT_BUSY_TIMEOUT_MS
+    return get_settings(reload=True).database.busy_timeout_ms
 
 
 def get_db_path() -> str:
-    return os.getenv("DATABASE_PATH", DEFAULT_DB_PATH)
+    """Returns the SQLite database file path with environment override."""
+    return get_settings(reload=True).database.database_path
 
 
 def get_db_connection(db_path: str | None = None) -> sqlite3.Connection:

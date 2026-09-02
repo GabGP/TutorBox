@@ -1,7 +1,5 @@
 import logging
-import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
 
@@ -10,29 +8,10 @@ from api.health import router as health_router
 from api.quiz import router as quiz_router
 from api.staff import router as staff_router
 from api.users import router as users_router
+from config import load_env_file
 from db.database import get_db_path
 from db.migrations import apply_migrations
 from quiz.seed_data import seed_question_bank
-
-
-def load_env_file() -> None:
-    """Loads environment variables from root or backend .env file if present."""
-    search_paths = [
-        Path(__file__).resolve().parent.parent.parent / ".env",
-        Path(__file__).resolve().parent.parent / ".env",
-    ]
-    for env_path in search_paths:
-        if env_path.is_file():
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                stripped = line.strip()
-                if not stripped or stripped.startswith("#") or "=" not in stripped:
-                    continue
-                key, val = stripped.split("=", 1)
-                clean_key, clean_val = key.strip(), val.strip().strip("'\"")
-                if clean_key and clean_key not in os.environ:
-                    os.environ[clean_key] = clean_val
-            break
-
 
 load_env_file()
 

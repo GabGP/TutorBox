@@ -1,17 +1,18 @@
 """Concrete LLM client for local llama.cpp / OpenAI-compatible completion server."""
 
 import json
-import os
 import urllib.error
 import urllib.request
 from typing import Any
 
+from config import (
+    DEFAULT_SLM_BASE_URL,
+    DEFAULT_SLM_MODEL_NAME,
+    DEFAULT_SLM_TEMPERATURE,
+    DEFAULT_SLM_TIMEOUT_SECONDS,
+    get_settings,
+)
 from llm.base import LLMClient
-
-DEFAULT_SLM_BASE_URL: str = "http://127.0.0.1:8080/v1"
-DEFAULT_SLM_MODEL_NAME: str = "default"
-DEFAULT_SLM_TEMPERATURE: float = 0.7
-DEFAULT_SLM_TIMEOUT_SECONDS: float = 60.0
 
 __all__ = [
     "DEFAULT_SLM_BASE_URL",
@@ -32,44 +33,17 @@ class LocalSLMClient(LLMClient):
         temperature: float | None = None,
         timeout_seconds: float | None = None,
     ) -> None:
-        self.base_url = (
-            base_url or os.environ.get("SLM_BASE_URL", DEFAULT_SLM_BASE_URL)
-        ).rstrip("/")
-        self.model = model or os.environ.get("SLM_MODEL_NAME", DEFAULT_SLM_MODEL_NAME)
-        self.temperature = self._resolve_temperature(temperature)
-        self.timeout = self._resolve_timeout(timeout_seconds)
-
-    @staticmethod
-    def _resolve_temperature(temperature: float | None) -> float:
-        """Resolves sampling temperature with environment override and fallback."""
-        if temperature is not None:
-            return temperature
-        raw_env_temp = os.environ.get("SLM_TEMPERATURE")
-        try:
-            return (
-                float(raw_env_temp)
-                if raw_env_temp is not None
-                else DEFAULT_SLM_TEMPERATURE
-            )
-        except ValueError:
-            return DEFAULT_SLM_TEMPERATURE
-
-    @staticmethod
-    def _resolve_timeout(timeout_seconds: float | None) -> float:
-        """Resolves request timeout with environment override and fallback."""
-        if timeout_seconds is not None:
-            return float(timeout_seconds)
-        raw_env_timeout = os.environ.get("SLM_TIMEOUT_SECONDS") or os.environ.get(
-            "SLM_TIMEOUT"
+        settings = get_settings(reload=True).llm
+        self.base_url = (base_url or settings.base_url).rstrip("/")
+        self.model = model or settings.model_name
+        self.temperature = (
+            temperature if temperature is not None else settings.temperature
         )
-        try:
-            return (
-                float(raw_env_timeout)
-                if raw_env_timeout is not None
-                else DEFAULT_SLM_TIMEOUT_SECONDS
-            )
-        except ValueError:
-            return DEFAULT_SLM_TIMEOUT_SECONDS
+        self.timeout = (
+            float(timeout_seconds)
+            if timeout_seconds is not None
+            else settings.timeout_seconds
+        )
 
     def _build_request_payload(
         self, system_prompt: str, user_prompt: str
