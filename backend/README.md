@@ -52,6 +52,9 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - In-memory rate limiting: credential lockout limiter (consecutive failure backoff) and global sliding window limiters (signup / rate-throttling).
   - Bearer session token lifecycle with active session deactivation.
   - Zero-credential logging guards and anti-oracle check ordering.
+- **Centralized Configuration & Environment Loader**:
+  - Top-level `config` package providing typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`).
+  - Safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
 - **Database & Migrations**:
   - SQLite database with foreign keys, index optimization, and WAL mode.
   - Numbered, idempotent schema migrations.
@@ -208,6 +211,7 @@ backend/
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
 │   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users) mounted under /api/v1
+│   ├── config/        # Centralized typed domain settings engine and .env environment loader
 │   ├── db/            # SQLite connection manager, runtime pragmas, quiz & telemetry repositories, and audit logger
 │   ├── llm/           # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
