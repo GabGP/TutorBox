@@ -12,26 +12,26 @@ def get_canonical_exemplar(
     return {
         "topic": topic,
         "subconcept": subconcept_slug,
-        "question_text": "¿Cuál es el valor resultante de la expresión de ejemplo?",
+        "question_text": "¿Cuál es el resultado de la operación planteada?",
         "options": {
-            "A": "Respuesta correcta",
-            "B": "Distractor por error conceptual 1",
-            "C": "Distractor por error conceptual 2",
-            "D": "Distractor por error conceptual 3",
+            "A": "Valor de la respuesta correcta",
+            "B": "Valor del distractor 1",
+            "C": "Valor del distractor 2",
+            "D": "Valor del distractor 3",
         },
         "correct_option": "A",
         "distractors": {
             "B": {
-                "misconception": "nombre_del_error_conceptual_1",
-                "explanation": "Explicación amigable en español sobre por qué esta opción es incorrecta.",
+                "misconception": "nombre_error_conceptual_1",
+                "explanation": "Explicación en español del error que lleva al valor de la opción B.",
             },
             "C": {
-                "misconception": "nombre_del_error_conceptual_2",
-                "explanation": "Explicación amigable en español sobre el segundo tipo de error conceptual.",
+                "misconception": "nombre_error_conceptual_2",
+                "explanation": "Explicación en español del error que lleva al valor de la opción C.",
             },
             "D": {
-                "misconception": "nombre_del_error_conceptual_3",
-                "explanation": "Explicación amigable en español sobre el tercer tipo de error conceptual.",
+                "misconception": "nombre_error_conceptual_3",
+                "explanation": "Explicación en español del error que lleva al valor de la opción D.",
             },
         },
     }

@@ -10,6 +10,10 @@ def build_quiz_system_prompt() -> str:
     return (
         "You are an expert pedagogical math quiz generator for TutorBox (primary school education).\n"
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
+        "MANDATORY COGNITIVE DERIVATION STEPS:\n"
+        "Step 1 (Question Formulation & Truth): Formulate the question and compute the exact mathematical solution with certainty.\n"
+        "Step 2 (Distractor Error Derivations): For each of the 3 distractor misconceptions, compute the exact erroneous number that a student arrives at by applying that misconception, and write its Spanish explanation.\n"
+        "Step 3 (Option Binding & Consistency): Assign the 1 correct answer and 3 calculated distractor values to options A through D. The number stated in each distractor explanation MUST match the exact string value assigned to that option letter.\n"
         "MANDATORY RULES:\n"
         '1. The question must contain exactly 4 options: "A", "B", "C", "D".\n'
         '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true. '
@@ -17,10 +21,11 @@ def build_quiz_system_prompt() -> str:
         '3. "distractors" must be a dictionary with exactly 3 keys for the non-correct options.\n'
         '4. Each distractor MUST include "misconception" (slug) and "explanation" (a friendly Spanish explanation for primary school).\n'
         '5. The "question_text" and distractor "explanation" fields MUST be in Spanish.\n'
-        "6. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
-        "7. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients. "
+        "6. ANTI-CONTRADICTION RULE: NEVER state a calculated number in an explanation that contradicts the corresponding option value (e.g., never say 'obtendrías 24' if the option is '0').\n"
+        "7. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
+        "8. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients. "
         "NEVER copy or reuse the numbers, equation, or text from the format reference example.\n"
-        "8. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs."
+        "9. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs."
     )
 
 
@@ -65,7 +70,9 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         f"{original_prompt}\n\n"
         "ATTENTION: Your previous response was rejected due to the following errors:\n"
         f"{error_list}\n"
-        "Please fix all listed errors and output the valid JSON object strictly."
+        "CORRECTION INSTRUCTIONS:\n"
+        "1. If an option value contradicts its explanation calculation, ensure the option string matches the exact number in the explanation.\n"
+        "2. Fix all listed errors and output the valid JSON object strictly."
     )
 
 

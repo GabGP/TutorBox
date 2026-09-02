@@ -1,6 +1,6 @@
-from src.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
-from src.quiz.generation.exemplars import get_canonical_exemplar
-from src.quiz.generation.prompt import (
+from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
+from quiz.generation.exemplars import get_canonical_exemplar
+from quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_response_format,
     build_quiz_system_prompt,
@@ -12,6 +12,8 @@ def test_build_quiz_system_prompt():
     prompt = build_quiz_system_prompt()
     assert "TutorBox" in prompt
     assert "strict JSON format" in prompt
+    assert "MANDATORY COGNITIVE DERIVATION STEPS" in prompt
+    assert "ANTI-CONTRADICTION RULE" in prompt
     assert '"correct_option"' in prompt
     assert '"distractors"' in prompt
     assert '"misconception"' in prompt
@@ -31,6 +33,7 @@ def test_build_quiz_user_prompt_with_topic_and_subconcept():
     assert "left_to_right_precedence" in prompt
     assert "Required JSON format" in prompt
     assert "schema reference ONLY" in prompt
+    assert "2x + 4 = 12" not in prompt
     assert "3 + 4 * 2" not in prompt
 
 
@@ -40,13 +43,14 @@ def test_build_quiz_user_prompt_pre_algebra_two_step():
     assert "two_step_equations" in prompt
     assert "divided_before_subtracting" in prompt
     assert "forgot_division" in prompt
-    assert "2*x + 4 = 12" not in prompt
+    assert "2x + 4 = 12" not in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_only():
     prompt = build_quiz_user_prompt("fractions")
     assert "fractions" in prompt
     assert "added_denominators" in prompt
+    assert "2x + 4 = 12" not in prompt
 
 
 def test_build_quiz_user_prompt_with_custom_misconceptions():
@@ -93,6 +97,7 @@ def test_build_feedback_prompt():
     feedback = build_feedback_prompt(base, errors)
     assert base in feedback
     assert "ATTENTION: Your previous response was rejected" in feedback
+    assert "CORRECTION INSTRUCTIONS" in feedback
     assert "- Distractors must contain 3 items." in feedback
     assert "- Option B is missing 'explanation'." in feedback
 
