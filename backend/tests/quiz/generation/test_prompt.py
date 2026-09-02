@@ -24,6 +24,7 @@ def test_build_quiz_system_prompt():
     assert "LaTeX math delimiters" in prompt
     assert "$x$" in prompt
     assert "plain text" in prompt
+    assert "explicitly formulate the mathematical equation" in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_and_subconcept():
@@ -72,6 +73,7 @@ def test_get_canonical_exemplar_structural_format():
     for distractor_info in exemplar["distractors"].values():
         assert "misconception" in distractor_info
         assert "explanation" in distractor_info
+    assert "[Escribe aquí el enunciado completo" in exemplar["question_text"]
 
 
 def test_get_canonical_exemplar_defaults():
@@ -100,6 +102,7 @@ def test_build_feedback_prompt():
     assert "CORRECTION INSTRUCTIONS" in feedback
     assert "- Distractors must contain 3 items." in feedback
     assert "- Option B is missing 'explanation'." in feedback
+    assert "Ensure 'question_text' explicitly includes" in feedback
 
 
 def test_all_taxonomy_pairs_exemplars_consistent():
@@ -123,6 +126,7 @@ def test_build_quiz_response_format():
     assert "topic" in schema["properties"]
     assert "subconcept" in schema["properties"]
     assert "question_text" in schema["properties"]
+    assert "description" in schema["properties"]["question_text"]
     assert "options" in schema["properties"]
     assert "correct_option" in schema["properties"]
     assert "distractors" in schema["properties"]

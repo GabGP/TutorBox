@@ -12,7 +12,7 @@ def get_canonical_exemplar(
     return {
         "topic": topic,
         "subconcept": subconcept_slug,
-        "question_text": "¿Cuál es el resultado de la operación planteada?",
+        "question_text": "[Escribe aquí el enunciado completo del problema matemático o ecuación única a resolver]",
         "options": {
             "A": "Valor de la respuesta correcta",
             "B": "Valor del distractor 1",
