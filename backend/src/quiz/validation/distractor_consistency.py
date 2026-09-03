@@ -55,7 +55,7 @@ class DistractorConsistencyValidator:
             if invalid_pattern.search(cleaned_explanation):
                 errors.append(
                     f"Distractor '{option_key}' explanation incorrectly claims this wrong "
-                    "option is the correct answer."
+                    "option is the correct answer or uses empty boilerplate referencing option letters."
                 )
 
         parsed_option = parse_option_expression(option_value)

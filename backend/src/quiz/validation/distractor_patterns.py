@@ -55,4 +55,9 @@ INVALID_CLAIM_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bes\s+la\s+respuesta\s+correcta\b", re.IGNORECASE),
     re.compile(r"\bes\s+la\s+opci[óo]n\s+correcta\b", re.IGNORECASE),
     re.compile(r"\bes\s+la\s+soluci[óo]n\s+correcta\b", re.IGNORECASE),
+    re.compile(
+        r"obtendr[íi]as?\s+(?:el\s+error\s+de\s+|la\s+)?respuesta\s+[A-D]",
+        re.IGNORECASE,
+    ),
+    re.compile(r"(?:el|al)?\s*valor\s+de\s+la\s+opci[óo]n\s+[A-D]", re.IGNORECASE),
 ]

@@ -121,6 +121,9 @@ def test_build_feedback_prompt():
     assert "- Distractors must contain 3 items." in feedback
     assert "- Option B is missing 'explanation'." in feedback
     assert "Ensure 'question_text' explicitly includes" in feedback
+    assert "CRITICAL REVISION RULE" in feedback
+    assert "backward formulation" in feedback
+    assert "DO NOT reuse numbers or computed truth values" in feedback
 
 
 def test_all_taxonomy_pairs_exemplars_consistent():

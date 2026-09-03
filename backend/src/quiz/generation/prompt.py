@@ -68,7 +68,10 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         "CORRECTION INSTRUCTIONS:\n"
         "1. If an option value contradicts its explanation calculation, ensure the option string matches the exact number in the explanation.\n"
         "2. Ensure 'question_text' explicitly includes the full mathematical equation or problem statement.\n"
-        "3. Fix all listed errors and output the valid JSON object strictly."
+        "3. Fix all listed errors and output the valid JSON object strictly.\n\n"
+        "CRITICAL REVISION RULE:\n"
+        "If you generate a new problem or equation, recalculate its solution from scratch using backward formulation.\n"
+        "DO NOT reuse numbers or computed truth values from the previous rejected attempt."
     )
 
 

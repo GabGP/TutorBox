@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **479 / 479 passing tests** (335 new tests added in Week 2, a 232.6% expansion from Week 1).
+* **Backend Test Suite**: **482 / 482 passing tests** (338 new tests added in Week 2, a 234.7% expansion from Week 1).
 * **Statement Coverage**: **100.00% coverage** across all source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
@@ -38,10 +38,10 @@ This document summarizes the technical deliverables, architectural implementatio
    * Topic-adaptive backward formulation derivation protocols (`protocols.py`, `prompt.py`) enforcing cognitive reverse-engineering steps (Target Solution $\to$ Construct Problem $\to$ Distractor Error Derivations $\to$ Option Binding) tailored to each math domain (`pre_algebra`, `arithmetic`, `fractions`, `decimals_percentages`).
    * Direct zero-shot prompt formulation cutting ~280 prompt tokens per inference call to minimize latency and eliminate template bias, relying on GBNF constrained decoding for strict JSON syntax guarantees.
    * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
-   * Deterministic distractor explanation consistency validator (`distractor_consistency.py`, `distractor_patterns.py`) verifying that numbers calculated in pedagogical explanations match assigned option values, eliminating contradictory explanations.
+   * Deterministic distractor explanation consistency validator (`distractor_consistency.py`, `distractor_patterns.py`) verifying that numbers calculated in pedagogical explanations match assigned option values, eliminating contradictory explanations and rejecting boilerplate option-letter references.
    * Deterministic deduplication & novelty gate (`deduplication.py`) comparing candidate questions against reference questions via text normalization and algebraic equation equivalence, rejecting duplicates and forcing question novelty.
    * Hardware-agnostic shared LLM Client package (`src/llm/`) with abstract `LLMClient` protocol, `LocalSLMClient` (connecting to local `llama.cpp` OpenAI-compatible endpoint with configurable sampling temperature and structured `response_format`), and `MockLLMClient` (for CI/CD testing), ready for multi-mode reuse in Socratic Tutor (Week 5).
-   * Automated 5-stage validation pipeline (`generator.py`) retrying up to an user-defined amount of times with error feedback upon receiving malformed JSON, taxonomy mismatches, mathematical errors, distractor explanation contradictions, or duplicate seed questions.
+   * Automated 5-stage validation pipeline (`generator.py`) retrying up to an user-defined amount of times with anti-anchoring feedback instructions (`prompt.py`) upon receiving malformed JSON, taxonomy mismatches, mathematical errors, distractor explanation contradictions, or duplicate seed questions, forcing recalculated solutions on revised candidate questions.
    * Anti-guessing option and misconception shuffler (`shuffler.py`) ensuring uniform random distribution of the correct answer across `{"A", "B", "C", "D"}` and random permutation of distractor misconception ordering while strictly preserving diagnostic bindings.
 3. **Universal Mathematical AST Engine (`math_engine`)**:
    * Deterministic SymPy AST parser (`parser.py`) supporting arithmetic, fractions, percentages, Spanish decimal commas (`1,5`), colon division (`6 : 2`), and linear equations.

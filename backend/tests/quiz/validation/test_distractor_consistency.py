@@ -168,3 +168,27 @@ def test_distractor_consistency_skips_correct_option_key(base_question: QuizQues
     validator = DistractorConsistencyValidator()
     result = validator.validate_distractor_consistency(base_question)
     assert result.is_valid is True
+
+
+def test_distractor_consistency_rejects_boilerplate_response_letter(
+    base_question: QuizQuestion,
+):
+    base_question.distractors[
+        "B"
+    ].explanation = "Al dividir antes de restar, obtendrías el error de respuesta B."
+    validator = DistractorConsistencyValidator()
+    result = validator.validate_distractor_consistency(base_question)
+    assert result.is_valid is False
+    assert any("empty boilerplate" in err for err in result.errors)
+
+
+def test_distractor_consistency_rejects_boilerplate_option_letter(
+    base_question: QuizQuestion,
+):
+    base_question.distractors[
+        "C"
+    ].explanation = "Este cálculo lleva al valor de la opción C en la pregunta."
+    validator = DistractorConsistencyValidator()
+    result = validator.validate_distractor_consistency(base_question)
+    assert result.is_valid is False
+    assert any("empty boilerplate" in err for err in result.errors)
