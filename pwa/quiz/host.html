@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TutorBox Quiz Host</title>
+<!-- Placeholder host UI. Replace with the Claude Design "TutorBox Quiz Host.dc.html" once imported; keep the same fetch calls. -->
+<style>
+  :root { --a:#e74c3c; --b:#3498db; --c:#f1c40f; --d:#2ecc71; --bg:#1a1f2e; --card:#242a3d; --fg:#f4f6fb; --mute:#9aa3b8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); padding:20px; }
+  [hidden] { display:none !important; }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  button, select, input { font-size:16px; padding:10px 14px; border-radius:10px; border:0; }
+  button { background:#5b6cff; color:#fff; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  .card { background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; }
+  .q { font-size:28px; margin-bottom:16px; }
+  .bars { display:grid; gap:10px; }
+  .bar { display:grid; grid-template-columns:40px 1fr 60px; align-items:center; gap:10px; font-size:18px; }
+  .bar i { display:block; height:34px; border-radius:8px; transition:width .3s; min-width:4px; }
+  .bar[data-k=A] i{background:var(--a)} .bar[data-k=B] i{background:var(--b)} .bar[data-k=C] i{background:var(--c)} .bar[data-k=D] i{background:var(--d)}
+  .bar.correct b::after { content:' ✓'; color:var(--d); }
+  .alert { background:#7a2e2e; border-radius:12px; padding:14px; font-size:18px; }
+  .mute { color:var(--mute); }
+  ol { columns:2; }
+</style>
+</head>
+<body>
+<h1>TutorBox Quiz Host <span class="mute" style="font-size:14px">:190 host · :195 students · :196 clickers</span></h1>
+
+<div class="row">
+  <select id="topic"><option value="">All topics</option></select>
+  <input id="count" type="number" min="1" max="30" value="5" style="width:80px">
+  <button id="start">Start quiz</button>
+  <button id="reveal">Reveal answer</button>
+  <button id="next">Next question</button>
+  <button id="reset" style="background:#444">Reset</button>
+  <span class="mute" id="meta"></span>
+</div>
+
+<div class="card" id="qcard" hidden>
+  <div class="mute" id="counter"></div>
+  <div class="q" id="qtext"></div>
+  <div class="bars" id="bars">
+    <div class="bar" data-k="A"><b>A</b><i></i><span></span></div>
+    <div class="bar" data-k="B"><b>B</b><i></i><span></span></div>
+    <div class="bar" data-k="C"><b>C</b><i></i><span></span></div>
+    <div class="bar" data-k="D"><b>D</b><i></i><span></span></div>
+  </div>
+  <p class="mute" id="opts"></p>
+  <div class="alert" id="alert" hidden></div>
+</div>
+
+<div class="card">
+  <b>Players</b>
+  <ol id="scores"></ol>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const post = (path, body) => fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) }).then(r => r.json()).then(render);
+$('start').onclick = () => post('/start', { count: +$('count').value, topic: $('topic').value });
+$('reveal').onclick = () => post('/reveal');
+$('next').onclick = () => post('/next');
+$('reset').onclick = () => post('/reset');
+
+function render(s) {
+  if ($('topic').options.length === 1) for (const t of s.topics) $('topic').add(new Option(t, t));
+  $('meta').textContent = `${s.players} players · ${s.voted} voted · ${s.phase}`;
+  $('reveal').disabled = s.phase !== 'question';
+  $('next').disabled = s.phase !== 'revealed';
+  $('qcard').hidden = !s.question;
+  renderScores(s);
+  if (!s.question) return;
+  $('counter').textContent = `Question ${s.index + 1} of ${s.total}`;
+  $('qtext').textContent = s.question.text;
+  $('opts').textContent = ['A','B','C','D'].map(k => `${k}: ${s.question.options[k]}`).join('   ·   ');
+  const n = Math.max(1, s.voted);
+  for (const bar of $('bars').children) {
+    const k = bar.dataset.k, v = s.tally[k];
+    bar.querySelector('i').style.width = (100 * v / n) + '%';
+    bar.querySelector('span').textContent = v;
+    bar.classList.toggle('correct', s.phase === 'revealed' && s.correct === k);
+  }
+  const md = s.phase === 'revealed' && s.majority_distractor;
+  $('alert').hidden = !md;
+  if (md) $('alert').textContent = `🔊 >51% chose ${md.choice} (${md.misconception}): ${md.explanation}`;
+}
+function renderScores(s) {
+  $('scores').innerHTML = s.scores.map(([n, p]) => `<li>${n.replace(/</g,'&lt;')} — ${p}${s.votes[n] ? ' · ' + s.votes[n] : ''}</li>`).join('');
+}
+(async function poll() { try { render(await fetch('/state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
+</script>
+</body>
+</html>
