@@ -8,11 +8,12 @@ from quiz.generation.prompt import (
 )
 
 
-def test_build_quiz_system_prompt():
+def test_build_quiz_system_prompt_default():
     prompt = build_quiz_system_prompt()
     assert "TutorBox" in prompt
     assert "strict JSON format" in prompt
-    assert "MANDATORY COGNITIVE DERIVATION STEPS" in prompt
+    assert "MANDATORY REVERSE-ENGINEERING PROTOCOL" in prompt
+    assert "Step 1 (Target Truth)" in prompt
     assert "ANTI-CONTRADICTION RULE" in prompt
     assert '"correct_option"' in prompt
     assert '"distractors"' in prompt
@@ -20,11 +21,25 @@ def test_build_quiz_system_prompt():
     assert '"explanation"' in prompt
     assert "Spanish" in prompt
     assert "NOVELTY RULE" in prompt
-    assert "NEVER copy or reuse" in prompt
     assert "LaTeX math delimiters" in prompt
     assert "$x$" in prompt
     assert "plain text" in prompt
     assert "explicitly formulate the mathematical equation" in prompt
+
+
+def test_build_quiz_system_prompt_pre_algebra():
+    prompt = build_quiz_system_prompt("pre_algebra")
+    assert "MANDATORY PRE-ALGEBRA REVERSE-ENGINEERING PROTOCOL" in prompt
+    assert "Step 1 (Target Root)" in prompt
+    assert "Step 2 (Coefficients)" in prompt
+    assert "Step 3 (Assemble Equation)" in prompt
+
+
+def test_build_quiz_system_prompt_arithmetic():
+    prompt = build_quiz_system_prompt("arithmetic")
+    assert "MANDATORY ARITHMETIC REVERSE-ENGINEERING PROTOCOL" in prompt
+    assert "Step 1 (Target Value)" in prompt
+    assert "precedence" in prompt
 
 
 def test_build_quiz_user_prompt_with_topic_and_subconcept():
@@ -32,8 +47,8 @@ def test_build_quiz_user_prompt_with_topic_and_subconcept():
     assert "arithmetic" in prompt
     assert "order_of_operations" in prompt
     assert "left_to_right_precedence" in prompt
-    assert "Required JSON format" in prompt
-    assert "schema reference ONLY" in prompt
+    assert "Required JSON format" not in prompt
+    assert "schema reference ONLY" not in prompt
     assert "2x + 4 = 12" not in prompt
     assert "3 + 4 * 2" not in prompt
 
@@ -44,6 +59,7 @@ def test_build_quiz_user_prompt_pre_algebra_two_step():
     assert "two_step_equations" in prompt
     assert "divided_before_subtracting" in prompt
     assert "forgot_division" in prompt
+    assert "Required JSON format" not in prompt
     assert "2x + 4 = 12" not in prompt
 
 
@@ -51,6 +67,7 @@ def test_build_quiz_user_prompt_with_topic_only():
     prompt = build_quiz_user_prompt("fractions")
     assert "fractions" in prompt
     assert "added_denominators" in prompt
+    assert "Required JSON format" not in prompt
     assert "2x + 4 = 12" not in prompt
 
 
@@ -61,6 +78,7 @@ def test_build_quiz_user_prompt_with_custom_misconceptions():
     )
     assert "custom_error_1" in prompt
     assert "custom_error_2" in prompt
+    assert "Required JSON format" not in prompt
 
 
 def test_get_canonical_exemplar_structural_format():
@@ -87,7 +105,7 @@ def test_get_canonical_exemplar_defaults():
 def test_build_quiz_user_prompt_unknown_topic():
     prompt = build_quiz_user_prompt("calculus")
     assert "calculus" in prompt
-    assert "Required JSON format" in prompt
+    assert "Required JSON format" not in prompt
 
 
 def test_build_feedback_prompt():

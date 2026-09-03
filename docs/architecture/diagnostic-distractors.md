@@ -160,7 +160,7 @@ sequenceDiagram
 2. **Distractor Collision Prevention**: No distractor expression may evaluate to the canonical expected solution.
 3. **No Duplicate Choices**: All 4 options ($A, B, C, D$) must evaluate to distinct mathematical or numerical values.
 4. **Distractor Explanation Consistency**: The numerical value calculated and stated in a distractor explanation must strictly match the assigned option string value, preventing arithmetic contradictions.
-5. **Anti-Anchoring Neutral Exemplar**: Prompts use abstract structural exemplars with generic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
+5. **Zero-Shot Backward Formulation**: Employs domain-adaptive reverse-engineering derivation protocols (`protocols.py`) paired with GBNF grammar-constrained decoding to guide mathematical reasoning and prevent template bias.
 6. **Deterministic Deduplication Gate**: Every candidate question is checked against reference seed questions via text normalization and algebraic equation equivalence, rejecting any duplicate items and forcing question novelty.
 7. **Automated Ingestion Sanitizer**: Strips LaTeX math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`), normalizes LaTeX fractions (`\frac{a}{b} \to a/b`), and strips stray backslashes from option strings at the ingestion boundary before symbolic evaluation.
 

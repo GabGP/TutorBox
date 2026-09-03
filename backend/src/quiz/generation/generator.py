@@ -82,7 +82,7 @@ class QuizQuestionGenerator:
         effective_max_retries = (
             max_retries if max_retries is not None else get_quiz_max_retries()
         )
-        system_prompt = build_quiz_system_prompt()
+        system_prompt = build_quiz_system_prompt(topic)
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         response_format = build_quiz_response_format()
 

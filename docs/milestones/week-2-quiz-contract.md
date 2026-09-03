@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **472 / 472 passing tests** (328 new tests added in Week 2, a 227.8% expansion from Week 1).
+* **Backend Test Suite**: **479 / 479 passing tests** (335 new tests added in Week 2, a 232.6% expansion from Week 1).
 * **Statement Coverage**: **100.00% coverage** across all source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
@@ -35,8 +35,8 @@ This document summarizes the technical deliverables, architectural implementatio
    * Standardized curriculum taxonomy (`taxonomy.py`) across 4 domains (`arithmetic`, `fractions`, `pre_algebra`, `decimals_percentages`), 10 subconcepts, and 32 validated misconception error slugs.
 2. **Multi-Layer Deterministic Alignment & Generation Pipeline**:
    * Structured JSON Schema constrained decoding (`prompt.py`, `client.py`) with OpenAI-compatible `response_format` strictly enforcing option keys `{"A", "B", "C", "D"}` and enum membership on local SLMs (`llama.cpp`), cutting schema hallucination and rejection latency.
-   * Cognitive derivation prompt sequencing & anti-contradiction constraints (`prompt.py`) enforcing a 3-step mental derivation chain (Truth $\to$ Distractor derivations $\to$ Option binding) prior to JSON emission.
-   * Neutral structural few-shot exemplar provider (`prompt.py`, `exemplars.py`) demonstrating JSON schema structure with generic semantic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
+   * Topic-adaptive backward formulation derivation protocols (`protocols.py`, `prompt.py`) enforcing cognitive reverse-engineering steps (Target Solution $\to$ Construct Problem $\to$ Distractor Error Derivations $\to$ Option Binding) tailored to each math domain (`pre_algebra`, `arithmetic`, `fractions`, `decimals_percentages`).
+   * Direct zero-shot prompt formulation cutting ~280 prompt tokens per inference call to minimize latency and eliminate template bias, relying on GBNF constrained decoding for strict JSON syntax guarantees.
    * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
    * Deterministic distractor explanation consistency validator (`distractor_consistency.py`, `distractor_patterns.py`) verifying that numbers calculated in pedagogical explanations match assigned option values, eliminating contradictory explanations.
    * Deterministic deduplication & novelty gate (`deduplication.py`) comparing candidate questions against reference questions via text normalization and algebraic equation equivalence, rejecting duplicates and forcing question novelty.

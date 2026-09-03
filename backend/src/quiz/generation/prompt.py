@@ -1,19 +1,18 @@
-import json
+"""Prompt builders and constrained schema formats for SLM quiz question generation."""
+
 from typing import Any
 
 from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
-from quiz.generation.exemplars import get_canonical_exemplar
+from quiz.generation.protocols import get_derivation_protocol
 
 
-def build_quiz_system_prompt() -> str:
+def build_quiz_system_prompt(topic: str | None = None) -> str:
     """Returns the strict system prompt for local SLM question generation."""
+    protocol_text = get_derivation_protocol(topic)
     return (
         "You are an expert pedagogical math quiz generator for TutorBox (primary school education).\n"
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
-        "MANDATORY COGNITIVE DERIVATION STEPS:\n"
-        "Step 1 (Question Formulation & Truth): Formulate the question and compute the exact mathematical solution with certainty.\n"
-        "Step 2 (Distractor Error Derivations): For each of the 3 distractor misconceptions, compute the exact erroneous number that a student arrives at by applying that misconception, and write its Spanish explanation.\n"
-        "Step 3 (Option Binding & Consistency): Assign the 1 correct answer and 3 calculated distractor values to options A through D. The number stated in each distractor explanation MUST match the exact string value assigned to that option letter.\n"
+        f"{protocol_text}\n"
         "MANDATORY RULES:\n"
         '1. The question must contain exactly 4 options: "A", "B", "C", "D".\n'
         '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true. '
@@ -24,8 +23,7 @@ def build_quiz_system_prompt() -> str:
         '"question_text" MUST explicitly formulate the mathematical equation, operation, or problem to solve.\n'
         "6. ANTI-CONTRADICTION RULE: NEVER state a calculated number in an explanation that contradicts the corresponding option value (e.g., never say 'obtendrías 24' if the option is '0').\n"
         "7. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
-        "8. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients. "
-        "NEVER copy or reuse the numbers, equation, or text from the format reference example.\n"
+        "8. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients.\n"
         "9. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs."
     )
 
@@ -53,14 +51,10 @@ def build_quiz_user_prompt(
         else ""
     )
 
-    example_json: dict[str, Any] = get_canonical_exemplar(topic, subconcept)
-
     return (
         f"Generate 1 diagnostic quiz question for topic '{topic}'"
         + (f" and subconcept '{subconcept}'" if subconcept else "")
-        + f".{misconception_guide}\n\n"
-        "Required JSON format (schema reference ONLY - do NOT copy these numbers or equation):\n"
-        f"{json.dumps(example_json, ensure_ascii=False, indent=2)}"
+        + f".{misconception_guide}"
     )
 
 
