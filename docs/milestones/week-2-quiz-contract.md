@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **466 / 466 passing tests** (322 new tests added in Week 2, a 223.6% expansion from Week 1).
+* **Backend Test Suite**: **472 / 472 passing tests** (328 new tests added in Week 2, a 227.8% expansion from Week 1).
 * **Statement Coverage**: **100.00% coverage** across all source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
@@ -31,7 +31,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ### A. Student A (Pilot): Quiz Contract, Generation Pipeline, Storage & APIs
 1. **Diagnostic Contract & Pedagogical Taxonomy**:
    * Pydantic validation models (`models.py`, `schema.py`) enforcing the 1-correct + 3-distractor rule with non-empty misconception slugs and age-appropriate Spanish explanations.
-   * Automated LaTeX math delimiter and dollar wrapper sanitization pipeline (`sanitizer.py`) stripping `$x$` and `$$...$$` delimiters on model ingestion, contract validation, and response processing to guarantee clean plain text for SQLite storage, mobile UI, and offline TTS speech.
+   * Automated LaTeX math delimiter, fraction normalization, and dollar wrapper sanitization pipeline (`sanitizer.py`) stripping `$x$`, `$$...$$`, `\(...\)`, and `\[...\]` delimiters, normalizing `\frac{a}{b} \to a/b`, and stripping stray backslashes from options on model ingestion, contract validation, and response processing to guarantee clean plain text for SQLite storage, mobile UI, and offline TTS speech.
    * Standardized curriculum taxonomy (`taxonomy.py`) across 4 domains (`arithmetic`, `fractions`, `pre_algebra`, `decimals_percentages`), 10 subconcepts, and 32 validated misconception error slugs.
 2. **Multi-Layer Deterministic Alignment & Generation Pipeline**:
    * Structured JSON Schema constrained decoding (`prompt.py`, `client.py`) with OpenAI-compatible `response_format` strictly enforcing option keys `{"A", "B", "C", "D"}` and enum membership on local SLMs (`llama.cpp`), cutting schema hallucination and rejection latency.

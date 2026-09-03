@@ -17,7 +17,9 @@ from quiz.contracts.models import (
     ValidateQuestionRequest,
 )
 from quiz.contracts.sanitizer import (
+    normalize_latex_fractions,
     sanitize_distractors_dict,
+    sanitize_option_text,
     sanitize_options_dict,
     sanitize_quiz_dict,
     strip_math_delimiters,
@@ -63,7 +65,9 @@ __all__ = [
     "get_quiz_question_schema_json",
     "is_valid_subconcept",
     "is_valid_topic",
+    "normalize_latex_fractions",
     "sanitize_distractors_dict",
+    "sanitize_option_text",
     "sanitize_options_dict",
     "sanitize_quiz_dict",
     "strip_math_delimiters",

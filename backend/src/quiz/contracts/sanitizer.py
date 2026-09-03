@@ -1,27 +1,63 @@
-"""Automated sanitization utilities for quiz math text and LaTeX delimiters."""
+"""Automated sanitization utilities for quiz math text, fractions, and LaTeX delimiters."""
 
 import re
 from typing import Any
 
-_MATH_DELIMITER_PAIR_PATTERN = re.compile(r"\${1,2}(.*?)\${1,2}")
+_LATEX_FRACTION_PATTERN = re.compile(
+    r"\\frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\}"
+)
+_MATH_DELIMITER_PAIR_PATTERN = re.compile(r"\${1,2}(.*?)\${1,2}", re.DOTALL)
+_LATEX_PAREN_DELIMITER_PATTERN = re.compile(r"\\\((.*?)\\\)", re.DOTALL)
+_LATEX_BRACKET_DELIMITER_PATTERN = re.compile(r"\\\[(.*?)\\\]", re.DOTALL)
+
+
+def normalize_latex_fractions(text: str) -> str:
+    """Converts LaTeX fraction notation (\\frac{a}{b}) into standard division format (a/b)."""
+    if not isinstance(text, str):
+        return text
+    normalized_text = text
+    while _LATEX_FRACTION_PATTERN.search(normalized_text):
+        normalized_text = _LATEX_FRACTION_PATTERN.sub(r"\1/\2", normalized_text)
+    return normalized_text
 
 
 def strip_math_delimiters(text: str) -> str:
-    """Strips LaTeX math delimiters ($...$, $$...$$) and stray dollar signs from text.
+    """Strips LaTeX math delimiters and normalizes fractions in math text.
 
-    Ensures question text, equations, and explanations are stored as clean plain
-    text for database persistence, mobile web rendering, and offline TTS speech.
+    Handles inline math ($...$, \\(...\\)), display math ($$...$$, \\[...\\]),
+    and stray delimiter symbols. Ensures question text, equations, and explanations
+    are stored as clean plain text for database persistence, mobile web rendering,
+    and offline TTS speech.
     """
     if not isinstance(text, str):
         return text
-    unwrapped = _MATH_DELIMITER_PAIR_PATTERN.sub(r"\1", text)
-    return unwrapped.replace("$", "")
+    unwrapped = normalize_latex_fractions(text)
+    unwrapped = _LATEX_BRACKET_DELIMITER_PATTERN.sub(r"\1", unwrapped)
+    unwrapped = _LATEX_PAREN_DELIMITER_PATTERN.sub(r"\1", unwrapped)
+    unwrapped = _MATH_DELIMITER_PAIR_PATTERN.sub(r"\1", unwrapped)
+    unwrapped = unwrapped.replace("$", "")
+    unwrapped = (
+        unwrapped.replace(r"\(", "")
+        .replace(r"\)", "")
+        .replace(r"\[", "")
+        .replace(r"\]", "")
+    )
+    return unwrapped
+
+
+def sanitize_option_text(text: str) -> str:
+    """Sanitizes an option value by stripping delimiters, fractions, and stray backslashes."""
+    if not isinstance(text, str):
+        return text
+    sanitized = strip_math_delimiters(text)
+    sanitized = sanitized.replace("\\", "")
+    return sanitized.strip()
 
 
 def sanitize_options_dict(options: dict[str, Any]) -> dict[str, Any]:
     """Sanitizes all option text values in an options dictionary."""
     return {
-        key: strip_math_delimiters(value) if isinstance(value, str) else value
+        key: sanitize_option_text(value) if isinstance(value, str) else value
         for key, value in options.items()
     }
 

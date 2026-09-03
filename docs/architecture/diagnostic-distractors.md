@@ -162,6 +162,7 @@ sequenceDiagram
 4. **Distractor Explanation Consistency**: The numerical value calculated and stated in a distractor explanation must strictly match the assigned option string value, preventing arithmetic contradictions.
 5. **Anti-Anchoring Neutral Exemplar**: Prompts use abstract structural exemplars with generic placeholders, completely preventing local quantized SLMs from copying numbers or equations from few-shot examples.
 6. **Deterministic Deduplication Gate**: Every candidate question is checked against reference seed questions via text normalization and algebraic equation equivalence, rejecting any duplicate items and forcing question novelty.
+7. **Automated Ingestion Sanitizer**: Strips LaTeX math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`), normalizes LaTeX fractions (`\frac{a}{b} \to a/b`), and strips stray backslashes from option strings at the ingestion boundary before symbolic evaluation.
 
 ### Anti-Guessing Option & Misconception Permutation
 To prevent students from inferring correct answers through positional biases (e.g. LLM few-shot template bias always emitting correct answers in option `A`) or predictable distractor ordering:
