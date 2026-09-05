@@ -1,22 +1,15 @@
 """Pipeline for LLM question generation, schema enforcement, SymPy and distractor verification."""
 
-import json
 import random
-from typing import Any
 
 from llm import LLMClient
+from quiz.generation.attempt_runner import execute_generation_attempt
 from quiz.generation.generation_state import GenerationState
 from quiz.generation.prompt import (
-    build_feedback_prompt,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
 from quiz.generation.response_format import build_quiz_response_format
-from quiz.generation.response_processor import (
-    extract_json_dict,
-    extract_scratchpad,
-    process_generated_response,
-)
 from quiz.generation.shuffler import shuffle_quiz_question
 from quiz.generation.types import (
     GenerationError,
@@ -61,18 +54,6 @@ class QuizQuestionGenerator:
             or "unknown"
         )
 
-    def _execute_llm_query(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        response_format: dict[str, Any],
-    ) -> str:
-        """Executes the LLM request handling optional structured response format."""
-        try:
-            return self.llm_client.generate(system_prompt, user_prompt, response_format)
-        except TypeError:
-            return self.llm_client.generate(system_prompt, user_prompt)
-
     def generate(
         self,
         topic: str,
@@ -81,11 +62,13 @@ class QuizQuestionGenerator:
         question_id: str | None = None,
     ) -> GenerationResult:
         """Generates a validated diagnostic quiz question using a feedback-driven retry loop."""
+        # 1. Prepare subconcept-aware system prompt, base user prompt, and JSON schema format
         retries = max_retries if max_retries is not None else get_quiz_max_retries()
-        system_prompt = build_quiz_system_prompt(topic)
+        system_prompt = build_quiz_system_prompt(topic, subconcept)
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         response_format = build_quiz_response_format()
 
+        # 2. Initialize mutable generation state for retry and telemetry tracking
         state = GenerationState(
             model_name=self._resolve_model_name(),
             base_user_prompt=base_user_prompt,
@@ -93,33 +76,14 @@ class QuizQuestionGenerator:
             max_retries=retries,
         )
 
+        # 3. Execute feedback-driven retry loop up to max_retries attempts
         while state.attempt <= state.max_retries:
-            # 1. Query local SLM completion endpoint with structured format
-            try:
-                raw_response = self._execute_llm_query(
-                    system_prompt, state.current_user_prompt, response_format
-                )
-            except Exception as llm_err:
-                raise state.build_llm_failure_error(llm_err) from llm_err
-
-            # 2. Extract and parse root JSON object
-            try:
-                parsed_json = extract_json_dict(raw_response)
-                if not isinstance(parsed_json, dict):
-                    raise TypeError("Extracted JSON root is not an object")
-            except (json.JSONDecodeError, TypeError, ValueError) as json_err:
-                err_msg = f"Invalid JSON output: {json_err}"
-                next_prompt = build_feedback_prompt(
-                    base_user_prompt, state.accumulated_errors + [err_msg]
-                )
-                state.record_rejection([err_msg], next_prompt)
-                continue
-
-            state.record_scratchpad(extract_scratchpad(parsed_json))
-
-            # 3. Execute 5-stage validation (Schema, Taxonomy, SymPy Math, Distractor, Deduplication)
-            validated_question, stage_errors = process_generated_response(
-                parsed_json=parsed_json,
+            validated_question = execute_generation_attempt(
+                client=self.llm_client,
+                system_prompt=system_prompt,
+                base_user_prompt=base_user_prompt,
+                response_format=response_format,
+                state=state,
                 topic=topic,
                 subconcept=subconcept,
                 question_id=question_id,
@@ -129,20 +93,12 @@ class QuizQuestionGenerator:
                 distractor_validator=self.distractor_validator,
             )
 
-            # 4. If validation failed, accumulate feedback and retry
-            if stage_errors:
-                next_prompt = build_feedback_prompt(
-                    base_user_prompt, state.accumulated_errors + stage_errors
-                )
-                state.record_rejection(stage_errors, next_prompt)
-                continue
-
-            # 5. Success: shuffle options to avoid positional bias and package result
+            # 4. Success: shuffle options to eliminate positional bias and package result
             if validated_question is not None:
                 shuffled = shuffle_quiz_question(validated_question, rng=self.rng)
                 return GenerationResult(
                     question=shuffled, metadata=state.build_metadata()
                 )
 
-        # 6. Pipeline exhausted max retries without producing a valid question
+        # 5. Pipeline exhausted max retries without producing a valid question
         raise state.build_exhaustion_error()
