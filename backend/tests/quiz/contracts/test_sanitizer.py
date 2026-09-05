@@ -1,6 +1,7 @@
 """Unit tests for math delimiter, LaTeX fraction, and option sanitization."""
 
 from src.quiz.contracts.sanitizer import (
+    _strip_leaked_option_listings,
     normalize_latex_fractions,
     sanitize_distractors_dict,
     sanitize_option_text,
@@ -161,3 +162,61 @@ def test_sanitize_quiz_dict():
         == "Restaste 1/2 en vez de multiplicar."
     )
     assert sanitized["distractors"]["D"]["explanation"] == "Dividiste antes de restar."
+
+
+def test_strip_leaked_option_listings_trailing_options():
+    raw_text = "Resuelve x + 5 = 12 para x.\n\nA) 7\nB) -3\nC) 12\nD) 5"
+    expected = "Resuelve x + 5 = 12 para x."
+    assert _strip_leaked_option_listings(raw_text) == expected
+
+
+def test_strip_leaked_option_listings_with_spanish_preamble():
+    raw_text = (
+        "Encuentra el valor de y: 3y = 15.\n"
+        "¿Cuál de las siguientes respuestas es correcta?\n"
+        "A) 5\n"
+        "B) 12\n"
+        "C) 18\n"
+        "D) 45"
+    )
+    expected = "Encuentra el valor de y: 3y = 15."
+    assert _strip_leaked_option_listings(raw_text) == expected
+
+
+def test_strip_leaked_option_listings_isolated_marker_preserved():
+    raw_text = "Calcula la expresión A) + B) según la figura."
+    assert _strip_leaked_option_listings(raw_text) == raw_text
+
+
+def test_strip_leaked_option_listings_no_leaked_options():
+    raw_text = "Encuentra la solución de x - 8 = 10."
+    assert _strip_leaked_option_listings(raw_text) == raw_text
+
+
+def test_strip_leaked_option_listings_non_string():
+    assert _strip_leaked_option_listings(123) == 123  # type: ignore[arg-type]
+    assert _strip_leaked_option_listings(None) is None  # type: ignore[arg-type]
+
+
+def test_sanitize_quiz_dict_with_leaked_options():
+    raw_quiz = {
+        "question_text": (
+            "¿Cuál es el valor de $x$ en la ecuación: $x + 4 = 10$?\n\n"
+            "A) 6\n"
+            "B) 14\n"
+            "C) 40\n"
+            "D) 2"
+        ),
+        "options": {"A": "6", "B": "14", "C": "40", "D": "2"},
+        "correct_option": "A",
+        "distractors": {
+            "B": {"misconception": "added_instead", "explanation": "Sumó 4."},
+            "C": {"misconception": "multiplied", "explanation": "Multiplicó por 4."},
+            "D": {"misconception": "divided", "explanation": "Dividió."},
+        },
+    }
+    sanitized = sanitize_quiz_dict(raw_quiz)
+    assert (
+        sanitized["question_text"]
+        == "¿Cuál es el valor de x en la ecuación: x + 4 = 10?"
+    )

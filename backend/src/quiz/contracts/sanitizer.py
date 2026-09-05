@@ -10,6 +10,14 @@ _MATH_DELIMITER_PAIR_PATTERN = re.compile(r"\${1,2}(.*?)\${1,2}", re.DOTALL)
 _LATEX_PAREN_DELIMITER_PATTERN = re.compile(r"\\\((.*?)\\\)", re.DOTALL)
 _LATEX_BRACKET_DELIMITER_PATTERN = re.compile(r"\\\[(.*?)\\\]", re.DOTALL)
 
+# Requires at least 2 consecutive option-like markers anchored to newlines
+_LEAKED_OPTIONS_PATTERN = re.compile(
+    r"\n+\s*[A-D]\)\s*.+(?:\n\s*[A-D]\)\s*.+)+", re.DOTALL
+)
+_SPANISH_PREAMBLE_PATTERN = re.compile(
+    r"\n*¿Cuál de las siguientes[^?]*\?" r"(?:\n\s*[A-D]\)\s*.+)+", re.DOTALL
+)
+
 
 def normalize_latex_fractions(text: str) -> str:
     """Converts LaTeX fraction notation (\\frac{a}{b}) into standard division format (a/b)."""
@@ -43,6 +51,15 @@ def strip_math_delimiters(text: str) -> str:
         .replace(r"\]", "")
     )
     return unwrapped
+
+
+def _strip_leaked_option_listings(text: str) -> str:
+    """Remove trailing multiple-choice option listings leaked by the SLM into question_text."""
+    if not isinstance(text, str):
+        return text
+    cleaned = _SPANISH_PREAMBLE_PATTERN.sub("", text)
+    cleaned = _LEAKED_OPTIONS_PATTERN.sub("", cleaned)
+    return cleaned.rstrip()
 
 
 def sanitize_option_text(text: str) -> str:
@@ -86,6 +103,9 @@ def sanitize_quiz_dict(data: dict[str, Any]) -> dict[str, Any]:
     if "question_text" in sanitized_data and isinstance(
         sanitized_data["question_text"], str
     ):
+        sanitized_data["question_text"] = _strip_leaked_option_listings(
+            sanitized_data["question_text"]
+        )
         sanitized_data["question_text"] = strip_math_delimiters(
             sanitized_data["question_text"]
         )
