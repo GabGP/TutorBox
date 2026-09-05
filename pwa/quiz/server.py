@@ -4,6 +4,7 @@ Ports (fixed by classroom convention):
   190  host / teacher  -> host.html + control API
   195  student players -> student.html + join/vote API
   196  ESP32 clickers  -> POST /vote {device_id, choice}   (reserved, same vote path)
+  197  HDMI class screen -> screen.html (question + timer only, never per-student votes)
 
 Run from this folder with the backend's Python (seed bank needs pydantic):
   python server.py            # serves on 0.0.0.0
@@ -15,13 +16,16 @@ import json
 import random
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs
 
 HERE = Path(__file__).parent
-PORT_HOST, PORT_STUDENT, PORT_CLICKER = 190, 195, 196
+PORT_HOST, PORT_STUDENT, PORT_CLICKER, PORT_SCREEN = 190, 195, 196, 197
 CHOICES = ("A", "B", "C", "D")
+QUESTION_SECONDS = 20
+STATIC = {"/tb.css": "text/css"}
 
 
 def load_bank() -> list[dict]:
@@ -45,14 +49,20 @@ class Session:
         self.index = -1
         self.players: dict[str, int] = {}  # name -> score
         self.votes: dict[str, str] = {}  # name -> choice (current question)
+        self.voted_ever: set[str] = set()
+        self.history: list[dict] = []  # one entry per revealed question (stats)
+        self.started_at = 0.0
 
-    def topics(self) -> list[str]:
-        return sorted({q["topic"] for q in self.bank})
+    def topics(self) -> list[dict]:
+        ids = sorted({q["topic"] for q in self.bank})
+        return [{"id": t, "count": sum(q["topic"] == t for q in self.bank)} for t in ids]
 
     def start(self, count: int = 5, topic: str | None = None):
         pool = [q for q in self.bank if not topic or q["topic"] == topic]
         self.questions = random.sample(pool, min(count, len(pool)))
         self.index = -1
+        self.history = []
+        self.voted_ever = set()
         for n in self.players:
             self.players[n] = 0
         self.next()
@@ -64,24 +74,43 @@ class Session:
         self.index += 1
         self.votes = {}
         self.phase = "question"
+        self.started_at = time.monotonic()
+
+    def remaining(self) -> int:
+        return max(0, round(QUESTION_SECONDS - (time.monotonic() - self.started_at)))
+
+    def tick(self):
+        """Lazy timer: the first state read after the window closes reveals the answer."""
+        if self.phase == "question" and self.remaining() == 0:
+            self.reveal()
 
     def reveal(self):
         if self.phase != "question":
             return
         self.phase = "revealed"
-        correct = self.question["correct_option"]
+        q = self.question
+        correct = q["correct_option"]
         for name, choice in self.votes.items():
             if choice == correct and name in self.players:
                 self.players[name] += 1
+        self.history.append({
+            "text": q["question_text"],
+            "correct": correct,
+            "correct_text": q["options"][correct],
+            "tally": self.tally(),
+            "voters": len(self.votes),
+            "top_distractor": self.top_distractor(),
+        })
 
     def join(self, name: str):
         self.players.setdefault(name, 0)
 
     def vote(self, name: str, choice: str) -> bool:
-        if self.phase != "question" or choice not in CHOICES or not name:
-            return False
+        if self.phase != "question" or choice not in CHOICES or not name or name in self.votes:
+            return False  # first press locks (design: "Respuesta enviada")
         self.players.setdefault(name, 0)
-        self.votes[name] = choice  # ponytail: last press wins inside the window
+        self.votes[name] = choice
+        self.voted_ever.add(name)
         return True
 
     @property
@@ -94,17 +123,57 @@ class Session:
             t[c] += 1
         return t
 
+    def top_distractor(self) -> dict | None:
+        """Most-chosen wrong option, with its count and misconception."""
+        q = self.question
+        if not q or not self.votes:
+            return None
+        choice, count = max(
+            ((c, n) for c, n in self.tally().items() if c != q["correct_option"]), key=lambda cn: cn[1]
+        )
+        if not count:
+            return None
+        return {"choice": choice, "count": count, "text": q["options"][choice], **q["distractors"][choice]}
+
     def majority_distractor(self) -> dict | None:
         """The >51% rule: a single distractor chosen by more than half of voters."""
-        q, n = self.question, len(self.votes)
-        if not q or not n:
-            return None
-        for choice, count in self.tally().items():
-            if choice != q["correct_option"] and count * 100 > 51 * n:
-                return {"choice": choice, **q["distractors"][choice]}
-        return None
+        d = self.top_distractor()
+        return d if d and d["count"] * 100 > 51 * len(self.votes) else None
+
+    def report(self) -> dict:
+        """Group summary for the stats step and the CSV export."""
+        h = self.history
+        answered = sum(x["voters"] for x in h)
+        correct = sum(x["tally"][x["correct"]] for x in h)
+        hard = sorted(
+            ({"text": x["text"], "pct": round(100 * x["tally"][x["correct"]] / x["voters"]) if x["voters"] else 0} for x in h),
+            key=lambda x: x["pct"],
+        )
+        errors = [
+            {"question": x["text"], **x["top_distractor"]}  # text = the chosen wrong option
+            for x in h
+            if x["top_distractor"] and x["top_distractor"]["count"] >= 2
+        ]
+        return {
+            "average": round(100 * correct / answered) if answered else 0,
+            "participation": [len(self.voted_ever), len(self.players)],
+            "ranking": sorted(self.players.items(), key=lambda kv: (-kv[1], kv[0])),
+            "hardest": hard[:3],
+            "errors": sorted(errors, key=lambda e: -e["count"])[:3],
+        }
+
+    def report_csv(self) -> str:
+        r = self.report()
+        lines = ["alumno,aciertos,total"] + [f"{n},{p},{len(self.questions)}" for n, p in r["ranking"]]
+        lines += ["", "pregunta,correcta,respondieron,aciertos"]
+        lines += [
+            f'"{x["text"]}",{x["correct"]} {x["correct_text"]},{x["voters"]},{x["tally"][x["correct"]]}'
+            for x in self.history
+        ]
+        return "\n".join(lines) + "\n"
 
     def public_state(self, name: str | None = None) -> dict:
+        self.tick()
         q = self.question
         state = {
             "phase": self.phase,
@@ -117,6 +186,8 @@ class Session:
         }
         if q and self.phase in ("question", "revealed"):
             state["question"] = {"text": q["question_text"], "options": q["options"]}
+        if self.phase == "question":
+            state["remaining"] = self.remaining()
         if q and self.phase == "revealed":
             state["correct"] = q["correct_option"]
             mine = self.votes.get(name or "", "")
@@ -133,8 +204,16 @@ class Session:
         )
         if self.question:
             state["correct"] = self.question["correct_option"]
-            state["distractors"] = self.question["distractors"]
             state["majority_distractor"] = self.majority_distractor()
+        if self.phase == "finished":
+            state["report"] = self.report()
+        return state
+
+    def screen_state(self) -> dict:
+        """HDMI display: question + timer only; never per-student votes."""
+        state = self.public_state()
+        if self.phase == "finished":
+            state["podium"] = self.report()["ranking"][:3]
         return state
 
 
@@ -168,18 +247,26 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path, _, query = self.path.partition("?")
         if path == "/":
-            body = (HERE / self.page).read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self.send_file((HERE / self.page).read_bytes(), "text/html; charset=utf-8")
+        elif path in STATIC:
+            self.send_file((HERE / path[1:]).read_bytes(), STATIC[path])
         elif path == "/state":
             name = (parse_qs(query).get("name") or [None])[0]
             with SESSION.lock:
                 self.send_json(self.state(name))
+        elif path == "/report.csv" and self.page == "host.html":
+            with SESSION.lock:
+                self.send_file(SESSION.report_csv().encode(), "text/csv; charset=utf-8")
         else:
             self.send_json({"error": "not found"}, 404)
+
+    def send_file(self, body: bytes, ctype: str):
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def state(self, name):
         return SESSION.public_state(name)
@@ -215,9 +302,21 @@ class HostHandler(Handler):
             SESSION.reveal()
         elif path == "/reset":
             SESSION.reset()
+        elif path == "/speak":
+            pass  # ponytail: TTS seam — body {lang: "es"|"quc", text}; wire to the backend voice service later
         else:
             return False
         return True
+
+
+class ScreenHandler(Handler):
+    page = "screen.html"
+
+    def state(self, name):
+        return SESSION.screen_state()
+
+    def action(self, path, data, name) -> bool:
+        return False
 
 
 class ClickerHandler(Handler):
@@ -230,7 +329,9 @@ class ClickerHandler(Handler):
 
 
 def serve():
-    for port, handler in ((PORT_HOST, HostHandler), (PORT_STUDENT, Handler), (PORT_CLICKER, ClickerHandler)):
+    for port, handler in (
+        (PORT_HOST, HostHandler), (PORT_STUDENT, Handler), (PORT_CLICKER, ClickerHandler), (PORT_SCREEN, ScreenHandler)
+    ):
         srv = ThreadingHTTPServer(("0.0.0.0", port), handler)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         print(f"{handler.__name__:15s} http://0.0.0.0:{port}/", flush=True)
@@ -251,15 +352,23 @@ def selftest():
     s.start(1)
     assert s.phase == "question" and s.public_state("ana")["question"]["options"]["B"] == "4"
     assert "correct" not in s.public_state("ana"), "correct answer hidden while open"
+    assert s.public_state("ana")["remaining"] == QUESTION_SECONDS
     assert s.vote("ana", "B") and s.vote("beto", "D") and s.vote("cai", "D")
+    assert s.vote("ana", "A") is False, "first press locks"
     assert s.vote("cai", "Z") is False and s.vote("", "A") is False
     assert s.majority_distractor()["choice"] == "D", ">51% rule"
-    s.reveal()
+    s.started_at -= QUESTION_SECONDS  # fast-forward the clock
     st = s.public_state("cai")
+    assert s.phase == "revealed", "timer auto-reveals"
     assert st["correct"] == "B" and st["explanation"] == "why not D" and st["score"] == 0
     assert s.public_state("ana")["score"] == 1
     s.next()
     assert s.phase == "finished"
+    r = s.report()
+    assert r["average"] == 33 and r["participation"] == [3, 3] and r["ranking"][0] == ("ana", 1)
+    assert r["hardest"][0]["pct"] == 33 and r["errors"][0]["choice"] == "D" and r["errors"][0]["count"] == 2
+    assert s.screen_state()["podium"][0][0] == "ana" and "votes" not in s.screen_state()
+    assert "ana,1,1" in s.report_csv()
     print("selftest ok")
 
 

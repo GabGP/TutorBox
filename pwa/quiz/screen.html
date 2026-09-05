@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TutorBox · Pantalla del aula</title>
+<link rel="stylesheet" href="/tb.css">
+<style>
+  /* HDMI class screen (:197): question + timer only. Never per-student votes. */
+  body { background: var(--navy); color: #fff; min-height: 100vh; padding: 4vh 4vw; display: flex; flex-direction: column; }
+  section { flex: 1; display: flex; flex-direction: column; animation: stepIn .4s ease; }
+  .center { align-items: center; justify-content: center; text-align: center; gap: 18px; }
+  .logo { width: 96px; height: 96px; border-radius: 30px; background: var(--p); display: grid; place-items: center; font-size: 46px; font-weight: 700; }
+  .h { font-size: 40px; font-weight: 600; letter-spacing: -.5px; }
+  .sub { font-size: 24px; color: var(--navy-mute); }
+  .count { font-size: 30px; color: var(--navy-soft); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+  .top .sub { font-size: 22px; }
+  .ring { width: 92px; height: 92px; --pct: 100; }
+  .ring > div { width: 74px; height: 74px; background: var(--navy); color: #fff; font-size: 34px; }
+  .ring.low > div { color: #fff; }
+  .q { font-size: 54px; font-weight: 600; line-height: 1.12; letter-spacing: -1px; text-wrap: pretty; margin-bottom: 26px; }
+  .opts { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .opt { border-radius: 22px; padding: 0 26px; display: flex; align-items: center; gap: 20px; min-height: 92px; font-size: 38px; font-weight: 600; }
+  .opt i { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 16px; background: rgba(255,255,255,.24); display: grid; place-items: center; font-size: 26px; font-weight: 700; font-style: normal; }
+  .lbl { font-size: 26px; color: var(--navy-mute); letter-spacing: 1px; }
+  .reveal { display: flex; align-items: center; gap: 24px; animation: popIn .4s cubic-bezier(.2,.9,.3,1); }
+  .reveal i { width: 104px; height: 104px; border-radius: 30px; display: grid; place-items: center; font-size: 52px; font-weight: 700; font-style: normal; }
+  .reveal b { font-size: 92px; font-weight: 700; line-height: 1; }
+  .podium { display: flex; align-items: flex-end; gap: 18px; }
+  .podium > div { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 24px; color: var(--navy-soft); }
+  .podium > div > div { width: 150px; border-radius: 20px 20px 0 0; display: grid; place-items: center; font-size: 40px; font-weight: 700; color: #fff; }
+  .podium .first { font-size: 28px; color: #fff; font-weight: 600; }
+  .podium .first > div { height: 152px; background: var(--C); font-size: 48px; }
+  .podium .second > div { height: 108px; background: var(--B); }
+  .podium .third > div { height: 82px; background: var(--D); font-size: 36px; }
+</style>
+</head>
+<body>
+<section id="s-idle" class="center">
+  <div class="logo">T</div>
+  <div class="h">TutorBox está listo</div>
+  <div class="sub">Esperando a que el docente inicie el juego</div>
+  <div class="count" id="ready"></div>
+</section>
+
+<section id="s-question" hidden>
+  <div class="top">
+    <div class="sub" id="counter"></div>
+    <div class="ring" id="ring"><div id="timer"></div></div>
+  </div>
+  <div class="q" id="qtext"></div>
+  <div class="opts" id="opts">
+    <div class="opt k-A"><i>A</i><span></span></div>
+    <div class="opt k-B"><i>B</i><span></span></div>
+    <div class="opt k-C"><i>C</i><span></span></div>
+    <div class="opt k-D"><i>D</i><span></span></div>
+  </div>
+</section>
+
+<section id="s-reveal" class="center" hidden>
+  <div class="lbl">RESPUESTA CORRECTA</div>
+  <div class="reveal"><i id="cletter"></i><b id="ctext"></b></div>
+</section>
+
+<section id="s-stats" class="center" hidden>
+  <div class="h">¡Buen trabajo, grupo!</div>
+  <div class="podium" id="podium"></div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SCREEN = { lobby: 'idle', question: 'question', revealed: 'reveal', finished: 'stats' };
+
+function render(s) {
+  const cur = SCREEN[s.phase] || 'idle';
+  for (const k of ['idle', 'question', 'reveal', 'stats']) $('s-' + k).hidden = k !== cur;
+  if (cur === 'idle') $('ready').textContent = `${s.players} alumnos listos`;
+  if (cur === 'question') {
+    $('counter').textContent = `Pregunta ${s.index + 1} de ${s.total}`;
+    $('timer').textContent = s.remaining;
+    $('ring').style.setProperty('--pct', 100 * s.remaining / 20);
+    $('ring').classList.toggle('low', s.remaining <= 5);
+    $('qtext').textContent = s.question.text;
+    [...$('opts').children].forEach((el, i) => el.lastElementChild.textContent = s.question.options['ABCD'[i]]);
+  }
+  if (cur === 'reveal') {
+    $('cletter').textContent = s.correct;
+    $('cletter').className = 'k-' + s.correct;
+    $('ctext').textContent = s.question.options[s.correct];
+  }
+  if (cur === 'stats') {
+    const p = s.podium || [];
+    const label = n => n.replace(/^Clicker #(\d+)$/, 'Mando $1');
+    const slot = (i, cls) => p[i] ? `<div class="${cls}">${esc(label(p[i][0]))}<div>${i + 1}</div></div>` : '';
+    $('podium').innerHTML = slot(1, 'second') + slot(0, 'first') + slot(2, 'third');
+  }
+}
+(async function poll() { try { render(await fetch('/state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
+</script>
+</body>
+</html>

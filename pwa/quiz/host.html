@@ -1,95 +1,344 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TutorBox Quiz Host</title>
-<!-- Placeholder host UI. Replace with the Claude Design "TutorBox Quiz Host.dc.html" once imported; keep the same fetch calls. -->
+<title>TutorBox · Panel del docente</title>
+<link rel="stylesheet" href="/tb.css">
 <style>
-  :root { --a:#e74c3c; --b:#3498db; --c:#f1c40f; --d:#2ecc71; --bg:#1a1f2e; --card:#242a3d; --fg:#f4f6fb; --mute:#9aa3b8; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); padding:20px; }
-  [hidden] { display:none !important; }
-  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
-  button, select, input { font-size:16px; padding:10px 14px; border-radius:10px; border:0; }
-  button { background:#5b6cff; color:#fff; cursor:pointer; }
-  button:disabled { opacity:.4; cursor:default; }
-  .card { background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; }
-  .q { font-size:28px; margin-bottom:16px; }
-  .bars { display:grid; gap:10px; }
-  .bar { display:grid; grid-template-columns:40px 1fr 60px; align-items:center; gap:10px; font-size:18px; }
-  .bar i { display:block; height:34px; border-radius:8px; transition:width .3s; min-width:4px; }
-  .bar[data-k=A] i{background:var(--a)} .bar[data-k=B] i{background:var(--b)} .bar[data-k=C] i{background:var(--c)} .bar[data-k=D] i{background:var(--d)}
-  .bar.correct b::after { content:' ✓'; color:var(--d); }
-  .alert { background:#7a2e2e; border-radius:12px; padding:14px; font-size:18px; }
-  .mute { color:var(--mute); }
-  ol { columns:2; }
+  /* Teacher phone (:190). Wizard steps topic/count/lobby live in the browser; question/reveal/stats follow the server phase. */
+  body { background: var(--panel); min-height: 100vh; display: flex; flex-direction: column; }
+  #shell { display: flex; flex-direction: column; flex: 1; background: var(--panel); }
+  @media (min-width: 600px) {
+    body { background: var(--bg); }
+    #shell { width: 396px; height: 792px; flex: 0 0 auto; margin: 24px auto; border-radius: 42px; border: 1px solid #D3E1E8; box-shadow: 0 24px 60px -24px rgba(11,60,84,.38); overflow: hidden; }
+  }
+  header { height: 60px; flex: 0 0 60px; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 6px; border-bottom: 1px solid var(--line); }
+  #back { width: 48px; height: 48px; border-radius: 24px; font-size: 24px; color: var(--ink2); display: grid; place-items: center; }
+  #back:hover { background: var(--line); }
+  #back:disabled { opacity: 0; }
+  header .t { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .s { font-size: 13px; color: var(--mute2); }
+  #voice { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--tint2); color: var(--tint-ink); font-size: 13px; font-weight: 600; }
+  #voice:hover { background: #C2DBE6; }
+  main { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 18px 8px; }
+  h1 { font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; margin: 0; }
+  footer { flex: 0 0 auto; padding: 14px 18px 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .btns { display: flex; gap: 10px; }
+  .btns .btn { flex: 1; }
+  .btns .outline { flex: 0 0 124px; }
+  .dots { display: flex; gap: 6px; justify-content: center; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line3); transition: all .3s ease; }
+  .dots i.on { background: var(--p); }
+  .dots i.cur { width: 26px; }
+
+  /* step 1 · topic */
+  .topics { display: flex; flex-direction: column; gap: 12px; }
+  .topic { border-radius: 26px; background: #fff; border: 2px solid var(--line2); padding: 18px 20px; display: flex; align-items: center; gap: 16px; text-align: left; width: 100%; transition: transform .18s cubic-bezier(.2,.85,.25,1); }
+  .topic:hover { transform: translateY(-2px); }
+  .topic.on { background: var(--tint); border-color: var(--p); }
+  .topic .glyph { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 18px; background: var(--tint); color: var(--p); display: grid; place-items: center; font-size: 22px; font-weight: 700; }
+  .topic.on .glyph { background: var(--p); color: #fff; }
+  .topic .l { font-size: 19px; font-weight: 600; }
+  .topic .m { font-size: 14px; color: var(--mute); }
+  .topic .tick { font-size: 22px; color: var(--p); width: 22px; }
+
+  /* step 2 · count */
+  .counter { border-radius: 28px; background: var(--tint); padding: 26px 20px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .counter .num { font-size: 68px; font-weight: 700; color: var(--p); line-height: 1; }
+  .counter .sub { font-size: 15px; color: var(--mute); }
+  .pm { display: flex; gap: 14px; }
+  .pm button { width: 76px; height: 66px; border-radius: 24px; font-size: 34px; background: #fff; border: 1px solid var(--line3); color: var(--p); user-select: none; }
+  .pm button:hover { background: #F1F8FB; }
+  .pm button.p { background: var(--p); color: #fff; border: 0; }
+  .pm button.p:hover { background: var(--p-dark); }
+  .card .h { font-size: 16px; font-weight: 600; }
+  .card .p-text { font-size: 17px; color: var(--p); font-weight: 500; margin-top: 6px; }
+  .help { font-size: 15px; color: var(--mute2); line-height: 1.5; margin: 0; }
+
+  /* step 3 · lobby */
+  .hero { border-radius: 28px; background: var(--p); color: #fff; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hero .lbl { font-size: 14px; opacity: .82; letter-spacing: .4px; }
+  .hero .big { font-size: 40px; font-weight: 700; line-height: 1.15; }
+  .hero .addr { font-size: 17px; font-weight: 600; text-align: right; word-break: break-all; }
+  .rowb { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--mute2); }
+  .rowb b { font-size: 18px; color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cell { aspect-ratio: 1; border-radius: 20px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--tint-ink); transition: background .25s ease; overflow: hidden; padding: 4px; }
+  .cell .mark { font-size: 22px; font-weight: 700; line-height: 1; }
+  .cell .name { font-size: 11px; opacity: .75; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cell:not([class*="k-"]) { background: var(--tint2); }
+  .cell.idle { background: var(--line); color: #7A868C; }
+  .cell.k-A, .cell.k-B, .cell.k-C, .cell.k-D { color: #fff; }
+  .note { border-radius: 24px; background: var(--bad-bg); border: 1px solid var(--bad-line); padding: 16px 18px; color: var(--bad-ink); font-size: 15px; line-height: 1.45; }
+
+  /* step 4 · live question */
+  #s-question, #s-reveal { gap: 14px; }
+  .qhead { display: flex; align-items: center; gap: 14px; }
+  .qhead .ring { width: 74px; height: 74px; flex: 0 0 74px; }
+  .qhead .ring > div { width: 58px; height: 58px; font-size: 24px; }
+  .qhead .c { font-size: 14px; color: var(--mute2); font-weight: 500; }
+  .qtext { font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .answered { display: flex; align-items: baseline; gap: 8px; font-size: 16px; color: var(--mute); }
+  .answered b { font-size: 30px; color: var(--p); }
+
+  /* step 5 · reveal */
+  .okcard { border-radius: 28px; background: var(--ok-bg); padding: 22px 24px; color: var(--ok); display: flex; flex-direction: column; gap: 6px; }
+  .okcard .lbl { font-size: 14px; font-weight: 500; letter-spacing: .3px; }
+  .okcard .big { font-size: 28px; font-weight: 700; line-height: 1.15; }
+  .alert.lg { border-radius: 28px; padding: 20px; gap: 14px; font-size: 15px; line-height: 1.5; }
+  .alert.lg b { font-size: 18px; }
+  .alert .btns .btn { height: 56px; border-radius: 28px; font-size: 17px; }
+  .alert .btns .outline { flex: 0 0 116px; }
+  .row { display: flex; align-items: center; justify-content: space-between; font-size: 16px; color: var(--ink2); }
+  .row b { font-size: 22px; color: var(--p); }
+
+  /* step 6 · stats */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { border-radius: 26px; padding: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .stat .n { font-size: 34px; font-weight: 700; line-height: 1.1; }
+  .stat.tint { background: var(--tint); color: var(--mute); }
+  .stat.tint .n { color: var(--p); }
+  .stat.ok { background: var(--ok-bg); color: var(--ok2); }
+  .stat.ok .n { color: var(--ok); }
+  .card h2 { font-size: 18px; font-weight: 600; margin: 0 0 14px; }
+  .rank { display: flex; flex-direction: column; gap: 10px; }
+  .rank + .btn { margin-top: 14px; width: 100%; }
+  .rank div { display: flex; align-items: center; gap: 12px; font-size: 17px; }
+  .rank i { width: 34px; height: 34px; border-radius: 17px; background: var(--line); color: #40484C; display: grid; place-items: center; font-size: 15px; font-weight: 600; font-style: normal; }
+  .rank span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank b { color: #40484C; }
+  .rank div:nth-child(-n+3) i { background: var(--p); color: #fff; }
+  .rank div:nth-child(-n+3) b { color: var(--p); }
+  .hard { display: flex; flex-direction: column; gap: 14px; }
+  .hard > div { display: flex; flex-direction: column; gap: 7px; }
+  .hard .h { display: flex; justify-content: space-between; gap: 10px; font-size: 16px; color: var(--ink2); }
+  .hard .h b { font-size: 15px; white-space: nowrap; }
+  .hard .track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .hard .track div { height: 100%; border-radius: 5px; }
+  .errs { display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.5; }
+  .alert.lg .errs b { display: inline; font-size: inherit; }
+  #export { margin-bottom: 6px; color: var(--p); font-weight: 600; height: 60px; }
 </style>
 </head>
 <body>
-<h1>TutorBox Quiz Host <span class="mute" style="font-size:14px">:190 host · :195 students · :196 clickers</span></h1>
+<div id="shell">
+  <header>
+    <button id="back" aria-label="Atrás">←</button>
+    <div class="grow"><div class="t" id="title"></div><div class="s" id="subtitle"></div></div>
+    <button id="voice">Voz ES</button>
+  </header>
 
-<div class="row">
-  <select id="topic"><option value="">All topics</option></select>
-  <input id="count" type="number" min="1" max="30" value="5" style="width:80px">
-  <button id="start">Start quiz</button>
-  <button id="reveal">Reveal answer</button>
-  <button id="next">Next question</button>
-  <button id="reset" style="background:#444">Reset</button>
-  <span class="mute" id="meta"></span>
-</div>
+  <main>
+    <section id="s-topic" class="step">
+      <h1>Elige el tema<br>del juego</h1>
+      <div class="topics" id="topics"></div>
+    </section>
 
-<div class="card" id="qcard" hidden>
-  <div class="mute" id="counter"></div>
-  <div class="q" id="qtext"></div>
-  <div class="bars" id="bars">
-    <div class="bar" data-k="A"><b>A</b><i></i><span></span></div>
-    <div class="bar" data-k="B"><b>B</b><i></i><span></span></div>
-    <div class="bar" data-k="C"><b>C</b><i></i><span></span></div>
-    <div class="bar" data-k="D"><b>D</b><i></i><span></span></div>
-  </div>
-  <p class="mute" id="opts"></p>
-  <div class="alert" id="alert" hidden></div>
-</div>
+    <section id="s-count" class="step" hidden>
+      <h1>¿Cuántas preguntas?</h1>
+      <div class="counter">
+        <div class="num" id="count">10</div>
+        <div class="sub">preguntas · aprox. <span id="minutes">6</span> min</div>
+        <div class="pm"><button id="dec">−</button><button id="inc" class="p">+</button></div>
+      </div>
+      <div class="card"><div class="h">Tema elegido</div><div class="p-text" id="topicLabel"></div></div>
+      <p class="help">Cada pregunta dura 20 segundos. Usted decide cuándo pasar a la siguiente.</p>
+    </section>
 
-<div class="card">
-  <b>Players</b>
-  <ol id="scores"></ol>
+    <section id="s-lobby" class="step" hidden>
+      <div class="hero">
+        <div><div class="lbl">ALUMNOS LISTOS</div><div class="big" id="lobbyCount">0</div></div>
+        <div><div class="lbl">ENTRAN EN</div><div class="addr" id="addr"></div></div>
+      </div>
+      <div class="rowb"><b>Alumnos conectados</b><span>Mando A–D</span></div>
+      <div class="grid" id="lobbyGrid"></div>
+      <div class="note" id="lobbyEmpty">Todavía no entra nadie. Los alumnos abren la dirección de arriba en su teléfono o encienden el mando.</div>
+    </section>
+
+    <section id="s-question" class="step" hidden>
+      <div class="qhead">
+        <div class="ring" id="ring"><div id="timer">20</div></div>
+        <div class="grow"><div class="c" id="qcounter"></div><div class="qtext" id="qtext"></div></div>
+      </div>
+      <div class="answered"><b id="answered">0</b><span>de <span id="conn">0</span> ya respondieron</span></div>
+      <div class="grid" id="voteGrid"></div>
+      <div class="bars" id="qbars"></div>
+      <div class="alert" id="qalert" hidden><b id="qalertTitle"></b><div>Al terminar, TutorBox puede explicar este error por voz.</div></div>
+    </section>
+
+    <section id="s-reveal" class="step" hidden>
+      <div class="okcard"><div class="lbl">RESPUESTA CORRECTA</div><div class="big" id="correct"></div></div>
+      <div class="bars grow" id="rbars"></div>
+      <div class="alert lg" id="ralert" hidden>
+        <b id="ralertTitle"></b>
+        <div id="explain"></div>
+        <div class="btns"><button id="play" class="btn p">Explicar en español</button><button id="skip" class="btn outline">Saltar</button></div>
+      </div>
+      <div class="card row"><span>Aciertos en esta pregunta</span><b id="hits"></b></div>
+    </section>
+
+    <section id="s-stats" class="step" hidden>
+      <div class="two">
+        <div class="stat tint"><div>Promedio del grupo</div><div class="n" id="avg"></div></div>
+        <div class="stat ok"><div>Participación</div><div class="n" id="part"></div></div>
+      </div>
+      <div class="card white"><h2>Clasificación</h2><div class="rank" id="rank"></div><button id="more" class="btn soft" hidden></button></div>
+      <div class="card white"><h2>Preguntas más difíciles</h2><div class="hard" id="hard"></div></div>
+      <div class="alert lg"><b>Errores que se repiten</b><div class="errs" id="errors"></div></div>
+      <a id="export" class="btn outline" href="/report.csv" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="btns"><button id="secondary" class="btn outline" hidden>Inicio</button><button id="primary" class="btn p"></button></div>
+    <div class="dots" id="dots"></div>
+  </footer>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const post = (path, body) => fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) }).then(r => r.json()).then(render);
-$('start').onclick = () => post('/start', { count: +$('count').value, topic: $('topic').value });
-$('reveal').onclick = () => post('/reveal');
-$('next').onclick = () => post('/next');
-$('reset').onclick = () => post('/reset');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const post = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(r => r.json()).then(render);
+
+const STEPS = ['topic', 'count', 'lobby', 'question', 'reveal', 'stats'];
+const PHASE_STEP = { question: 'question', revealed: 'reveal', finished: 'stats' };
+const TITLES = {
+  topic: ['Paso 1 de 4', 'Elegir tema'], count: ['Paso 2 de 4', 'Número de preguntas'], lobby: ['Paso 3 de 4', 'Alumnos listos'],
+  question: ['En juego', 'Respuestas en vivo'], reveal: ['En juego', 'Resultado de la pregunta'], stats: ['Juego terminado', 'Resumen del grupo']
+};
+const TOPIC = { '': ['Todos los temas', '∗'], arithmetic: ['Aritmética', '+'], decimals_percentages: ['Decimales y porcentajes', '%'], fractions: ['Fracciones', '½'], pre_algebra: ['Pre-álgebra', 'x'] };
+const topicLabel = id => (TOPIC[id] || [id, '?'])[0];
+// "Clicker #7" -> ["07", "Mando 7"]; "Ana" -> ["A", "Ana"]
+const who = n => { const m = /^Clicker #(\d+)$/.exec(n); return m ? [m[1].padStart(2, '0'), 'Mando ' + m[1]] : [n.trim().charAt(0).toUpperCase(), n]; };
+
+let wizard = 'topic', topic = '', count = 10, voice = 'es', voiceDone = -1, showAll = false, playing = false, S = { phase: 'lobby', index: -1, total: 0, players: 0 };
+
+$('back').onclick = () => { wizard = STEPS[Math.max(0, STEPS.indexOf(wizard) - 1)]; render(S); };
+$('voice').onclick = () => { voice = voice === 'es' ? 'quc' : 'es'; render(S); };
+$('inc').onclick = () => { count = Math.min(20, count + 1); render(S); };
+$('dec').onclick = () => { count = Math.max(3, count - 1); render(S); };
+$('more').onclick = () => { showAll = !showAll; render(S); };
+$('skip').onclick = () => { voiceDone = S.index; render(S); };
+$('play').onclick = () => {
+  const md = S.majority_distractor; if (!md || playing) return;
+  playing = true; render(S);
+  post('/speak', { lang: voice, text: md.explanation }); // ponytail: server stub; backend TTS lands later
+  setTimeout(() => { playing = false; voiceDone = S.index; render(S); }, 1600);
+};
+$('secondary').onclick = () => post('/reset').then(() => { wizard = 'topic'; render(S); });
+$('primary').onclick = () => {
+  const step = stepOf(S);
+  if (step === 'topic') wizard = 'count';
+  else if (step === 'count') wizard = 'lobby';
+  else if (step === 'lobby') return post('/start', { count, topic });
+  else if (step === 'question') return post('/reveal');
+  else if (step === 'reveal') return post('/next');
+  else return $('secondary').onclick();
+  render(S);
+};
+
+const stepOf = s => PHASE_STEP[s.phase] || wizard;
 
 function render(s) {
-  if ($('topic').options.length === 1) for (const t of s.topics) $('topic').add(new Option(t, t));
-  $('meta').textContent = `${s.players} players · ${s.voted} voted · ${s.phase}`;
-  $('reveal').disabled = s.phase !== 'question';
-  $('next').disabled = s.phase !== 'revealed';
-  $('qcard').hidden = !s.question;
-  renderScores(s);
-  if (!s.question) return;
-  $('counter').textContent = `Question ${s.index + 1} of ${s.total}`;
-  $('qtext').textContent = s.question.text;
-  $('opts').textContent = ['A','B','C','D'].map(k => `${k}: ${s.question.options[k]}`).join('   ·   ');
-  const n = Math.max(1, s.voted);
-  for (const bar of $('bars').children) {
-    const k = bar.dataset.k, v = s.tally[k];
-    bar.querySelector('i').style.width = (100 * v / n) + '%';
-    bar.querySelector('span').textContent = v;
-    bar.classList.toggle('correct', s.phase === 'revealed' && s.correct === k);
+  S = s;
+  const step = stepOf(s), idx = STEPS.indexOf(step), last = s.index + 1 >= s.total;
+  for (const k of STEPS) $('s-' + k).hidden = k !== step;
+  $('subtitle').textContent = TITLES[step][0];
+  $('title').textContent = TITLES[step][1];
+  $('back').disabled = step !== 'count' && step !== 'lobby';
+  $('voice').textContent = voice === 'es' ? 'Voz ES' : "Voz K'iche'";
+  $('primary').textContent = { topic: 'Continuar', count: 'Continuar', lobby: 'Comenzar el juego', question: 'Terminar la pregunta', reveal: last ? 'Ver resultados' : 'Siguiente pregunta', stats: 'Nuevo juego' }[step];
+  $('primary').classList.toggle('ok', step === 'lobby');
+  $('primary').disabled = step === 'lobby' && !s.players;
+  $('secondary').hidden = step !== 'stats';
+  $('dots').innerHTML = STEPS.slice(0, 4).map((_, i) => `<i class="${i <= idx ? 'on' : ''} ${i === Math.min(idx, 3) ? 'cur' : ''}"></i>`).join('');
+  ({ topic: renderTopics, count: renderCount, lobby: renderLobby, question: renderQuestion, reveal: renderReveal, stats: renderStats })[step](s);
+}
+
+function renderTopics(s) {
+  const el = $('topics');
+  if (!el.children.length && s.topics) {
+    const all = [{ id: '', count: s.topics.reduce((a, t) => a + t.count, 0) }, ...s.topics];
+    el.innerHTML = all.map(t => `<button class="topic" data-id="${esc(t.id)}"><span class="glyph">${esc((TOPIC[t.id] || [0, '?'])[1])}</span><span class="grow"><div class="l">${esc(topicLabel(t.id))}</div><div class="m">${t.count} preguntas</div></span><span class="tick"></span></button>`).join('');
+    for (const b of el.children) b.onclick = () => { topic = b.dataset.id; render(S); };
   }
-  const md = s.phase === 'revealed' && s.majority_distractor;
-  $('alert').hidden = !md;
-  if (md) $('alert').textContent = `🔊 >51% chose ${md.choice} (${md.misconception}): ${md.explanation}`;
+  for (const b of el.children) { const on = b.dataset.id === topic; b.classList.toggle('on', on); b.lastElementChild.textContent = on ? '✓' : ''; }
 }
-function renderScores(s) {
-  $('scores').innerHTML = s.scores.map(([n, p]) => `<li>${n.replace(/</g,'&lt;')} — ${p}${s.votes[n] ? ' · ' + s.votes[n] : ''}</li>`).join('');
+
+function renderCount() {
+  $('count').textContent = count;
+  $('minutes').textContent = Math.max(2, Math.round(count * 0.6));
+  $('topicLabel').textContent = topicLabel(topic);
 }
+
+function renderLobby(s) {
+  $('lobbyCount').textContent = s.players;
+  $('addr').textContent = `${location.hostname}:195`;
+  $('lobbyEmpty').hidden = s.players > 0;
+  $('lobbyGrid').innerHTML = s.scores.map(([n]) => { const [short, label] = who(n); return `<div class="cell"><div class="mark">${esc(short)}</div><div class="name">${esc(label)}</div></div>`; }).join('');
+}
+
+function bars(el, s) {
+  if (el.dataset.i !== String(s.index)) {
+    el.dataset.i = s.index;
+    el.innerHTML = ['A', 'B', 'C', 'D'].map(k => `<div class="bar"><span class="letter k-${k}">${k}</span><span class="txt"></span><span class="track"><div class="k-${k}"></div></span><span class="n"></span></div>`).join('');
+  }
+  [...el.children].forEach((row, i) => {
+    const k = 'ABCD'[i], v = s.tally[k];
+    row.children[1].textContent = s.question.options[k];
+    row.children[2].firstChild.style.width = (s.voted ? Math.round(100 * v / s.voted) : 0) + '%';
+    row.children[3].textContent = v;
+  });
+}
+
+const alertTitle = (s, md) => `${md.count} de ${s.voted} eligieron ${md.text}`;
+
+function renderQuestion(s) {
+  const r = s.remaining;
+  $('timer').textContent = r;
+  $('ring').style.setProperty('--pct', 100 * r / 20);
+  $('ring').classList.toggle('low', r <= 5);
+  $('qcounter').textContent = `Pregunta ${s.index + 1} de ${s.total}`;
+  $('qtext').textContent = s.question.text;
+  $('answered').textContent = s.voted;
+  $('conn').textContent = s.players;
+  $('voteGrid').innerHTML = s.scores.map(([n]) => {
+    const [short, label] = who(n), v = s.votes[n];
+    return `<div class="cell ${v ? 'k-' + v : 'idle'}"><div class="mark">${v || '·'}</div><div class="name">${esc(label)}</div></div>`;
+  }).join('');
+  bars($('qbars'), s);
+  const md = s.voted >= 4 && s.majority_distractor;
+  $('qalert').hidden = !md;
+  if (md) $('qalertTitle').textContent = `${alertTitle(s, md)}: ${md.explanation}`;
+}
+
+function renderReveal(s) {
+  $('correct').textContent = `${s.correct} · ${s.question.options[s.correct]}`;
+  bars($('rbars'), s);
+  const md = s.majority_distractor, show = md && voiceDone !== s.index;
+  $('ralert').hidden = !show;
+  if (show) {
+    $('ralertTitle').textContent = alertTitle(s, md);
+    $('explain').textContent = md.explanation;
+    $('play').textContent = playing ? 'Reproduciendo…' : voice === 'es' ? 'Explicar en español' : "Explicar en k'iche'";
+  }
+  $('hits').textContent = `${s.tally[s.correct]}/${s.voted}`;
+}
+
+function renderStats(s) {
+  const r = s.report;
+  $('avg').textContent = r.average + '%';
+  $('part').textContent = `${r.participation[0]}/${r.participation[1]}`;
+  const rows = showAll ? r.ranking : r.ranking.slice(0, 5);
+  $('rank').innerHTML = rows.map(([n, p], i) => `<div><i>${i + 1}</i><span>${esc(who(n)[1])}</span><b>${p}/${s.total}</b></div>`).join('') || '<div class="mute">Nadie participó.</div>';
+  $('more').hidden = r.ranking.length <= 5;
+  $('more').textContent = showAll ? 'Ver menos' : `Ver los ${r.ranking.length} alumnos`;
+  const tone = p => p < 40 ? 'var(--bad)' : p < 70 ? 'var(--C)' : 'var(--D)';
+  $('hard').innerHTML = r.hardest.map(h => `<div><div class="h"><span>${esc(h.text)}</span><b style="color:${tone(h.pct)}">${h.pct}% acierto</b></div><div class="track"><div style="width:${h.pct}%;background:${tone(h.pct)}"></div></div></div>`).join('') || '<div class="mute">Sin preguntas respondidas.</div>';
+  $('errors').innerHTML = r.errors.map(e => `<div>En <b>${esc(e.question)}</b>, ${e.count} alumnos eligieron <b>${esc(e.text)}</b>: ${esc(e.explanation)}</div>`).join('') || '<div>Ningún error se repitió en el grupo.</div>';
+}
+
 (async function poll() { try { render(await fetch('/state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
 </script>
 </body>
