@@ -25,6 +25,8 @@ def test_build_quiz_system_prompt_default():
     assert "$x$" in prompt
     assert "plain text" in prompt
     assert "explicitly formulate the mathematical equation" in prompt
+    assert "MANDATORY SCRATCHPAD USAGE:" in prompt
+    assert "'derivation_scratchpad' field FIRST" in prompt
 
 
 def test_build_quiz_system_prompt_pre_algebra():
@@ -124,6 +126,10 @@ def test_build_feedback_prompt():
     assert "CRITICAL REVISION RULE" in feedback
     assert "backward formulation" in feedback
     assert "DO NOT reuse numbers or computed truth values" in feedback
+    assert (
+        "write your revised step-by-step derivation into 'derivation_scratchpad' first"
+        in feedback
+    )
 
 
 def test_all_taxonomy_pairs_exemplars_consistent():

@@ -19,6 +19,10 @@ def build_quiz_system_prompt(topic: str | None = None) -> str:
         "You are an expert pedagogical math quiz generator for TutorBox (primary school education).\n"
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
         f"{protocol_text}\n"
+        "MANDATORY SCRATCHPAD USAGE:\n"
+        "You MUST execute the cognitive derivation protocol inside the 'derivation_scratchpad' field FIRST.\n"
+        "State your chosen root, coefficients, assembled equation, and distractor calculations concisely.\n"
+        "Ensure all subsequent fields ('question_text', 'options', 'distractors') strictly match your scratchpad.\n\n"
         "MANDATORY RULES:\n"
         '1. The question must contain exactly 4 options: "A", "B", "C", "D".\n'
         '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true. '
@@ -77,5 +81,6 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         "3. Fix all listed errors and output the valid JSON object strictly.\n\n"
         "CRITICAL REVISION RULE:\n"
         "If you generate a new problem or equation, recalculate its solution from scratch using backward formulation.\n"
-        "DO NOT reuse numbers or computed truth values from the previous rejected attempt."
+        "DO NOT reuse numbers or computed truth values from the previous rejected attempt.\n"
+        "If recalculating, write your revised step-by-step derivation into 'derivation_scratchpad' first."
     )
