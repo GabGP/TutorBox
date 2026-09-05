@@ -164,6 +164,31 @@ sequenceDiagram
 6. **Deterministic Deduplication Gate**: Every candidate question is checked against reference seed questions via text normalization and algebraic equation equivalence, rejecting any duplicate items and forcing question novelty.
 7. **Automated Ingestion Sanitizer**: Strips LaTeX math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`), normalizes LaTeX fractions (`\frac{a}{b} \to a/b`), and strips stray backslashes from option strings at the ingestion boundary before symbolic evaluation.
 
+### In-Schema Chain-of-Thought Scratchpad (`derivation_scratchpad`)
+To overcome the autoregressive dilemma on local SLMs (`Qwen2.5-3B-Instruct`) running under strict GBNF constrained decoding, TutorBox employs an **In-Schema Chain-of-Thought (CoT) Scratchpad**:
+
+```mermaid
+flowchart TD
+    subgraph WithoutScratchpad ["1. Without Scratchpad (Autoregressive Dilemma)"]
+        A1["Prompt Tokens in Context"] --> A2["GBNF forces first key: 'question_text'"]
+        A2 --> A3["Model invents equation at Step 0 without roots/coefficients"]
+        A3 --> A4["Model generates 'options' and 'distractors'<br/>❌ High probability of mathematical contradiction"]
+    end
+
+    subgraph WithScratchpad ["2. With 'derivation_scratchpad' (In-Schema CoT)"]
+        B1["Prompt Tokens in Context"] --> B2["GBNF forces first key: 'derivation_scratchpad'"]
+        B2 --> B3["Model emits 40-60 token backward derivation:<br/>'1. Root x=4. 2. Coeffs 2, 4. 3. Eq: 2x+4=12. 4. Distractors...'"]
+        B3 --> B4["Self-attention attends back to derivation tokens"]
+        B4 --> B5["Model generates 'question_text', 'options', and 'distractors'<br/>✅ 100% mathematically aligned with its own scratchpad"]
+    end
+```
+
+#### Edge SLM Architectural Rationale
+* **Autoregressive Alignment**: Because Transformers generate text left-to-right, forcing `"derivation_scratchpad"` as the **first property** in `build_quiz_response_format()` ensures the model chooses its root and coefficients before emitting the equation in `"question_text"`.
+* **Bounded Edge Latency vs. Reasoning Runaway**: Reasoning models (e.g. `DeepSeek-R1-Distill`) can emit 1,000–2,000 thinking tokens, taking 50–100 seconds at ~20 tokens/sec on the Jetson Orin Nano. An in-schema scratchpad instructed to execute in 2–4 lines emits only **40–60 tokens (2.0–3.0 seconds)**.
+* **KV Cache & Memory Budget**: Consuming only ~50 tokens prevents KV cache bloat, keeping memory safely within the Jetson's 8GB unified RAM budget alongside the OS, database, and TTS engine.
+* **Ephemeral Ingestion Boundary**: The scratchpad is an ephemeral inference mechanism. [`extract_scratchpad()`](../../backend/src/quiz/generation/response_processor.py) removes it during response processing, attaching it to [`GenerationMetadata`](../../backend/src/quiz/contracts/models.py) for telemetry inspection while leaving the [`QuizQuestion`](../../backend/src/quiz/contracts/models.py) database schema and mobile clients 100% pristine.
+
 ### Anti-Guessing Option & Misconception Permutation
 To prevent students from inferring correct answers through positional biases (e.g. LLM few-shot template bias always emitting correct answers in option `A`) or predictable distractor ordering:
 * **Uniform Correct Option Distribution**: The correct answer key is randomly permuted across `{"A", "B", "C", "D"}` with uniform ~25% probability per option slot.

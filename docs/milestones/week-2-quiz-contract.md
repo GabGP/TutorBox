@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"Wrong answers are the pedagogical content"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) In Progress**
-* **Backend Test Suite**: **482 / 482 passing tests** (338 new tests added in Week 2, a 234.7% expansion from Week 1).
+* **Backend Test Suite**: **488 / 488 passing tests** (344 new tests added in Week 2, a 238.9% expansion from Week 1).
 * **Statement Coverage**: **100.00% coverage** across all source files (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`ruff check backend/` and `ruff format --check backend/`).
 * **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (verified automatically via `tests/test_modularity_policy.py`).
@@ -34,7 +34,9 @@ This document summarizes the technical deliverables, architectural implementatio
    * Automated LaTeX math delimiter, fraction normalization, and dollar wrapper sanitization pipeline (`sanitizer.py`) stripping `$x$`, `$$...$$`, `\(...\)`, and `\[...\]` delimiters, normalizing `\frac{a}{b} \to a/b`, and stripping stray backslashes from options on model ingestion, contract validation, and response processing to guarantee clean plain text for SQLite storage, mobile UI, and offline TTS speech.
    * Standardized curriculum taxonomy (`taxonomy.py`) across 4 domains (`arithmetic`, `fractions`, `pre_algebra`, `decimals_percentages`), 10 subconcepts, and 32 validated misconception error slugs.
 2. **Multi-Layer Deterministic Alignment & Generation Pipeline**:
-   * Structured JSON Schema constrained decoding (`prompt.py`, `client.py`) with OpenAI-compatible `response_format` strictly enforcing option keys `{"A", "B", "C", "D"}` and enum membership on local SLMs (`llama.cpp`), cutting schema hallucination and rejection latency.
+   * Structured JSON Schema constrained decoding (`response_format.py`, `prompt.py`, `client.py`) with OpenAI-compatible `response_format` strictly enforcing option keys `{"A", "B", "C", "D"}` and enum membership on local SLMs (`llama.cpp`), cutting schema hallucination and rejection latency.
+   * In-schema Chain-of-Thought (CoT) scratchpad (`derivation_scratchpad`) forced as token 0 by GBNF grammar, compelling local SLMs (`Qwen2.5-3B-Instruct`) to formulate roots, coefficients, equations, and distractor calculations in 40–60 tokens before emitting `question_text`, resolving autoregressive blind equation invention.
+   * Ephemeral inference isolation in `response_processor.py` extracting `derivation_scratchpad` prior to Pydantic and SymPy validation, attaching it to `GenerationMetadata` for telemetry while preserving pristine `QuizQuestion` database and mobile client contracts.
    * Topic-adaptive backward formulation derivation protocols (`protocols.py`, `prompt.py`) enforcing cognitive reverse-engineering steps (Target Solution $\to$ Construct Problem $\to$ Distractor Error Derivations $\to$ Option Binding) tailored to each math domain (`pre_algebra`, `arithmetic`, `fractions`, `decimals_percentages`).
    * Direct zero-shot prompt formulation cutting ~280 prompt tokens per inference call to minimize latency and eliminate template bias, relying on GBNF constrained decoding for strict JSON syntax guarantees.
    * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
