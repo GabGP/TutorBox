@@ -24,6 +24,9 @@ Technical specification and Entity-Relationship model for the **TutorBox** SQLit
   - [Table: `quiz_questions`](#table-quiz_questions)
   - [Table: `quiz_generation_logs`](#table-quiz_generation_logs)
   - [Table: `audit_logs`](#table-audit_logs)
+  - [Table: `quiz_sessions`](#table-quiz_sessions)
+  - [Table: `quiz_session_rounds`](#table-quiz_session_rounds)
+  - [Table: `quiz_session_votes`](#table-quiz_session_votes)
   - [Table: `schema_migrations`](#table-schema_migrations)
 - [4. Performance Indexes](#4-performance-indexes)
 - [5. Data Lifecycle & Integrity Policies](#5-data-lifecycle--integrity-policies)
@@ -136,6 +139,50 @@ erDiagram
         INTEGER actor_user_id "Caller user ID (NULL for signup)"
         TEXT action "Valid audit action string"
         INTEGER target_user_id "Target user ID"
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    quiz_sessions ||--o{ quiz_session_rounds : "contains"
+    quiz_session_rounds ||--o{ quiz_session_votes : "aggregates"
+    users ||--o{ quiz_sessions : "hosts / teaches"
+    users ||--o{ quiz_session_votes : "casts"
+    quiz_questions ||--o{ quiz_session_rounds : "presents"
+
+    quiz_sessions {
+        TEXT id PK "Session UUID"
+        TEXT title "Session human-readable title"
+        TEXT topic "Curriculum topic slug"
+        INTEGER teacher_id FK "REFERENCES users(id) ON DELETE SET NULL"
+        TEXT status "lobby | active | completed | abandoned"
+        INTEGER question_count "Total planned rounds"
+        INTEGER current_round_index "Current round (0-based)"
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+        TIMESTAMP started_at "Match start timestamp"
+        TIMESTAMP ended_at "Match completion timestamp"
+    }
+
+    quiz_session_rounds {
+        TEXT id PK "Round UUID"
+        TEXT session_id FK "REFERENCES quiz_sessions(id) ON DELETE CASCADE"
+        TEXT question_id FK "REFERENCES quiz_questions(id) ON DELETE SET NULL"
+        INTEGER round_index "0-based round sequence index"
+        TEXT status "pending | open | closed | revealed"
+        TIMESTAMP opened_at "Voting window open timestamp"
+        TIMESTAMP closed_at "Voting window close timestamp"
+        INTEGER duration_seconds "Countdown window duration (sec)"
+    }
+
+    quiz_session_votes {
+        TEXT id PK "Vote UUID"
+        TEXT session_id FK "REFERENCES quiz_sessions(id) ON DELETE CASCADE"
+        TEXT round_id FK "REFERENCES quiz_session_rounds(id) ON DELETE CASCADE"
+        INTEGER student_id FK "REFERENCES users(id) ON DELETE CASCADE"
+        TEXT transport_type "web | hardware | mock"
+        TEXT device_id "Hardware clicker ID (optional)"
+        TEXT selected_option "A | B | C | D"
+        INTEGER is_correct "1: True | 0: False"
+        TEXT misconception "Pedagogical misconception slug"
+        REAL response_time_ms "Vote submission latency"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
@@ -289,6 +336,63 @@ Append-only audit trail recording sensitive operational, staff, and hardware pai
 
 ---
 
+### Table: `quiz_sessions`
+Live classroom quiz sessions coordinating question presentation, real-time round progression, and vote collection.
+
+> **Related API Operations**: Created by `POST /api/v1/session`; queried by `GET /api/v1/session/{id}`; transitioned by `POST /api/v1/session/{id}/start` and `POST /api/v1/session/{id}/close`.
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `TEXT` | `PRIMARY KEY` | — | Unique session identifier (UUID string). |
+| `title` | `TEXT` | `NOT NULL` | — | Human-readable title of the quiz session. |
+| `topic` | `TEXT` | `NOT NULL` | — | Mathematics topic slug (e.g., `'fractions'`). |
+| `teacher_id` | `INTEGER` | `NULL`, `FOREIGN KEY -> users(id) ON DELETE SET NULL` | `NULL` | Host teacher account identifier. |
+| `status` | `TEXT` | `NOT NULL`, `CHECK(status IN ('lobby', 'active', 'completed', 'abandoned'))` | `'lobby'` | Current state of the session lifecycle. |
+| `question_count` | `INTEGER` | `NOT NULL` | `0` | Planned number of question rounds in session. |
+| `current_round_index` | `INTEGER` | `NOT NULL` | `0` | 0-based index of the currently active/latest round. |
+| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of session creation. |
+| `started_at` | `TIMESTAMP` | `NULL` | `NULL` | Timestamp when session transitioned out of lobby. |
+| `ended_at` | `TIMESTAMP` | `NULL` | `NULL` | Timestamp when session completed or was abandoned. |
+
+---
+
+### Table: `quiz_session_rounds`
+Sequential question turns within a quiz match, tracking voting window timers and status.
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `TEXT` | `PRIMARY KEY` | — | Unique round identifier (UUID string). |
+| `session_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> quiz_sessions(id) ON DELETE CASCADE` | — | Reference to parent quiz session. |
+| `question_id` | `TEXT` | `NULL`, `FOREIGN KEY -> quiz_questions(id) ON DELETE SET NULL` | `NULL` | Reference to diagnostic question bank entry. |
+| `round_index` | `INTEGER` | `NOT NULL` | — | 0-based sequential sequence order of the round. |
+| `status` | `TEXT` | `NOT NULL`, `CHECK(status IN ('pending', 'open', 'closed', 'revealed'))` | `'pending'` | Lifecycle state of this question round. |
+| `opened_at` | `TIMESTAMP` | `NULL` | `NULL` | Timestamp when voting opened. |
+| `closed_at` | `TIMESTAMP` | `NULL` | `NULL` | Timestamp when voting window closed. |
+| `duration_seconds` | `INTEGER` | `NOT NULL` | `30` | Configured countdown timer duration in seconds. |
+
+---
+
+### Table: `quiz_session_votes`
+Individual student vote submissions recorded immutably per round. Enforces first-press locking via a unique constraint.
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `TEXT` | `PRIMARY KEY` | — | Unique vote identifier (UUID string). |
+| `session_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> quiz_sessions(id) ON DELETE CASCADE` | — | Reference to parent quiz session. |
+| `round_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> quiz_session_rounds(id) ON DELETE CASCADE` | — | Reference to active question round. |
+| `student_id` | `INTEGER` | `NOT NULL`, `FOREIGN KEY -> users(id) ON DELETE CASCADE` | — | Reference to participating student. |
+| `transport_type` | `TEXT` | `NOT NULL`, `CHECK(transport_type IN ('web', 'hardware', 'mock'))` | `'web'` | Ingestion transport channel. |
+| `device_id` | `TEXT` | `NULL` | `NULL` | Hardware clicker ID if submitted via ESP32. |
+| `selected_option` | `TEXT` | `NOT NULL`, `CHECK(selected_option IN ('A', 'B', 'C', 'D'))` | — | Option key chosen by student. |
+| `is_correct` | `INTEGER` | `NOT NULL`, `CHECK(is_correct IN (0, 1))` | — | Correctness boolean flag. |
+| `misconception` | `TEXT` | `NULL` | `NULL` | Diagnostic misconception tag for incorrect votes. |
+| `response_time_ms` | `REAL` | `NULL`, `CHECK(response_time_ms IS NULL OR response_time_ms >= 0.0)` | `NULL` | Turnaround time from window opening to vote receipt. |
+| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of vote submission. |
+
+> **First Press Locks Constraint**: `UNIQUE(round_id, student_id)` ensures that a student can only submit a single vote per round, rejecting duplicates with `409 Conflict`.
+
+---
+
 ### Table: `schema_migrations`
 Internal schema migration tracker for automated migrations.
 
@@ -315,6 +419,11 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | `idx_quiz_gen_logs_user` | `quiz_generation_logs` | `(user_id)` | Fast filtering of generation telemetry by teacher user ID. |
 | `idx_quiz_gen_logs_topic` | `quiz_generation_logs` | `(topic, subconcept)` | Fast aggregation and filtering of generation latency and retry counts by topic. |
 | `idx_quiz_gen_logs_created` | `quiz_generation_logs` | `(created_at)` | Fast chronological sorting and time-window analytics. |
+| `idx_quiz_sessions_status` | `quiz_sessions` | `(status)` | Fast filtering and lookup of active/lobby matches. |
+| `idx_quiz_rounds_session` | `quiz_session_rounds` | `(session_id, round_index)` | Fast ordered retrieval of question rounds within a quiz match. |
+| `idx_quiz_votes_round` | `quiz_session_votes` | `(round_id)` | Fast aggregation of student votes during round closure and reveal. |
+| `idx_quiz_votes_student` | `quiz_session_votes` | `(student_id)` | Fast lookup of student participation and longitudinal performance. |
+| `idx_quiz_votes_analytics` | `quiz_session_votes` | `(is_correct, misconception)` | High-speed indexing for longitudinal diagnostic error reporting. |
 
 ---
 
@@ -356,6 +465,7 @@ Schema migrations are applied automatically at application startup in sequential
 * **[`007_add_devices.sql`](../backend/migrations/007_add_devices.sql)**: Creates `devices` table and lookup index `idx_devices_assigned_user` for ESP32 clicker fleet pairing.
 * **[`008_add_quiz_questions.sql`](../backend/migrations/008_add_quiz_questions.sql)**: Creates `quiz_questions` table and composite indexes `idx_quiz_questions_topic` and `idx_quiz_questions_created` for persistent question bank storage.
 * **[`009_add_quiz_generation_logs.sql`](../backend/migrations/009_add_quiz_generation_logs.sql)**: Creates `quiz_generation_logs` table and lookup indexes `idx_quiz_gen_logs_user`, `idx_quiz_gen_logs_topic`, and `idx_quiz_gen_logs_created` for tracking SLM telemetry, latency, and rejection histories.
+* **[`010_add_quiz_sessions_and_votes.sql`](../backend/migrations/010_add_quiz_sessions_and_votes.sql)**: Creates `quiz_sessions`, `quiz_session_rounds`, and `quiz_session_votes` tables with strict unique constraint on `(round_id, student_id)` to enforce first-press locking and support longitudinal analytics.
 
 ## Next Steps
 

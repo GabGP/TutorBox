@@ -18,7 +18,7 @@ def test_migrations_applied_successfully():
         cursor = conn.cursor()
         cursor.execute("SELECT version FROM schema_migrations ORDER BY version")
         versions = {r[0] for r in cursor.fetchall()}
-        assert {1, 2, 3, 4, 5, 6, 7, 8, 9}.issubset(versions)
+        assert {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}.issubset(versions)
 
         # Verify columns added by migrations 002, 004, 005 exist on users
         cursor.execute("PRAGMA table_info(users)")
