@@ -2,9 +2,27 @@
 
 from typing import Any
 
+from quiz.contracts.models import VALID_OPTIONS
+
+_SCRATCHPAD_DESCRIPTION = (
+    "Mandatory reverse-engineering scratchpad. Briefly execute derivation steps "
+    "here in 2-4 lines: 1. Target Root. 2. Coefficients. 3. Equation. 4. Distractors."
+)
+
+_QUESTION_TEXT_DESCRIPTION = (
+    "Enunciado completo en español con la ecuación o problema a resolver. "
+    "NUNCA incluyas opciones A, B, C, D en este texto."
+)
+
+_OPTION_DESCRIPTION = (
+    "Valor numérico o resultado conciso únicamente (ej. '7', '-3', '5/2'). "
+    "NUNCA incluyas explicaciones, oraciones ni palabras como 'correcto'."
+)
+
 
 def build_quiz_response_format() -> dict[str, Any]:
     """Constructs OpenAI-compatible response_format dict for JSON schema constrained decoding."""
+    sorted_options = sorted(VALID_OPTIONS)
     distractor_item = {
         "type": "object",
         "properties": {
@@ -24,42 +42,30 @@ def build_quiz_response_format() -> dict[str, Any]:
                 "properties": {
                     "derivation_scratchpad": {
                         "type": "string",
-                        "description": (
-                            "Mandatory reverse-engineering scratchpad. Briefly execute derivation steps "
-                            "here in 2-4 lines: 1. Target Root. 2. Coefficients. 3. Equation. 4. Distractors."
-                        ),
+                        "description": _SCRATCHPAD_DESCRIPTION,
                     },
                     "topic": {"type": "string"},
                     "subconcept": {"type": "string"},
                     "question_text": {
                         "type": "string",
-                        "description": (
-                            "Enunciado completo en español con la ecuación o problema a resolver."
-                        ),
+                        "description": _QUESTION_TEXT_DESCRIPTION,
                     },
                     "options": {
                         "type": "object",
                         "properties": {
-                            "A": {"type": "string"},
-                            "B": {"type": "string"},
-                            "C": {"type": "string"},
-                            "D": {"type": "string"},
+                            key: {"type": "string", "description": _OPTION_DESCRIPTION}
+                            for key in sorted_options
                         },
-                        "required": ["A", "B", "C", "D"],
+                        "required": sorted_options,
                         "additionalProperties": False,
                     },
                     "correct_option": {
                         "type": "string",
-                        "enum": ["A", "B", "C", "D"],
+                        "enum": sorted_options,
                     },
                     "distractors": {
                         "type": "object",
-                        "properties": {
-                            "A": distractor_item,
-                            "B": distractor_item,
-                            "C": distractor_item,
-                            "D": distractor_item,
-                        },
+                        "properties": {key: distractor_item for key in sorted_options},
                         "additionalProperties": False,
                     },
                 },

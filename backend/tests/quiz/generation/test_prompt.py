@@ -189,3 +189,78 @@ def test_build_quiz_response_format_module_parity():
     )
 
     assert direct_build_quiz_response_format() == build_quiz_response_format()
+
+
+def test_system_prompt_one_step_embeds_one_step_protocol():
+    prompt = build_quiz_system_prompt("pre_algebra", "one_step_equations")
+    assert "ONE-STEP EQUATION PROTOCOL" in prompt
+    assert "x/a = c" in prompt
+    assert "FORBIDDEN" in prompt
+
+
+def test_system_prompt_pre_algebra_no_subconcept_backwards_compat():
+    prompt = build_quiz_system_prompt("pre_algebra")
+    assert "MANDATORY PRE-ALGEBRA REVERSE-ENGINEERING PROTOCOL" in prompt
+
+
+def test_system_prompt_arithmetic_with_subconcept_no_interference():
+    prompt = build_quiz_system_prompt("arithmetic", "order_of_operations")
+    assert "MANDATORY ARITHMETIC REVERSE-ENGINEERING PROTOCOL" in prompt
+    assert "ONE-STEP" not in prompt
+
+
+def test_system_prompt_contains_rule_10_option_value_constraint():
+    prompt = build_quiz_system_prompt()
+    assert "10." in prompt
+    assert "correcto" in prompt
+
+
+def test_system_prompt_contains_rule_11_question_text_purity():
+    prompt = build_quiz_system_prompt()
+    assert "11." in prompt
+    assert "NEVER append or list options A, B, C, D" in prompt
+
+
+def test_feedback_prompt_with_pedagogical_mismatch_includes_recovery():
+    base = "test prompt"
+    errors = [
+        "Pedagogical mismatch: subconcept 'one_step_equations' requires 1-step equation"
+    ]
+    feedback = build_feedback_prompt(base, errors)
+    assert "x + 5 = 12" in feedback
+    assert "3x = 15" in feedback
+    assert "x/3 = 5" in feedback
+    assert "NEVER write 2-step equations" in feedback
+
+
+def test_feedback_prompt_with_one_step_keyword_includes_recovery():
+    base = "test prompt"
+    errors = ["Validator rejected: expected 1-step equation"]
+    feedback = build_feedback_prompt(base, errors)
+    assert "STRUCTURAL FIX" in feedback
+    assert "x + 5 = 12" in feedback
+
+
+def test_feedback_prompt_without_structural_error_no_recovery():
+    base = "test prompt"
+    errors = ["Schema violation: missing field 'options'"]
+    feedback = build_feedback_prompt(base, errors)
+    assert "STRUCTURAL FIX" not in feedback
+    assert "x + 5 = 12" not in feedback
+
+
+def test_response_format_question_text_description_forbids_options():
+    fmt = build_quiz_response_format()
+    question_desc = fmt["json_schema"]["schema"]["properties"]["question_text"][
+        "description"
+    ]
+    assert "NUNCA incluyas opciones A, B, C, D" in question_desc
+
+
+def test_response_format_option_descriptions_require_concise_values():
+    fmt = build_quiz_response_format()
+    options_props = fmt["json_schema"]["schema"]["properties"]["options"]["properties"]
+    for key in ("A", "B", "C", "D"):
+        desc = options_props[key]["description"]
+        assert "Valor numérico o resultado conciso únicamente" in desc
+        assert "NUNCA incluyas explicaciones" in desc

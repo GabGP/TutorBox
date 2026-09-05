@@ -1,7 +1,10 @@
 """Prompt builders and constrained schema formats for SLM quiz question generation."""
 
 from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
-from quiz.generation.protocols import get_derivation_protocol
+from quiz.generation.protocols import (
+    get_derivation_protocol,
+    get_structural_recovery_instruction,
+)
 from quiz.generation.response_format import build_quiz_response_format
 
 __all__ = [
@@ -12,9 +15,12 @@ __all__ = [
 ]
 
 
-def build_quiz_system_prompt(topic: str | None = None) -> str:
+def build_quiz_system_prompt(
+    topic: str | None = None,
+    subconcept: str | None = None,
+) -> str:
     """Returns the strict system prompt for local SLM question generation."""
-    protocol_text = get_derivation_protocol(topic)
+    protocol_text = get_derivation_protocol(topic, subconcept)
     return (
         "You are an expert pedagogical math quiz generator for TutorBox (primary school education).\n"
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
@@ -34,7 +40,9 @@ def build_quiz_system_prompt(topic: str | None = None) -> str:
         "6. ANTI-CONTRADICTION RULE: NEVER state a calculated number in an explanation that contradicts the corresponding option value (e.g., never say 'obtendrías 24' if the option is '0').\n"
         "7. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
         "8. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients.\n"
-        "9. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs."
+        "9. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs.\n"
+        "10. Each value in 'options' must be a concise numerical or algebraic result (e.g. '7', '-3'). NEVER put explanations, sentences, or words like 'correcto' inside options.\n"
+        "11. 'question_text' must contain ONLY the question and equation. NEVER append or list options A, B, C, D inside 'question_text'."
     )
 
 
@@ -71,6 +79,8 @@ def build_quiz_user_prompt(
 def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
     """Appends validation errors to previous prompt for rejection cycle recovery."""
     error_list = "\n".join(f"- {error_msg}" for error_msg in errors)
+    structural_fix = get_structural_recovery_instruction(errors)
+
     return (
         f"{original_prompt}\n\n"
         "ATTENTION: Your previous response was rejected due to the following errors:\n"
@@ -78,7 +88,7 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         "CORRECTION INSTRUCTIONS:\n"
         "1. If an option value contradicts its explanation calculation, ensure the option string matches the exact number in the explanation.\n"
         "2. Ensure 'question_text' explicitly includes the full mathematical equation or problem statement.\n"
-        "3. Fix all listed errors and output the valid JSON object strictly.\n\n"
+        f"3. Fix all listed errors and output the valid JSON object strictly.{structural_fix}\n\n"
         "CRITICAL REVISION RULE:\n"
         "If you generate a new problem or equation, recalculate its solution from scratch using backward formulation.\n"
         "DO NOT reuse numbers or computed truth values from the previous rejected attempt.\n"
