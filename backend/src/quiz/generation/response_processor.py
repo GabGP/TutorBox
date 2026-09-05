@@ -39,6 +39,15 @@ def resolve_question_id(parsed_json: dict[str, Any], question_id: str | None) ->
     return f"q_gen_{uuid.uuid4().hex[:12]}"
 
 
+def extract_scratchpad(parsed_json: dict[str, Any]) -> str | None:
+    """Extracts and removes ephemeral derivation scratchpad from candidate payload."""
+    scratchpad = parsed_json.pop("derivation_scratchpad", None)
+    if scratchpad is not None:
+        cleaned = str(scratchpad).strip()
+        return cleaned if cleaned else None
+    return None
+
+
 def process_generated_response(
     parsed_json: dict[str, Any],
     topic: str,
@@ -58,6 +67,7 @@ def process_generated_response(
         4. Distractor Consistency: Verifies numerical alignment between explanations and options.
         5. Deduplication Gate: Rejects candidate questions matching existing question bank items.
     """
+    extract_scratchpad(parsed_json)
     parsed_json = sanitize_quiz_dict(parsed_json)
     parsed_json["id"] = resolve_question_id(parsed_json, question_id)
 

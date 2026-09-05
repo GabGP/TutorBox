@@ -18,11 +18,16 @@ class GenerationState:
     start_time: float = field(default_factory=time.perf_counter)
     attempt: int = 1
     accumulated_errors: list[str] = field(default_factory=list)
+    last_scratchpad: str | None = None
 
     @property
     def duration_ms(self) -> float:
         """Returns elapsed wall-clock milliseconds rounded to 2 decimal places."""
         return round((time.perf_counter() - self.start_time) * 1000.0, 2)
+
+    def record_scratchpad(self, scratchpad: str | None) -> None:
+        """Records the latest in-schema scratchpad emitted by the model."""
+        self.last_scratchpad = scratchpad
 
     def record_rejection(self, errors: list[str], next_prompt: str) -> None:
         """Appends new rejection errors, updates the prompt, and advances attempt."""
@@ -37,6 +42,7 @@ class GenerationState:
             attempts=self.attempt,
             duration_ms=self.duration_ms,
             rejection_history=list(self.accumulated_errors),
+            scratchpad=self.last_scratchpad,
         )
 
     def build_exhaustion_error(self) -> GenerationError:

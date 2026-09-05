@@ -149,9 +149,26 @@ def test_generator_handles_legacy_2_arg_llm_client():
     payload = valid_question_dict()
 
     class LegacyClient(LLMClient):
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
+        def generate(  # type: ignore[override]
+            self, system_prompt: str, user_prompt: str
+        ) -> str:
             return json.dumps(payload)
 
     generator = QuizQuestionGenerator(LegacyClient())
     question = generator.generate("arithmetic")
     assert question.id == "q_test_1"
+
+
+def test_generator_with_derivation_scratchpad():
+    payload = valid_question_dict()
+    payload["derivation_scratchpad"] = (
+        "1. Root x=17. 2. 5 + 3 * 4. 3. Distractors: 32, 20, 60."
+    )
+    client = MockLLMClient([json.dumps(payload)])
+    generator = QuizQuestionGenerator(client)
+
+    result = generator.generate("arithmetic")
+    assert result.id == "q_test_1"
+    assert result.metadata.scratchpad == (
+        "1. Root x=17. 2. 5 + 3 * 4. 3. Distractors: 32, 20, 60."
+    )

@@ -14,6 +14,7 @@ def test_generation_state_initialization():
     assert state.max_retries == 3
     assert state.accumulated_errors == []
     assert state.duration_ms >= 0.0
+    assert state.last_scratchpad is None
 
 
 def test_generation_state_record_rejection():
@@ -37,11 +38,13 @@ def test_generation_state_build_metadata():
         max_retries=3,
     )
     state.record_rejection(["Error A"], "new feedback prompt")
+    state.record_scratchpad("1. Root: x=4. 2. Coeffs: 2, 4. 3. Eq: 2x+4=12.")
     metadata = state.build_metadata()
     assert metadata.model_name == "test-slm"
     assert metadata.attempts == 2
     assert metadata.rejection_history == ["Error A"]
     assert metadata.duration_ms >= 0.0
+    assert metadata.scratchpad == "1. Root: x=4. 2. Coeffs: 2, 4. 3. Eq: 2x+4=12."
 
 
 def test_generation_state_build_exhaustion_error():

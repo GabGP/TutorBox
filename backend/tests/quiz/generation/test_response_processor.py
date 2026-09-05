@@ -1,6 +1,7 @@
 from quiz.contracts.models import QuizQuestion
 from quiz.generation.response_processor import (
     extract_json_dict,
+    extract_scratchpad,
     process_generated_response,
     resolve_question_id,
 )
@@ -83,3 +84,35 @@ def test_resolve_question_id():
     assert resolve_question_id({}, "explicit_id") == "explicit_id"
     fallback = resolve_question_id({"id": "gen_sample_01"}, None)
     assert fallback.startswith("q_gen_")
+
+
+def test_extract_scratchpad_present():
+    payload = {"derivation_scratchpad": "  Step 1: Root x=5  ", "id": "q1"}
+    scratchpad = extract_scratchpad(payload)
+    assert scratchpad == "Step 1: Root x=5"
+    assert "derivation_scratchpad" not in payload
+
+
+def test_extract_scratchpad_absent_or_empty():
+    assert extract_scratchpad({"id": "q1"}) is None
+    assert extract_scratchpad({"derivation_scratchpad": "   "}) is None
+
+
+def test_process_generated_response_with_scratchpad():
+    data = sample_raw_quiz_dict()
+    data["derivation_scratchpad"] = (
+        "1. Root x=14. 2. Coeffs 9. 3. Eq: 9+x=23. 4. Distractors: B=32, C=-14, D=9."
+    )
+    question, errors = process_generated_response(
+        parsed_json=data,
+        topic="pre_algebra",
+        subconcept="one_step_equations",
+        question_id=None,
+        math_validator=SymPyMathValidator(),
+        taxonomy_validator=TaxonomyValidator(),
+        dedup_validator=DeduplicationValidator(),
+        distractor_validator=DistractorConsistencyValidator(),
+    )
+    assert errors == []
+    assert isinstance(question, QuizQuestion)
+    assert "derivation_scratchpad" not in data

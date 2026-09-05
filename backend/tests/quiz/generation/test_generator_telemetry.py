@@ -1,6 +1,7 @@
 """Unit tests for QuizQuestionGenerator telemetry, duration, attempts, and error tracking."""
 
 import json
+from typing import Any
 
 import pytest
 
@@ -46,6 +47,7 @@ def test_generator_one_shot_telemetry():
     assert result.metadata.attempts == 1
     assert result.metadata.duration_ms >= 0.0
     assert result.metadata.rejection_history == []
+    assert result.metadata.scratchpad is None
 
     # Verify tuple unpacking and attribute delegation
     question, metadata = result
@@ -54,6 +56,23 @@ def test_generator_one_shot_telemetry():
     assert result.id == "q_tel_1"
     assert result[0].id == "q_tel_1"
     assert result[1].attempts == 1
+
+
+def test_generator_one_shot_captures_scratchpad_telemetry():
+    """Verifies that an in-schema scratchpad is extracted and attached to telemetry metadata."""
+    payload = _valid_question_dict()
+    payload["derivation_scratchpad"] = (
+        "1. Target Value: 17. 2. Operation: 5 + 3 * 4. 3. Distractors: 32, 20, 60."
+    )
+    client = MockLLMClient([json.dumps(payload)], model="qwen2.5-coder-1.5b")
+    generator = QuizQuestionGenerator(client)
+
+    result = generator.generate("arithmetic", "order_of_operations")
+    assert result.question.id == "q_tel_1"
+    assert result.metadata.scratchpad == (
+        "1. Target Value: 17. 2. Operation: 5 + 3 * 4. 3. Distractors: 32, 20, 60."
+    )
+    assert not hasattr(result.question, "derivation_scratchpad")
 
 
 def test_generator_retry_telemetry_captures_rejections():
@@ -68,7 +87,12 @@ def test_generator_retry_telemetry_captures_rejections():
             self._index = 0
             self.model_name: str = model_name
 
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
+        def generate(
+            self,
+            system_prompt: str,
+            user_prompt: str,
+            response_format: dict[str, Any] | None = None,
+        ) -> str:
             resp = self._responses[self._index]
             self._index = min(self._index + 1, len(self._responses) - 1)
             return resp
@@ -91,7 +115,12 @@ def test_generator_exhaustion_telemetry_in_generation_error():
     """Verifies that GenerationError contains attempts, duration, and error history."""
 
     class UnnamedLLM(LLMClient):
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
+        def generate(
+            self,
+            system_prompt: str,
+            user_prompt: str,
+            response_format: dict[str, Any] | None = None,
+        ) -> str:
             return "invalid json output"
 
     client = UnnamedLLM()
@@ -111,7 +140,12 @@ def test_generator_llm_exception_telemetry():
     """Verifies that immediate SLM request exceptions attach attempt and timing metadata."""
 
     class CrashingLLM(MockLLMClient):
-        def generate(self, system_prompt: str, user_prompt: str) -> str:
+        def generate(
+            self,
+            system_prompt: str,
+            user_prompt: str,
+            response_format: dict[str, Any] | None = None,
+        ) -> str:
             raise ConnectionRefusedError("LocalSLM offline")
 
     client = CrashingLLM(model="local-qwen")

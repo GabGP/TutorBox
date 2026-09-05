@@ -8,12 +8,13 @@ from llm import LLMClient
 from quiz.generation.generation_state import GenerationState
 from quiz.generation.prompt import (
     build_feedback_prompt,
-    build_quiz_response_format,
     build_quiz_system_prompt,
     build_quiz_user_prompt,
 )
+from quiz.generation.response_format import build_quiz_response_format
 from quiz.generation.response_processor import (
     extract_json_dict,
+    extract_scratchpad,
     process_generated_response,
 )
 from quiz.generation.shuffler import shuffle_quiz_question
@@ -53,9 +54,10 @@ class QuizQuestionGenerator:
 
     def _resolve_model_name(self) -> str:
         """Extracts the model identifier from the underlying LLM client."""
+        client = self.llm_client
         return (
-            getattr(self.llm_client, "model", None)
-            or getattr(self.llm_client, "model_name", None)
+            getattr(client, "model", None)
+            or getattr(client, "model_name", None)
             or "unknown"
         )
 
@@ -79,9 +81,7 @@ class QuizQuestionGenerator:
         question_id: str | None = None,
     ) -> GenerationResult:
         """Generates a validated diagnostic quiz question using a feedback-driven retry loop."""
-        effective_max_retries = (
-            max_retries if max_retries is not None else get_quiz_max_retries()
-        )
+        retries = max_retries if max_retries is not None else get_quiz_max_retries()
         system_prompt = build_quiz_system_prompt(topic)
         base_user_prompt = build_quiz_user_prompt(topic, subconcept)
         response_format = build_quiz_response_format()
@@ -90,7 +90,7 @@ class QuizQuestionGenerator:
             model_name=self._resolve_model_name(),
             base_user_prompt=base_user_prompt,
             current_user_prompt=base_user_prompt,
-            max_retries=effective_max_retries,
+            max_retries=retries,
         )
 
         while state.attempt <= state.max_retries:
@@ -114,6 +114,8 @@ class QuizQuestionGenerator:
                 )
                 state.record_rejection([err_msg], next_prompt)
                 continue
+
+            state.record_scratchpad(extract_scratchpad(parsed_json))
 
             # 3. Execute 5-stage validation (Schema, Taxonomy, SymPy Math, Distractor, Deduplication)
             validated_question, stage_errors = process_generated_response(

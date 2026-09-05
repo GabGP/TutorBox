@@ -132,6 +132,10 @@ class GenerationMetadata(BaseModel):
         default_factory=list,
         description="Chronological errors captured during intermediate rejection stages",
     )
+    scratchpad: str | None = Field(
+        default=None,
+        description="Ephemeral in-schema chain-of-thought derivation scratchpad",
+    )
 
 
 class GenerateQuestionResponse(BaseModel):
