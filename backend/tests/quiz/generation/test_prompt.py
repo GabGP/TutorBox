@@ -144,6 +144,12 @@ def test_build_quiz_response_format():
     assert "json_schema" in fmt
     schema = fmt["json_schema"]["schema"]
     assert schema["type"] == "object"
+    assert "derivation_scratchpad" in schema["properties"]
+    assert next(iter(schema["properties"].keys())) == "derivation_scratchpad"
+    assert (
+        "Mandatory reverse-engineering scratchpad"
+        in schema["properties"]["derivation_scratchpad"]["description"]
+    )
     assert "topic" in schema["properties"]
     assert "subconcept" in schema["properties"]
     assert "question_text" in schema["properties"]
@@ -160,6 +166,7 @@ def test_build_quiz_response_format():
         "D",
     }
     assert schema["required"] == [
+        "derivation_scratchpad",
         "topic",
         "subconcept",
         "question_text",
@@ -168,3 +175,11 @@ def test_build_quiz_response_format():
         "distractors",
     ]
     assert schema["additionalProperties"] is False
+
+
+def test_build_quiz_response_format_module_parity():
+    from quiz.generation.response_format import (
+        build_quiz_response_format as direct_build_quiz_response_format,
+    )
+
+    assert direct_build_quiz_response_format() == build_quiz_response_format()

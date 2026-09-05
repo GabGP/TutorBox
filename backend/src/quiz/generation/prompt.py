@@ -1,9 +1,15 @@
 """Prompt builders and constrained schema formats for SLM quiz question generation."""
 
-from typing import Any
-
 from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
 from quiz.generation.protocols import get_derivation_protocol
+from quiz.generation.response_format import build_quiz_response_format
+
+__all__ = [
+    "build_feedback_prompt",
+    "build_quiz_response_format",
+    "build_quiz_system_prompt",
+    "build_quiz_user_prompt",
+]
 
 
 def build_quiz_system_prompt(topic: str | None = None) -> str:
@@ -73,70 +79,3 @@ def build_feedback_prompt(original_prompt: str, errors: list[str]) -> str:
         "If you generate a new problem or equation, recalculate its solution from scratch using backward formulation.\n"
         "DO NOT reuse numbers or computed truth values from the previous rejected attempt."
     )
-
-
-def build_quiz_response_format() -> dict[str, Any]:
-    """Constructs OpenAI-compatible response_format dict for JSON schema constrained decoding."""
-    distractor_item = {
-        "type": "object",
-        "properties": {
-            "misconception": {"type": "string"},
-            "explanation": {"type": "string"},
-        },
-        "required": ["misconception", "explanation"],
-        "additionalProperties": False,
-    }
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "quiz_question",
-            "strict": True,
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "topic": {"type": "string"},
-                    "subconcept": {"type": "string"},
-                    "question_text": {
-                        "type": "string",
-                        "description": (
-                            "Enunciado completo en español con la ecuación o problema a resolver."
-                        ),
-                    },
-                    "options": {
-                        "type": "object",
-                        "properties": {
-                            "A": {"type": "string"},
-                            "B": {"type": "string"},
-                            "C": {"type": "string"},
-                            "D": {"type": "string"},
-                        },
-                        "required": ["A", "B", "C", "D"],
-                        "additionalProperties": False,
-                    },
-                    "correct_option": {
-                        "type": "string",
-                        "enum": ["A", "B", "C", "D"],
-                    },
-                    "distractors": {
-                        "type": "object",
-                        "properties": {
-                            "A": distractor_item,
-                            "B": distractor_item,
-                            "C": distractor_item,
-                            "D": distractor_item,
-                        },
-                        "additionalProperties": False,
-                    },
-                },
-                "required": [
-                    "topic",
-                    "subconcept",
-                    "question_text",
-                    "options",
-                    "correct_option",
-                    "distractors",
-                ],
-                "additionalProperties": False,
-            },
-        },
-    }
