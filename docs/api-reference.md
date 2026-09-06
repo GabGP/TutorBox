@@ -1081,13 +1081,12 @@ Cast an individual student vote for the active round. Enforces first-press locki
   * `200 OK`:
     ```json
     {
-      "vote_id": "v_uuid_001",
+      "vote_id": "v_a1b2c3d4e5f6",
       "session_id": "s_a1b2c3d4e5f6",
-      "round_id": "r_001_uuid",
+      "round_id": "s_a1b2c3d4e5f6_r0",
       "student_id": 4,
       "selected_option": "B",
-      "is_correct": false,
-      "created_at": "2026-09-06T12:00:00Z"
+      "recorded_at": "2026-09-06 12:00:00"
     }
     ```
   * `400 Bad Request`: Invalid option (not A, B, C, or D).
@@ -1116,24 +1115,23 @@ Reveal the round outcome, aggregate votes, and compute the pedagogical distracto
   * `200 OK`:
     ```json
     {
-      "round_id": "r_001_uuid",
+      "round_id": "s_a1b2c3d4e5f6_r0",
+      "status": "revealed",
       "tally": {
-        "round_id": "r_001_uuid",
+        "counts": {"A": 5, "B": 12, "C": 2, "D": 1},
         "total_votes": 20,
-        "option_counts": {"A": 5, "B": 12, "C": 2, "D": 1},
         "percentages": {"A": 25.0, "B": 60.0, "C": 10.0, "D": 5.0},
-        "top_distractor": "B",
-        "top_distractor_count": 12,
-        "is_distractor_tie": false
+        "correct_option": "A",
+        "correct_count": 5,
+        "correct_percentage": 25.0
       },
       "decision": {
-        "round_id": "r_001_uuid",
         "should_speak": true,
-        "triggered_option": "B",
+        "reason": "dominant_distractor_exceeded_threshold",
+        "dominant_distractor": "B",
+        "dominant_percentage": 60.0,
         "misconception": "added_denominators",
-        "explanation": "Sumaste los denominadores en vez de mantener el común denominador.",
-        "trigger_percentage": 60.0,
-        "reason": "distractor_majority"
+        "explanation": "Sumaste los denominadores en vez de mantener el común denominador."
       }
     }
     ```
@@ -1166,7 +1164,6 @@ Retrieve summary performance statistics and accuracy percentage for a quiz match
       "status": "completed",
       "total_rounds": 3,
       "total_votes_cast": 58,
-      "correct_votes": 41,
       "average_accuracy_percentage": 70.69
     }
     ```

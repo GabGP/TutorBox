@@ -14,27 +14,25 @@
 This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
 ## Table of Contents
-- [TutorBox Engineering Roadmap (10-Week Plan)](#tutorbox-engineering-roadmap-10-week-plan)
-  - [Table of Contents](#table-of-contents)
-    - [1. Operating Rules \& Team Rotation](#1-operating-rules--team-rotation)
-  - [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
-  - [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
-  - [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
-    - [✅ Week 1 — Appliance Baseline \& Storage Infrastructure (Completed)](#-week-1--appliance-baseline--storage-infrastructure-completed)
-    - [⏳ Week 2 — Quiz Contract \& Diagnostic Distractors (Pilot: A · Copilot: B)](#-week-2--quiz-contract--diagnostic-distractors-pilot-a--copilot-b)
-    - [⏳ Week 3 — Session Engine \& Browser Voting (Pilot: B · Copilot: A)](#-week-3--session-engine--browser-voting-pilot-b--copilot-a)
-    - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#-week-4--full-quiz-mode-with-offline-spanish-voice-pilot-a--copilot-b)
-    - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#-week-5--socratic-tutor-mode-pilot-b--copilot-a)
-    - [⏳ Week 6 — Offline Primary Games \& Log Synchronization (Pilot: A · Copilot: B)](#-week-6--offline-primary-games--log-synchronization-pilot-a--copilot-b)
-    - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#-week-7--esp32-physical-clickers-pilot-b--copilot-a)
-    - [⏳ Week 8 — Unified Analytics \& Weekly Teacher Report (Pilot: A · Copilot: B)](#-week-8--unified-analytics--weekly-teacher-report-pilot-a--copilot-b)
-    - [⏳ Week 9 — Concurrency \& Full System Stress Testing (Pilot: B · Copilot: A)](#-week-9--concurrency--full-system-stress-testing-pilot-b--copilot-a)
-    - [⏳ Week 10 — General Rehearsal, Documentation \& Release v1.0 (Both as Co-Leads)](#-week-10--general-rehearsal-documentation--release-v10-both-as-co-leads)
-  - [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
+- [1. Operating Rules & Team Rotation](#1-operating-rules--team-rotation)
+- [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
+- [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
+- [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
+  - [Week 1 — Appliance Baseline & Storage Infrastructure](#week-1)
+  - [Week 2 — Quiz Contract & Diagnostic Distractors](#week-2)
+  - [Week 3 — Session Engine & Browser Voting](#week-3)
+  - [Week 4 — Full Quiz Mode with Offline Spanish Voice](#week-4)
+  - [Week 5 — Socratic Tutor Mode](#week-5)
+  - [Week 6 — Offline Primary Games & Log Synchronization](#week-6)
+  - [Week 7 — ESP32 Physical Clickers](#week-7)
+  - [Week 8 — Unified Analytics & Weekly Teacher Report](#week-8)
+  - [Week 9 — Concurrency & Full System Stress Testing](#week-9)
+  - [Week 10 — General Rehearsal, Documentation & Release v1.0](#week-10)
+- [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
 
 ---
 
-### <a id="1-operating-rules--team-rotation"></a>1. Operating Rules & Team Rotation
+## <a id="1-operating-rules--team-rotation"></a>1. Operating Rules & Team Rotation
 
 * **The Rotation Rule (Weeks 2–10)**: Each week has a **Pilot** (owner of architectural decisions and design) and a **Copilot** (implements substantial components of the same subsystem and code-reviews all of the Pilot's pull requests).
 * **The Tuesday Presentation Rule**: The **Copilot** defends the weekly milestone to the evaluation jury. Because the engineer who did not lead the design must present, this guarantees deep cross-system understanding across both team members.
@@ -54,8 +52,8 @@ gantt
     Week 1 - Baseline, Auth & Devices (A & B) :done, w1, 2026-08-23, 2026-08-30
 
     section Classroom Quiz Subsystem
-    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :active, w2, 2026-08-30, 2026-09-06
-    Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :w3, 2026-09-06, 2026-09-13
+    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :w2, 2026-08-30, 2026-09-06
+    Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :active, w3, 2026-09-06, 2026-09-13
     Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):w4, 2026-09-13, 2026-09-20
 
     section Socratic & Games Subsystems
@@ -124,14 +122,14 @@ gantt
 
 ### <a id="week-3"></a>⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
 * **Focus**: Core quiz turn state machine, browser-based voting, and deterministic >51% distractor rule evaluation.
-* **Student B (Pilot)**:
+* **Student B (Pilot - In Progress)**:
   * Device-agnostic `VoteTransport` abstract interface.
   * Lightweight mobile web voting client (A–D buttons) for student smartphones/tablets.
   * Teacher management web app to select topics and launch quiz sessions.
-* **Student A (Copilot)**:
-  * Real-time session engine (voting window timer, vote aggregation, distribution calculation).
-  * Implementation of the **>51% Rule** with documented edge cases (ties, partial turnout).
-  * Database persistence of each student vote for longitudinal analytics.
+* **Student A (Copilot - Completed)**:
+  * Real-time session engine (voting window timer, vote aggregation, distribution calculation) with 589 green tests and 100% statement coverage.
+  * Formal validation of the **>51% Rule** across all 12 edge cases.
+  * Database persistence (`010_add_quiz_sessions_and_votes.sql`) with first-press locks and 8 versioned REST endpoints (`/api/v1/session`).
 * **Tuesday Defense (Presented by Copilot A)**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
   1. Data flow of a single vote from client touch to server aggregation.
   2. Rationale behind the 51% threshold and edge-case behavior.

@@ -16,28 +16,21 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [TutorBox Backend](#tutorbox-backend)
-  - [Table of Contents](#table-of-contents)
-  - [1. Components \& Architecture](#1-components--architecture)
-  - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
-  - [3. Environment Setup](#3-environment-setup)
-    - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
-      - [Windows (PowerShell)](#windows-powershell)
-      - [Linux](#linux)
-      - [Conda (Windows or Linux)](#conda-windows-or-linux)
-    - [Environment Variables \& Configuration (`.env`)](#environment-variables--configuration-env)
-  - [4. Installation \& Workflow](#4-installation--workflow)
-    - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
-      - [Running in Development:](#running-in-development)
-    - [B. Production Mode](#b-production-mode)
-      - [Running in Production:](#running-in-production)
-  - [5. Testing \& Quality Assurance](#5-testing--quality-assurance)
-    - [Running the Test Suite:](#running-the-test-suite)
-    - [Running Parallel Tests (`pytest-xdist`):](#running-parallel-tests-pytest-xdist)
-    - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
-    - [Code Formatting \& Static Analysis:](#code-formatting--static-analysis)
-  - [6. Project Structure](#6-project-structure)
-  - [Next Steps](#next-steps)
+- [1. Components & Architecture](#1-components--architecture)
+- [2. API Contracts & Specifications](#2-api-contracts--specifications)
+- [3. Environment Setup](#3-environment-setup)
+  - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
+  - [Environment Variables & Configuration (`.env`)](#environment-variables--configuration-env)
+- [4. Installation & Workflow](#4-installation--workflow)
+  - [A. Development Mode (Local Coding & Testing)](#a-development-mode-local-coding--testing)
+  - [B. Production Mode](#b-production-mode)
+- [5. Testing & Quality Assurance](#5-testing--quality-assurance)
+  - [Running the Test Suite](#running-the-test-suite)
+  - [Running Parallel Tests (`pytest-xdist`)](#running-parallel-tests-pytest-xdist)
+  - [Running Scoped Subpackage Tests](#running-scoped-subpackage-tests)
+  - [Code Formatting & Static Analysis](#code-formatting--static-analysis)
+- [6. Project Structure](#6-project-structure)
+- [Next Steps](#next-steps)
 
 ---
 
@@ -62,12 +55,18 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Persistent `quiz_questions` repository with diagnostic distractors and SymPy mathematical verification flags.
   - Append-only `quiz_generation_logs` telemetry repository tracking SLM generation attempts, latency profiling, and rejection trails.
 
+- **Classroom Quiz Engine & Real-Time Session Engine (Weeks 2 & 3)**:
+  - Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, and curated 66-question seed bank.
+  - Multi-stage prompt rejection/regeneration pipeline with anti-guessing shuffler and LaTeX math delimiter normalization.
+  - Universal SymPy AST parsing, mathematical truth validation, and non-equality proofs.
+  - Real-time session engine with monotonic countdown timer, vote aggregation, first-press lock enforcement (`UNIQUE(round_id, student_id)`), and formal >51% Rule distractor evaluator.
+
 The following items are planned deliverables across upcoming milestone phases:
 
-- **Classroom Quiz Engine (Weeks 2–4)**: JSON schema with diagnostic distractors, deterministic SymPy validator, session engine with >51% threshold, and Jetson offline Spanish & K'iche' voice feedback.
+- **Offline Voice Feedback (Week 4)**: Jetson offline neural TTS (Piper-TTS / Sherpa-ONNX) in Spanish and K'iche' for distractor remediation.
 - **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
-- **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` integration.
+- **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
@@ -194,7 +193,7 @@ ruff format --check .
 ```
 
 Auto-format all code:
-```bash
+```bashs
 ruff format .
 ```
 
@@ -210,13 +209,14 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, quiz, staff administration, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, health, quiz, session, staff, users) mounted under /api/v1
 │   ├── config/        # Centralized typed domain settings engine and .env environment loader
-│   ├── db/            # SQLite connection manager, runtime pragmas, quiz & telemetry repositories, and audit logger
+│   ├── db/            # SQLite connection, quiz & session repositories, vote persistence, and audit logger
 │   ├── llm/           # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline with anti-guessing shuffler, seed dataset, and SymPy validator
-│   └── security/      # bcrypt PIN hashing, session tokens, and rate limiters
+│   ├── security/      # bcrypt PIN hashing, session tokens, and rate limiters
+│   └── session/       # Quiz session engine, >51% rule evaluator, countdown timer, vote processor
 ├── tests/             # Pytest test suite mirroring src/ with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
 └── README.md          # Backend developer documentation and local setup guide

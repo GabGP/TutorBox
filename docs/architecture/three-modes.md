@@ -52,7 +52,7 @@ graph TD
 {
   "id": "q_math_001",
   "topic": "pre_algebra",
-  "subconcept": "inverse_operations",
+  "subconcept": "two_step_equations",
   "question_text": "¿Cuál es el valor de x en la ecuación 2x + 4 = 12?",
   "options": {
     "A": "4",
