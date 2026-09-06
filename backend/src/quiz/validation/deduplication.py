@@ -1,9 +1,6 @@
 """Deterministic deduplication validator rejecting duplicate quiz questions against seed bank."""
 
-import re
-import unicodedata
 from collections.abc import Sequence
-from difflib import SequenceMatcher
 
 from pydantic import BaseModel, Field
 
@@ -11,9 +8,11 @@ from math_engine.equation_parser import parse_equation_components
 from math_engine.parser import are_values_equivalent
 from quiz.contracts.models import QuizQuestionBase
 from quiz.seed_data import SEED_QUESTIONS
-
-_REPL = {"÷": "/", "×": "*", "·": "*"}
-_LATEX_REPL = {r"\cdot": "*", r"\times": "*", r"\div": "/"}
+from quiz.validation.similarity_helpers import (
+    calculate_text_similarity,
+    extract_math_core,
+    normalize_question_text,
+)
 
 
 class DeduplicationValidationResult(BaseModel):
@@ -23,42 +22,6 @@ class DeduplicationValidationResult(BaseModel):
     errors: list[str] = Field(default_factory=list)
     similarity_score: float = 0.0
     matched_question_text: str | None = None
-
-
-def normalize_question_text(text: str) -> str:
-    """Normalizes question text for robust deduplication comparison."""
-    norm = "".join(
-        c
-        for c in unicodedata.normalize("NFKD", text.lower())
-        if not unicodedata.combining(c)
-    )
-    for p in ("¿", "?", "¡", "!", ":", ";", ",", "."):
-        norm = norm.replace(p, " ")
-    for src, tgt in {**_REPL, **_LATEX_REPL}.items():
-        norm = norm.replace(src, tgt)
-    return re.sub(r"\s+", " ", norm).strip()
-
-
-def extract_math_core(text: str) -> str | None:
-    """Extracts mathematical equation or arithmetic core without framing."""
-    norm = normalize_question_text(text)
-    if "=" in norm and (
-        m := re.search(r"([0-9a-z\s\+\-\*/\(\)\^]+=[0-9a-z\s\+\-\*/\(\)\^]+)", norm)
-    ):
-        return re.sub(r"\s+", "", m.group(1))
-    if arith := re.search(r"[\d\(\)][\d\s\+\-\*/\(\)\.\^%]+[\d\)]", norm):
-        return re.sub(r"\s+", "", arith.group(0))
-    return None
-
-
-def calculate_text_similarity(text_a: str, text_b: str) -> float:
-    """Computes similarity between two normalized strings."""
-    if text_a == text_b:
-        return 1.0
-    seq_ratio = SequenceMatcher(None, text_a, text_b).ratio()
-    tok_a, tok_b = set(text_a.split()), set(text_b.split())
-    jaccard = len(tok_a & tok_b) / len(tok_a | tok_b) if (tok_a | tok_b) else 0.0
-    return max(seq_ratio, jaccard)
 
 
 class DeduplicationValidator:
@@ -146,3 +109,12 @@ class DeduplicationValidator:
             similarity_score=highest_sim,
             matched_question_text=matched_text,
         )
+
+
+__all__ = [
+    "DeduplicationValidationResult",
+    "DeduplicationValidator",
+    "calculate_text_similarity",
+    "extract_math_core",
+    "normalize_question_text",
+]
