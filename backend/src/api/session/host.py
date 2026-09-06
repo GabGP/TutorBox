@@ -6,6 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from api.session.dependencies import get_session_and_current_round
 from api.session.schemas import (
     CreateSessionRequest,
     RoundRevealResponse,
@@ -13,8 +14,6 @@ from api.session.schemas import (
 )
 from api.session.state_builder import build_session_state
 from db.database import get_db
-from db.round_repository import get_round_by_index
-from db.session_repository import get_quiz_session
 from security import AuthContext, require_roles
 from session.engine import QuizSessionEngine
 from session.exceptions import (
@@ -26,23 +25,6 @@ from session.exceptions import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-def _get_session_and_current_round(conn, session_id: str):
-    """Retrieves session and its active round, raising 404 if missing."""
-    session = get_quiz_session(conn, session_id)
-    if session is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session '{session_id}' not found.",
-        )
-    current_round = get_round_by_index(conn, session_id, session.current_round_index)
-    if current_round is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Round not found.",
-        )
-    return session, current_round
 
 
 @router.post(
@@ -98,7 +80,7 @@ def close_round(
     """Closes the active round's voting window."""
     with get_db() as conn:
         engine = QuizSessionEngine(conn)
-        _, current_round = _get_session_and_current_round(conn, session_id)
+        _, current_round = get_session_and_current_round(conn, session_id)
         try:
             engine.close_round(session_id, current_round.id)
             conn.commit()
@@ -117,7 +99,7 @@ def reveal_round(
     """Reveals the round outcome, aggregates votes, and computes pedagogical decision."""
     with get_db() as conn:
         engine = QuizSessionEngine(conn)
-        _, current_round = _get_session_and_current_round(conn, session_id)
+        _, current_round = get_session_and_current_round(conn, session_id)
         try:
             tally, decision = engine.reveal_round(session_id, current_round.id)
             conn.commit()
