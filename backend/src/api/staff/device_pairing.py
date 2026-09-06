@@ -2,8 +2,12 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import (
+    AssignDeviceRequest,
+    AssignDeviceResponse,
+    DeviceMessageResponse,
+)
 from db.audit import record_audit
 from db.database import get_db
 from security import (
@@ -11,20 +15,8 @@ from security import (
     require_roles,
 )
 
-from .devices import DeviceMessageResponse
-
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-class AssignDeviceRequest(BaseModel):
-    user_id: int
-
-
-class AssignDeviceResponse(BaseModel):
-    device_id: str
-    assigned_user_id: int
-    assigned_username: str
 
 
 @router.post("/devices/{device_id}/assign", response_model=AssignDeviceResponse)

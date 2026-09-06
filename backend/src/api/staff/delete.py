@@ -4,8 +4,8 @@ import sqlite3
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import DeleteUserResponse
 from db.audit import record_audit
 from db.database import get_db
 from security import (
@@ -17,10 +17,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class DeleteUserResponse(BaseModel):
-    detail: str = "Account deleted."
 
 
 def _soft_delete_user(

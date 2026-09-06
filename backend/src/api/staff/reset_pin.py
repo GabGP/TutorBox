@@ -2,8 +2,8 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import ResetPinResponse
 from db.audit import record_audit
 from db.database import get_db
 from security import (
@@ -16,11 +16,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class ResetPinResponse(BaseModel):
-    username: str
-    temporary_pin: str
 
 
 @router.post(

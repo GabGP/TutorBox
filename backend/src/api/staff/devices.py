@@ -3,38 +3,23 @@ import sqlite3
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import (
+    DeviceItem,
+    DeviceListResponse,
+    DeviceMessageResponse,
+    RegisterDeviceRequest,
+)
 from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
-    DeviceIdField,
     require_roles,
 )
 
 logger = logging.getLogger(__name__)
 DEFAULT_DEVICE_LIST_LIMIT: int = 1000
 router = APIRouter()
-
-
-class DeviceItem(BaseModel):
-    device_id: str
-    assigned_user_id: int | None = None
-    assigned_username: str | None = None
-    created_at: str
-
-
-class DeviceListResponse(BaseModel):
-    devices: list[DeviceItem]
-
-
-class RegisterDeviceRequest(BaseModel):
-    device_id: DeviceIdField
-
-
-class DeviceMessageResponse(BaseModel):
-    detail: str
 
 
 @router.get("/devices", response_model=DeviceListResponse)

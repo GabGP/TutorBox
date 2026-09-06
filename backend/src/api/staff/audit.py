@@ -1,11 +1,11 @@
 """Staff audit logs read endpoint."""
 
 import logging
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 
+from api.staff.schemas import AuditLogsResponse
 from db.database import get_db
 from security import (
     AuthContext,
@@ -17,10 +17,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_AUDIT_LOG_LIMIT: int = 500
 
 router = APIRouter()
-
-
-class AuditLogsResponse(BaseModel):
-    logs: list[dict[str, Any]]
 
 
 @router.get(

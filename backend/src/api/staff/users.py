@@ -1,17 +1,14 @@
 import logging
 import sqlite3
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import CreateUserRequest, CreateUserResponse, UserListResponse
 from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
-    PinField,
-    RoleField,
-    UsernameField,
     hash_pin,
     require_roles,
 )
@@ -21,21 +18,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_USER_LIST_LIMIT: int = 1000
 
 router = APIRouter()
-
-
-class CreateUserRequest(BaseModel):
-    username: UsernameField
-    pin: PinField
-    role: RoleField = "student"
-
-
-class CreateUserResponse(BaseModel):
-    username: str
-    role: str
-
-
-class UserListResponse(BaseModel):
-    users: list[dict[str, Any]]
 
 
 @router.get("/users", response_model=UserListResponse)

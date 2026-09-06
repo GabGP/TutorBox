@@ -3,13 +3,12 @@ import sqlite3
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.staff.schemas import RecoverUserRequest, RecoverUserResponse
 from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
-    UsernameField,
     generate_temporary_pin,
     hash_pin,
     require_roles,
@@ -18,16 +17,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class RecoverUserRequest(BaseModel):
-    username: UsernameField
-
-
-class RecoverUserResponse(BaseModel):
-    username: str
-    temporary_pin: str
-    detail: str = "Account recovered. User must set a new PIN on next login."
 
 
 @router.post(
