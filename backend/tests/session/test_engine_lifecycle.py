@@ -6,6 +6,10 @@ import tempfile
 from typing import Any
 
 import pytest
+
+from db.migrations import apply_migrations
+from db.quiz import create_question
+from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (
     InvalidRoundStateError,
@@ -14,10 +18,6 @@ from session.exceptions import (
     SessionNotFoundError,
 )
 from session.models import RoundStatus, SessionStatus
-
-from db.migrations import apply_migrations
-from db.quiz import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 
 
 @pytest.fixture

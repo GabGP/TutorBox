@@ -3,6 +3,13 @@
 import sqlite3
 import time
 
+from db.quiz import get_question_by_id
+from db.round_repository import (
+    get_quiz_round,
+    get_round_by_index,
+    update_quiz_round_status,
+)
+from db.vote_repository import get_votes_for_round
 from session.aggregator import compute_round_tally
 from session.evaluator import evaluate_turn_decision
 from session.exceptions import (
@@ -16,14 +23,6 @@ from session.models import (
     TurnDecision,
 )
 from session.timer import RoundTimer
-
-from db.quiz import get_question_by_id
-from db.round_repository import (
-    get_quiz_round,
-    get_round_by_index,
-    update_quiz_round_status,
-)
-from db.vote_repository import get_votes_for_round
 
 
 def open_turn_round(

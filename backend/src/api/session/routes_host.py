@@ -5,13 +5,6 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from session.engine import QuizSessionEngine
-from session.exceptions import (
-    InvalidRoundStateError,
-    InvalidSessionStateError,
-    RoundNotFoundError,
-    SessionNotFoundError,
-)
 
 from api.session.routes_participant import _build_session_state
 from api.session.schema import (
@@ -23,6 +16,13 @@ from db.database import get_db
 from db.round_repository import get_round_by_index
 from db.session_repository import get_quiz_session
 from security import AuthContext, require_roles
+from session.engine import QuizSessionEngine
+from session.exceptions import (
+    InvalidRoundStateError,
+    InvalidSessionStateError,
+    RoundNotFoundError,
+    SessionNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -2,8 +2,6 @@
 
 import sqlite3
 
-from session.models import QuizSessionRecord, SessionStatus
-
 from db.round_repository import (
     create_quiz_round,
     get_quiz_round,
@@ -12,6 +10,7 @@ from db.round_repository import (
     update_quiz_round_status,
 )
 from db.session_mapper import row_to_quiz_session
+from session.models import QuizSessionRecord, SessionStatus
 
 __all__ = [
     "create_quiz_round",

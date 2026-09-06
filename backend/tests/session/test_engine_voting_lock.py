@@ -5,6 +5,10 @@ import sqlite3
 import tempfile
 
 import pytest
+
+from db.migrations import apply_migrations
+from db.quiz import create_question
+from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (
     InvalidOptionError,
@@ -12,10 +16,6 @@ from session.exceptions import (
     RoundNotFoundError,
     VoteAlreadyCastError,
 )
-
-from db.migrations import apply_migrations
-from db.quiz import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 
 
 @pytest.fixture

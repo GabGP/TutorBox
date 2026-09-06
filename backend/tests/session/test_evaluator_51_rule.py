@@ -1,9 +1,8 @@
 """Formal validation and edge-case testing of the deterministic >51% Rule."""
 
+from quiz.contracts.models import DistractorDetail
 from session.aggregator import compute_tally_from_counts
 from session.evaluator import evaluate_turn_decision
-
-from quiz.contracts.models import DistractorDetail
 
 MOCK_DISTRACTORS = {
     "B": DistractorDetail(

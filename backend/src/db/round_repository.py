@@ -2,9 +2,8 @@
 
 import sqlite3
 
-from session.models import QuizRoundRecord
-
 from db.session_mapper import row_to_quiz_round
+from session.models import QuizRoundRecord
 
 
 def create_quiz_round(

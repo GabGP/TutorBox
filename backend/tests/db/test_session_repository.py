@@ -1,7 +1,6 @@
 import sqlite3
 
 import pytest
-from session.models import RoundStatus, SessionStatus
 
 from db.session_repository import (
     create_quiz_round,
@@ -13,6 +12,7 @@ from db.session_repository import (
     update_quiz_round_status,
     update_quiz_session_status,
 )
+from session.models import RoundStatus, SessionStatus
 
 
 @pytest.fixture

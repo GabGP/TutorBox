@@ -2,10 +2,9 @@
 
 import sqlite3
 
+from db.session_mapper import row_to_student_vote
 from session.exceptions import VoteAlreadyCastError
 from session.models import StudentVoteRecord, TransportType
-
-from db.session_mapper import row_to_student_vote
 
 
 def record_student_vote(

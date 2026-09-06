@@ -1,8 +1,6 @@
 import sqlite3
 
 import pytest
-from session.exceptions import VoteAlreadyCastError
-from session.models import TransportType
 
 from db.vote_repository import (
     count_votes_for_round,
@@ -12,6 +10,8 @@ from db.vote_repository import (
     has_student_voted,
     record_student_vote,
 )
+from session.exceptions import VoteAlreadyCastError
+from session.models import TransportType
 
 
 @pytest.fixture

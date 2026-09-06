@@ -1,6 +1,7 @@
 """Pydantic schemas for the Quiz Session REST API endpoints."""
 
 from pydantic import BaseModel, Field
+
 from session.models import RoundTally, TurnDecision
 
 

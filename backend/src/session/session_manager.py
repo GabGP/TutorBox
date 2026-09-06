@@ -3,18 +3,17 @@
 import sqlite3
 import time
 
-from session.exceptions import (
-    InvalidSessionStateError,
-    SessionNotFoundError,
-)
-from session.models import QuizSessionRecord, SessionStatus
-
 from db.round_repository import create_quiz_round
 from db.session_repository import (
     create_quiz_session,
     get_quiz_session,
     update_quiz_session_status,
 )
+from session.exceptions import (
+    InvalidSessionStateError,
+    SessionNotFoundError,
+)
+from session.models import QuizSessionRecord, SessionStatus
 
 
 def initialize_quiz_session(
