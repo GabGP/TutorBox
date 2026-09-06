@@ -30,6 +30,7 @@ Comprehensive technical specification and integration contracts for the **TutorB
   - [6.5 System Audit (`GET /api/v1/staff/audit-logs`)](#65-system-audit)
   - [6.6 Hardware Clicker & Device Fleet Management (`GET /api/v1/staff/devices`, `POST /api/v1/staff/devices`, `POST /api/v1/staff/devices/{device_id}/assign`, `POST /api/v1/staff/devices/{device_id}/unassign`, `DELETE /api/v1/staff/devices/{device_id}`)](#66-hardware-clicker--device-fleet-management)
   - [6.7 Quiz & Diagnostic Question Bank (`GET /api/v1/quiz/topics`, `GET /api/v1/quiz/schema`, `POST /api/v1/quiz/validate`, `POST /api/v1/quiz/generate`, `GET /api/v1/quiz/generation-logs`, `GET /api/v1/quiz/generation-metrics`, `GET /api/v1/quiz/questions`, `GET /api/v1/quiz/questions/{id}`, `POST /api/v1/quiz/questions`, `DELETE /api/v1/quiz/questions/{id}`)](#67-quiz--diagnostic-question-bank)
+  - [6.8 Quiz Match & Real-Time Voting Sessions (`POST /api/v1/session`, `GET /api/v1/session/{id}`, `POST /api/v1/session/{id}/start`, `POST /api/v1/session/{id}/vote`, `POST /api/v1/session/{id}/close`, `POST /api/v1/session/{id}/reveal`, `POST /api/v1/session/{id}/next`, `GET /api/v1/session/{id}/report`)](#68-quiz-match--real-time-voting-sessions)
 - [Next Steps](#next-steps)
 
 ---
@@ -119,6 +120,14 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/api/v1/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 | `/api/v1/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) |
+| `/api/v1/session/{session_id}/start` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}/vote` | `POST` | ❌ | ✅ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}/close` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}/reveal` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}/next` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
+| `/api/v1/session/{session_id}/report` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403 if rotation pending)** |
 
 
 
@@ -978,6 +987,190 @@ Soft-delete a diagnostic question from the question bank while retaining telemet
     ```
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
   * `404 Not Found`: Question not found or already deleted.
+
+---
+
+### <a id="68-quiz-match--real-time-voting-sessions"></a>6.8 Quiz Match & Real-Time Voting Sessions
+
+Coordinates real-time classroom quiz matches, monotonic countdown voting windows, student vote ingestion with first-press locking, and pedagogical distractor decision calculation (>51% Rule).
+
+#### `POST /api/v1/session`
+Create a new quiz session match in lobby state.
+
+* **Authorization**: Teacher, Admin
+* **Request Body**:
+  ```json
+  {
+    "title": "Math Review 1",
+    "topic": "arithmetic",
+    "question_ids": ["q_add_001", "q_add_002", "q_add_003"],
+    "duration_seconds": 30
+  }
+  ```
+* **Responses**:
+  * `201 Created`:
+    ```json
+    {
+      "id": "s_a1b2c3d4e5f6",
+      "title": "Math Review 1",
+      "topic": "arithmetic",
+      "status": "lobby",
+      "current_round_index": 0,
+      "question_count": 3,
+      "current_round": null
+    }
+    ```
+  * `401 Unauthorized`: Missing or invalid session token.
+  * `403 Forbidden`: Caller is not a teacher or admin.
+
+#### `GET /api/v1/session/{session_id}`
+Retrieve the publicly inspectable state of a session and active round countdown.
+
+* **Authorization**: Public
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "id": "s_a1b2c3d4e5f6",
+      "title": "Math Review 1",
+      "topic": "arithmetic",
+      "status": "active",
+      "current_round_index": 0,
+      "question_count": 3,
+      "current_round": {
+        "round_id": "r_001_uuid",
+        "round_index": 0,
+        "status": "open",
+        "question_id": "q_add_001",
+        "duration_seconds": 30,
+        "time_remaining": 22.5
+      }
+    }
+    ```
+  * `404 Not Found`: Session not found.
+
+#### `POST /api/v1/session/{session_id}/start`
+Transition a session from lobby to active and open the first question round.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`: `SessionStateResponse` (status `active`, round 0 status `open`).
+  * `404 Not Found`: Session or initial round not found.
+  * `409 Conflict`: Session is not in `lobby` state.
+
+#### `POST /api/v1/session/{session_id}/vote`
+Cast an individual student vote for the active round. Enforces first-press locking.
+
+* **Authorization**: Student, Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Request Body**:
+  ```json
+  {
+    "selected_option": "B",
+    "transport_type": "web",
+    "device_id": null,
+    "response_time_ms": 1450.0
+  }
+  ```
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "vote_id": "v_uuid_001",
+      "session_id": "s_a1b2c3d4e5f6",
+      "round_id": "r_001_uuid",
+      "student_id": 4,
+      "selected_option": "B",
+      "is_correct": false,
+      "created_at": "2026-09-06T12:00:00Z"
+    }
+    ```
+  * `400 Bad Request`: Invalid option (not A, B, C, or D).
+  * `404 Not Found`: Session or active round not found.
+  * `409 Conflict`: First-press lock violation (student already voted) or round not in `open` state.
+  * `422 Unprocessable Content`: Validation failure on input schema.
+
+#### `POST /api/v1/session/{session_id}/close`
+Close the voting window for the active round.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`: `SessionStateResponse` with current round status `closed`.
+  * `404 Not Found`: Session or active round not found.
+  * `409 Conflict`: Round is not in `open` state.
+
+#### `POST /api/v1/session/{session_id}/reveal`
+Reveal the round outcome, aggregate votes, and compute the pedagogical distractor decision (>51% Rule).
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "round_id": "r_001_uuid",
+      "tally": {
+        "round_id": "r_001_uuid",
+        "total_votes": 20,
+        "option_counts": {"A": 5, "B": 12, "C": 2, "D": 1},
+        "percentages": {"A": 25.0, "B": 60.0, "C": 10.0, "D": 5.0},
+        "top_distractor": "B",
+        "top_distractor_count": 12,
+        "is_distractor_tie": false
+      },
+      "decision": {
+        "round_id": "r_001_uuid",
+        "should_speak": true,
+        "triggered_option": "B",
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los denominadores en vez de mantener el común denominador.",
+        "trigger_percentage": 60.0,
+        "reason": "distractor_majority"
+      }
+    }
+    ```
+  * `404 Not Found`: Session or active round not found.
+  * `409 Conflict`: Round is not in `closed` state.
+
+#### `POST /api/v1/session/{session_id}/next`
+Advance to the next question round or mark the session as `completed`.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`: `SessionStateResponse` with incremented `current_round_index` and round status `open`, or status `completed`.
+  * `404 Not Found`: Session not found.
+
+#### `GET /api/v1/session/{session_id}/report`
+Retrieve summary performance statistics and accuracy percentage for a quiz match.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "session_id": "s_a1b2c3d4e5f6",
+      "title": "Math Review 1",
+      "topic": "arithmetic",
+      "status": "completed",
+      "total_rounds": 3,
+      "total_votes_cast": 58,
+      "correct_votes": 41,
+      "average_accuracy_percentage": 70.69
+    }
+    ```
+  * `404 Not Found`: Session not found.
 
 ---
 

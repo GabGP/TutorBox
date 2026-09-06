@@ -14,21 +14,23 @@
 This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
 ## Table of Contents
-- [1. Operating Rules & Team Rotation](#1-operating-rules--team-rotation)
-- [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
-- [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
-- [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
-  - [✅ Week 1 — Appliance Baseline & Storage Infrastructure (Completed)](#week-1)
-  - [⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)](#week-2)
-  - [⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)](#week-3)
-  - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#week-4)
-  - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#week-5)
-  - [⏳ Week 6 — Offline Primary Games & Log Synchronization (Pilot: A · Copilot: B)](#week-6)
-  - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#week-7)
-  - [⏳ Week 8 — Unified Analytics & Weekly Teacher Report (Pilot: A · Copilot: B)](#week-8)
-  - [⏳ Week 9 — Concurrency & Full System Stress Testing (Pilot: B · Copilot: A)](#week-9)
-  - [⏳ Week 10 — General Rehearsal, Documentation & Release v1.0 (Both as Co-Leads)](#week-10)
-- [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
+- [TutorBox Engineering Roadmap (10-Week Plan)](#tutorbox-engineering-roadmap-10-week-plan)
+  - [Table of Contents](#table-of-contents)
+    - [1. Operating Rules \& Team Rotation](#1-operating-rules--team-rotation)
+  - [2. Engineering Schedule Gantt Chart](#2-engineering-schedule-gantt-chart)
+  - [3. Weekly Milestone Summary Table](#3-weekly-milestone-summary-table)
+  - [4. Detailed Weekly Milestone Breakdown](#4-detailed-weekly-milestone-breakdown)
+    - [✅ Week 1 — Appliance Baseline \& Storage Infrastructure (Completed)](#-week-1--appliance-baseline--storage-infrastructure-completed)
+    - [⏳ Week 2 — Quiz Contract \& Diagnostic Distractors (Pilot: A · Copilot: B)](#-week-2--quiz-contract--diagnostic-distractors-pilot-a--copilot-b)
+    - [⏳ Week 3 — Session Engine \& Browser Voting (Pilot: B · Copilot: A)](#-week-3--session-engine--browser-voting-pilot-b--copilot-a)
+    - [⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)](#-week-4--full-quiz-mode-with-offline-spanish-voice-pilot-a--copilot-b)
+    - [⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)](#-week-5--socratic-tutor-mode-pilot-b--copilot-a)
+    - [⏳ Week 6 — Offline Primary Games \& Log Synchronization (Pilot: A · Copilot: B)](#-week-6--offline-primary-games--log-synchronization-pilot-a--copilot-b)
+    - [⏳ Week 7 — ESP32 Physical Clickers (Pilot: B · Copilot: A)](#-week-7--esp32-physical-clickers-pilot-b--copilot-a)
+    - [⏳ Week 8 — Unified Analytics \& Weekly Teacher Report (Pilot: A · Copilot: B)](#-week-8--unified-analytics--weekly-teacher-report-pilot-a--copilot-b)
+    - [⏳ Week 9 — Concurrency \& Full System Stress Testing (Pilot: B · Copilot: A)](#-week-9--concurrency--full-system-stress-testing-pilot-b--copilot-a)
+    - [⏳ Week 10 — General Rehearsal, Documentation \& Release v1.0 (Both as Co-Leads)](#-week-10--general-rehearsal-documentation--release-v10-both-as-co-leads)
+  - [5. Ownership Balance at Closing](#5-ownership-balance-at-closing)
 
 ---
 
@@ -75,7 +77,7 @@ gantt
 | :---: | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
-| **3** ⏳ | Session Engine & Browser Voting | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
+| **3** ⏳ | [Session Engine & Browser Voting](week-3-session-engine.md) | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
 | **4** ⏳ | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
@@ -121,7 +123,7 @@ gantt
 ---
 
 ### <a id="week-3"></a>⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
-* **Focus**: The complete question lifecycle (open $\to$ vote $\to$ aggregate $\to$ decide) using web browsers as the initial transport layer.
+* **Focus**: Core quiz turn state machine, browser-based voting, and deterministic >51% distractor rule evaluation.
 * **Student B (Pilot)**:
   * Device-agnostic `VoteTransport` abstract interface.
   * Lightweight mobile web voting client (A–D buttons) for student smartphones/tablets.
@@ -137,6 +139,7 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Live 5-question test match conducted with 15 simultaneous web clients with 0 lost votes.
   * Unit test suite verifying `VoteTransport` against simulated mock transports.
+* **Detailed Milestone Report**: [Week 3 Milestone Synthesis](week-3-session-engine.md).
 
 ---
 
