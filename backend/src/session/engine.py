@@ -26,14 +26,27 @@ from session.vote_processor import process_student_vote
 
 EventListener = Callable[[str, dict[str, Any]], None]
 
+_SHARED_TIMERS: dict[str, RoundTimer] = {}
+_SHARED_LISTENERS: list[EventListener] = []
+
 
 class QuizSessionEngine:
     """Coordinates real-time session progression, voting locks, and turn decisions."""
 
-    def __init__(self, conn: sqlite3.Connection) -> None:
+    def __init__(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        timers: dict[str, RoundTimer] | None = None,
+        listeners: list[EventListener] | None = None,
+    ) -> None:
         self.conn = conn
-        self._timers: dict[str, RoundTimer] = {}
-        self._listeners: list[EventListener] = []
+        self._timers: dict[str, RoundTimer] = (
+            timers if timers is not None else _SHARED_TIMERS
+        )
+        self._listeners: list[EventListener] = (
+            listeners if listeners is not None else _SHARED_LISTENERS
+        )
 
     def add_event_listener(self, listener: EventListener) -> None:
         """Registers an open listener hook for Student B transports or telemetry."""
