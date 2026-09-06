@@ -1,5 +1,14 @@
 """Quiz session domain package."""
 
+from session.aggregator import (
+    compute_round_tally,
+    compute_tally_from_counts,
+    find_top_distractor,
+)
+from session.evaluator import (
+    STRICT_THRESHOLD_RATIO,
+    evaluate_turn_decision,
+)
 from session.exceptions import (
     InvalidOptionError,
     InvalidRoundStateError,
@@ -23,6 +32,7 @@ from session.models import (
 )
 
 __all__ = [
+    "STRICT_THRESHOLD_RATIO",
     "InvalidOptionError",
     "InvalidRoundStateError",
     "InvalidSessionStateError",
@@ -40,4 +50,8 @@ __all__ = [
     "TransportType",
     "TurnDecision",
     "VoteAlreadyCastError",
+    "compute_round_tally",
+    "compute_tally_from_counts",
+    "evaluate_turn_decision",
+    "find_top_distractor",
 ]
