@@ -18,15 +18,16 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
 * **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) In Progress**
-* **Backend Test Suite**: **589 / 589 passing tests** (70 new integration and unit tests added in Week 3 across persistence, aggregation, rule evaluation, lifecycle, and API layers).
-* **Statement Coverage**: **100.00% coverage** across all 2,883 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Backend Test Suite**: **605 / 605 passing tests** (86 new integration and unit tests added in Week 3 across persistence, aggregation, rule evaluation, lifecycle, schema contracts, event dispatching, and API layers).
+* **Statement Coverage**: **100.00% coverage** across all 2,924 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
-* **Modularity Compliance**: **100% of source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC** (enforced by Single Responsibility decomposition).
+* **Modularity Compliance**: **100% of source files $\le 133$ LoC** (well under the $\le 150$ LoC hard ceiling) and **100% of test files $\le 256$ LoC** (well under the $\le 300$ LoC ceiling), verified by `test_modularity_policy.py`.
 * **Key Milestone Artifacts**:
   * Idempotent migration `010_add_quiz_sessions_and_votes.sql` enforcing first-press locks via `UNIQUE(round_id, student_id)`.
   * Deterministic **>51% Rule** evaluator with formal validation across all 12 edge cases.
   * Monotonic countdown timer with simulated clock injection for deterministic TTL window expiration.
   * Versioned REST API endpoints (`/api/v1/session`) coordinating match creation, turn lifecycle, and student voting.
+  * Event dispatcher (`session/events.py`) and entity resolver (`api/session/dependencies.py`) maintaining strict Single Responsibility decoupling.
 
 ---
 
@@ -59,6 +60,11 @@ This document summarizes the technical deliverables, architectural implementatio
      * `participant.py`: Public state inspection (`GET /{session_id}`) and student vote submission (`POST /{session_id}/vote`) returning `409 Conflict` on duplicate submissions.
      * `reports.py`: Aggregate match reporting (`GET /{session_id}/report`) with accuracy calculations.
      * Registered in `backend/src/api/router.py`.
+6. **Architectural Hardening & Modularity Decompression**:
+   * Extracted `session/events.py` (23 LoC) to encapsulate event dispatching and shared in-memory timer/listener state, decompressing `session/engine.py` from 148 to 131 LoC.
+   * Extracted `api/session/dependencies.py` (25 LoC) to centralize session and round entity resolution, reducing `api/session/host.py` from 149 to 116 LoC.
+   * Extracted `quiz/validation/similarity_helpers.py` (38 LoC) to isolate text normalization and string distance math, reducing `quiz/validation/deduplication.py` from 148 to 103 LoC.
+   * Standardized `api/staff/` action modules (`user_delete.py`, `user_recover.py`, `user_reset_pin.py`) and centralized DTO schemas across all API packages, establishing 100% compliance with $\le 133$ LoC ceilings across all production modules.
 
 ---
 
