@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from api.session.schema import SessionReportResponse
 from db.database import get_db
 from db.session_repository import get_quiz_session
+from db.vote_repository import get_session_vote_summary
 from security import AuthContext, require_roles
 
 router = APIRouter()
@@ -25,14 +26,7 @@ def get_session_report(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Session '{session_id}' not found.",
             )
-        cursor = conn.execute(
-            """
-            SELECT COUNT(*), COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0)
-            FROM quiz_session_votes WHERE session_id = ?
-            """,
-            (session_id,),
-        )
-        total_votes, correct_votes = cursor.fetchone()
+        total_votes, correct_votes = get_session_vote_summary(conn, session_id)
         accuracy = (
             round((correct_votes / total_votes) * 100, 2) if total_votes > 0 else 0.0
         )

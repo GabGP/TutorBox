@@ -120,3 +120,18 @@ def get_votes_for_student(
         (student_id,),
     )
     return [row_to_student_vote(row) for row in cursor.fetchall()]
+
+
+def get_session_vote_summary(
+    conn: sqlite3.Connection, session_id: str
+) -> tuple[int, int]:
+    """Returns (total_votes, correct_votes) for all rounds in a given session."""
+    cursor = conn.execute(
+        """
+        SELECT COUNT(*), COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0)
+        FROM quiz_session_votes WHERE session_id = ?
+        """,
+        (session_id,),
+    )
+    row = cursor.fetchone()
+    return (int(row[0]), int(row[1])) if row else (0, 0)

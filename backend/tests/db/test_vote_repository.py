@@ -5,6 +5,7 @@ import pytest
 from db.vote_repository import (
     count_votes_for_round,
     get_round_vote_distribution,
+    get_session_vote_summary,
     get_votes_for_round,
     get_votes_for_student,
     has_student_voted,
@@ -217,3 +218,19 @@ def test_vote_retrieval_failure_raises():
         record_student_vote(
             mock_conn, "v_fail", "sess_v", "round_1", 1, "A", is_correct=False
         )
+
+
+def test_get_session_vote_summary(memory_db):
+    total, correct = get_session_vote_summary(memory_db, "sess_v")
+    assert total == 0
+    assert correct == 0
+
+    record_student_vote(
+        memory_db, "v_sum1", "sess_v", "round_1", 1, "A", is_correct=True
+    )
+    record_student_vote(
+        memory_db, "v_sum2", "sess_v", "round_1", 2, "B", is_correct=False
+    )
+    total, correct = get_session_vote_summary(memory_db, "sess_v")
+    assert total == 2
+    assert correct == 1
