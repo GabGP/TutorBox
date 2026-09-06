@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from api.session.schema import SessionReportResponse
+from api.session.schemas import SessionReportResponse
 from db.database import get_db
 from db.session_repository import get_quiz_session
 from db.vote_repository import get_session_vote_summary

@@ -54,10 +54,10 @@ This document summarizes the technical deliverables, architectural implementatio
      * `engine.py`: Unified coordinator providing open event listener hooks (`add_event_listener`) for downstream telemetry and transport binding.
 5. **FastAPI Versioned REST Endpoints (`/api/v1/session`)**:
    * Modular route packages:
-     * `schema.py`: Pydantic request/response models for match creation, voting, and telemetry.
-     * `routes_host.py`: Teacher endpoints for match creation (`POST /`) and turn progression (`/start`, `/close`, `/reveal`, `/next`).
-     * `routes_participant.py`: Public state inspection (`GET /{session_id}`) and student vote submission (`POST /{session_id}/vote`) returning `409 Conflict` on duplicate submissions.
-     * `routes_report.py`: Aggregate match reporting (`GET /{session_id}/report`) with accuracy calculations.
+     * `schemas.py`: Pydantic request/response models for match creation, voting, and telemetry.
+     * `host.py`: Teacher endpoints for match creation (`POST /`) and turn progression (`/start`, `/close`, `/reveal`, `/next`).
+     * `participant.py`: Public state inspection (`GET /{session_id}`) and student vote submission (`POST /{session_id}/vote`) returning `409 Conflict` on duplicate submissions.
+     * `reports.py`: Aggregate match reporting (`GET /{session_id}/report`) with accuracy calculations.
      * Registered in `backend/src/api/router.py`.
 
 ---

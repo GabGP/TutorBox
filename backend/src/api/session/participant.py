@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from api.session.schema import (
+from api.session.schemas import (
     CastVoteRequest,
     SessionStateResponse,
     VoteResponse,

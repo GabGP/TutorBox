@@ -2,9 +2,9 @@
 
 from fastapi import APIRouter
 
-from api.session.routes_host import router as host_router
-from api.session.routes_participant import router as participant_router
-from api.session.routes_report import router as report_router
+from api.session.host import router as host_router
+from api.session.participant import router as participant_router
+from api.session.reports import router as report_router
 
 router = APIRouter()
 router.include_router(host_router)

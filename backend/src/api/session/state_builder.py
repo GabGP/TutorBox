@@ -4,7 +4,7 @@ import sqlite3
 
 from fastapi import HTTPException, status
 
-from api.session.schema import SessionRoundInfo, SessionStateResponse
+from api.session.schemas import SessionRoundInfo, SessionStateResponse
 from db.round_repository import get_round_by_index
 from db.session_repository import get_quiz_session
 from session.engine import QuizSessionEngine
