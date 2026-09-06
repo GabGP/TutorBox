@@ -17,17 +17,19 @@ from session.session_manager import (
     initialize_quiz_session,
 )
 from session.timer import RoundTimer
-from session.turn_manager import (
-    close_turn_round,
-    open_turn_round,
-    reveal_turn_round,
-)
+from session.turn_manager import close_turn_round, open_turn_round, reveal_turn_round
 from session.vote_processor import process_student_vote
 
 EventListener = Callable[[str, dict[str, Any]], None]
 
 _SHARED_TIMERS: dict[str, RoundTimer] = {}
 _SHARED_LISTENERS: list[EventListener] = []
+
+
+def reset_shared_session_state() -> None:
+    """Resets in-memory timers and listeners for clean test isolation."""
+    _SHARED_TIMERS.clear()
+    _SHARED_LISTENERS.clear()
 
 
 class QuizSessionEngine:
@@ -41,12 +43,8 @@ class QuizSessionEngine:
         listeners: list[EventListener] | None = None,
     ) -> None:
         self.conn = conn
-        self._timers: dict[str, RoundTimer] = (
-            timers if timers is not None else _SHARED_TIMERS
-        )
-        self._listeners: list[EventListener] = (
-            listeners if listeners is not None else _SHARED_LISTENERS
-        )
+        self._timers = timers if timers is not None else _SHARED_TIMERS
+        self._listeners = listeners if listeners is not None else _SHARED_LISTENERS
 
     def add_event_listener(self, listener: EventListener) -> None:
         """Registers an open listener hook for Student B transports or telemetry."""
@@ -55,6 +53,13 @@ class QuizSessionEngine:
     def _emit(self, event_name: str, payload: dict[str, Any]) -> None:
         for listener in self._listeners:
             listener(event_name, payload)
+
+    def get_remaining_time(self, round_id: str) -> float | None:
+        """Returns remaining seconds for round timer, or None if unmanaged."""
+        timer = self._timers.get(round_id)
+        if timer is None:
+            return None
+        return round(timer.remaining_seconds(), 1) if timer.is_running() else 0.0
 
     def create_session(
         self,
@@ -100,14 +105,13 @@ class QuizSessionEngine:
         device_id: str | None = None,
     ) -> StudentVoteRecord:
         """Submits a student vote enforcing the first-press lock constraint."""
-        timer = self._timers.get(round_id)
         vote = process_student_vote(
             self.conn,
             session_id,
             round_id,
             student_id,
             selected_option,
-            timer=timer,
+            timer=self._timers.get(round_id),
             response_time_ms=response_time_ms,
             transport_type=transport_type,
             device_id=device_id,
@@ -126,14 +130,12 @@ class QuizSessionEngine:
     ) -> tuple[RoundTally, TurnDecision]:
         """Calculates vote tallies and evaluates the deterministic >51% Rule."""
         tally, decision = reveal_turn_round(self.conn, self._timers, round_id)
-        self._emit(
-            "round_revealed",
-            {
-                "round_id": round_id,
-                "should_speak": decision.should_speak,
-                "tally": tally.model_dump(),
-            },
-        )
+        event_data = {
+            "round_id": round_id,
+            "should_speak": decision.should_speak,
+            "tally": tally.model_dump(),
+        }
+        self._emit("round_revealed", event_data)
         return tally, decision
 
     def next_round(self, session_id: str) -> QuizRoundRecord | None:
@@ -141,6 +143,5 @@ class QuizSessionEngine:
         next_index = advance_quiz_session(self.conn, session_id)
         if next_index is not None:
             return self.open_round(session_id, next_index)
-
         self._emit("session_completed", {"session_id": session_id})
         return None

@@ -231,3 +231,22 @@ def test_session_and_round_additional_error_branches(session_db):
     assert round_1 is not None
     with pytest.raises(InvalidRoundStateError, match="cannot be revealed"):
         engine.reveal_round("s8", round_1.id)
+
+
+def test_get_remaining_time_and_reset_state(session_db):
+    from session.engine import reset_shared_session_state
+
+    conn, question_ids = session_db
+    engine = QuizSessionEngine(conn)
+    engine.create_session("s_rem", "Quiz Rem", "arithmetic", question_ids)
+
+    assert engine.get_remaining_time("nonexistent_round") is None
+
+    round_rec = engine.open_round("s_rem", 0)
+    rem = engine.get_remaining_time(round_rec.id)
+    assert rem is not None and rem > 0.0
+
+    engine.close_round("s_rem", round_rec.id)
+    assert engine.get_remaining_time(round_rec.id) is None
+
+    reset_shared_session_state()
