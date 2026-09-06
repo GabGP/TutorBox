@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from src.api.users.credentials import ChangePinRequest, _change_credential
 from src.security.auth import hash_pin
-from src.security.session import AuthContext
+from src.security.auth_session import AuthContext
 
 
 def test_change_pin_success(seeded_db, client: TestClient):

@@ -1,7 +1,13 @@
 """TutorBox Security package."""
 
-from . import auth, rate_limit, session, validation
+from . import auth, auth_session, rate_limit, validation
 from .auth import generate_temporary_pin, hash_pin, verify_pin
+from .auth_session import (
+    AuthContext,
+    ensure_no_pending_rotation,
+    get_current_session,
+    require_roles,
+)
 from .rate_limit import (
     InMemoryRateLimiter,
     SlidingWindowLimiter,
@@ -9,12 +15,9 @@ from .rate_limit import (
     login_rate_limiter,
     signup_rate_limiter,
 )
-from .session import (
-    AuthContext,
-    ensure_no_pending_rotation,
-    get_current_session,
-    require_roles,
-)
+
+# Backward-compatibility alias
+session = auth_session
 from .validation import (
     ALLOWED_ROLES,
     DEFAULT_TEMP_PIN_LENGTH,
@@ -53,6 +56,7 @@ __all__ = [
     "SlidingWindowLimiter",
     "UsernameField",
     "auth",
+    "auth_session",
     "check_rate_limit",
     "ensure_no_pending_rotation",
     "generate_temporary_pin",

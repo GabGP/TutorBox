@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from src.db.database import get_db_connection
 from src.security.auth import hash_pin
-from src.security.session import (
+from src.security.auth_session import (
     AuthContext,
     ensure_no_pending_rotation,
     get_current_session,
