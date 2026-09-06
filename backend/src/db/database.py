@@ -15,14 +15,14 @@ __all__ = [
 ]
 
 
-def get_busy_timeout_ms() -> int:
+def get_busy_timeout_ms(*, reload: bool = True) -> int:
     """Returns the SQLite busy timeout in milliseconds with environment override."""
-    return get_settings(reload=True).database.busy_timeout_ms
+    return get_settings(reload=reload).database.busy_timeout_ms
 
 
-def get_db_path() -> str:
+def get_db_path(*, reload: bool = True) -> str:
     """Returns the SQLite database file path with environment override."""
-    return get_settings(reload=True).database.database_path
+    return get_settings(reload=reload).database.database_path
 
 
 def get_db_connection(db_path: str | None = None) -> sqlite3.Connection:
