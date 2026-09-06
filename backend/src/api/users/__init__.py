@@ -3,17 +3,20 @@
 from fastapi import APIRouter
 
 from .credentials import (
-    ChangePinRequest,
-    ChangeUsernameRequest,
-    CredentialChangeResponse,
     _change_credential,
 )
 from .credentials import (
     router as credentials_router,
 )
-from .profile import UserProfileResponse
 from .profile import router as profile_router
-from .signup import SignupRequest, SignupResponse
+from .schemas import (
+    ChangePinRequest,
+    ChangeUsernameRequest,
+    CredentialChangeResponse,
+    SignupRequest,
+    SignupResponse,
+    UserProfileResponse,
+)
 from .signup import router as signup_router
 
 router = APIRouter()

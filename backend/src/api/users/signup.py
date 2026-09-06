@@ -2,13 +2,11 @@ import logging
 import sqlite3
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
 
+from api.users.schemas import SignupRequest, SignupResponse
 from db.audit import record_audit
 from db.database import get_db
 from security import (
-    PinField,
-    UsernameField,
     hash_pin,
     signup_rate_limiter,
 )
@@ -16,16 +14,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class SignupRequest(BaseModel):
-    username: UsernameField
-    pin: PinField
-
-
-class SignupResponse(BaseModel):
-    username: str
-    role: str
 
 
 @router.post(

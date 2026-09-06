@@ -3,14 +3,16 @@ import sqlite3
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from api.users.schemas import (
+    ChangePinRequest,
+    ChangeUsernameRequest,
+    CredentialChangeResponse,
+)
 from db.audit import record_audit
 from db.database import get_db
 from security import (
     AuthContext,
-    PinField,
-    UsernameField,
     check_rate_limit,
     ensure_no_pending_rotation,
     get_current_session,
@@ -22,20 +24,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class ChangeUsernameRequest(BaseModel):
-    current_pin: PinField
-    new_username: UsernameField
-
-
-class ChangePinRequest(BaseModel):
-    current_pin: PinField
-    new_pin: PinField
-
-
-class CredentialChangeResponse(BaseModel):
-    detail: str = "Credentials updated. Please sign in again."
 
 
 def _change_credential(
