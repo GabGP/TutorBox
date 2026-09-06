@@ -6,12 +6,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from api.session.routes_participant import _build_session_state
 from api.session.schema import (
     CreateSessionRequest,
     RoundRevealResponse,
     SessionStateResponse,
 )
+from api.session.state_builder import build_session_state
 from db.database import get_db
 from db.round_repository import get_round_by_index
 from db.session_repository import get_quiz_session
@@ -65,7 +65,7 @@ def create_session(
             duration_seconds=payload.duration_seconds,
         )
         conn.commit()
-        return _build_session_state(conn, session_id, engine)
+        return build_session_state(conn, session_id, engine)
 
 
 @router.post("/{session_id}/start", response_model=SessionStateResponse)
@@ -87,7 +87,7 @@ def start_session(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail=str(err)
             ) from err
-        return _build_session_state(conn, session_id, engine)
+        return build_session_state(conn, session_id, engine)
 
 
 @router.post("/{session_id}/close", response_model=SessionStateResponse)
@@ -106,7 +106,7 @@ def close_round(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail=str(err)
             ) from err
-        return _build_session_state(conn, session_id, engine)
+        return build_session_state(conn, session_id, engine)
 
 
 @router.post("/{session_id}/reveal", response_model=RoundRevealResponse)
@@ -145,4 +145,4 @@ def next_round(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=str(err)
             ) from err
-        return _build_session_state(conn, session_id, engine)
+        return build_session_state(conn, session_id, engine)
