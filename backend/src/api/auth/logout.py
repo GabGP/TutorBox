@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from api.auth.schemas import LogoutResponse
 from db.database import get_db
 from security import AuthContext, get_current_session
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/logout")
+@router.post("/logout", response_model=LogoutResponse)
 def logout(ctx: Annotated[AuthContext, Depends(get_current_session)]):
     """
     Deactivates the caller's current session.
@@ -25,4 +26,4 @@ def logout(ctx: Annotated[AuthContext, Depends(get_current_session)]):
         conn.commit()
 
     logger.info("User '%s' logged out.", ctx.username)
-    return {"detail": "Logged out."}
+    return LogoutResponse()

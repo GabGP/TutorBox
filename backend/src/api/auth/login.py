@@ -2,12 +2,10 @@ import logging
 import uuid
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
 
+from api.auth.schemas import LoginRequest, LoginResponse
 from db.database import get_db
 from security import (
-    PinField,
-    UsernameField,
     check_rate_limit,
     login_rate_limiter,
     verify_pin,
@@ -16,18 +14,6 @@ from security import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-class LoginRequest(BaseModel):
-    username: UsernameField
-    pin: PinField
-
-
-class LoginResponse(BaseModel):
-    session_id: str
-    username: str
-    status: str = "authenticated"
-    must_change_pin: bool = False
 
 
 @router.post("/login", response_model=LoginResponse)
