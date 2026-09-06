@@ -1,9 +1,15 @@
 """Real-time quiz session state machine and turn coordinator."""
 
 import sqlite3
-from collections.abc import Callable
 from typing import Any
 
+from session.events import (
+    EventListener,
+    emit_event,
+    get_shared_listeners,
+    get_shared_timers,
+    reset_shared_session_state,
+)
 from session.models import (
     QuizRoundRecord,
     QuizSessionRecord,
@@ -20,17 +26,6 @@ from session.timer import RoundTimer
 from session.turn_manager import close_turn_round, open_turn_round, reveal_turn_round
 from session.vote_processor import process_student_vote
 
-EventListener = Callable[[str, dict[str, Any]], None]
-
-_SHARED_TIMERS: dict[str, RoundTimer] = {}
-_SHARED_LISTENERS: list[EventListener] = []
-
-
-def reset_shared_session_state() -> None:
-    """Resets in-memory timers and listeners for clean test isolation."""
-    _SHARED_TIMERS.clear()
-    _SHARED_LISTENERS.clear()
-
 
 class QuizSessionEngine:
     """Coordinates real-time session progression, voting locks, and turn decisions."""
@@ -43,16 +38,15 @@ class QuizSessionEngine:
         listeners: list[EventListener] | None = None,
     ) -> None:
         self.conn = conn
-        self._timers = timers if timers is not None else _SHARED_TIMERS
-        self._listeners = listeners if listeners is not None else _SHARED_LISTENERS
+        self._timers = timers if timers is not None else get_shared_timers()
+        self._listeners = listeners if listeners is not None else get_shared_listeners()
 
     def add_event_listener(self, listener: EventListener) -> None:
         """Registers an open listener hook for Student B transports or telemetry."""
         self._listeners.append(listener)
 
     def _emit(self, event_name: str, payload: dict[str, Any]) -> None:
-        for listener in self._listeners:
-            listener(event_name, payload)
+        emit_event(self._listeners, event_name, payload)
 
     def get_remaining_time(self, round_id: str) -> float | None:
         """Returns remaining seconds for round timer, or None if unmanaged."""
@@ -145,3 +139,10 @@ class QuizSessionEngine:
             return self.open_round(session_id, next_index)
         self._emit("session_completed", {"session_id": session_id})
         return None
+
+
+__all__ = [
+    "EventListener",
+    "QuizSessionEngine",
+    "reset_shared_session_state",
+]
