@@ -9,7 +9,7 @@ import pytest
 from quiz.contracts.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
 from src.db.database import get_db_connection
 from src.db.migrations import apply_migrations
-from src.db.quiz import (
+from src.db.question_repository import (
     count_questions,
     create_question,
     get_question_by_id,

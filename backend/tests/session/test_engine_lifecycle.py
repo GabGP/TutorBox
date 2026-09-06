@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from db.migrations import apply_migrations
-from db.quiz import create_question
+from db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (

@@ -1,6 +1,6 @@
 """Negative and error branch integration tests for quiz session REST API."""
 
-from db.quiz import create_question
+from db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from tests.conftest import auth_headers
 

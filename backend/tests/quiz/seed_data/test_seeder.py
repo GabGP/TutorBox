@@ -2,7 +2,11 @@ import sqlite3
 from pathlib import Path
 
 from db.migrations import apply_migrations
-from db.quiz import get_question_by_id, list_questions, soft_delete_question
+from db.question_repository import (
+    get_question_by_id,
+    list_questions,
+    soft_delete_question,
+)
 from quiz.contracts.models import DistractorDetail, QuizQuestion
 from quiz.seed_data import SEED_QUESTIONS, seed_question_bank
 

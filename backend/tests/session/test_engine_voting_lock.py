@@ -7,7 +7,7 @@ import tempfile
 import pytest
 
 from db.migrations import apply_migrations
-from db.quiz import create_question
+from db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (
@@ -158,7 +158,7 @@ def test_vote_on_round_without_question(voting_db):
 def test_vote_on_round_with_missing_question_in_db(voting_db):
     conn, question_id = voting_db
     engine = QuizSessionEngine(conn)
-    from db.quiz import soft_delete_question
+    from db.question_repository import soft_delete_question
 
     engine.create_session("s_del_q", "Deleted Q", "arithmetic", [question_id])
     round_rec = engine.start_session("s_del_q")

@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from api.session.state_builder import build_session_state
 from db.migrations import apply_migrations
-from db.quiz import create_question
+from db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine, reset_shared_session_state
 

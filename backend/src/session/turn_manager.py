@@ -3,7 +3,7 @@
 import sqlite3
 import time
 
-from db.quiz import get_question_by_id
+from db.question_repository import get_question_by_id
 from db.round_repository import (
     get_quiz_round,
     get_round_by_index,

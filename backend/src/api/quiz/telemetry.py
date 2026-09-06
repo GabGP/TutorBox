@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from db.database import get_db
-from db.quiz_telemetry import (
+from db.telemetry_repository import (
     get_generation_summary_metrics,
     list_generation_logs,
 )

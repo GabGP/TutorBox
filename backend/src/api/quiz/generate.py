@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from api.quiz.dependencies import get_quiz_generator
 from db.audit import record_audit
 from db.database import get_db
-from db.quiz import create_question, get_question_by_id
-from db.quiz_telemetry import record_generation_log
+from db.question_repository import create_question, get_question_by_id
+from db.telemetry_repository import record_generation_log
 from quiz.contracts.models import (
     GenerateQuestionRequest,
     GenerateQuestionResponse,

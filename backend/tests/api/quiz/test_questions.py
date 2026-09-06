@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from db.quiz import create_question
+from db.question_repository import create_question
 from quiz.contracts.models import QuizQuestion
 from tests.conftest import auth_headers
 

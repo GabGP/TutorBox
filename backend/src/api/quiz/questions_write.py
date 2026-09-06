@@ -9,7 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from api.quiz.dependencies import get_math_validator
 from db.audit import record_audit
 from db.database import get_db
-from db.quiz import create_question, get_question_by_id, soft_delete_question
+from db.question_repository import (
+    create_question,
+    get_question_by_id,
+    soft_delete_question,
+)
 from quiz.contracts.models import (
     QuizDeleteResponse,
     QuizQuestionCreate,

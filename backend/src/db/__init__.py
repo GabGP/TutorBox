@@ -4,21 +4,26 @@ from . import (
     audit,
     database,
     migrations,
-    quiz,
-    quiz_mapper,
-    quiz_telemetry,
+    question_mapper,
+    question_repository,
     round_repository,
     session_mapper,
     session_repository,
+    telemetry_repository,
     vote_repository,
 )
 from .audit import VALID_ACTIONS, record_audit
-from .quiz_telemetry import (
+from .telemetry_repository import (
     get_generation_log_by_id,
     get_generation_summary_metrics,
     list_generation_logs,
     record_generation_log,
 )
+
+# Backward-compatibility aliases
+quiz = question_repository
+quiz_mapper = question_mapper
+quiz_telemetry = telemetry_repository
 
 __all__ = [
     "VALID_ACTIONS",
@@ -28,6 +33,8 @@ __all__ = [
     "get_generation_summary_metrics",
     "list_generation_logs",
     "migrations",
+    "question_mapper",
+    "question_repository",
     "quiz",
     "quiz_mapper",
     "quiz_telemetry",
@@ -36,5 +43,6 @@ __all__ = [
     "round_repository",
     "session_mapper",
     "session_repository",
+    "telemetry_repository",
     "vote_repository",
 ]

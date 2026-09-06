@@ -14,7 +14,7 @@ def seed_question_bank(
 
     Returns the count of newly inserted questions. Idempotent.
     """
-    from db.quiz import create_question, get_question_by_id
+    from db.question_repository import create_question, get_question_by_id
     from quiz.seed_data import SEED_QUESTIONS
 
     target_questions = questions if questions is not None else SEED_QUESTIONS

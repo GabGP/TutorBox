@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from db.database import get_db
-from db.quiz import count_questions, get_question_by_id, list_questions
+from db.question_repository import count_questions, get_question_by_id, list_questions
 from quiz.contracts.models import QuestionListResponse, QuizQuestionResponse
 from security import AuthContext, require_roles
 
