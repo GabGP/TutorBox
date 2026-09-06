@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from api.auth.schemas import LogoutResponse
-from db.database import get_db
-from security import AuthContext, get_current_session
+from core.db.database import get_db
+from core.security import AuthContext, get_current_session
 
 logger = logging.getLogger(__name__)
 

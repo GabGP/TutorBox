@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from db.migrations import apply_migrations
-from db.question_repository import create_question
+from core.db.migrations import apply_migrations
+from core.db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (
@@ -225,7 +225,7 @@ def test_session_and_round_additional_error_branches(session_db):
         engine.close_round("s8", round_0.id)
 
     # Reveal round when still pending (round 1 of s8 is still pending)
-    from db.round_repository import get_round_by_index
+    from core.db.round_repository import get_round_by_index
 
     round_1 = get_round_by_index(conn, "s8", 1)
     assert round_1 is not None

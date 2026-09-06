@@ -5,10 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.session.schemas import SessionReportResponse
-from db.database import get_db
-from db.session_repository import get_quiz_session
-from db.vote_repository import get_session_vote_summary
-from security import AuthContext, require_roles
+from core.db.database import get_db
+from core.db.session_repository import get_quiz_session
+from core.db.vote_repository import get_session_vote_summary
+from core.security import AuthContext, require_roles
 
 router = APIRouter()
 

@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from db.database import get_db
-from db.telemetry_repository import (
+from core.db.database import get_db
+from core.db.telemetry_repository import (
     get_generation_summary_metrics,
     list_generation_logs,
 )
-from security import AuthContext, require_roles
+from core.security import AuthContext, require_roles
 
 router = APIRouter()
 

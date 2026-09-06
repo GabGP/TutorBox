@@ -2,7 +2,7 @@
 
 import json
 
-from llm import LLMClient, MockLLMClient
+from core.llm import LLMClient, MockLLMClient
 from quiz.generation.generator import QuizQuestionGenerator
 
 

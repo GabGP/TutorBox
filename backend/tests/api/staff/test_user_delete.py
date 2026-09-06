@@ -2,7 +2,7 @@ import uuid
 
 from fastapi.testclient import TestClient
 
-from src.security.auth import hash_pin, verify_pin
+from core.security.auth import hash_pin, verify_pin
 from tests.conftest import auth_headers, get_user_id
 
 

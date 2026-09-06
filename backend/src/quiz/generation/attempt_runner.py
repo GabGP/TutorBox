@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from llm import LLMClient
+from core.llm import LLMClient
 from quiz.contracts.models import QuizQuestion
 from quiz.generation.generation_state import GenerationState
 from quiz.generation.prompt import build_feedback_prompt

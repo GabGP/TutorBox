@@ -2,9 +2,9 @@ import logging
 
 from fastapi.testclient import TestClient
 
-from src.db.database import get_db_connection
-from src.security.auth import hash_pin
-from src.security.rate_limit import LOCKOUT_DURATION_SECONDS
+from core.db.database import get_db_connection
+from core.security.auth import hash_pin
+from core.security.rate_limit import LOCKOUT_DURATION_SECONDS
 
 
 def test_login_success(seeded_db, client: TestClient):

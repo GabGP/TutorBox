@@ -1,6 +1,6 @@
 """Centralized configuration package for TutorBox."""
 
-from config.constants import (
+from core.config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,
@@ -16,20 +16,20 @@ from config.constants import (
     DEFAULT_SLM_TIMEOUT_SECONDS,
     PROJECT_ROOT,
 )
-from config.env_loader import load_env_file
-from config.models import (
+from core.config.env_loader import load_env_file
+from core.config.models import (
     DatabaseConfig,
     LLMConfig,
     QuizConfig,
     SecurityConfig,
     Settings,
 )
-from config.parsers import (
+from core.config.parsers import (
     parse_db_path,
     parse_float,
     parse_int,
 )
-from config.settings import (
+from core.config.settings import (
     clear_settings_cache,
     get_settings,
 )

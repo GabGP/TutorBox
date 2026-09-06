@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from security import PinField, UsernameField
+from core.security import PinField, UsernameField
 
 
 class SignupRequest(BaseModel):

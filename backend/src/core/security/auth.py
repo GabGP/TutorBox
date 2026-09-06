@@ -3,8 +3,8 @@ import secrets
 
 import bcrypt
 
-from config import DEFAULT_BCRYPT_ROUNDS, get_settings
-from security.validation import DEFAULT_TEMP_PIN_LENGTH
+from core.config import DEFAULT_BCRYPT_ROUNDS, get_settings
+from core.security.validation import DEFAULT_TEMP_PIN_LENGTH
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 """Unit tests for centralized typed settings (src/config/settings.py)."""
 
-from config.constants import (
+from core.config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,
@@ -16,7 +16,7 @@ from config.constants import (
     DEFAULT_SLM_TIMEOUT_SECONDS,
     PROJECT_ROOT,
 )
-from config.settings import (
+from core.config.settings import (
     clear_settings_cache,
     get_settings,
 )

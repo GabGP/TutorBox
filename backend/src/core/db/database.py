@@ -3,7 +3,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from config import DEFAULT_BUSY_TIMEOUT_MS, DEFAULT_DB_PATH, get_settings
+from core.config import DEFAULT_BUSY_TIMEOUT_MS, DEFAULT_DB_PATH, get_settings
 
 __all__ = [
     "DEFAULT_BUSY_TIMEOUT_MS",

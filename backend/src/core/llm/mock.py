@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from llm.base import LLMClient
+from core.llm.base import LLMClient
 
 
 class MockLLMClient(LLMClient):

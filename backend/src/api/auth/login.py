@@ -4,8 +4,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 
 from api.auth.schemas import LoginRequest, LoginResponse
-from db.database import get_db
-from security import (
+from core.db.database import get_db
+from core.security import (
     check_rate_limit,
     login_rate_limiter,
     verify_pin,

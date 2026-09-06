@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from config.constants import PROJECT_ROOT
+from core.config.constants import PROJECT_ROOT
 
 
 def load_env_file(custom_path: Path | None = None) -> None:

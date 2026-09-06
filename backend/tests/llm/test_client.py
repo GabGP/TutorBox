@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from llm.client import LocalSLMClient
+from core.llm.client import LocalSLMClient
 
 
 def test_local_slm_client_initialization_explicit_parameters():

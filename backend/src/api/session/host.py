@@ -13,8 +13,8 @@ from api.session.schemas import (
     SessionStateResponse,
 )
 from api.session.state_builder import build_session_state
-from db.database import get_db
-from security import AuthContext, require_roles
+from core.db.database import get_db
+from core.security import AuthContext, require_roles
 from session.engine import QuizSessionEngine
 from session.exceptions import (
     InvalidRoundStateError,

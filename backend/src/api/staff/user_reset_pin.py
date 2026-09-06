@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.staff.schemas import ResetPinResponse
-from db.audit import record_audit
-from db.database import get_db
-from security import (
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.security import (
     AuthContext,
     generate_temporary_pin,
     hash_pin,

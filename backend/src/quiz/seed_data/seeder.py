@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from db.database import get_db_connection
+from core.db.database import get_db_connection
 from quiz.contracts.models import QuizQuestion
 
 
@@ -14,7 +14,7 @@ def seed_question_bank(
 
     Returns the count of newly inserted questions. Idempotent.
     """
-    from db.question_repository import create_question, get_question_by_id
+    from core.db.question_repository import create_question, get_question_by_id
     from quiz.seed_data import SEED_QUESTIONS
 
     target_questions = questions if questions is not None else SEED_QUESTIONS

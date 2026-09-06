@@ -1,6 +1,6 @@
 import pytest
 
-from llm.mock import MockLLMClient
+from core.llm.mock import MockLLMClient
 
 
 def test_mock_llm_client_basic_flow():

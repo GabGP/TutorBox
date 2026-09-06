@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from api.router import root_router
-from config import load_env_file
-from db.database import get_db_path
-from db.migrations import apply_migrations
+from core.config import load_env_file
+from core.db.database import get_db_path
+from core.db.migrations import apply_migrations
 from quiz.seed_data import seed_question_bank
 
 load_env_file()

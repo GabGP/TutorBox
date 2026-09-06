@@ -6,10 +6,9 @@ import tempfile
 
 import pytest
 
-from quiz.contracts.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
-from src.db.database import get_db_connection
-from src.db.migrations import apply_migrations
-from src.db.question_repository import (
+from core.db.database import get_db_connection
+from core.db.migrations import apply_migrations
+from core.db.question_repository import (
     count_questions,
     create_question,
     get_question_by_id,
@@ -17,6 +16,7 @@ from src.db.question_repository import (
     list_questions,
     soft_delete_question,
 )
+from quiz.contracts.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ import json
 from fastapi.testclient import TestClient
 
 from api.quiz.dependencies import get_quiz_generator
-from llm import MockLLMClient
+from core.llm import MockLLMClient
 from quiz.generation.generator import QuizQuestionGenerator
 from quiz.generation.types import get_quiz_max_retries
 from src.main import app
@@ -59,7 +59,7 @@ def test_generate_question_rbac_student_forbidden(staff_db, client: TestClient):
 
 def test_generate_question_rbac_rotation_pending_forbidden(temp_db, client: TestClient):
     """POST /api/v1/quiz/generate returns 403 Forbidden when PIN rotation is pending."""
-    from security.auth import hash_pin
+    from core.security.auth import hash_pin
 
     _, conn = temp_db
     conn.execute(

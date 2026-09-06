@@ -1,9 +1,9 @@
-from math_engine.ast_algebra import (
+from core.math_engine.ast_algebra import (
     extract_linear_polynomial,
     is_two_step_linear,
     validate_pre_algebra_structure,
 )
-from math_engine.ast_arithmetic import (
+from core.math_engine.ast_arithmetic import (
     validate_arithmetic_structure,
     validate_decimals_percentages_structure,
     validate_fractions_structure,

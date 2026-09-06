@@ -2,7 +2,7 @@
 
 import os
 
-from config.constants import (
+from core.config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,
@@ -16,14 +16,14 @@ from config.constants import (
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
 )
-from config.models import (
+from core.config.models import (
     DatabaseConfig,
     LLMConfig,
     QuizConfig,
     SecurityConfig,
     Settings,
 )
-from config.parsers import parse_db_path, parse_float, parse_int
+from core.config.parsers import parse_db_path, parse_float, parse_int
 
 __all__ = ["clear_settings_cache", "get_settings"]
 

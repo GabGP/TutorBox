@@ -4,8 +4,8 @@ import sqlite3
 
 from fastapi import HTTPException, status
 
-from db.round_repository import get_round_by_index
-from db.session_repository import get_quiz_session
+from core.db.round_repository import get_round_by_index
+from core.db.session_repository import get_quiz_session
 from session.models import QuizRoundRecord, QuizSessionRecord
 
 

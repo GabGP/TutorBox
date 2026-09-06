@@ -207,7 +207,7 @@ def test_reset_pin_blocked_during_pending_rotation(temp_db, client: TestClient):
     """
     Staff caller with must_change_pin=1 is blocked (403) by the rotation gate.
     """
-    from src.security.auth import hash_pin
+    from core.security.auth import hash_pin
 
     _, conn = temp_db
     hashed = hash_pin("1234")

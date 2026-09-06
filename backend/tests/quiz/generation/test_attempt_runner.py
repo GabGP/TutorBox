@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from llm import LLMClient, MockLLMClient
+from core.llm import LLMClient, MockLLMClient
 from quiz.generation.attempt_runner import (
     execute_generation_attempt,
     execute_llm_query,

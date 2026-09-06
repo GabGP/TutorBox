@@ -2,7 +2,7 @@ import sqlite3
 
 from fastapi import APIRouter
 
-from db.database import get_db
+from core.db.database import get_db
 
 router = APIRouter()
 

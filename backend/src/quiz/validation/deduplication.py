@@ -4,8 +4,8 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 
-from math_engine.equation_parser import parse_equation_components
-from math_engine.parser import are_values_equivalent
+from core.math_engine.equation_parser import parse_equation_components
+from core.math_engine.parser import are_values_equivalent
 from quiz.contracts.models import QuizQuestionBase
 from quiz.seed_data import SEED_QUESTIONS
 from quiz.validation.similarity_helpers import (

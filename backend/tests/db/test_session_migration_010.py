@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 
-from src.db.migrations import apply_migrations
+from core.db.migrations import apply_migrations
 
 
 @pytest.fixture

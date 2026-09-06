@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, status
 from fastapi.testclient import TestClient
 
-from src.db.database import get_db_connection
-from src.security.auth import hash_pin
-from src.security.auth_session import (
+from core.db.database import get_db_connection
+from core.security.auth import hash_pin
+from core.security.auth_session import (
     AuthContext,
     ensure_no_pending_rotation,
     get_current_session,

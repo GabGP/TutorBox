@@ -10,9 +10,9 @@ from api.staff.schemas import (
     DeviceMessageResponse,
     RegisterDeviceRequest,
 )
-from db.audit import record_audit
-from db.database import get_db
-from security import (
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.security import (
     AuthContext,
     require_roles,
 )

@@ -1,6 +1,6 @@
 import threading
 
-from src.security.rate_limit import LOCKOUT_DURATION_SECONDS, InMemoryRateLimiter
+from core.security.rate_limit import LOCKOUT_DURATION_SECONDS, InMemoryRateLimiter
 
 
 def test_rate_limiter_caps_tracked_keys():
@@ -79,7 +79,7 @@ def test_sliding_window_limiter_enforces_limit_and_expires(monkeypatch):
     """
     import time
 
-    from src.security.rate_limit import SlidingWindowLimiter
+    from core.security.rate_limit import SlidingWindowLimiter
 
     limiter = SlidingWindowLimiter(max_events=2, window_seconds=10)
     assert limiter.allow() is True
@@ -98,7 +98,7 @@ def test_sliding_window_limiter_clear():
     """
     SlidingWindowLimiter.clear resets internal event queue.
     """
-    from src.security.rate_limit import SlidingWindowLimiter
+    from core.security.rate_limit import SlidingWindowLimiter
 
     limiter = SlidingWindowLimiter(max_events=1, window_seconds=10)
     assert limiter.allow() is True
@@ -111,7 +111,7 @@ def test_rate_limit_config_resolvers_and_fallbacks(monkeypatch):
     """
     Tests environment variable resolution and invalid format fallbacks.
     """
-    from src.security.rate_limit.config import (
+    from core.security.rate_limit.config import (
         DEFAULT_LOCKOUT_DURATION_SECONDS,
         DEFAULT_MAX_ATTEMPTS,
         DEFAULT_MAX_TRACKED_KEYS,

@@ -2,7 +2,7 @@
 
 import inspect
 
-from llm.base import LLMClient
+from core.llm.base import LLMClient
 
 
 def test_abstract_llm_client_is_abstract_base_class():

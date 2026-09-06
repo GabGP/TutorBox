@@ -1,4 +1,4 @@
-from src.db.database import get_db_connection
+from core.db.database import get_db_connection
 
 
 def test_database_connection(temp_db):
@@ -70,7 +70,7 @@ def test_default_db_path_points_to_root_cache_dir(monkeypatch):
     """
     from pathlib import Path
 
-    from src.db.database import DEFAULT_DB_PATH, get_db_path
+    from core.db.database import DEFAULT_DB_PATH, get_db_path
 
     monkeypatch.delenv("DATABASE_PATH", raising=False)
     resolved_path = get_db_path()
@@ -112,7 +112,7 @@ def test_get_db_context_manager(temp_db):
     """
     Test that get_db context manager yields open connection and closes it upon exit.
     """
-    from src.db.database import get_db
+    from core.db.database import get_db
 
     db_path, _ = temp_db
     with get_db(db_path) as conn:
@@ -125,7 +125,7 @@ def test_busy_timeout_env_and_fallback(monkeypatch):
     """
     Test that get_busy_timeout_ms respects environment override and falls back on invalid values.
     """
-    from src.db.database import DEFAULT_BUSY_TIMEOUT_MS, get_busy_timeout_ms
+    from core.db.database import DEFAULT_BUSY_TIMEOUT_MS, get_busy_timeout_ms
 
     monkeypatch.setenv("DB_BUSY_TIMEOUT_MS", "8000")
     assert get_busy_timeout_ms() == 8000

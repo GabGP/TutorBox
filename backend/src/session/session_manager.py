@@ -3,8 +3,8 @@
 import sqlite3
 import time
 
-from db.round_repository import create_quiz_round
-from db.session_repository import (
+from core.db.round_repository import create_quiz_round
+from core.db.session_repository import (
     create_quiz_session,
     get_quiz_session,
     update_quiz_session_status,

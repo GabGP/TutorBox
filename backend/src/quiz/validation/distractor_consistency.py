@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from math_engine.parser import are_values_equivalent, parse_option_expression
+from core.math_engine.parser import are_values_equivalent, parse_option_expression
 from quiz.contracts.models import QuizQuestionBase
 from quiz.validation.distractor_patterns import (
     INVALID_CLAIM_PATTERNS,

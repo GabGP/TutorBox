@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from api.users.schemas import UserProfileResponse
-from security import AuthContext, get_current_session
+from core.security import AuthContext, get_current_session
 
 logger = logging.getLogger(__name__)
 

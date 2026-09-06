@@ -2,7 +2,7 @@ import sqlite3
 
 import pytest
 
-from db.vote_repository import (
+from core.db.vote_repository import (
     count_votes_for_round,
     get_round_vote_distribution,
     get_session_vote_summary,

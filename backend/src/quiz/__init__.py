@@ -1,4 +1,4 @@
-from math_engine.parser import (
+from core.math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
     evaluate_percentage_expression,

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
+PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
 
 DEFAULT_DB_PATH: str = str(PROJECT_ROOT / ".cache" / "db" / "tutorbox.db")
 DEFAULT_BUSY_TIMEOUT_MS: int = 5000

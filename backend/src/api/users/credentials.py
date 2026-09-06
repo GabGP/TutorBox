@@ -9,9 +9,9 @@ from api.users.schemas import (
     ChangeUsernameRequest,
     CredentialChangeResponse,
 )
-from db.audit import record_audit
-from db.database import get_db
-from security import (
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.security import (
     AuthContext,
     check_rate_limit,
     ensure_no_pending_rotation,

@@ -5,8 +5,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
-from db.database import get_db
-from security.validation import UUID_RE
+from core.db.database import get_db
+from core.security.validation import UUID_RE
 
 logger = logging.getLogger(__name__)
 

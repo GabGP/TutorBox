@@ -2,7 +2,7 @@ import sqlite3
 
 import pytest
 
-from db.session_repository import (
+from core.db.session_repository import (
     create_quiz_round,
     create_quiz_session,
     get_quiz_round,
@@ -202,7 +202,7 @@ def test_create_and_manage_quiz_rounds(memory_db):
 
 
 def test_session_creation_retrieval_failure_raises(memory_db, monkeypatch):
-    import db.session_repository as repo
+    import core.db.session_repository as repo
 
     monkeypatch.setattr(repo, "get_quiz_session", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="Failed to retrieve newly created session"):
@@ -210,7 +210,7 @@ def test_session_creation_retrieval_failure_raises(memory_db, monkeypatch):
 
 
 def test_round_creation_retrieval_failure_raises(memory_db, monkeypatch):
-    import db.round_repository as repo
+    import core.db.round_repository as repo
 
     create_quiz_session(memory_db, "sess_rf", "RF", "topic")
     monkeypatch.setattr(repo, "get_quiz_round", lambda *args, **kwargs: None)

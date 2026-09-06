@@ -6,8 +6,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from api.staff.schemas import AuditLogsResponse
-from db.database import get_db
-from security import (
+from core.db.database import get_db
+from core.security import (
     AuthContext,
     require_roles,
 )

@@ -2,7 +2,7 @@ from tokenize import TokenError
 
 import sympy as sp
 
-from src.math_engine.equation_parser import (
+from core.math_engine.equation_parser import (
     EQUATION_PATTERN,
     PARSE_ERRORS,
     parse_equation_components,

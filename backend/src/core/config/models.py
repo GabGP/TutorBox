@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from config.constants import (
+from core.config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,

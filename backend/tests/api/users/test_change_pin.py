@@ -2,9 +2,9 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
+from core.security.auth import hash_pin
+from core.security.auth_session import AuthContext
 from src.api.users.credentials import ChangePinRequest, _change_credential
-from src.security.auth import hash_pin
-from src.security.auth_session import AuthContext
 
 
 def test_change_pin_success(seeded_db, client: TestClient):

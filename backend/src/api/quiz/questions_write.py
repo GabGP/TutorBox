@@ -7,13 +7,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.quiz.dependencies import get_math_validator
-from db.audit import record_audit
-from db.database import get_db
-from db.question_repository import (
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.db.question_repository import (
     create_question,
     get_question_by_id,
     soft_delete_question,
 )
+from core.security import AuthContext, require_roles
 from quiz.contracts.models import (
     QuizDeleteResponse,
     QuizQuestionCreate,
@@ -21,7 +22,6 @@ from quiz.contracts.models import (
 )
 from quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
 from quiz.validation.validator import MathValidatorInterface
-from security import AuthContext, require_roles
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -1,8 +1,8 @@
 import sqlite3
 from pathlib import Path
 
-from db.migrations import apply_migrations
-from db.question_repository import (
+from core.db.migrations import apply_migrations
+from core.db.question_repository import (
     get_question_by_id,
     list_questions,
     soft_delete_question,

@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from config.env_loader import load_env_file
+from core.config.env_loader import load_env_file
 
 
 def test_load_env_file_parses_valid_key_values(tmp_path: Path, monkeypatch) -> None:

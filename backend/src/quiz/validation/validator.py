@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 import sympy as sp
 
-from math_engine.ast_inspector import validate_math_structure
-from math_engine.parser import (
+from core.math_engine.ast_inspector import validate_math_structure
+from core.math_engine.parser import (
     are_values_equivalent,
     extract_and_solve_problem,
     parse_option_expression,

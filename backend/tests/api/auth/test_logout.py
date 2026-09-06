@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from src.db.database import get_db_connection
+from core.db.database import get_db_connection
 
 
 def test_logout_success_deactivates_session(seeded_db, client: TestClient):

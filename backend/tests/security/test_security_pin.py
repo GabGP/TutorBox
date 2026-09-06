@@ -2,7 +2,7 @@ import logging
 
 from fastapi.testclient import TestClient
 
-from src.security.auth import hash_pin
+from core.security.auth import hash_pin
 from tests.conftest import auth_headers
 
 
@@ -81,7 +81,7 @@ def test_plain_text_pin_never_logged_during_hashing(caplog):
 
     with caplog.at_level(logging.DEBUG):
         hashed = hash_pin(sensitive_pin)
-        from src.security.auth import verify_pin
+        from core.security.auth import verify_pin
 
         verify_pin(sensitive_pin, hashed)
         verify_pin("wrong_pin", hashed)

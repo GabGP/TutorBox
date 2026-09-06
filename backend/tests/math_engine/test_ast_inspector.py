@@ -1,4 +1,4 @@
-from src.math_engine.ast_inspector import (
+from core.math_engine.ast_inspector import (
     extract_linear_polynomial,
     validate_math_structure,
 )

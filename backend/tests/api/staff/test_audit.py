@@ -47,7 +47,7 @@ def test_read_audit_logs_blocked_during_pending_rotation(temp_db, client: TestCl
     """
     Admin caller with must_change_pin=1 is blocked (403) by the rotation gate.
     """
-    from src.security.auth import hash_pin
+    from core.security.auth import hash_pin
 
     _, conn = temp_db
     hashed = hash_pin("1234")

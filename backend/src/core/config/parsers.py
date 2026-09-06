@@ -2,7 +2,7 @@
 
 import os
 
-from config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
+from core.config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
 
 __all__ = ["parse_db_path", "parse_float", "parse_int"]
 

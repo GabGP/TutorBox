@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from llm import LLMClient, LocalSLMClient
+from core.llm import LLMClient, LocalSLMClient
 from quiz.generation.generator import QuizQuestionGenerator
 from quiz.validation.distractor_consistency import DistractorConsistencyValidator
 from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator

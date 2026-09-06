@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
-from config.parsers import parse_db_path, parse_float, parse_int
+from core.config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
+from core.config.parsers import parse_db_path, parse_float, parse_int
 
 
 def test_parse_db_path_none_and_empty() -> None:

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from src.security.auth import hash_pin
+from core.security.auth import hash_pin
 
 
 def test_get_me_success(seeded_db, client: TestClient):

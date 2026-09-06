@@ -1,4 +1,4 @@
-from src.security.auth import hash_pin, verify_pin
+from core.security.auth import hash_pin, verify_pin
 
 
 def test_hash_pin_generates_bcrypt_hash():
@@ -52,7 +52,7 @@ def test_generate_temporary_pin():
     """
     Test generate_temporary_pin creates numeric strings of expected length.
     """
-    from src.security.auth import generate_temporary_pin
+    from core.security.auth import generate_temporary_pin
 
     pin_default = generate_temporary_pin()
     assert len(pin_default) == 6

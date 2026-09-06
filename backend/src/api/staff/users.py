@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.staff.schemas import CreateUserRequest, CreateUserResponse, UserListResponse
-from db.audit import record_audit
-from db.database import get_db
-from security import (
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.security import (
     AuthContext,
     hash_pin,
     require_roles,

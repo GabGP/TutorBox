@@ -9,7 +9,7 @@ MIGRATION_NAME_RE = re.compile(r"^(\d{3})_[a-z0-9_]+\.sql$")
 
 
 def get_migrations_dir() -> Path:
-    base_dir = Path(__file__).resolve().parent.parent.parent
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
     return base_dir / "migrations"
 
 

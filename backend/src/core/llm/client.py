@@ -5,14 +5,14 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from config import (
+from core.config import (
     DEFAULT_SLM_BASE_URL,
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
     get_settings,
 )
-from llm.base import LLMClient
+from core.llm.base import LLMClient
 
 __all__ = [
     "DEFAULT_SLM_BASE_URL",

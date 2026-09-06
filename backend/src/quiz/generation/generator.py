@@ -2,7 +2,7 @@
 
 import random
 
-from llm import LLMClient
+from core.llm import LLMClient
 from quiz.generation.attempt_runner import execute_generation_attempt
 from quiz.generation.generation_state import GenerationState
 from quiz.generation.prompt import (

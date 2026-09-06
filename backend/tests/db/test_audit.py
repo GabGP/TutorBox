@@ -1,6 +1,6 @@
 import pytest
 
-from src.db.audit import VALID_ACTIONS, record_audit
+from core.db.audit import VALID_ACTIONS, record_audit
 
 
 def test_record_audit_valid_actions(temp_db):

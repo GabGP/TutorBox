@@ -6,8 +6,8 @@ import tempfile
 
 import pytest
 
-from db.migrations import apply_migrations
-from db.question_repository import create_question
+from core.db.migrations import apply_migrations
+from core.db.question_repository import create_question
 from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from session.engine import QuizSessionEngine
 from session.exceptions import (
@@ -143,8 +143,8 @@ def test_vote_on_expired_timer(voting_db):
 def test_vote_on_round_without_question(voting_db):
     conn, _ = voting_db
     engine = QuizSessionEngine(conn)
-    from db.round_repository import create_quiz_round
-    from db.session_repository import create_quiz_session
+    from core.db.round_repository import create_quiz_round
+    from core.db.session_repository import create_quiz_session
 
     create_quiz_session(conn, "s_no_q", "No Q", "topic", question_count=1)
     round_no_q = create_quiz_round(conn, "r_no_q", "s_no_q", 0, question_id=None)
@@ -158,7 +158,7 @@ def test_vote_on_round_without_question(voting_db):
 def test_vote_on_round_with_missing_question_in_db(voting_db):
     conn, question_id = voting_db
     engine = QuizSessionEngine(conn)
-    from db.question_repository import soft_delete_question
+    from core.db.question_repository import soft_delete_question
 
     engine.create_session("s_del_q", "Deleted Q", "arithmetic", [question_id])
     round_rec = engine.start_session("s_del_q")

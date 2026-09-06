@@ -1,7 +1,7 @@
 """Configuration constants and environment variable resolvers for rate limiters."""
 
-import config
-from config import (
+from core import config
+from core.config import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
     DEFAULT_AUTH_MAX_TRACKED_KEYS,

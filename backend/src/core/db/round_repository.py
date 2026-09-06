@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from db.session_mapper import row_to_quiz_round
+from core.db.session_mapper import row_to_quiz_round
 from session.models import QuizRoundRecord
 
 

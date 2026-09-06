@@ -3,9 +3,9 @@
 import sqlite3
 import uuid
 
-from db.question_repository import get_question_by_id
-from db.round_repository import get_quiz_round
-from db.vote_repository import record_student_vote
+from core.db.question_repository import get_question_by_id
+from core.db.round_repository import get_quiz_round
+from core.db.vote_repository import record_student_vote
 from session.exceptions import (
     InvalidOptionError,
     InvalidRoundStateError,

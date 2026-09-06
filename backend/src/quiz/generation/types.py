@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from typing import Any
 
-from config import DEFAULT_QUIZ_MAX_RETRIES, get_settings
+from core.config import DEFAULT_QUIZ_MAX_RETRIES, get_settings
 from quiz.contracts.models import GenerationMetadata, QuizQuestion
 
 DEFAULT_MAX_RETRIES: int = DEFAULT_QUIZ_MAX_RETRIES

@@ -11,10 +11,10 @@ from api.session.schemas import (
     VoteResponse,
 )
 from api.session.state_builder import build_session_state
-from db.database import get_db
-from db.round_repository import get_round_by_index
-from db.session_repository import get_quiz_session
-from security import AuthContext, get_current_session
+from core.db.database import get_db
+from core.db.round_repository import get_round_by_index
+from core.db.session_repository import get_quiz_session
+from core.security import AuthContext, get_current_session
 from session.engine import QuizSessionEngine
 from session.exceptions import (
     InvalidOptionError,

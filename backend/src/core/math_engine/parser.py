@@ -3,7 +3,7 @@ from typing import Any
 
 import sympy as sp
 
-from math_engine.equation_parser import (
+from core.math_engine.equation_parser import (
     PARSE_ERRORS,
     parse_equation_components,
 )

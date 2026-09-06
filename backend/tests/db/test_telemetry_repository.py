@@ -2,8 +2,8 @@
 
 import sqlite3
 
-from db.question_repository import create_question
-from db.telemetry_repository import (
+from core.db.question_repository import create_question
+from core.db.telemetry_repository import (
     get_generation_log_by_id,
     get_generation_summary_metrics,
     list_generation_logs,

@@ -5,10 +5,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from db.database import get_db
-from db.question_repository import count_questions, get_question_by_id, list_questions
+from core.db.database import get_db
+from core.db.question_repository import (
+    count_questions,
+    get_question_by_id,
+    list_questions,
+)
+from core.security import AuthContext, require_roles
 from quiz.contracts.models import QuestionListResponse, QuizQuestionResponse
-from security import AuthContext, require_roles
 
 logger = logging.getLogger(__name__)
 DEFAULT_QUESTION_LIMIT: int = 50

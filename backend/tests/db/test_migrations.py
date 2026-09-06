@@ -2,7 +2,7 @@ import os
 import sqlite3
 import tempfile
 
-from src.db.migrations import apply_migrations
+from core.db.migrations import apply_migrations
 
 
 def test_migrations_applied_successfully():
@@ -117,7 +117,7 @@ def test_migrations_missing_directory():
 
     try:
         with patch(
-            "src.db.migrations.get_migrations_dir",
+            "core.db.migrations.get_migrations_dir",
             return_value=Path("/non_existent_dir_12345"),
         ):
             apply_migrations(db_path)
@@ -152,7 +152,7 @@ def test_migrations_invalid_filename_skipped(tmp_path):
         "CREATE TABLE valid_table (id INT);", encoding="utf-8"
     )
 
-    with patch("src.db.migrations.get_migrations_dir", return_value=mig_dir):
+    with patch("core.db.migrations.get_migrations_dir", return_value=mig_dir):
         apply_migrations(db_path)
 
     conn = sqlite3.connect(db_path)
@@ -186,7 +186,7 @@ def test_migrations_skip_duplicate_version_numbers(tmp_path):
         "CREATE TABLE second_table (id INT);", encoding="utf-8"
     )
 
-    with patch("src.db.migrations.get_migrations_dir", return_value=mig_dir):
+    with patch("core.db.migrations.get_migrations_dir", return_value=mig_dir):
         apply_migrations(db_path)  # must not raise
 
     conn = sqlite3.connect(db_path)
@@ -221,7 +221,7 @@ def test_migrations_rollback_on_failure(tmp_path):
     )
 
     with (
-        patch("src.db.migrations.get_migrations_dir", return_value=mig_dir),
+        patch("core.db.migrations.get_migrations_dir", return_value=mig_dir),
         pytest.raises(sqlite3.OperationalError),
     ):
         apply_migrations(db_path)

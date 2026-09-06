@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from llm import LLMClient, MockLLMClient
+from core.llm import LLMClient, MockLLMClient
 from quiz.generation.generator import GenerationError, QuizQuestionGenerator
 from quiz.validation.validator import SymPyMathValidator
 

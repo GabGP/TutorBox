@@ -1,6 +1,6 @@
 import sympy as sp
 
-from math_engine.equation_parser import parse_equation_components
+from core.math_engine.equation_parser import parse_equation_components
 
 
 def extract_linear_polynomial(

@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from security import DeviceIdField, PinField, RoleField, UsernameField
+from core.security import DeviceIdField, PinField, RoleField, UsernameField
 
 
 class CreateUserRequest(BaseModel):

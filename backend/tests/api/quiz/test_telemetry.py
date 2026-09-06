@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from db.telemetry_repository import record_generation_log
+from core.db.telemetry_repository import record_generation_log
 from tests.conftest import auth_headers
 
 

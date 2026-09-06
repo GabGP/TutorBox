@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from src.db.database import get_db_connection
+from core.db.database import get_db_connection
 
 
 def test_signup_success(temp_db, client: TestClient):
@@ -48,7 +48,11 @@ def test_signup_rate_limiting_triggers_429(temp_db, client: TestClient, monkeypa
     """
     import sys
 
-    for mod_name in ("security.rate_limit", "src.security.rate_limit"):
+    for mod_name in (
+        "core.security.rate_limit",
+        "src.core.security.rate_limit",
+        "security.rate_limit",
+    ):
         if mod_name in sys.modules:
             monkeypatch.setattr(
                 sys.modules[mod_name].signup_rate_limiter, "allow", lambda: False

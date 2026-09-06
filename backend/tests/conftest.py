@@ -10,10 +10,10 @@ os.environ["BCRYPT_ROUNDS"] = "4"
 import pytest
 from fastapi.testclient import TestClient
 
-from src.db.database import get_db_connection
-from src.db.migrations import apply_migrations
+from core.db.database import get_db_connection
+from core.db.migrations import apply_migrations
+from core.security.auth import hash_pin
 from src.main import app
-from src.security.auth import hash_pin
 
 # Cache pre-hashed default test PIN ('1234') across fixtures
 PRE_HASHED_PIN_1234 = hash_pin("1234")
@@ -38,7 +38,7 @@ def _reset_rate_limiters():
     """
 
     def _clear_all():
-        for mod_name in ("security.rate_limit", "src.security.rate_limit"):
+        for mod_name in ("core.security.rate_limit", "src.core.security.rate_limit"):
             mod = sys.modules.get(mod_name)
             if mod:
                 if hasattr(mod, "login_rate_limiter"):

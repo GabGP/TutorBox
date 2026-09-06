@@ -6,10 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.quiz.dependencies import get_quiz_generator
-from db.audit import record_audit
-from db.database import get_db
-from db.question_repository import create_question, get_question_by_id
-from db.telemetry_repository import record_generation_log
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.db.question_repository import create_question, get_question_by_id
+from core.db.telemetry_repository import record_generation_log
+from core.security import AuthContext, require_roles
 from quiz.contracts.models import (
     GenerateQuestionRequest,
     GenerateQuestionResponse,
@@ -18,7 +19,6 @@ from quiz.contracts.models import (
 from quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
 from quiz.generation.generator import QuizQuestionGenerator
 from quiz.generation.types import GenerationError
-from security import AuthContext, require_roles
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
