@@ -79,7 +79,7 @@ def test_export_quiz_question_schema(tmp_path: Path):
 
 def test_anti_drift_static_schema_file():
     """Anti-drift CI gate: ensures backend/schemas/v1/quiz_question.schema.json matches code schema."""
-    backend_root = Path(__file__).resolve().parents[3]
+    backend_root = Path(__file__).resolve().parents[4]
     static_schema_path = backend_root / "schemas" / "v1" / "quiz_question.schema.json"
 
     assert static_schema_path.exists(), (
