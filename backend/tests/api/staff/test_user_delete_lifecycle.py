@@ -5,10 +5,12 @@ import uuid
 from fastapi.testclient import TestClient
 
 from core.security.auth import verify_pin
-from tests.conftest import auth_headers, get_user_id
+from tests.conftest import get_user_id
 
 
-def test_teacher_deletes_student_success(staff_db, client: TestClient) -> None:
+def test_teacher_deletes_student_success(
+    staff_db, client: TestClient, teacher_headers
+) -> None:
     """Teacher can soft-delete a student.
 
     - Returns 200 OK with 'Account deleted.'.
@@ -31,7 +33,6 @@ def test_teacher_deletes_student_success(staff_db, client: TestClient) -> None:
     assert client.get("/api/v1/users/me", headers=student_headers).status_code == 200
 
     # Teacher deletes student1
-    teacher_headers = auth_headers(client, "teacher1", "1234")
     del_res = client.delete(
         f"/api/v1/staff/users/{student_id}", headers=teacher_headers
     )
@@ -63,11 +64,12 @@ def test_teacher_deletes_student_success(staff_db, client: TestClient) -> None:
     assert verify_pin("1234", row["hashed_pin"]) is False
 
 
-def test_delete_already_deleted_user_returns_404(staff_db, client: TestClient) -> None:
+def test_delete_already_deleted_user_returns_404(
+    staff_db, client: TestClient, admin_headers
+) -> None:
     """Deleting an already soft-deleted user returns 404 Not Found."""
     _, conn = staff_db
     student1_id = get_user_id(conn, "student1")
-    admin_headers = auth_headers(client, "admin1", "1234")
 
     # First delete succeeds
     assert (
@@ -84,7 +86,7 @@ def test_delete_already_deleted_user_returns_404(staff_db, client: TestClient) -
 
 
 def test_soft_delete_preserves_telemetry_turn_logs(
-    staff_db, client: TestClient
+    staff_db, client: TestClient, teacher_headers
 ) -> None:
     """Telemetry preservation: turn_logs records remain intact and joinable to user."""
     _, conn = staff_db
@@ -103,7 +105,6 @@ def test_soft_delete_preserves_telemetry_turn_logs(
     conn.commit()
 
     # Teacher deletes student1
-    teacher_headers = auth_headers(client, "teacher1", "1234")
     del_res = client.delete(
         f"/api/v1/staff/users/{student_id}", headers=teacher_headers
     )
@@ -126,12 +127,11 @@ def test_soft_delete_preserves_telemetry_turn_logs(
 
 
 def test_original_username_reusable_after_deletion(
-    staff_db, client: TestClient
+    staff_db, client: TestClient, teacher_headers
 ) -> None:
     """Once an account is soft-deleted, original username is immediately available."""
     _, conn = staff_db
     student_id = get_user_id(conn, "student1")
-    teacher_headers = auth_headers(client, "teacher1", "1234")
 
     # Delete student1
     assert (

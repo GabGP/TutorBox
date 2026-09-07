@@ -3,7 +3,7 @@
 from fastapi.testclient import TestClient
 
 from core.security.auth import hash_pin
-from tests.conftest import auth_headers, get_user_id
+from tests.conftest import get_user_id
 
 
 def test_delete_user_unauthenticated(client: TestClient) -> None:
@@ -11,41 +11,43 @@ def test_delete_user_unauthenticated(client: TestClient) -> None:
     assert client.delete("/api/v1/staff/users/1").status_code == 401
 
 
-def test_delete_user_forbidden_for_students(staff_db, client: TestClient) -> None:
+def test_delete_user_forbidden_for_students(
+    staff_db, client: TestClient, student_headers
+) -> None:
     """Students cannot delete accounts (403 Forbidden)."""
     _, conn = staff_db
     student2_id = get_user_id(conn, "student2")
-    student_headers = auth_headers(client, "student1", "1234")
 
     res = client.delete(f"/api/v1/staff/users/{student2_id}", headers=student_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Insufficient permissions."
 
 
-def test_teacher_deleting_admin_returns_403(staff_db, client: TestClient) -> None:
+def test_teacher_deleting_admin_returns_403(
+    staff_db, client: TestClient, teacher_headers
+) -> None:
     """Teacher cannot delete an admin account (403 Forbidden)."""
     _, conn = staff_db
     admin_id = get_user_id(conn, "admin1")
-    teacher_headers = auth_headers(client, "teacher1", "1234")
 
     res = client.delete(f"/api/v1/staff/users/{admin_id}", headers=teacher_headers)
     assert res.status_code == 403
     assert res.json()["detail"] == "Only admins may delete admin accounts."
 
 
-def test_delete_user_not_found(staff_db, client: TestClient) -> None:
+def test_delete_user_not_found(client: TestClient, admin_headers) -> None:
     """Deleting a non-existent user returns 404 Not Found."""
-    admin_headers = auth_headers(client, "admin1", "1234")
     res = client.delete("/api/v1/staff/users/99999", headers=admin_headers)
     assert res.status_code == 404
     assert res.json()["detail"] == "User not found."
 
 
-def test_admin_cannot_delete_last_remaining_admin(staff_db, client: TestClient) -> None:
+def test_admin_cannot_delete_last_remaining_admin(
+    staff_db, client: TestClient, admin_headers
+) -> None:
     """Last-admin guard: Appliance must never lose its final administrator (409 Conflict)."""
     _, conn = staff_db
     admin_id = get_user_id(conn, "admin1")
-    admin_headers = auth_headers(client, "admin1", "1234")
 
     # Only admin1 exists
     res = client.delete(f"/api/v1/staff/users/{admin_id}", headers=admin_headers)
@@ -85,10 +87,11 @@ def test_delete_user_blocked_during_pending_rotation(
     assert res.json()["detail"] == "PIN change required."
 
 
-def test_teacher_deletes_another_teacher_success(staff_db, client: TestClient) -> None:
+def test_teacher_deletes_another_teacher_success(
+    staff_db, client: TestClient, teacher_headers
+) -> None:
     """Under the uniform staff matrix, a teacher can soft-delete another teacher."""
     _, conn = staff_db
-    teacher_headers = auth_headers(client, "teacher1", "1234")
 
     # Create teacher2
     client.post(
@@ -105,10 +108,11 @@ def test_teacher_deletes_another_teacher_success(staff_db, client: TestClient) -
     assert del_res.json() == {"detail": "Account deleted."}
 
 
-def test_admin_deletes_anyone_success(staff_db, client: TestClient) -> None:
+def test_admin_deletes_anyone_success(
+    staff_db, client: TestClient, admin_headers
+) -> None:
     """Admin can delete students, teachers, and other admins (when not the last admin)."""
     _, conn = staff_db
-    admin_headers = auth_headers(client, "admin1", "1234")
 
     # Admin deletes student
     student_id = get_user_id(conn, "student1")

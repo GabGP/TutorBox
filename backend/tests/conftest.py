@@ -137,6 +137,24 @@ def auth_headers(
     return {"Authorization": f"Bearer {response.json()['session_id']}"}
 
 
+@pytest.fixture
+def admin_headers(client: TestClient, staff_db) -> dict[str, str]:
+    """Pre-authenticated Bearer headers for default admin user."""
+    return auth_headers(client, "admin1")
+
+
+@pytest.fixture
+def teacher_headers(client: TestClient, staff_db) -> dict[str, str]:
+    """Pre-authenticated Bearer headers for default teacher user."""
+    return auth_headers(client, "teacher1")
+
+
+@pytest.fixture
+def student_headers(client: TestClient, staff_db) -> dict[str, str]:
+    """Pre-authenticated Bearer headers for default student user."""
+    return auth_headers(client, "student1")
+
+
 def get_user_id(conn: sqlite3.Connection, username: str) -> int:
     """Helper to query user id by username."""
     cursor = conn.cursor()
