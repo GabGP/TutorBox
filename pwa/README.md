@@ -7,7 +7,7 @@ React / Vite Progressive Web App client hosted directly on the NVIDIA Jetson Ori
 | 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 **PWA** | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Frontend (PWA)** › **Overview** • **Related:** [Docs](../docs/README.md) • [REST API Reference](../docs/api-reference.md) • [Three Modes](../docs/architecture/three-modes.md)
+📍 **Frontend (PWA) Hub** • **Related:** [Docs Hub](../docs/README.md) • [REST API Hub](../docs/api/README.md) • [Three Modes](../docs/architecture/three-modes.md)
 
 </div>
 
@@ -32,6 +32,6 @@ React / Vite Progressive Web App client hosted directly on the NVIDIA Jetson Ori
 
 ## Next Steps
 
-* **[REST API Reference](../docs/api-reference.md)**: Explore endpoint contracts for frontend client integration.
+* **[REST API Specifications](../docs/api/README.md)**: Explore endpoint contracts for frontend client integration.
 * **[Documentation Portal](../docs/README.md)**: View the overarching documentation index.
 * **[10-Week Engineering Roadmap](../docs/milestones/roadmap.md)**: View frontend deliverables scheduled across Weeks 2–10.

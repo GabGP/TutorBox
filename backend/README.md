@@ -9,7 +9,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 | 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Backend** › **Overview** • **Related:** [REST API Reference](../docs/api-reference.md) • [Database Schema](../docs/database-schema.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
+📍 **Backend Hub** • **Related:** [REST API Hub](../docs/api/README.md) • [Database Schema](../docs/database/README.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
 
 </div>
 
@@ -71,8 +71,8 @@ The following items are planned deliverables across upcoming milestone phases:
 
 For further details check these documents:
 
-* **[REST API Reference & Contracts (`docs/api-reference.md`)](../docs/api-reference.md)**: Authoritative specification for all REST endpoints, complete request/response JSON schemas, Role-Based Access Control (RBAC) matrix, error status triggers, and anti-oracle validation rules.
-* **[Database Schema & ER Model (`docs/database-schema.md`)](../docs/database-schema.md)**: Authoritative specification for SQLite tables, columns, constraints, performance indexes, data lifecycle policies, and migration logs.
+* **[REST API Specifications (`docs/api/`)](../docs/api/README.md)**: Authoritative specification for all REST endpoints, complete request/response JSON schemas, Role-Based Access Control (RBAC) matrix, error status triggers, and anti-oracle validation rules.
+* **[Database Schema & ER Model (`docs/database/`)](../docs/database/README.md)**: Authoritative specification for SQLite tables, columns, constraints, performance indexes, and data lifecycle policies. For migration changelogs and runbooks, see **[Migrations Playbook (`docs/database/migrations.md`)](../docs/database/migrations.md)**.
 * **Interactive OpenAPI Swagger UI**: When running the backend server locally, navigate to <http://127.0.0.1:8000/docs> for live interactive testing or <http://127.0.0.1:8000/openapi.json> for the machine-readable schema.
 
 ---
@@ -227,7 +227,8 @@ backend/
 
 ## Next Steps
 
-* **[REST API Reference & Contracts](../docs/api-reference.md)**: Explore the endpoint contracts, request/response schemas, and RBAC matrix.
-* **[Database Schema Reference](../docs/database-schema.md)**: Explore the SQLite table definitions and ER diagram.
+* **[REST API Specifications](../docs/api/README.md)**: Explore the modular endpoint contracts, request/response schemas, and RBAC matrix.
+* **[Database Schema Reference](../docs/database/README.md)**: Explore the SQLite table definitions and ER diagram.
+* **[Database Migrations Playbook](../docs/database/migrations.md)**: Explore migration procedures, changelog, and testing runbooks.
 * **[Documentation Portal](../docs/README.md)**: View the overarching documentation index.
 * **[Root Repository Overview](../README.md)**: Return to the project root overview.

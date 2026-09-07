@@ -7,7 +7,7 @@ Pedagogical architecture and classification model for **TutorBox Mode 1 (Classro
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Architecture** › **Diagnostic Distractors** • **Related:** [REST API Reference](../api-reference.md) • [Database Schema](../database-schema.md)
+📍 [Docs](../README.md) › **Architecture** › **Diagnostic Distractors** • **Related:** [Quiz API Spec](../api/quiz.md) • [Database Schema](../database/README.md)
 
 </div>
 
@@ -187,7 +187,7 @@ flowchart TD
 * **Autoregressive Alignment**: Because Transformers generate text left-to-right, forcing `"derivation_scratchpad"` as the **first property** in `build_quiz_response_format()` ensures the model chooses its root and coefficients before emitting the equation in `"question_text"`.
 * **Bounded Edge Latency vs. Reasoning Runaway**: Reasoning models (e.g. `DeepSeek-R1-Distill`) can emit 1,000–2,000 thinking tokens, taking 50–100 seconds at ~20 tokens/sec on the Jetson Orin Nano. An in-schema scratchpad instructed to execute in 2–4 lines emits only **40–60 tokens (2.0–3.0 seconds)**.
 * **KV Cache & Memory Budget**: Consuming only ~50 tokens prevents KV cache bloat, keeping memory safely within the Jetson's 8GB unified RAM budget alongside the OS, database, and TTS engine.
-* **Ephemeral Ingestion Boundary**: The scratchpad is an ephemeral inference mechanism. [`extract_scratchpad()`](../../backend/src/quiz/generation/response_processor.py) removes it during response processing, attaching it to [`GenerationMetadata`](../../backend/src/quiz/contracts/models.py) for telemetry inspection while leaving the [`QuizQuestion`](../../backend/src/quiz/contracts/models.py) database schema and mobile clients 100% pristine.
+* **Ephemeral Ingestion Boundary**: The scratchpad is an ephemeral inference mechanism. [`extract_scratchpad()`](../../backend/src/modes/quiz/generation/response_processor.py) removes it during response processing, attaching it to [`GenerationMetadata`](../../backend/src/modes/quiz/contracts/models.py) for telemetry inspection while leaving the [`QuizQuestion`](../../backend/src/modes/quiz/contracts/models.py) database schema and mobile clients 100% pristine.
 
 ### Anti-Guessing Option & Misconception Permutation
 To prevent students from inferring correct answers through positional biases (e.g. LLM few-shot template bias always emitting correct answers in option `A`) or predictable distractor ordering:
@@ -216,12 +216,12 @@ Every multiple-choice diagnostic quiz question in TutorBox is governed by an imm
 * **Canonical Schema URI (`$id`)**: `https://tutorbox.local/schemas/v1/quiz_question.schema.json`
 * **Static Repository Artifact**: `backend/schemas/v1/quiz_question.schema.json`
 * **Dynamic Inspection Endpoint**: `GET /quiz/schema` (public, unauthenticated)
-* **Anti-Drift CI Gate**: Automated unit tests (`backend/tests/quiz/contracts/test_schema.py`) strictly guarantee that Pydantic contract definitions, static repository schema files, and API endpoints remain 100% synchronized.
+* **Anti-Drift CI Gate**: Automated unit tests (`backend/tests/modes/quiz/contracts/test_schema.py`) strictly guarantee that Pydantic contract definitions, static repository schema files, and API endpoints remain 100% synchronized.
 
 ---
 
 ## Next Steps
 
-* **[REST API Reference](../api-reference.md)**: Explore the endpoint contracts for `/quiz/schema`, `/quiz/generate`, `/quiz/validate`, `/quiz/questions`, and `/quiz/topics`.
-* **[Database Schema Reference](../database-schema.md)**: Inspect the `quiz_questions` table specification and migration changelog.
+* **[Quiz API Specification](../api/quiz.md)**: Explore the endpoint contracts for `/quiz/schema`, `/quiz/generate`, `/quiz/validate`, `/quiz/questions`, and `/quiz/topics`.
+* **[Database Schema Reference](../database/README.md)**: Inspect the `quiz_questions` table specification and migration changelog.
 * **[Backend Guide](../../backend/README.md)**: Run tests and inspect backend implementation details.

@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Milestones** › **Week 2 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Diagnostic Distractors](../architecture/diagnostic-distractors.md)
+📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 2 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Diagnostic Distractors](../architecture/diagnostic-distractors.md)
 
 </div>
 

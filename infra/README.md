@@ -7,7 +7,7 @@ Deployment configurations, systemd service units, and isolated networking setup 
 | 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 **Infra** |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Infrastructure** › **Overview** • **Related:** [Hardware Topology](../docs/architecture/hardware-topology.md) • [Backend Guide](../backend/README.md)
+📍 **Infrastructure Hub** • **Related:** [Hardware Topology](../docs/architecture/hardware-topology.md) • [Backend Guide](../backend/README.md) • [GL.iNet Setup](glinet/initial.md)
 
 </div>
 

@@ -7,7 +7,7 @@ Comprehensive engineering specification for the **TutorBox Physical Clicker Subs
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Docs** › **Architecture** › **ESP32 Clicker Transport** • **Related:** [Hardware Topology](hardware-topology.md) • [Three Modes](three-modes.md) • [Database Schema](../database-schema.md)
+📍 [Docs](../README.md) › **Architecture** › **ESP32 Clicker Transport** • **Related:** [Hardware Topology](hardware-topology.md) • [Three Modes](three-modes.md) • [Database Schema](../database/README.md)
 
 </div>
 
@@ -315,6 +315,6 @@ gantt
 
 ## Next Steps
 
-* **[REST API Reference](../api-reference.md)**: Explore the `/devices` and `/users` endpoint specifications.
-* **[Database Schema Reference](../database-schema.md)**: Review table definitions and ER relationships.
+* **[Hardware Devices API Spec](../api/devices.md)**: Explore the `/staff/devices` and student pairing endpoint specifications.
+* **[Database Schema Reference](../database/README.md)**: Review table definitions and ER relationships.
 * **[Hardware Topology](hardware-topology.md)**: Explore overall edge appliance hardware and RAM budgets.

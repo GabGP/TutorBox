@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Infrastructure** › **GL.iNet** › **Initial AP Setup** • **Related:** [Hardware Topology](../../docs/architecture/hardware-topology.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md)
+📍 [Infra](../README.md) › **GL.iNet Initial Setup** • **Related:** [Hardware Topology](../../docs/architecture/hardware-topology.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md)
 
 </div>
 
@@ -305,7 +305,7 @@ passes only because no cable is attached proves nothing.
 - [ ] From a student phone with that cable still attached: a public site fails to load, while the
       PWA still works.
 - [ ] Backend health probe answers through the AP: `curl http://192.168.8.2/health` from a laptop
-      on the classroom Wi-Fi (see [API Reference](../../docs/api-reference.md)).
+      on the classroom Wi-Fi (see [System & Health API Specification](../../docs/api/system.md)).
 - [ ] Reboot once more and re-check the last three items — this catches config that was never
       committed and rules that do not survive a power cycle.
 

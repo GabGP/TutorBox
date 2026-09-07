@@ -7,7 +7,7 @@
 | 🏠 **TutorBox** | 📚 [Docs](docs/README.md) | ⚙️ [Backend](backend/README.md) | 📱 [PWA](pwa/README.md) | 🔌 [Infra](infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 **Root** › **Overview** • **Quick Links:** [Architecture](docs/README.md#2-system-architecture--modes) • [Roadmap](docs/milestones/roadmap.md) • [API Reference](docs/api-reference.md) • [Database Schema](docs/database-schema.md)
+📍 **Root Overview** • **Quick Links:** [Architecture](docs/README.md#1-system-architecture--appliance-modes) • [Roadmap](docs/milestones/roadmap.md) • [API Hub](docs/api/README.md) • [Database Schema](docs/database/README.md)
 
 </div>
 
@@ -118,9 +118,9 @@ TutorBox/
 
 ## <a id="6-technical-documentation"></a>6. Technical Documentation
 
-* **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications.
-* **[Database Schema & ER Model](docs/database-schema.md)**: SQLite schema dictionaries, indexes, and migration log.
-* **[REST API Reference & Contracts](docs/api-reference.md)**: RBAC matrix, auth flows, error formats, and 18 endpoint specifications.
+* **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications across all subsystems.
+* **[Database Schema & ER Model](docs/database/README.md)**: SQLite schema dictionaries, ER diagrams, indexes, and policies (with the **[Migrations Playbook](docs/database/migrations.md)**).
+* **[REST API Specifications](docs/api/README.md)**: Modular domain contracts, RBAC matrix, auth flows, error formats, and security policies.
 * **[ESP32 Clicker Transport Specification](docs/architecture/esp32-clicker-transport.md)**: Physical hardware, network transport, dual LEDs, and `VoteTransport` interface.
 * **[Backend Developer Guide](backend/README.md)**: Backend installation, local execution, and testing guide.
 
