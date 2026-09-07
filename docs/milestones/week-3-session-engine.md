@@ -37,8 +37,8 @@ This document summarizes the technical deliverables, architectural implementatio
 1. **Database Persistence & First-Press Locking (`010_add_quiz_sessions_and_votes.sql`)**:
    * Migration `010_add_quiz_sessions_and_votes.sql` establishing tables `quiz_sessions`, `quiz_session_rounds`, and `quiz_session_votes` with indexing on `(session_id, round_index)`, `student_id`, and `(is_correct, misconception)`.
    * Strict database-layer first-press lock enforcement via `UNIQUE(round_id, student_id)`, preventing duplicate vote submissions per question round.
-   * High-speed repository layer (`backend/src/db/session_repository.py`, `backend/src/db/round_repository.py`, `backend/src/db/vote_repository.py`, `backend/src/db/session_mapper.py`) supporting atomic vote insertions, round progression, and aggregate vote tallies.
-2. **Domain Models & Exception Contracts (`backend/src/session/`)**:
+   * High-speed repository layer (`backend/src/core/db/session_repository.py`, `backend/src/core/db/round_repository.py`, `backend/src/core/db/vote_repository.py`, `backend/src/core/db/session_mapper.py`) supporting atomic vote insertions, round progression, and aggregate vote tallies.
+2. **Domain Models & Exception Contracts (`backend/src/modes/quiz/session/`)**:
    * Strongly typed domain models (`models.py`) defining `SessionStatus`, `RoundStatus`, `StudentVoteRecord`, `RoundTally`, `TurnDecision`, and `SessionSummary`.
    * Standardized exception hierarchy (`exceptions.py`) handling `SessionNotFoundError`, `RoundNotFoundError`, `InvalidSessionStateError`, `InvalidRoundStateError`, `VoteAlreadyCastError`, and `InvalidOptionError`.
 3. **Vote Aggregator & Formal >51% Rule Evaluator**:
@@ -61,9 +61,9 @@ This document summarizes the technical deliverables, architectural implementatio
      * `reports.py`: Aggregate match reporting (`GET /{session_id}/report`) with accuracy calculations.
      * Registered in `backend/src/api/router.py`.
 6. **Architectural Hardening & Modularity Decompression**:
-   * Extracted `session/events.py` (23 LoC) to encapsulate event dispatching and shared in-memory timer/listener state, decompressing `session/engine.py` from 148 to 131 LoC.
+   * Extracted `modes/quiz/session/events.py` (23 LoC) to encapsulate event dispatching and shared in-memory timer/listener state, decompressing `modes/quiz/session/engine.py` from 148 to 131 LoC.
    * Extracted `api/session/dependencies.py` (25 LoC) to centralize session and round entity resolution, reducing `api/session/host.py` from 149 to 116 LoC.
-   * Extracted `quiz/validation/similarity_helpers.py` (38 LoC) to isolate text normalization and string distance math, reducing `quiz/validation/deduplication.py` from 148 to 103 LoC.
+   * Extracted `modes/quiz/validation/similarity_helpers.py` (38 LoC) to isolate text normalization and string distance math, reducing `modes/quiz/validation/deduplication.py` from 148 to 103 LoC.
    * Standardized `api/staff/` action modules (`user_delete.py`, `user_recover.py`, `user_reset_pin.py`) and centralized DTO schemas across all API packages, establishing 100% compliance with $\le 133$ LoC ceilings across all production modules.
 
 ---
@@ -72,7 +72,7 @@ This document summarizes the technical deliverables, architectural implementatio
 
 **Interface Contracts & Open Hooks Provided by Student A for Student B Integration:**
 
-* **Open Event Hook in `QuizSessionEngine`** (`backend/src/session/engine.py`):
+* **Open Event Hook in `QuizSessionEngine`** (`backend/src/modes/quiz/session/engine.py`):
   ```python
   EventListener = Callable[[str, dict[str, Any]], None]
 

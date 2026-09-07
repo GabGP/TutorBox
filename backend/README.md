@@ -45,21 +45,17 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - In-memory rate limiting: credential lockout limiter (consecutive failure backoff) and global sliding window limiters (signup / rate-throttling).
   - Bearer session token lifecycle with active session deactivation.
   - Zero-credential logging guards and anti-oracle check ordering.
-- **Centralized Configuration & Environment Loader**:
-  - Top-level `config` package providing typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`).
-  - Safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
-- **Database & Migrations**:
-  - SQLite database with foreign keys, index optimization, and WAL mode.
-  - Numbered, idempotent schema migrations.
-  - Append-only `audit_logs` table tracking privileged user, account, and hardware pairing mutations.
-  - Persistent `quiz_questions` repository with diagnostic distractors and SymPy mathematical verification flags.
-  - Append-only `quiz_generation_logs` telemetry repository tracking SLM generation attempts, latency profiling, and rejection trails.
+- **Platform Infrastructure (`core/`)**:
+  - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
+  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, and generation telemetry.
+  - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
+  - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
+  - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
 
-- **Classroom Quiz Engine & Real-Time Session Engine (Weeks 2 & 3)**:
-  - Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, and curated 66-question seed bank.
-  - Multi-stage prompt rejection/regeneration pipeline with anti-guessing shuffler and LaTeX math delimiter normalization.
-  - Universal SymPy AST parsing, mathematical truth validation, and non-equality proofs.
-  - Real-time session engine with monotonic countdown timer, vote aggregation, first-press lock enforcement (`UNIQUE(round_id, student_id)`), and formal >51% Rule distractor evaluator.
+- **Appliance Operating Modes (`modes/`)**:
+  - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
+  - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Planned for Week 5 (mobile conversational math practice, Socratic hint ladders, SymPy containment).
+  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: Planned for Week 6 (offline educational games, student error event ingestion, opportunistic AP sync).
 
 The following items are planned deliverables across upcoming milestone phases:
 
@@ -182,7 +178,8 @@ python -m pytest -n 4
 Run isolated test directories during focused development:
 ```bash
 python -m pytest tests/api/staff/ -o addopts="--strict-markers"
-python -m pytest tests/security/ -o addopts="--strict-markers"
+python -m pytest tests/core/security/ -o addopts="--strict-markers"
+python -m pytest tests/modes/quiz/ -o addopts="--strict-markers"
 ```
 
 ### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:
@@ -193,7 +190,7 @@ ruff format --check .
 ```
 
 Auto-format all code:
-```bashs
+```bash
 ruff format .
 ```
 
@@ -210,14 +207,18 @@ backend/
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
 │   ├── api/           # FastAPI route modules (auth, health, quiz, session, staff, users) mounted under /api/v1
-│   ├── config/        # Centralized typed domain settings engine and .env environment loader
-│   ├── db/            # SQLite connection, quiz & session repositories, vote persistence, and audit logger
-│   ├── llm/           # Abstract LLM client interface, HTTP local SLM client, and test mock client
-│   ├── math_engine/   # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
-│   ├── quiz/          # Diagnostic contracts, taxonomy, generation pipeline with anti-guessing shuffler, seed dataset, and SymPy validator
-│   ├── security/      # bcrypt PIN hashing, session tokens, and rate limiters
-│   └── session/       # Quiz session engine, >51% rule evaluator, countdown timer, vote processor
-├── tests/             # Pytest test suite mirroring src/ with 100% coverage
+│   ├── core/          # Platform infrastructure & transversal foundation
+│   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
+│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry), migrations & audit
+│   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
+│   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
+│   │   └── security/  # bcrypt PIN hashing, session tokens, and rate limiters
+│   └── modes/         # TutorBox bounded appliance operating modes
+│       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
+│       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor
+│       ├── socratic/  # Mode 2: Socratic Math Practice Tutor (Week 5 stub)
+│       └── games/     # Mode 3: Offline Primary Educational Games (Week 6 stub)
+├── tests/             # Pytest test suite mirroring src/ (core/, modes/, api/) with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
 └── README.md          # Backend developer documentation and local setup guide
 ```
