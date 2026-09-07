@@ -9,10 +9,12 @@ from . import (
     round_repository,
     session_mapper,
     session_repository,
+    telemetry_mapper,
     telemetry_repository,
     vote_repository,
 )
 from .audit import VALID_ACTIONS, record_audit
+from .telemetry_mapper import row_to_telemetry_dict
 from .telemetry_repository import (
     get_generation_log_by_id,
     get_generation_summary_metrics,
@@ -41,8 +43,10 @@ __all__ = [
     "record_audit",
     "record_generation_log",
     "round_repository",
+    "row_to_telemetry_dict",
     "session_mapper",
     "session_repository",
+    "telemetry_mapper",
     "telemetry_repository",
     "vote_repository",
 ]

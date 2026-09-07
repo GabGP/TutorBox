@@ -4,6 +4,8 @@ import json
 import sqlite3
 from typing import Any
 
+from core.db.telemetry_mapper import row_to_telemetry_dict
+
 DEFAULT_TELEMETRY_LOG_LIMIT: int = 50
 
 
@@ -49,31 +51,13 @@ def record_generation_log(
     return row_id
 
 
-def _row_to_telemetry_dict(row: sqlite3.Row) -> dict[str, Any]:
-    """Converts a database row into a structured telemetry dictionary."""
-    rejection_json = row["rejection_history_json"]
-    return {
-        "id": row["id"],
-        "question_id": row["question_id"],
-        "user_id": row["user_id"],
-        "topic": row["topic"],
-        "subconcept": row["subconcept"],
-        "model_name": row["model_name"],
-        "attempts": row["attempts"],
-        "duration_ms": float(row["duration_ms"]),
-        "success": bool(row["success"]),
-        "rejection_history": json.loads(rejection_json) if rejection_json else [],
-        "created_at": row["created_at"],
-    }
-
-
 def get_generation_log_by_id(
     conn: sqlite3.Connection, log_id: int
 ) -> dict[str, Any] | None:
     """Retrieves a single quiz generation telemetry record by ID."""
     cursor = conn.execute("SELECT * FROM quiz_generation_logs WHERE id = ?", (log_id,))
     row = cursor.fetchone()
-    return _row_to_telemetry_dict(row) if row is not None else None
+    return row_to_telemetry_dict(row) if row is not None else None
 
 
 def list_generation_logs(
@@ -105,7 +89,7 @@ def list_generation_logs(
     )
     params.extend([limit, offset])
     cursor = conn.execute(query, params)
-    return [_row_to_telemetry_dict(row) for row in cursor.fetchall()]
+    return [row_to_telemetry_dict(row) for row in cursor.fetchall()]
 
 
 def get_generation_summary_metrics(
