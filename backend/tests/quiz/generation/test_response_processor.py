@@ -1,14 +1,14 @@
-from quiz.contracts.models import QuizQuestion
-from quiz.generation.response_processor import (
+from modes.quiz.contracts.models import QuizQuestion
+from modes.quiz.generation.response_processor import (
     extract_json_dict,
     extract_scratchpad,
     process_generated_response,
     resolve_question_id,
 )
-from quiz.validation.deduplication import DeduplicationValidator
-from quiz.validation.distractor_consistency import DistractorConsistencyValidator
-from quiz.validation.taxonomy_validator import TaxonomyValidator
-from quiz.validation.validator import SymPyMathValidator
+from modes.quiz.validation.deduplication import DeduplicationValidator
+from modes.quiz.validation.distractor_consistency import DistractorConsistencyValidator
+from modes.quiz.validation.taxonomy_validator import TaxonomyValidator
+from modes.quiz.validation.validator import SymPyMathValidator
 
 
 def sample_raw_quiz_dict() -> dict:

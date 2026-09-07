@@ -1,6 +1,6 @@
 """Unit tests for the monotonic round voting timer."""
 
-from session.timer import RoundTimer
+from modes.quiz.session.timer import RoundTimer
 
 
 def test_timer_initial_state():

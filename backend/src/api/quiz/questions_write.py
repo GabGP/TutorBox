@@ -15,13 +15,13 @@ from core.db.question_repository import (
     soft_delete_question,
 )
 from core.security import AuthContext, require_roles
-from quiz.contracts.models import (
+from modes.quiz.contracts.models import (
     QuizDeleteResponse,
     QuizQuestionCreate,
     QuizQuestionResponse,
 )
-from quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
-from quiz.validation.validator import MathValidatorInterface
+from modes.quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
+from modes.quiz.validation.validator import MathValidatorInterface
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

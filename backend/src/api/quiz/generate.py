@@ -11,14 +11,14 @@ from core.db.database import get_db
 from core.db.question_repository import create_question, get_question_by_id
 from core.db.telemetry_repository import record_generation_log
 from core.security import AuthContext, require_roles
-from quiz.contracts.models import (
+from modes.quiz.contracts.models import (
     GenerateQuestionRequest,
     GenerateQuestionResponse,
     QuizQuestionResponse,
 )
-from quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
-from quiz.generation.generator import QuizQuestionGenerator
-from quiz.generation.types import GenerationError
+from modes.quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
+from modes.quiz.generation.generator import QuizQuestionGenerator
+from modes.quiz.generation.types import GenerationError
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

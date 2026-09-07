@@ -11,8 +11,8 @@ from core.db.vote_repository import (
     has_student_voted,
     record_student_vote,
 )
-from session.exceptions import VoteAlreadyCastError
-from session.models import TransportType
+from modes.quiz.session.exceptions import VoteAlreadyCastError
+from modes.quiz.session.models import TransportType
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
-from quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
-from quiz.generation.exemplars import get_canonical_exemplar
-from quiz.generation.prompt import (
+from modes.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
+from modes.quiz.generation.exemplars import get_canonical_exemplar
+from modes.quiz.generation.prompt import (
     build_feedback_prompt,
     build_quiz_response_format,
     build_quiz_system_prompt,
@@ -184,7 +184,7 @@ def test_build_quiz_response_format():
 
 
 def test_build_quiz_response_format_module_parity():
-    from quiz.generation.response_format import (
+    from modes.quiz.generation.response_format import (
         build_quiz_response_format as direct_build_quiz_response_format,
     )
 

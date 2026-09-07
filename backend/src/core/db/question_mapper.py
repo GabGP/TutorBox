@@ -3,7 +3,7 @@
 import json
 import sqlite3
 
-from quiz.contracts.models import (
+from modes.quiz.contracts.models import (
     DistractorDetail,
     QuizQuestion,
     QuizQuestionCreate,

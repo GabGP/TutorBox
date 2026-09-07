@@ -1,6 +1,6 @@
 """Unit tests for math delimiter, LaTeX fraction, and option sanitization."""
 
-from src.quiz.contracts.sanitizer import (
+from modes.quiz.contracts.sanitizer import (
     _strip_leaked_option_listings,
     normalize_latex_fractions,
     sanitize_distractors_dict,

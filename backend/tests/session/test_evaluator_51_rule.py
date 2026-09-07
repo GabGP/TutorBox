@@ -1,8 +1,8 @@
 """Formal validation and edge-case testing of the deterministic >51% Rule."""
 
-from quiz.contracts.models import DistractorDetail
-from session.aggregator import compute_tally_from_counts
-from session.evaluator import evaluate_turn_decision
+from modes.quiz.contracts.models import DistractorDetail
+from modes.quiz.session.aggregator import compute_tally_from_counts
+from modes.quiz.session.evaluator import evaluate_turn_decision
 
 MOCK_DISTRACTORS = {
     "B": DistractorDetail(
@@ -180,7 +180,7 @@ def test_evaluator_unsupported_distractor_metadata_type():
 
 
 def test_evaluator_zero_distractor_votes_and_minority_correct():
-    from session.models import RoundTally
+    from modes.quiz.session.models import RoundTally
 
     tally = RoundTally(
         counts={"A": 2, "B": 0, "C": 0, "D": 0},

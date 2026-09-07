@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from session.models import RoundTally, TurnDecision
+from modes.quiz.session.models import RoundTally, TurnDecision
 
 
 class CreateSessionRequest(BaseModel):

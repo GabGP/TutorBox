@@ -1,6 +1,6 @@
 """Unit tests for similarity helper algorithms used in quiz deduplication."""
 
-from quiz.validation.similarity_helpers import (
+from modes.quiz.validation.similarity_helpers import (
     calculate_text_similarity,
     extract_math_core,
     normalize_question_text,

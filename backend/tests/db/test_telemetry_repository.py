@@ -9,7 +9,7 @@ from core.db.telemetry_repository import (
     list_generation_logs,
     record_generation_log,
 )
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 
 
 def _create_dummy_user(conn: sqlite3.Connection, username: str = "teacher1") -> int:

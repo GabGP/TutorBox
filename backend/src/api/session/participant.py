@@ -15,8 +15,8 @@ from core.db.database import get_db
 from core.db.round_repository import get_round_by_index
 from core.db.session_repository import get_quiz_session
 from core.security import AuthContext, get_current_session
-from session.engine import QuizSessionEngine
-from session.exceptions import (
+from modes.quiz.session.engine import QuizSessionEngine
+from modes.quiz.session.exceptions import (
     InvalidOptionError,
     InvalidRoundStateError,
     RoundNotFoundError,

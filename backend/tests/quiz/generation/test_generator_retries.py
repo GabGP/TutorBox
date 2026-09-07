@@ -5,8 +5,8 @@ import json
 import pytest
 
 from core.llm import MockLLMClient
-from quiz.generation.generator import GenerationError, QuizQuestionGenerator
-from quiz.validation.validator import SymPyMathValidator
+from modes.quiz.generation.generator import GenerationError, QuizQuestionGenerator
+from modes.quiz.validation.validator import SymPyMathValidator
 
 
 def valid_question_dict(id_str: str = "q_test_1") -> dict:

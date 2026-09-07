@@ -3,7 +3,7 @@
 import sqlite3
 
 from core.db.session_mapper import row_to_quiz_round
-from session.models import QuizRoundRecord
+from modes.quiz.session.models import QuizRoundRecord
 
 
 def create_quiz_round(

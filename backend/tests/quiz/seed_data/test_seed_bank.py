@@ -1,12 +1,12 @@
 import pytest
 
-from quiz.contracts.models import QuizQuestion
-from quiz.contracts.taxonomy import (
+from modes.quiz.contracts.models import QuizQuestion
+from modes.quiz.contracts.taxonomy import (
     CURRICULUM_TAXONOMY,
     is_valid_subconcept,
     is_valid_topic,
 )
-from quiz.seed_data import (
+from modes.quiz.seed_data import (
     ARITHMETIC_ADD_QUESTIONS,
     ARITHMETIC_DIV_QUESTIONS,
     ARITHMETIC_MUL_QUESTIONS,
@@ -25,7 +25,7 @@ from quiz.seed_data import (
     PRE_ALGEBRA_TWO_STEP_B_QUESTIONS,
     SEED_QUESTIONS,
 )
-from quiz.validation.validator import SymPyMathValidator
+from modes.quiz.validation.validator import SymPyMathValidator
 
 
 def test_seed_bank_minimum_question_count():

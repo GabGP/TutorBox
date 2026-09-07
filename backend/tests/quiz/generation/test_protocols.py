@@ -1,6 +1,6 @@
 """Unit tests for topic-adaptive derivation protocols."""
 
-from quiz.generation.protocols import (
+from modes.quiz.generation.protocols import (
     _ARITHMETIC_PROTOCOL,
     _DECIMALS_PERCENTAGES_PROTOCOL,
     _FRACTIONS_PROTOCOL,

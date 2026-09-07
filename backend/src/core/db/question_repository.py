@@ -8,7 +8,7 @@ from core.db.question_mapper import (
     row_to_quiz_question,
     serialize_options_and_distractors,
 )
-from quiz.contracts.models import (
+from modes.quiz.contracts.models import (
     QuizQuestion,
     QuizQuestionCreate,
     QuizQuestionResponse,

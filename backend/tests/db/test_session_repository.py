@@ -12,7 +12,7 @@ from core.db.session_repository import (
     update_quiz_round_status,
     update_quiz_session_status,
 )
-from session.models import RoundStatus, SessionStatus
+from modes.quiz.session.models import RoundStatus, SessionStatus
 
 
 @pytest.fixture
@@ -219,7 +219,7 @@ def test_round_creation_retrieval_failure_raises(memory_db, monkeypatch):
 
 
 def test_domain_exceptions_attributes():
-    from session.exceptions import (
+    from modes.quiz.session.exceptions import (
         InvalidOptionError,
         InvalidRoundStateError,
         InvalidSessionStateError,

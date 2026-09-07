@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from quiz.contracts.taxonomy import TopicInfo, get_available_topics
+from modes.quiz.contracts.taxonomy import TopicInfo, get_available_topics
 
 router = APIRouter()
 

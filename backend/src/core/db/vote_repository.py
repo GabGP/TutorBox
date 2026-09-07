@@ -3,8 +3,8 @@
 import sqlite3
 
 from core.db.session_mapper import row_to_student_vote
-from session.exceptions import VoteAlreadyCastError
-from session.models import StudentVoteRecord, TransportType
+from modes.quiz.session.exceptions import VoteAlreadyCastError
+from modes.quiz.session.models import StudentVoteRecord, TransportType
 
 
 def record_student_vote(

@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 
 from api.quiz.dependencies import get_quiz_generator
 from core.llm import MockLLMClient
-from quiz.generation.generator import QuizQuestionGenerator
-from quiz.generation.types import get_quiz_max_retries
+from modes.quiz.generation.generator import QuizQuestionGenerator
+from modes.quiz.generation.types import get_quiz_max_retries
 from src.main import app
 from tests.conftest import auth_headers
 

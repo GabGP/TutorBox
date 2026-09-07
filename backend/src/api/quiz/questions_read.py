@@ -12,7 +12,7 @@ from core.db.question_repository import (
     list_questions,
 )
 from core.security import AuthContext, require_roles
-from quiz.contracts.models import QuestionListResponse, QuizQuestionResponse
+from modes.quiz.contracts.models import QuestionListResponse, QuizQuestionResponse
 
 logger = logging.getLogger(__name__)
 DEFAULT_QUESTION_LIMIT: int = 50

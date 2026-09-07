@@ -10,7 +10,7 @@ from core.db.round_repository import (
     update_quiz_round_status,
 )
 from core.db.session_mapper import row_to_quiz_session
-from session.models import QuizSessionRecord, SessionStatus
+from modes.quiz.session.models import QuizSessionRecord, SessionStatus
 
 __all__ = [
     "create_quiz_round",

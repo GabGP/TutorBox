@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import Depends
 
 from core.llm import LLMClient, LocalSLMClient
-from quiz.generation.generator import QuizQuestionGenerator
-from quiz.validation.distractor_consistency import DistractorConsistencyValidator
-from quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
+from modes.quiz.generation.generator import QuizQuestionGenerator
+from modes.quiz.validation.distractor_consistency import DistractorConsistencyValidator
+from modes.quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
 def get_llm_client() -> LLMClient:

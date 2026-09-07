@@ -8,9 +8,9 @@ import pytest
 
 from core.db.migrations import apply_migrations
 from core.db.question_repository import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
-from session.engine import QuizSessionEngine
-from session.exceptions import (
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from modes.quiz.session.engine import QuizSessionEngine
+from modes.quiz.session.exceptions import (
     InvalidOptionError,
     InvalidRoundStateError,
     RoundNotFoundError,

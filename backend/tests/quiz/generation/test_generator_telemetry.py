@@ -6,8 +6,8 @@ from typing import Any
 import pytest
 
 from core.llm import LLMClient, MockLLMClient
-from quiz.generation.generator import GenerationError, QuizQuestionGenerator
-from quiz.validation.validator import SymPyMathValidator
+from modes.quiz.generation.generator import GenerationError, QuizQuestionGenerator
+from modes.quiz.validation.validator import SymPyMathValidator
 
 
 def _valid_question_dict(id_str: str = "q_tel_1") -> dict:

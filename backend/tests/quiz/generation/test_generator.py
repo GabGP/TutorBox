@@ -3,7 +3,7 @@
 import json
 
 from core.llm import LLMClient, MockLLMClient
-from quiz.generation.generator import QuizQuestionGenerator
+from modes.quiz.generation.generator import QuizQuestionGenerator
 
 
 def valid_question_dict(id_str: str = "q_test_1") -> dict:

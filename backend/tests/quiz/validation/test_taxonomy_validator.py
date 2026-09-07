@@ -1,7 +1,7 @@
 import pytest
 
-from src.quiz.contracts.models import DistractorDetail, QuizQuestion
-from src.quiz.validation.taxonomy_validator import TaxonomyValidator
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestion
+from modes.quiz.validation.taxonomy_validator import TaxonomyValidator
 
 
 @pytest.fixture

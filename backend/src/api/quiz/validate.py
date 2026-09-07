@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from api.quiz.dependencies import get_math_validator
-from quiz.contracts.models import MathValidationResult, ValidateQuestionRequest
-from quiz.validation.validator import MathValidatorInterface
+from modes.quiz.contracts.models import MathValidationResult, ValidateQuestionRequest
+from modes.quiz.validation.validator import MathValidatorInterface
 
 router = APIRouter()
 

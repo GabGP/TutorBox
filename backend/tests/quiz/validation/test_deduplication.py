@@ -1,5 +1,5 @@
-from quiz.contracts.models import DistractorDetail, QuizQuestion
-from quiz.validation.deduplication import (
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestion
+from modes.quiz.validation.deduplication import (
     DeduplicationValidator,
     calculate_text_similarity,
     normalize_question_text,

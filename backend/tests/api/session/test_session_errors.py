@@ -1,7 +1,7 @@
 """Negative and error branch integration tests for quiz session REST API."""
 
 from core.db.question_repository import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from tests.conftest import auth_headers
 
 
@@ -154,8 +154,8 @@ def test_missing_active_round_returns_404(staff_db, client):
 
 
 def test_vote_invalid_option_error(staff_db, client, monkeypatch):
-    from session.engine import QuizSessionEngine
-    from session.exceptions import InvalidOptionError
+    from modes.quiz.session.engine import QuizSessionEngine
+    from modes.quiz.session.exceptions import InvalidOptionError
 
     _, conn = staff_db
     qid = _seed_question(conn)

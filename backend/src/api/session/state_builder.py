@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from api.session.schemas import SessionRoundInfo, SessionStateResponse
 from core.db.round_repository import get_round_by_index
 from core.db.session_repository import get_quiz_session
-from session.engine import QuizSessionEngine
+from modes.quiz.session.engine import QuizSessionEngine
 
 __all__ = ["build_session_state"]
 

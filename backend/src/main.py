@@ -7,7 +7,7 @@ from api.router import root_router
 from core.config import load_env_file
 from core.db.database import get_db_path
 from core.db.migrations import apply_migrations
-from quiz.seed_data import seed_question_bank
+from modes.quiz.seed_data import seed_question_bank
 
 load_env_file()
 

@@ -1,11 +1,11 @@
 """Unit tests for vote aggregation, tally computation, and distractor ranking."""
 
-from session.aggregator import (
+from modes.quiz.session.aggregator import (
     compute_round_tally,
     compute_tally_from_counts,
     find_top_distractor,
 )
-from session.models import StudentVoteRecord
+from modes.quiz.session.models import StudentVoteRecord
 
 
 def test_compute_tally_from_counts_zero_votes():

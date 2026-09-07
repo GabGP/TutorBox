@@ -9,15 +9,15 @@ import pytest
 
 from core.db.migrations import apply_migrations
 from core.db.question_repository import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
-from session.engine import QuizSessionEngine
-from session.exceptions import (
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from modes.quiz.session.engine import QuizSessionEngine
+from modes.quiz.session.exceptions import (
     InvalidRoundStateError,
     InvalidSessionStateError,
     RoundNotFoundError,
     SessionNotFoundError,
 )
-from session.models import RoundStatus, SessionStatus
+from modes.quiz.session.models import RoundStatus, SessionStatus
 
 
 @pytest.fixture
@@ -234,7 +234,7 @@ def test_session_and_round_additional_error_branches(session_db):
 
 
 def test_get_remaining_time_and_reset_state(session_db):
-    from session.engine import reset_shared_session_state
+    from modes.quiz.session.engine import reset_shared_session_state
 
     conn, question_ids = session_db
     engine = QuizSessionEngine(conn)

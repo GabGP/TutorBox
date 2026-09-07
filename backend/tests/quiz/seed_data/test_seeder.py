@@ -7,8 +7,8 @@ from core.db.question_repository import (
     list_questions,
     soft_delete_question,
 )
-from quiz.contracts.models import DistractorDetail, QuizQuestion
-from quiz.seed_data import SEED_QUESTIONS, seed_question_bank
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestion
+from modes.quiz.seed_data import SEED_QUESTIONS, seed_question_bank
 
 
 def test_seed_question_bank_with_connection(temp_db: tuple[str, sqlite3.Connection]):

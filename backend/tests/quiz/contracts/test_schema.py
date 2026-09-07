@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from src.quiz.contracts.schema import (
+from modes.quiz.contracts.schema import (
     JSON_SCHEMA_DRAFT,
     SCHEMA_ID,
     SCHEMA_VERSION,

@@ -1,5 +1,5 @@
-from quiz.generation.generation_state import GenerationState
-from quiz.generation.types import GenerationError
+from modes.quiz.generation.generation_state import GenerationState
+from modes.quiz.generation.types import GenerationError
 
 
 def test_generation_state_initialization():

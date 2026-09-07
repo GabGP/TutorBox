@@ -6,16 +6,16 @@ from typing import Any
 import pytest
 
 from core.llm import LLMClient, MockLLMClient
-from quiz.generation.attempt_runner import (
+from modes.quiz.generation.attempt_runner import (
     execute_generation_attempt,
     execute_llm_query,
 )
-from quiz.generation.generation_state import GenerationState
-from quiz.generation.response_format import build_quiz_response_format
-from quiz.validation.deduplication import DeduplicationValidator
-from quiz.validation.distractor_consistency import DistractorConsistencyValidator
-from quiz.validation.taxonomy_validator import TaxonomyValidator
-from quiz.validation.validator import SymPyMathValidator
+from modes.quiz.generation.generation_state import GenerationState
+from modes.quiz.generation.response_format import build_quiz_response_format
+from modes.quiz.validation.deduplication import DeduplicationValidator
+from modes.quiz.validation.distractor_consistency import DistractorConsistencyValidator
+from modes.quiz.validation.taxonomy_validator import TaxonomyValidator
+from modes.quiz.validation.validator import SymPyMathValidator
 
 
 def _valid_question_dict(id_str: str = "q_test_1") -> dict:

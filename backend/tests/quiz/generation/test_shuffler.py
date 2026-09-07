@@ -1,9 +1,10 @@
 """Unit and property tests for the quiz option and misconception shuffler."""
 
 import random
+from typing import cast
 
-from quiz.contracts.models import DistractorDetail, QuizQuestion
-from quiz.generation.shuffler import shuffle_quiz_question
+from modes.quiz.contracts.models import DistractorDetail, OptionKey, QuizQuestion
+from modes.quiz.generation.shuffler import shuffle_quiz_question
 
 
 def create_sample_question(correct_option: str = "A") -> QuizQuestion:
@@ -30,7 +31,7 @@ def create_sample_question(correct_option: str = "A") -> QuizQuestion:
         subconcept="order_of_operations",
         question_text="¿Cuánto es 3 + 4 * 2?",
         options=options,
-        correct_option=correct_option,
+        correct_option=cast(OptionKey, correct_option),
         distractors=distractors,
     )
 

@@ -1,5 +1,5 @@
-from src.quiz.contracts.models import QuizQuestion, QuizQuestionBase
-from src.quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
+from modes.quiz.contracts.models import QuizQuestion, QuizQuestionBase
+from modes.quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
 
 def create_question(

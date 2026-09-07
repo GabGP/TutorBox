@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from session.models import (
+from modes.quiz.session.models import (
     QuizRoundRecord,
     QuizSessionRecord,
     StudentVoteRecord,

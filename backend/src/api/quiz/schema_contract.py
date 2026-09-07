@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from quiz.contracts.schema import get_quiz_question_json_schema
+from modes.quiz.contracts.schema import get_quiz_question_json_schema
 
 router = APIRouter()
 

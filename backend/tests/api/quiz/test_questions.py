@@ -3,7 +3,7 @@
 from fastapi.testclient import TestClient
 
 from core.db.question_repository import create_question
-from quiz.contracts.models import QuizQuestion
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestion
 from tests.conftest import auth_headers
 
 SAMPLE_QUESTION = QuizQuestion(
@@ -14,18 +14,18 @@ SAMPLE_QUESTION = QuizQuestion(
     options={"A": "50", "B": "40", "C": "60", "D": "55"},
     correct_option="A",
     distractors={
-        "B": {
-            "misconception": "subtraction_error",
-            "explanation": "Restaste 10 en vez de sumar.",
-        },
-        "C": {
-            "misconception": "forgot_carry",
-            "explanation": "Sumaste 10 de más.",
-        },
-        "D": {
-            "misconception": "table_lookup_error",
-            "explanation": "Error de cálculo.",
-        },
+        "B": DistractorDetail(
+            misconception="subtraction_error",
+            explanation="Restaste 10 en vez de sumar.",
+        ),
+        "C": DistractorDetail(
+            misconception="forgot_carry",
+            explanation="Sumaste 10 de más.",
+        ),
+        "D": DistractorDetail(
+            misconception="table_lookup_error",
+            explanation="Error de cálculo.",
+        ),
     },
 )
 

@@ -1,7 +1,7 @@
 """Integration tests for the quiz session REST API endpoints."""
 
 from core.db.question_repository import create_question
-from quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
 from tests.conftest import auth_headers
 
 

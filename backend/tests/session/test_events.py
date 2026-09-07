@@ -1,12 +1,12 @@
 """Unit tests for session event dispatcher and shared state isolation."""
 
-from session.events import (
+from modes.quiz.session.events import (
     emit_event,
     get_shared_listeners,
     get_shared_timers,
     reset_shared_session_state,
 )
-from session.timer import RoundTimer
+from modes.quiz.session.timer import RoundTimer
 
 
 def test_shared_state_accessors():

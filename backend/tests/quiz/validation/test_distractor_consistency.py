@@ -1,7 +1,7 @@
 import pytest
 
-from quiz.contracts.models import DistractorDetail, QuizQuestion
-from quiz.validation.distractor_consistency import (
+from modes.quiz.contracts.models import DistractorDetail, QuizQuestion
+from modes.quiz.validation.distractor_consistency import (
     DistractorConsistencyValidator,
 )
 

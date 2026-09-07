@@ -16,7 +16,11 @@ from core.db.question_repository import (
     list_questions,
     soft_delete_question,
 )
-from quiz.contracts.models import DistractorDetail, QuizQuestion, QuizQuestionCreate
+from modes.quiz.contracts.models import (
+    DistractorDetail,
+    QuizQuestion,
+    QuizQuestionCreate,
+)
 
 
 @pytest.fixture
