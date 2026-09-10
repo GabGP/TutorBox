@@ -6,7 +6,7 @@
 <title>TutorBox · Panel del docente</title>
 <link rel="stylesheet" href="/tb.css">
 <style>
-  /* Teacher phone (:190). Wizard steps topic/count/lobby live in the browser; question/reveal/stats follow the server phase. */
+  /* Teacher phone (/maestro/). Wizard steps topic/count/lobby live in the browser; question/reveal/stats follow the server phase. */
   body { background: var(--panel); min-height: 100vh; display: flex; flex-direction: column; }
   #shell { display: flex; flex-direction: column; flex: 1; background: var(--panel); }
   @media (min-width: 600px) {
@@ -156,6 +156,12 @@
       <div class="note" id="lobbyEmpty">Todavía no entra nadie. Los alumnos abren la dirección de arriba en su teléfono o encienden el mando.</div>
     </section>
 
+    <section id="s-wait" class="step" hidden>
+      <div class="hero"><div><div class="lbl">TUTORBOX ESTÁ CREANDO</div><div class="big" id="waitTitle"></div></div></div>
+      <p class="help">El modelo local escribe cada pregunta y la revisa con matemáticas antes de mostrarla. Puede tardar un momento.</p>
+      <div class="note" id="waitNote" hidden></div>
+    </section>
+
     <section id="s-question" class="step" hidden>
       <div class="qhead">
         <div class="ring" id="ring"><div id="timer">20</div></div>
@@ -186,7 +192,7 @@
       <div class="card white"><h2>Clasificación</h2><div class="rank" id="rank"></div><button id="more" class="btn soft" hidden></button></div>
       <div class="card white"><h2>Preguntas más difíciles</h2><div class="hard" id="hard"></div></div>
       <div class="alert lg"><b>Errores que se repiten</b><div class="errs" id="errors"></div></div>
-      <a id="export" class="btn outline" href="/report.csv" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
+      <a id="export" class="btn outline" href="report.csv" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
     </section>
   </main>
 
@@ -201,11 +207,11 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const post = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(r => r.json()).then(render);
 
-const STEPS = ['topic', 'count', 'lobby', 'question', 'reveal', 'stats'];
-const PHASE_STEP = { question: 'question', revealed: 'reveal', finished: 'stats' };
+const STEPS = ['topic', 'count', 'lobby', 'wait', 'question', 'reveal', 'stats'];
+const PHASE_STEP = { generating: 'wait', question: 'question', revealed: 'reveal', finished: 'stats' };
 const TITLES = {
   topic: ['Paso 1 de 4', 'Elegir tema'], count: ['Paso 2 de 4', 'Número de preguntas'], lobby: ['Paso 3 de 4', 'Alumnos listos'],
-  question: ['En juego', 'Respuestas en vivo'], reveal: ['En juego', 'Resultado de la pregunta'], stats: ['Juego terminado', 'Resumen del grupo']
+  wait: ['En juego', 'Creando pregunta'], question: ['En juego', 'Respuestas en vivo'], reveal: ['En juego', 'Resultado de la pregunta'], stats: ['Juego terminado', 'Resumen del grupo']
 };
 const TOPIC = { '': ['Todos los temas', '∗'], arithmetic: ['Aritmética', '+'], decimals_percentages: ['Decimales y porcentajes', '%'], fractions: ['Fracciones', '½'], pre_algebra: ['Pre-álgebra', 'x'] };
 const topicLabel = id => (TOPIC[id] || [id, '?'])[0];
@@ -223,17 +229,17 @@ $('skip').onclick = () => { voiceDone = S.index; render(S); };
 $('play').onclick = () => {
   const md = S.majority_distractor; if (!md || playing) return;
   playing = true; render(S);
-  post('/speak', { lang: voice, text: md.explanation }); // ponytail: server stub; backend TTS lands later
+  post('speak', { lang: voice, text: md.explanation }); // ponytail: server stub; backend TTS lands later
   setTimeout(() => { playing = false; voiceDone = S.index; render(S); }, 1600);
 };
-$('secondary').onclick = () => post('/reset').then(() => { wizard = 'topic'; render(S); });
+$('secondary').onclick = () => post('reset').then(() => { wizard = 'topic'; render(S); });
 $('primary').onclick = () => {
   const step = stepOf(S);
   if (step === 'topic') wizard = 'count';
   else if (step === 'count') wizard = 'lobby';
-  else if (step === 'lobby') return post('/start', { count, topic });
-  else if (step === 'question') return post('/reveal');
-  else if (step === 'reveal') return post('/next');
+  else if (step === 'lobby') return post('start', { count, topic });
+  else if (step === 'question') return post('reveal');
+  else if (step === 'reveal') return post('next');
   else return $('secondary').onclick();
   render(S);
 };
@@ -248,22 +254,27 @@ function render(s) {
   $('title').textContent = TITLES[step][1];
   $('back').disabled = step !== 'count' && step !== 'lobby';
   $('voice').textContent = voice === 'es' ? 'Voz ES' : "Voz K'iche'";
-  $('primary').textContent = { topic: 'Continuar', count: 'Continuar', lobby: 'Comenzar el juego', question: 'Terminar la pregunta', reveal: last ? 'Ver resultados' : 'Siguiente pregunta', stats: 'Nuevo juego' }[step];
+  $('primary').textContent = { topic: 'Continuar', count: 'Continuar', lobby: 'Comenzar el juego', wait: 'Esperando al modelo…', question: 'Terminar la pregunta', reveal: last ? 'Ver resultados' : 'Siguiente pregunta', stats: 'Nuevo juego' }[step];
   $('primary').classList.toggle('ok', step === 'lobby');
-  $('primary').disabled = step === 'lobby' && !s.players;
+  $('primary').disabled = (step === 'lobby' && !s.players) || step === 'wait';
   $('secondary').hidden = step !== 'stats';
   $('dots').innerHTML = STEPS.slice(0, 4).map((_, i) => `<i class="${i <= idx ? 'on' : ''} ${i === Math.min(idx, 3) ? 'cur' : ''}"></i>`).join('');
-  ({ topic: renderTopics, count: renderCount, lobby: renderLobby, question: renderQuestion, reveal: renderReveal, stats: renderStats })[step](s);
+  ({ topic: renderTopics, count: renderCount, lobby: renderLobby, wait: renderWait, question: renderQuestion, reveal: renderReveal, stats: renderStats })[step](s);
 }
 
 function renderTopics(s) {
   const el = $('topics');
   if (!el.children.length && s.topics) {
-    const all = [{ id: '', count: s.topics.reduce((a, t) => a + t.count, 0) }, ...s.topics];
-    el.innerHTML = all.map(t => `<button class="topic" data-id="${esc(t.id)}"><span class="glyph">${esc((TOPIC[t.id] || [0, '?'])[1])}</span><span class="grow"><div class="l">${esc(topicLabel(t.id))}</div><div class="m">${t.count} preguntas</div></span><span class="tick"></span></button>`).join('');
+    el.innerHTML = ['', ...s.topics].map(id => `<button class="topic" data-id="${esc(id)}"><span class="glyph">${esc((TOPIC[id] || [0, '?'])[1])}</span><span class="grow"><div class="l">${esc(topicLabel(id))}</div><div class="m">${id ? 'Preguntas creadas por el modelo' : 'Mezcla de todos los temas'}</div></span><span class="tick"></span></button>`).join('');
     for (const b of el.children) b.onclick = () => { topic = b.dataset.id; render(S); };
   }
   for (const b of el.children) { const on = b.dataset.id === topic; b.classList.toggle('on', on); b.lastElementChild.textContent = on ? '✓' : ''; }
+}
+
+function renderWait(s) {
+  $('waitTitle').textContent = `Pregunta ${s.ready + 1} de ${s.total}`;
+  $('waitNote').hidden = !s.fallback;
+  $('waitNote').textContent = `${s.fallback} pregunta(s) salieron del banco local porque el modelo no respondió.`;
 }
 
 function renderCount() {
@@ -274,7 +285,7 @@ function renderCount() {
 
 function renderLobby(s) {
   $('lobbyCount').textContent = s.players;
-  $('addr').textContent = `${location.hostname}:195`;
+  $('addr').textContent = `${location.host}/alumno`;
   $('lobbyEmpty').hidden = s.players > 0;
   $('lobbyGrid').innerHTML = s.scores.map(([n]) => { const [short, label] = who(n); return `<div class="cell"><div class="mark">${esc(short)}</div><div class="name">${esc(label)}</div></div>`; }).join('');
 }
@@ -339,7 +350,7 @@ function renderStats(s) {
   $('errors').innerHTML = r.errors.map(e => `<div>En <b>${esc(e.question)}</b>, ${e.count} alumnos eligieron <b>${esc(e.text)}</b>: ${esc(e.explanation)}</div>`).join('') || '<div>Ningún error se repitió en el grupo.</div>';
 }
 
-(async function poll() { try { render(await fetch('/state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
+(async function poll() { try { render(await fetch('state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
 </script>
 </body>
 </html>

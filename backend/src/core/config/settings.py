@@ -9,6 +9,8 @@ from core.config.constants import (
     DEFAULT_BCRYPT_ROUNDS,
     DEFAULT_BUSY_TIMEOUT_MS,
     DEFAULT_QUIZ_MAX_RETRIES,
+    DEFAULT_SEED_TEACHER_PIN,
+    DEFAULT_SEED_TEACHER_USERNAME,
     DEFAULT_SIGNUP_MAX_EVENTS,
     DEFAULT_SIGNUP_WINDOW_SECONDS,
     DEFAULT_SLM_BASE_URL,
@@ -69,6 +71,12 @@ def get_settings(*, reload: bool = False) -> Settings:
                 "SIGNUP_RATE_LIMIT_WINDOW_SECONDS",
                 DEFAULT_SIGNUP_WINDOW_SECONDS,
                 min_value=1,
+            ),
+            seed_teacher_username=os.environ.get(
+                "SEED_TEACHER_USERNAME", DEFAULT_SEED_TEACHER_USERNAME
+            ),
+            seed_teacher_pin=os.environ.get(
+                "SEED_TEACHER_PIN", DEFAULT_SEED_TEACHER_PIN
             ),
         ),
         llm=LLMConfig(

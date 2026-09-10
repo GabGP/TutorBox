@@ -10,6 +10,8 @@ from core.config.constants import (
     DEFAULT_BUSY_TIMEOUT_MS,
     DEFAULT_DB_PATH,
     DEFAULT_QUIZ_MAX_RETRIES,
+    DEFAULT_SEED_TEACHER_PIN,
+    DEFAULT_SEED_TEACHER_USERNAME,
     DEFAULT_SIGNUP_MAX_EVENTS,
     DEFAULT_SIGNUP_WINDOW_SECONDS,
     DEFAULT_SLM_BASE_URL,
@@ -33,6 +35,8 @@ class SecurityConfig:
     auth_max_tracked_keys: int = DEFAULT_AUTH_MAX_TRACKED_KEYS
     signup_max_events: int = DEFAULT_SIGNUP_MAX_EVENTS
     signup_window_seconds: int = DEFAULT_SIGNUP_WINDOW_SECONDS
+    seed_teacher_username: str = DEFAULT_SEED_TEACHER_USERNAME
+    seed_teacher_pin: str = DEFAULT_SEED_TEACHER_PIN
 
 
 @dataclass(frozen=True)

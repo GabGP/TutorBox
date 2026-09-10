@@ -7,6 +7,7 @@ from api.router import root_router
 from core.config import load_env_file
 from core.db.database import get_db_path
 from core.db.migrations import apply_migrations
+from core.db.seed_users import seed_teacher
 from modes.quiz.seed_data import seed_question_bank
 
 load_env_file()
@@ -28,6 +29,8 @@ async def lifespan(app: FastAPI):
     logger.info("Verifying and seeding default quiz question bank...")
     seeded_count = seed_question_bank(db_path)
     logger.info("Question bank ready (newly seeded questions: %d).", seeded_count)
+    if seed_teacher(db_path):
+        logger.info("Bootstrap teacher account created.")
     yield
     logger.info("Shutting down TutorBox backend appliance...")
 

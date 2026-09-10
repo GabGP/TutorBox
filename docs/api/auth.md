@@ -35,6 +35,7 @@ These endpoints manage user onboarding, session authentication, profile retrieva
 Authenticates a user using their username and 4–8 digit PIN. On success, issues a UUIDv4 session token persisted to the SQLite `sessions` table.
 
 * **Authorization**: Public
+* **Bootstrap account**: on startup the backend seeds one teacher (`SEED_TEACHER_USERNAME` / `SEED_TEACHER_PIN`, default `teacher1` / `1234`) if that username does not exist, so a fresh appliance can host quizzes. Change the PIN before deployment or set `SEED_TEACHER_PIN=` to disable.
 * **Security & Guards**:
   * Protected by the Credential Lockout Rate Limiter (exponential backoff after repeated failed attempts).
   * Uses anti-oracle check ordering (constant-time verification behavior).

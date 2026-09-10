@@ -35,10 +35,12 @@ async def test_app_lifespan_executes_migrations_and_seeding():
     with (
         patch("main.apply_migrations") as mock_apply,
         patch("main.seed_question_bank", return_value=5) as mock_seed,
+        patch("main.seed_teacher", return_value=True) as mock_teacher,
     ):
         async with lifespan(app):
             mock_apply.assert_called_once()
             mock_seed.assert_called_once()
+            mock_teacher.assert_called_once()
 
 
 def test_app_routes_mounted():

@@ -1,10 +1,16 @@
 """Local classroom quiz server. Stdlib only.
 
-Ports (fixed by classroom convention):
-  190  host / teacher  -> host.html + control API
-  195  student players -> student.html + join/vote API
-  196  ESP32 clickers  -> POST /vote {device_id, choice}   (reserved, same vote path)
-  197  HDMI class screen -> screen.html (question + timer only, never per-student votes)
+One port (TUTORBOX_PORT, default 190), routed by URL prefix:
+  /maestro/   host / teacher  -> host.html + control API
+  /alumno/    student players -> student.html + join/vote API
+  /mando/     ESP32 clickers  -> POST /mando/vote {device_id, choice}   (reserved, same vote path)
+  /pantalla/  HDMI class screen -> screen.html (question + timer only, never per-student votes)
+  /           -> /alumno/
+
+Questions come from the backend's local LLM (POST /api/v1/quiz/generate) as a teacher;
+the seed bank only fills in when the backend or model is unreachable.
+  TUTORBOX_API   default http://127.0.0.1:8000/api/v1
+  TUTORBOX_USER / TUTORBOX_PIN   teacher credentials, default teacher1 / 1234
 
 Run from this folder with the backend's Python (seed bank needs pydantic):
   python server.py            # serves on 0.0.0.0
@@ -13,6 +19,7 @@ On Linux ports < 1024 need root or `setcap cap_net_bind_service=+ep`.
 """
 
 import json
+import os
 import random
 import sys
 import threading
@@ -20,32 +27,63 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs
+from urllib.request import Request, urlopen
 
 HERE = Path(__file__).parent
-PORT_HOST, PORT_STUDENT, PORT_CLICKER, PORT_SCREEN = 190, 195, 196, 197
+PORT = int(os.environ.get("TUTORBOX_PORT", 190))
 CHOICES = ("A", "B", "C", "D")
 QUESTION_SECONDS = 20
 STATIC = {"/tb.css": "text/css"}
+API = os.environ.get("TUTORBOX_API", "http://127.0.0.1:8000/api/v1")
+TEACHER = (os.environ.get("TUTORBOX_USER", "teacher1"), os.environ.get("TUTORBOX_PIN", "1234"))
 
 
 def load_bank() -> list[dict]:
     sys.path.insert(0, str(HERE.parents[1] / "backend" / "src"))
-    from quiz.seed_data import SEED_QUESTIONS
+    from modes.quiz.seed_data import SEED_QUESTIONS
 
     return [q.model_dump() for q in SEED_QUESTIONS]
+
+
+def api(path: str, body: dict | None = None, token: str | None = None) -> dict:
+    """One call to the TutorBox backend. Raises on network/HTTP errors."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = Request(API + path, data=json.dumps(body).encode() if body is not None else None, headers=headers)
+    with urlopen(req, timeout=180) as r:
+        return json.load(r)
+
+
+def fetch_topics(bank: list[dict]) -> list[str]:
+    try:
+        return [t["name"] for t in api("/quiz/topics")]
+    except OSError:
+        return sorted({q["topic"] for q in bank})
+
+
+def generate_question(topic: str, token: str) -> dict:
+    return api("/quiz/generate", {"topic": topic}, token)["question"]
 
 
 class Session:
     """Question lifecycle: lobby -> question (open) -> revealed -> ... -> finished."""
 
-    def __init__(self, bank: list[dict]):
+    def __init__(self, bank: list[dict], topic_ids: list[str] | None = None, generate=generate_question):
         self.bank = bank
+        self.topic_ids = topic_ids or sorted({q["topic"] for q in bank})
+        self.generate = generate
         self.lock = threading.Lock()
+        self.gen = 0  # bumped on reset so a stale generator thread drops its results
         self.reset()
 
     def reset(self):
         self.phase = "lobby"
         self.questions: list[dict] = []
+        self.total = 0
+        self.fallback = 0  # questions served from the seed bank because the model failed
+        self.generating = False
+        self.gen += 1
         self.index = -1
         self.players: dict[str, int] = {}  # name -> score
         self.votes: dict[str, str] = {}  # name -> choice (current question)
@@ -53,23 +91,50 @@ class Session:
         self.history: list[dict] = []  # one entry per revealed question (stats)
         self.started_at = 0.0
 
-    def topics(self) -> list[dict]:
-        ids = sorted({q["topic"] for q in self.bank})
-        return [{"id": t, "count": sum(q["topic"] == t for q in self.bank)} for t in ids]
-
     def start(self, count: int = 5, topic: str | None = None):
-        pool = [q for q in self.bank if not topic or q["topic"] == topic]
-        self.questions = random.sample(pool, min(count, len(pool)))
-        self.index = -1
-        self.history = []
-        self.voted_ever = set()
+        """Enter 'generating'; a thread asks the model one question at a time and the game
+        advances as soon as the first one lands (teacher waits again only if it runs ahead)."""
+        self.questions, self.index, self.history, self.voted_ever = [], -1, [], set()
+        self.total, self.fallback, self.generating, self.phase = count, 0, True, "generating"
         for n in self.players:
             self.players[n] = 0
-        self.next()
+        threading.Thread(target=self._produce, args=(count, topic, self.gen), daemon=True).start()
+
+    def _produce(self, count: int, topic: str | None, gen: int):
+        try:
+            token = api("/auth/login", {"username": TEACHER[0], "pin": TEACHER[1]})["session_id"]
+        except (OSError, KeyError):
+            token = None
+        for _ in range(count):
+            t = topic or random.choice(self.topic_ids)
+            q, fell = None, False
+            if token:
+                try:
+                    q = self.generate(t, token)
+                except (OSError, KeyError, ValueError):
+                    pass
+            with self.lock:
+                if gen != self.gen:
+                    return  # reset happened while we were generating
+                if q is None:  # model unreachable/invalid -> seed bank, never a blank slot
+                    used = {x["question_text"] for x in self.questions}
+                    pool = [x for x in self.bank if x["topic"] == t and x["question_text"] not in used]
+                    q, fell = (random.choice(pool) if pool else None), True
+                if q:
+                    self.questions.append(q)
+                    self.fallback += fell
+                    if self.phase == "generating":
+                        self.next()
+        with self.lock:
+            if gen == self.gen:
+                self.generating = False
+                self.total = len(self.questions)
+                if self.phase == "generating":
+                    self.next()
 
     def next(self):
         if self.index + 1 >= len(self.questions):
-            self.phase = "finished"
+            self.phase = "generating" if self.generating else "finished"
             return
         self.index += 1
         self.votes = {}
@@ -178,7 +243,7 @@ class Session:
         state = {
             "phase": self.phase,
             "index": self.index,
-            "total": len(self.questions),
+            "total": self.total,
             "players": len(self.players),
             "voted": len(self.votes),
             "my_choice": self.votes.get(name) if name else None,
@@ -197,7 +262,9 @@ class Session:
     def host_state(self) -> dict:
         state = self.public_state()
         state.update(
-            topics=self.topics(),
+            topics=self.topic_ids,
+            ready=len(self.questions),
+            fallback=self.fallback,
             tally=self.tally(),
             scores=sorted(self.players.items(), key=lambda kv: -kv[1]),
             votes=self.votes,
@@ -220,18 +287,79 @@ class Session:
 SESSION: Session
 
 
-class Handler(BaseHTTPRequestHandler):
-    """Student port. Subclasses override `page`, `state`, `action`."""
+class Student:
+    """One role = one URL prefix. Subclasses override `page`, `state`, `action`."""
 
     page = "student.html"
+
+    def state(self, name):
+        return SESSION.public_state(name)
+
+    def action(self, path, data, name) -> bool:
+        if path == "join" and name:
+            SESSION.join(name)
+            return True
+        if path == "vote":
+            return SESSION.vote(name, data.get("choice"))
+        return False
+
+
+class Host(Student):
+    page = "host.html"
+
+    def state(self, name):
+        return SESSION.host_state()
+
+    def action(self, path, data, name) -> bool:
+        if path == "start" and SESSION.phase in ("lobby", "finished"):
+            SESSION.start(int(data.get("count", 5)), data.get("topic") or None)
+        elif path == "next":
+            SESSION.next()
+        elif path == "reveal":
+            SESSION.reveal()
+        elif path == "reset":
+            SESSION.reset()
+        elif path == "speak":
+            pass  # ponytail: TTS seam — body {lang: "es"|"quc", text}; wire to the backend voice service later
+        else:
+            return False
+        return True
+
+
+class Screen(Student):
+    page = "screen.html"
+
+    def state(self, name):
+        return SESSION.screen_state()
+
+    def action(self, path, data, name) -> bool:
+        return False
+
+
+class Clicker(Student):
+    """ESP32 transport: POST /mando/vote {"device_id": "7", "choice": "B"}. Player = "Clicker #7"."""
+
+    def action(self, path, data, name) -> bool:
+        if path == "vote" and data.get("device_id"):
+            return SESSION.vote(f"Clicker #{data['device_id']}", data.get("choice"))
+        return False
+
+
+ROLES = {"maestro": Host(), "alumno": Student(), "mando": Clicker(), "pantalla": Screen()}
+
+
+class Handler(BaseHTTPRequestHandler):
+    """Single port. /<role>/ serves the page, /<role>/state polls, /<role>/<action> posts."""
 
     def log_message(self, *_):
         pass
 
     def send_json(self, data, code=200):
-        body = json.dumps(data).encode()
+        self.send_bytes(json.dumps(data).encode(), "application/json", code)
+
+    def send_bytes(self, body: bytes, ctype: str, code=200):
         self.send_response(code)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", ctype)
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -244,98 +372,48 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             return {}
 
+    def route(self, path: str):
+        """'/maestro/state' -> (Host(), 'state'); unknown role -> (None, ...)."""
+        role, _, sub = path.strip("/").partition("/")
+        return ROLES.get(role), sub
+
     def do_GET(self):
         path, _, query = self.path.partition("?")
-        if path == "/":
-            self.send_file((HERE / self.page).read_bytes(), "text/html; charset=utf-8")
-        elif path in STATIC:
-            self.send_file((HERE / path[1:]).read_bytes(), STATIC[path])
-        elif path == "/state":
+        role, sub = self.route(path)
+        if path in STATIC:
+            self.send_bytes((HERE / path[1:]).read_bytes(), STATIC[path])
+        elif path == "/" or (role and not sub and not path.endswith("/")):
+            self.send_response(302)  # trailing slash so the pages' relative fetch('state') resolves
+            self.send_header("Location", "/alumno/" if path == "/" else path + "/")
+            self.end_headers()
+        elif role and not sub:
+            self.send_bytes((HERE / role.page).read_bytes(), "text/html; charset=utf-8")
+        elif role and sub == "state":
             name = (parse_qs(query).get("name") or [None])[0]
             with SESSION.lock:
-                self.send_json(self.state(name))
-        elif path == "/report.csv" and self.page == "host.html":
+                self.send_json(role.state(name))
+        elif sub == "report.csv" and isinstance(role, Host):
             with SESSION.lock:
-                self.send_file(SESSION.report_csv().encode(), "text/csv; charset=utf-8")
+                self.send_bytes(SESSION.report_csv().encode(), "text/csv; charset=utf-8")
         else:
             self.send_json({"error": "not found"}, 404)
 
-    def send_file(self, body: bytes, ctype: str):
-        self.send_response(200)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def state(self, name):
-        return SESSION.public_state(name)
-
     def do_POST(self):
+        role, sub = self.route(self.path)
+        if not role:
+            return self.send_json({"error": "not found"}, 404)
         data = self.read_json()
         name = str(data.get("name", "")).strip()[:24]
         with SESSION.lock:
-            ok = self.action(self.path, data, name)
-            self.send_json({"ok": ok, **self.state(name or None)}, 200 if ok else 409)
-
-    def action(self, path, data, name) -> bool:
-        if path == "/join" and name:
-            SESSION.join(name)
-            return True
-        if path == "/vote":
-            return SESSION.vote(name, data.get("choice"))
-        return False
-
-
-class HostHandler(Handler):
-    page = "host.html"
-
-    def state(self, name):
-        return SESSION.host_state()
-
-    def action(self, path, data, name) -> bool:
-        if path == "/start":
-            SESSION.start(int(data.get("count", 5)), data.get("topic") or None)
-        elif path == "/next":
-            SESSION.next()
-        elif path == "/reveal":
-            SESSION.reveal()
-        elif path == "/reset":
-            SESSION.reset()
-        elif path == "/speak":
-            pass  # ponytail: TTS seam — body {lang: "es"|"quc", text}; wire to the backend voice service later
-        else:
-            return False
-        return True
-
-
-class ScreenHandler(Handler):
-    page = "screen.html"
-
-    def state(self, name):
-        return SESSION.screen_state()
-
-    def action(self, path, data, name) -> bool:
-        return False
-
-
-class ClickerHandler(Handler):
-    """ESP32 transport: POST /vote {"device_id": "7", "choice": "B"}. Player = "Clicker #7"."""
-
-    def action(self, path, data, name) -> bool:
-        if path == "/vote" and data.get("device_id"):
-            return SESSION.vote(f"Clicker #{data['device_id']}", data.get("choice"))
-        return False
+            ok = role.action(sub, data, name)
+            self.send_json({"ok": ok, **role.state(name or None)}, 200 if ok else 409)
 
 
 def serve():
-    for port, handler in (
-        (PORT_HOST, HostHandler), (PORT_STUDENT, Handler), (PORT_CLICKER, ClickerHandler), (PORT_SCREEN, ScreenHandler)
-    ):
-        srv = ThreadingHTTPServer(("0.0.0.0", port), handler)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        print(f"{handler.__name__:15s} http://0.0.0.0:{port}/", flush=True)
-    threading.Event().wait()
+    srv = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+    for role in ROLES:
+        print(f"http://0.0.0.0:{PORT}/{role}/", flush=True)
+    srv.serve_forever()
 
 
 def selftest():
@@ -346,11 +424,14 @@ def selftest():
         "correct_option": "B",
         "distractors": {k: {"misconception": "m", "explanation": f"why not {k}"} for k in "ACD"},
     }
-    s = Session([q])
+    s = Session([q], generate=lambda t, tok: dict(q, question_text="from the model"))
     assert not s.vote("ana", "B"), "no voting in lobby"
     s.join("ana"), s.join("beto"), s.join("cai")
     s.start(1)
-    assert s.phase == "question" and s.public_state("ana")["question"]["options"]["B"] == "4"
+    assert s.phase == "generating" and s.public_state("ana")["total"] == 1
+    s._produce(1, None, s.gen)  # the thread's job; backend login fails offline -> seed bank fills in
+    assert s.phase == "question" and s.fallback == 1 and s.host_state()["ready"] == 1
+    assert s.public_state("ana")["question"]["options"]["B"] == "4"
     assert "correct" not in s.public_state("ana"), "correct answer hidden while open"
     assert s.public_state("ana")["remaining"] == QUESTION_SECONDS
     assert s.vote("ana", "B") and s.vote("beto", "D") and s.vote("cai", "D")
@@ -369,6 +450,13 @@ def selftest():
     assert r["hardest"][0]["pct"] == 33 and r["errors"][0]["choice"] == "D" and r["errors"][0]["count"] == 2
     assert s.screen_state()["podium"][0][0] == "ana" and "votes" not in s.screen_state()
     assert "ana,1,1" in s.report_csv()
+    s.generating, s.phase, s.index = True, "revealed", 0  # teacher outruns the model
+    s.next()
+    assert s.phase == "generating"
+    s.questions.append(q), s.next()
+    assert s.phase == "question" and s.index == 1
+    s.reset()
+    assert s.phase == "lobby" and s.total == 0
     print("selftest ok")
 
 
@@ -376,6 +464,7 @@ if __name__ == "__main__":
     if "--selftest" in sys.argv:
         selftest()
     else:
-        SESSION = Session(load_bank())
-        print(f"loaded {len(SESSION.bank)} questions", flush=True)
+        bank = load_bank()
+        SESSION = Session(bank, fetch_topics(bank))
+        print(f"backend {API} · topics {SESSION.topic_ids} · {len(bank)} fallback questions", flush=True)
         serve()

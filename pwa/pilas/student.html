@@ -6,7 +6,7 @@
 <title>TutorBox</title>
 <link rel="stylesheet" href="/tb.css">
 <style>
-  /* Student PWA (:195): name -> waiting -> answering -> sent -> result -> final. Shell colour follows the mood. */
+  /* Student PWA (/alumno/): name -> waiting -> answering -> sent -> result -> final. Shell colour follows the mood. */
   body { background: var(--panel); min-height: 100vh; display: flex; flex-direction: column; transition: background .35s ease; }
   body[data-mood=good] { background: var(--D); color: #fff; }
   body[data-mood=bad] { background: var(--bad); color: #fff; }
@@ -111,10 +111,10 @@ $('join').onclick = async () => {
   name = $('name').value.trim();
   if (!name) return;
   localStorage.setItem('tb_name', name);
-  render(await api('/join'));
+  render(await api('join'));
 };
 for (const b of document.querySelectorAll('.tile')) b.onclick = async () => {
-  const r = await api('/vote', { choice: b.dataset.k });
+  const r = await api('vote', { choice: b.dataset.k });
   if (r.ok) render(r); // server locks the first press; a late second tap just gets 409
 };
 
@@ -126,9 +126,9 @@ function show(id, mood) {
 function render(s) {
   $('who').textContent = name || 'Sin internet';
   if (!name) return show('name');
-  if (s.phase === 'lobby') {
+  if (s.phase === 'lobby' || s.phase === 'generating') {
     $('initial').textContent = name.charAt(0).toUpperCase();
-    $('waitTitle').textContent = `Hola, ${name}`;
+    $('waitTitle').textContent = s.phase === 'lobby' ? `Hola, ${name}` : 'Ya viene la pregunta…';
     return show('wait');
   }
   if (s.phase === 'finished') {
@@ -165,10 +165,10 @@ function render(s) {
 }
 
 async function poll() {
-  if (name) { try { render(await fetch('/state?name=' + encodeURIComponent(name)).then(r => r.json())); } catch {} }
+  if (name) { try { render(await fetch('state?name=' + encodeURIComponent(name)).then(r => r.json())); } catch {} }
   setTimeout(poll, 1000); // ponytail: 1s polling; move to SSE/WebSocket if >30 clients lag
 }
-if (name) { $('name').value = name; $('join').disabled = false; api('/join').then(render); }
+if (name) { $('name').value = name; $('join').disabled = false; api('join').then(render); }
 poll();
 </script>
 </body>
