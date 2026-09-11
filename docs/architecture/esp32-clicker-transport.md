@@ -90,6 +90,11 @@ graph LR
 
 A common question in offline hardware design is: **How does each physical clicker connect to the appliance's local Wi-Fi Access Point without a screen or keyboard?**
 
+> [!IMPORTANT]
+> **Superseded for Week 7**: the chosen primary strategy is **BLE provisioning from the appliance** — the Jetson's
+> Bluetooth stays on and hands each clicker the Wi-Fi credentials and a device secret on a button press. See
+> [ESP32 Clicker Protocol](esp32-protocol.md). Factory flashing below remains the documented fallback.
+
 TutorBox evaluates three connectivity strategies, with **Factory Fleet Provisioning** serving as the primary design:
 
 ```mermaid

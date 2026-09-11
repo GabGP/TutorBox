@@ -23,8 +23,30 @@ class CastVoteRequest(BaseModel):
     response_time_ms: float | None = Field(default=None, ge=0.0)
 
 
+class RoundRevealResponse(BaseModel):
+    """Turn resolution outcome with distributions and pedagogical remediation decision."""
+
+    round_id: str
+    status: str = "revealed"
+    tally: RoundTally
+    decision: TurnDecision
+
+
+class RoundQuestionView(BaseModel):
+    """Answer-free question view safe for student clients and the classroom screen."""
+
+    question_text: str
+    options: dict[str, str]
+
+
+class RoundResultView(RoundRevealResponse):
+    """Published once a round is revealed: the answer is on the classroom screen by then."""
+
+    explanations: dict[str, str] = Field(default_factory=dict)
+
+
 class SessionRoundInfo(BaseModel):
-    """Summary of current question round state and countdown."""
+    """Summary of current question round state, countdown, and phase-gated content."""
 
     round_id: str
     round_index: int
@@ -32,6 +54,9 @@ class SessionRoundInfo(BaseModel):
     question_id: str | None = None
     duration_seconds: int = 30
     time_remaining: float | None = None
+    votes_cast: int = 0
+    question: RoundQuestionView | None = None
+    result: RoundResultView | None = None
 
 
 class SessionStateResponse(BaseModel):
@@ -44,15 +69,6 @@ class SessionStateResponse(BaseModel):
     current_round_index: int
     question_count: int
     current_round: SessionRoundInfo | None = None
-
-
-class RoundRevealResponse(BaseModel):
-    """Turn resolution outcome with distributions and pedagogical remediation decision."""
-
-    round_id: str
-    status: str = "revealed"
-    tally: RoundTally
-    decision: TurnDecision
 
 
 class VoteResponse(BaseModel):

@@ -1,7 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.router import root_router
 from core.config import load_env_file
@@ -17,6 +20,10 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("tutorbox")
+# Pilas classroom client (pwa/pilas) served same-origin so pages call /api/v1 directly.
+# Mounted per folder (not at "/") so unknown API paths keep their JSON 404 and slash redirects.
+PILAS_DIR = Path(__file__).resolve().parents[2] / "pwa" / "pilas"
+PILAS_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 
 
 @asynccontextmanager
@@ -43,3 +50,13 @@ app = FastAPI(
 )
 
 app.include_router(root_router)
+for _name in PILAS_MOUNTS:
+    app.mount(
+        f"/{_name}", StaticFiles(directory=PILAS_DIR / _name, html=True), name=_name
+    )
+
+
+@app.get("/", include_in_schema=False)
+def pilas_root() -> RedirectResponse:
+    """Students land on the appliance address; the teacher opens /maestro/ explicitly."""
+    return RedirectResponse("/alumno/")

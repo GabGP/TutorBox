@@ -31,6 +31,7 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 * **[Diagnostic Distractors & Misconception Taxonomy](architecture/diagnostic-distractors.md)**: 4-domain curriculum taxonomy and 32 validated misconception slugs powering Quiz mode feedback, Socratic tutoring, and teacher reporting.
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)**: Physical 4-button student clickers, delegated pairing workflow, dual RGB LED feedback state machine, and the hardware-agnostic `VoteTransport` interface.
+* **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API.
 * **[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)**: Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance (8GB Unified RAM budget).
 
 ---

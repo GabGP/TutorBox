@@ -5,6 +5,7 @@ import pytest
 from core.db.session_repository import (
     create_quiz_round,
     create_quiz_session,
+    get_current_quiz_session,
     get_quiz_round,
     get_quiz_session,
     get_round_by_index,
@@ -240,3 +241,17 @@ def test_domain_exceptions_attributes():
     assert isinstance(InvalidRoundStateError("round closed"), Exception)
     assert isinstance(InvalidOptionError("option X invalid"), Exception)
     assert isinstance(TransportError("network down"), Exception)
+
+
+def test_get_current_quiz_session_newest_open_only(memory_db):
+    conn = memory_db
+    assert get_current_quiz_session(conn) is None
+    create_quiz_session(conn, "s_old", "Old", "arithmetic")
+    create_quiz_session(conn, "s_new", "New", "fractions")
+    assert get_current_quiz_session(conn).id == "s_new"
+    update_quiz_session_status(conn, "s_new", "active")
+    assert get_current_quiz_session(conn).id == "s_new"
+    update_quiz_session_status(conn, "s_new", "completed")
+    assert get_current_quiz_session(conn).id == "s_old"
+    update_quiz_session_status(conn, "s_old", "abandoned")
+    assert get_current_quiz_session(conn) is None

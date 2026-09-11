@@ -32,6 +32,7 @@ Comprehensive technical specification, security architecture, and integration co
 The TutorBox API runs on the NVIDIA Jetson Orin Nano edge appliance and communicates with the React/Vite Progressive Web Application (PWA) and ESP32 hardware clickers over the local classroom WLAN/Ethernet network.
 
 * **Base URL**: `http://<appliance-ip>:8000` (e.g., `http://127.0.0.1:8000` in local development)
+* **Classroom client (Pilas)**: served by the same process at `/maestro/`, `/alumno/` and `/pantalla/` (see [PWA](../../pwa/README.md))
 * **API v1 Prefix**: `/api/v1` (e.g., `/api/v1/auth/login`, `/api/v1/quiz/generate`)
 * **Unversioned Probes**: `/health`
 * **Interactive Swagger UI**: `http://<appliance-ip>:8000/docs`
@@ -51,7 +52,7 @@ The API specification is decomposed into cohesive domain modules:
 | **Staff Administration** | **[staff.md](staff.md)** | `GET /api/v1/staff/users`<br>`POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
 | **Hardware Devices** | **[devices.md](devices.md)** | `GET /api/v1/staff/devices`<br>`POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
 | **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
-| **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report` | Public,<br>Student,<br>Teacher,<br>Admin |
+| **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report` | Public,<br>Student,<br>Teacher,<br>Admin |
 
 ---
 
@@ -128,6 +129,7 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/session` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
+| `/api/v1/session/current` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}/start` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}/vote` | `POST` | ❌ | ✅ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |

@@ -20,7 +20,8 @@ These endpoints coordinate real-time classroom quiz matches: teacher match initi
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
 | `POST` | `/api/v1/session` | Teacher, Admin | Create a new quiz session match in lobby state |
-| `GET` | `/api/v1/session/{session_id}` | Public | Public session status and active countdown probe |
+| `GET` | `/api/v1/session/current` | Public | Newest lobby/active session, so classroom clients join without an id |
+| `GET` | `/api/v1/session/{session_id}` | Public | Public session status, active countdown, and phase-gated question/result |
 | `POST` | `/api/v1/session/{session_id}/start` | Teacher, Admin | Open first round and start voting countdown |
 | `POST` | `/api/v1/session/{session_id}/vote` | Student, Staff | Ingest student vote with first-press locking |
 | `POST` | `/api/v1/session/{session_id}/close` | Teacher, Admin | Close the active voting window |
@@ -64,15 +65,28 @@ Creates a new quiz session match in `lobby` state with ordered questions from th
 
 ---
 
+### <a id="get-session-current"></a>`GET /api/v1/session/current`
+
+Returns the newest session still in `lobby` or `active` state, with the same payload as
+`GET /api/v1/session/{session_id}`. One appliance serves one classroom, so student phones and the
+HDMI screen poll this instead of typing a session id; a completed session is never "current".
+
+* **Authorization**: Public
+* **Responses**:
+  * `200 OK`: `SessionStateResponse` (see below).
+  * `404 Not Found`: `"No active session."`
+
+---
+
 ### <a id="get-session-id"></a>`GET /api/v1/session/{session_id}`
 
-Publicly inspectable state of a session and active round countdown. Polled by student voting clients and projector displays.
+Publicly inspectable state of a session and active round countdown. Polled by student voting clients and projector displays. The round payload is **phase-gated**: `question` (text and options only) appears once the round opens; `result` appears only after the teacher reveals. The correct option and distractor explanations are never present while voting is open.
 
 * **Authorization**: Public
 * **Path Parameters**:
   * `session_id` (`string`, required): Unique session identifier.
 * **Responses**:
-  * `200 OK`:
+  * `200 OK` (round open):
     ```json
     {
       "id": "s_a1b2c3d4e5f6",
@@ -82,16 +96,34 @@ Publicly inspectable state of a session and active round countdown. Polled by st
       "current_round_index": 0,
       "question_count": 3,
       "current_round": {
-        "round_id": "r_001_uuid",
+        "round_id": "s_a1b2c3d4e5f6_r0",
         "round_index": 0,
         "status": "open",
         "question_id": "q_add_001",
-        "duration_seconds": 30,
-        "time_remaining": 22.5
+        "duration_seconds": 20,
+        "time_remaining": 12.5,
+        "votes_cast": 7,
+        "question": { "question_text": "¿Cuánto es 54 + 38?", "options": { "A": "82", "B": "16", "C": "92", "D": "812" } },
+        "result": null
       }
     }
     ```
+  * `200 OK` (round revealed) — `current_round.result` carries the same `tally` and `decision` that
+    `POST /reveal` returned (recomputed read-only from the persisted votes) plus an `explanations`
+    map so each student can read the explanation for the option they chose:
+    ```json
+    {
+      "round_id": "s_a1b2c3d4e5f6_r0",
+      "status": "revealed",
+      "tally": { "counts": { "A": 5, "B": 12, "C": 2, "D": 1 }, "total_votes": 20, "percentages": { "A": 25.0, "B": 60.0, "C": 10.0, "D": 5.0 }, "correct_option": "A", "correct_count": 5, "correct_percentage": 25.0 },
+      "decision": { "should_speak": true, "reason": "dominant_distractor_exceeded_threshold", "dominant_distractor": "B", "dominant_percentage": 60.0, "misconception": "added_denominators", "explanation": "Sumaste los denominadores en vez de mantener el común denominador." },
+      "explanations": { "B": "Sumaste los denominadores…", "C": "…", "D": "…" }
+    }
+    ```
   * `404 Not Found`: Session not found.
+* **Notes**:
+  * `time_remaining` is `null` when no in-memory timer exists for the round (e.g. after a backend restart); clients treat it as "no countdown" rather than "expired".
+  * In `lobby` the round is `pending` and `question` is `null`, so the first question is not visible before the teacher starts.
 
 ---
 

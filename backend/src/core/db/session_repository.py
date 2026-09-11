@@ -15,6 +15,7 @@ from modes.quiz.session.models import QuizSessionRecord, SessionStatus
 __all__ = [
     "create_quiz_round",
     "create_quiz_session",
+    "get_current_quiz_session",
     "get_quiz_round",
     "get_quiz_session",
     "get_round_by_index",
@@ -60,6 +61,17 @@ def get_quiz_session(
 ) -> QuizSessionRecord | None:
     """Retrieves a quiz session by its unique ID."""
     cursor = conn.execute("SELECT * FROM quiz_sessions WHERE id = ?", (session_id,))
+    row = cursor.fetchone()
+    return row_to_quiz_session(row) if row is not None else None
+
+
+def get_current_quiz_session(conn: sqlite3.Connection) -> QuizSessionRecord | None:
+    """Newest session still in lobby or active: the one classroom clients should join."""
+    cursor = conn.execute(
+        "SELECT * FROM quiz_sessions WHERE status IN (?, ?) "
+        "ORDER BY created_at DESC, rowid DESC LIMIT 1",
+        (SessionStatus.LOBBY.value, SessionStatus.ACTIVE.value),
+    )
     row = cursor.fetchone()
     return row_to_quiz_session(row) if row is not None else None
 

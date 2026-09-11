@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TutorBox · Panel del docente</title>
+<link rel="stylesheet" href="/static/tb.css">
+<style>
+  /* Teacher phone (/maestro/). login/topic/count live in the browser; lobby/question/reveal/stats follow the backend session. */
+  body { background: var(--panel); min-height: 100vh; display: flex; flex-direction: column; }
+  #shell { display: flex; flex-direction: column; flex: 1; background: var(--panel); }
+  @media (min-width: 600px) {
+    body { background: var(--bg); }
+    #shell { width: 396px; height: 792px; flex: 0 0 auto; margin: 24px auto; border-radius: 42px; border: 1px solid #D3E1E8; box-shadow: 0 24px 60px -24px rgba(11,60,84,.38); overflow: hidden; }
+  }
+  header { height: 60px; flex: 0 0 60px; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 6px; border-bottom: 1px solid var(--line); }
+  #back { width: 48px; height: 48px; border-radius: 24px; font-size: 24px; color: var(--ink2); display: grid; place-items: center; }
+  #back:hover { background: var(--line); }
+  #back:disabled { opacity: 0; }
+  header .t { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .s { font-size: 13px; color: var(--mute2); }
+  #voice { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--tint2); color: var(--tint-ink); font-size: 13px; font-weight: 600; }
+  #voice:hover { background: #C2DBE6; }
+  main { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 18px 8px; }
+  h1 { font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; margin: 0; }
+  footer { flex: 0 0 auto; padding: 14px 18px 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .btns { display: flex; gap: 10px; }
+  .btns .btn { flex: 1; }
+  .btns .outline { flex: 0 0 124px; }
+  .dots { display: flex; gap: 6px; justify-content: center; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line3); transition: all .3s ease; }
+  .dots i.on { background: var(--p); }
+  .dots i.cur { width: 26px; }
+  .help { font-size: 15px; color: var(--mute2); line-height: 1.5; margin: 0; }
+  .note { border-radius: 24px; background: var(--bad-bg); border: 1px solid var(--bad-line); padding: 16px 18px; color: var(--bad-ink); font-size: 15px; line-height: 1.45; }
+
+  /* login */
+  #s-login, #s-pin { justify-content: center; min-height: 100%; }
+  .logo { width: 76px; height: 76px; border-radius: 24px; background: var(--p); color: #fff; display: grid; place-items: center; font-size: 36px; font-weight: 700; }
+  .status { font-size: 14px; color: var(--mute2); display: flex; align-items: center; gap: 8px; }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--line3); }
+  .status.ok i { background: var(--D); }
+
+  /* step 1 · topic */
+  .topics { display: flex; flex-direction: column; gap: 12px; }
+  .topic { border-radius: 26px; background: #fff; border: 2px solid var(--line2); padding: 18px 20px; display: flex; align-items: center; gap: 16px; text-align: left; width: 100%; transition: transform .18s cubic-bezier(.2,.85,.25,1); }
+  .topic:hover { transform: translateY(-2px); }
+  .topic.on { background: var(--tint); border-color: var(--p); }
+  .topic .glyph { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 18px; background: var(--tint); color: var(--p); display: grid; place-items: center; font-size: 22px; font-weight: 700; }
+  .topic.on .glyph { background: var(--p); color: #fff; }
+  .topic .l { font-size: 19px; font-weight: 600; }
+  .topic .m { font-size: 14px; color: var(--mute); }
+  .topic .tick { font-size: 22px; color: var(--p); width: 22px; }
+
+  /* step 2 · count */
+  .counter { border-radius: 28px; background: var(--tint); padding: 26px 20px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .counter .num { font-size: 68px; font-weight: 700; color: var(--p); line-height: 1; }
+  .counter .sub { font-size: 15px; color: var(--mute); }
+  .pm { display: flex; gap: 14px; }
+  .pm button { width: 76px; height: 66px; border-radius: 24px; font-size: 34px; background: #fff; border: 1px solid var(--line3); color: var(--p); user-select: none; }
+  .pm button:hover { background: #F1F8FB; }
+  .pm button.p { background: var(--p); color: #fff; border: 0; }
+  .pm button.p:hover { background: var(--p-dark); }
+  .card .h { font-size: 16px; font-weight: 600; }
+  .card .p-text { font-size: 17px; color: var(--p); font-weight: 500; margin-top: 6px; }
+
+  /* step 3 · lobby (generation + roster) */
+  .hero { border-radius: 28px; background: var(--p); color: #fff; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hero .lbl { font-size: 14px; opacity: .82; letter-spacing: .4px; }
+  .hero .big { font-size: 40px; font-weight: 700; line-height: 1.15; }
+  .hero .addr { font-size: 17px; font-weight: 600; text-align: right; word-break: break-all; }
+  .rowb { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--mute2); }
+  .rowb b { font-size: 18px; color: var(--ink); }
+  .roster { display: flex; flex-direction: column; gap: 8px; }
+  .roster div { display: flex; align-items: center; gap: 10px; font-size: 16px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .roster div span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roster button { color: var(--p); font-weight: 600; font-size: 14px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--tint); }
+  .add { display: flex; gap: 8px; }
+  .add input { height: 52px; border-radius: 20px; font-size: 17px; padding: 0 16px; }
+  .add button { flex: 0 0 auto; }
+
+  /* step 4 · live question */
+  #s-question, #s-reveal { gap: 14px; }
+  .qhead { display: flex; align-items: center; gap: 14px; }
+  .qhead .ring { width: 74px; height: 74px; flex: 0 0 74px; }
+  .qhead .ring > div { width: 58px; height: 58px; font-size: 24px; }
+  .qhead .c { font-size: 14px; color: var(--mute2); font-weight: 500; }
+  .qtext { font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .answered { display: flex; align-items: baseline; gap: 8px; font-size: 16px; color: var(--mute); }
+  .answered b { font-size: 30px; color: var(--p); }
+
+  /* step 5 · reveal */
+  .okcard { border-radius: 28px; background: var(--ok-bg); padding: 22px 24px; color: var(--ok); display: flex; flex-direction: column; gap: 6px; }
+  .okcard .lbl { font-size: 14px; font-weight: 500; letter-spacing: .3px; }
+  .okcard .big { font-size: 28px; font-weight: 700; line-height: 1.15; }
+  .alert.lg { border-radius: 28px; padding: 20px; gap: 14px; font-size: 15px; line-height: 1.5; }
+  .alert.lg b { font-size: 18px; }
+  .alert .btns .btn { height: 56px; border-radius: 28px; font-size: 17px; }
+  .alert .btns .outline { flex: 0 0 116px; }
+  .row { display: flex; align-items: center; justify-content: space-between; font-size: 16px; color: var(--ink2); }
+  .row b { font-size: 22px; color: var(--p); }
+
+  /* step 6 · stats */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { border-radius: 26px; padding: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .stat .n { font-size: 34px; font-weight: 700; line-height: 1.1; }
+  .stat.tint { background: var(--tint); color: var(--mute); }
+  .stat.tint .n { color: var(--p); }
+  .stat.ok { background: var(--ok-bg); color: var(--ok2); }
+  .stat.ok .n { color: var(--ok); }
+  .card h2 { font-size: 18px; font-weight: 600; margin: 0 0 14px; }
+  .hard { display: flex; flex-direction: column; gap: 14px; }
+  .hard > div { display: flex; flex-direction: column; gap: 7px; }
+  .hard .h { display: flex; justify-content: space-between; gap: 10px; font-size: 16px; color: var(--ink2); }
+  .hard .h b { font-size: 15px; white-space: nowrap; }
+  .hard .track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .hard .track div { height: 100%; border-radius: 5px; }
+  .errs { display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.5; }
+  .alert.lg .errs b { display: inline; font-size: inherit; }
+  #export { margin-bottom: 6px; color: var(--p); font-weight: 600; height: 60px; }
+</style>
+</head>
+<body>
+<div id="shell">
+  <header>
+    <button id="back" aria-label="Atrás">←</button>
+    <div class="grow"><div class="t" id="title"></div><div class="s" id="subtitle"></div></div>
+    <button id="voice">Voz ES</button>
+  </header>
+
+  <main>
+    <section id="s-login" class="step">
+      <div class="logo">T</div>
+      <h1>Panel del docente</h1>
+      <div class="status" id="health"><i></i><span>Buscando TutorBox…</span></div>
+      <input id="user" maxlength="32" autocomplete="username" placeholder="Usuario">
+      <input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password" placeholder="PIN">
+      <div class="err" id="lerr" hidden></div>
+      <button id="enter" class="btn p">Entrar</button>
+    </section>
+
+    <section id="s-pin" class="step" hidden>
+      <div class="logo">T</div>
+      <h1>Elija un PIN nuevo</h1>
+      <p class="help">Su PIN fue reiniciado. Cámbielo por uno propio para continuar.</p>
+      <input id="npin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN nuevo (4 a 8 números)">
+      <input id="npin2" type="password" inputmode="numeric" maxlength="8" placeholder="Repita el PIN nuevo">
+      <div class="err" id="perr" hidden></div>
+      <button id="setpin" class="btn p">Guardar y entrar</button>
+    </section>
+
+    <section id="s-topic" class="step" hidden>
+      <h1>Elige el tema<br>del juego</h1>
+      <div class="topics" id="topics"></div>
+    </section>
+
+    <section id="s-count" class="step" hidden>
+      <h1>¿Cuántas preguntas?</h1>
+      <div class="counter">
+        <div class="num" id="count">10</div>
+        <div class="sub">preguntas · aprox. <span id="minutes">6</span> min de juego</div>
+        <div class="pm"><button id="dec">−</button><button id="inc" class="p">+</button></div>
+      </div>
+      <div class="card"><div class="h">Tema elegido</div><div class="p-text" id="topicLabel"></div></div>
+      <p class="help">El modelo local escribe cada pregunta y la revisa con matemáticas antes de usarla. Cada pregunta dura 20 segundos.</p>
+      <div class="note" id="countNote" hidden></div>
+    </section>
+
+    <section id="s-lobby" class="step" hidden>
+      <div class="hero">
+        <div><div class="lbl" id="heroLbl"></div><div class="big" id="heroBig"></div></div>
+        <div><div class="lbl">ENTRAN EN</div><div class="addr" id="addr"></div></div>
+      </div>
+      <p class="help" id="genHelp"></p>
+      <div class="note" id="genNote" hidden></div>
+      <div class="rowb"><b>Alumnos registrados</b><span id="rosterCount"></span></div>
+      <div class="add"><input id="newUser" maxlength="32" placeholder="Usuario nuevo"><input id="newPin" inputmode="numeric" maxlength="8" placeholder="PIN" style="flex:0 0 96px"><button id="addStudent" class="btn soft">Agregar</button></div>
+      <div class="err" id="rosterErr" hidden></div>
+      <div class="alert" id="pinNote" hidden></div>
+      <div class="roster" id="roster"></div>
+    </section>
+
+    <section id="s-question" class="step" hidden>
+      <div class="qhead">
+        <div class="ring" id="ring"><div></div></div>
+        <div class="grow"><div class="c" id="qcounter"></div><div class="qtext" id="qtext"></div></div>
+      </div>
+      <div class="answered"><b id="answered">0</b><span id="answeredLbl">respuestas recibidas</span></div>
+      <div class="bars" id="qbars"></div>
+      <p class="help" id="qhelp"></p>
+    </section>
+
+    <section id="s-reveal" class="step" hidden>
+      <div class="okcard"><div class="lbl">RESPUESTA CORRECTA</div><div class="big" id="correct"></div></div>
+      <div class="bars grow" id="rbars"></div>
+      <div class="alert lg" id="ralert" hidden>
+        <b id="ralertTitle"></b>
+        <div id="explain"></div>
+        <div class="btns"><button id="play" class="btn p">Explicar en español</button><button id="skip" class="btn outline">Saltar</button></div>
+      </div>
+      <div class="card row"><span>Aciertos en esta pregunta</span><b id="hits"></b></div>
+    </section>
+
+    <section id="s-stats" class="step" hidden>
+      <div class="two">
+        <div class="stat tint"><div>Promedio del grupo</div><div class="n" id="avg"></div></div>
+        <div class="stat ok"><div>Respuestas</div><div class="n" id="part"></div></div>
+      </div>
+      <div class="card white"><h2>Preguntas más difíciles</h2><div class="hard" id="hard"></div></div>
+      <div class="alert lg"><b>Errores que se repiten</b><div class="errs" id="errors"></div></div>
+      <a id="export" class="btn outline" href="#" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="btns"><button id="secondary" class="btn outline" hidden>Inicio</button><button id="primary" class="btn p"></button></div>
+    <div class="dots" id="dots"></div>
+  </footer>
+</div>
+
+<script src="/static/tb.js"></script>
+<script>
+const STEPS = ['login', 'pin', 'topic', 'count', 'lobby', 'question', 'reveal', 'stats'];
+const TITLES = {
+  login: ['TutorBox', 'Iniciar sesión'], pin: ['TutorBox', 'PIN nuevo'], topic: ['Paso 1 de 3', 'Elegir tema'], count: ['Paso 2 de 3', 'Número de preguntas'],
+  lobby: ['Paso 3 de 3', 'Preparar el juego'], question: ['En juego', 'Respuestas en vivo'], reveal: ['En juego', 'Resultado de la pregunta'], stats: ['Juego terminado', 'Resumen del grupo'],
+};
+const TOPIC = { '': ['Todos los temas', '∗'], arithmetic: ['Aritmética', '+'], decimals_percentages: ['Decimales y porcentajes', '%'], fractions: ['Fracciones', '½'], pre_algebra: ['Pre-álgebra', 'x'] };
+const topicLabel = id => (TOPIC[id] || [id, '?'])[0];
+const DURATION = 20;
+
+let me = null, topics = [], topic = '', count = 10, voice = 'es', voiceDone = -1, wizard = 'topic';
+let sid = localStorage.getItem('tb_session'), S = null, report = null, gen = null, genToken = 0, closing = null;
+let roster = [], history = [];
+const saveHist = () => localStorage.setItem('tb_hist_' + sid, JSON.stringify(history));
+const loadHist = () => { history = JSON.parse(localStorage.getItem('tb_hist_' + sid) || '[]'); };
+
+function stepOf() {
+  if (!me) return 'login';
+  if (!S) return wizard;
+  if (S.status === 'lobby') return 'lobby';
+  if (S.status === 'completed') return 'stats';
+  return S.current_round && S.current_round.status === 'revealed' ? 'reveal' : 'question';
+}
+function show(id) {
+  for (const k of STEPS) $('s-' + k).hidden = k !== id;
+  document.querySelector('footer').hidden = $('voice').hidden = id === 'login' || id === 'pin';
+}
+
+/* ---- generation: the model writes every question; nothing comes from a bank ---- */
+async function startGeneration() {
+  const token = ++genToken;
+  gen = { done: 0, total: count, failed: 0, ids: [], eta: null };
+  try {
+    const m = await api('GET', '/quiz/generation-metrics' + (topic ? '?topic=' + encodeURIComponent(topic) : ''));
+    gen.eta = m.avg_duration_ms ? Math.max(1, Math.round(m.avg_duration_ms / 1000)) : null;
+  } catch {}
+  render();
+  for (let i = 0; i < count; i++) {
+    const t = topic || topics[i % topics.length].name;
+    const subs = (topics.find(x => x.name === t) || { subconcepts: [] }).subconcepts;
+    const subconcept = subs.length ? subs[i % subs.length].name : null; // rotate for variety
+    try {
+      const r = await api('POST', '/quiz/generate', { topic: t, subconcept, save_to_bank: true }); // saved: rounds reference the id
+      if (token !== genToken) return;
+      gen.ids.push(r.question.id);
+    } catch (e) {
+      if (token !== genToken) return;
+      if (e.status === 401) return toLogin();
+      gen.failed++;
+    }
+    gen.done++;
+    render();
+  }
+  if (!gen.ids.length) {
+    $('countNote').textContent = 'El modelo no respondió a ninguna pregunta. Revise que el modelo local esté encendido e intente de nuevo.';
+    $('countNote').hidden = false;
+    gen = null; wizard = 'count';
+    return render();
+  }
+  const s = await api('POST', '/session', { title: `Pilas ${new Date().toLocaleDateString('es')}`, topic: topic || 'mixto', question_ids: gen.ids, duration_seconds: DURATION });
+  if (token !== genToken) return;
+  sid = s.id; localStorage.setItem('tb_session', sid);
+  history = []; saveHist(); report = null; S = s;
+  render();
+}
+
+/* ---- roster: teacher-managed student accounts (no presence: the backend has no "join") ---- */
+async function loadRoster() {
+  try { roster = (await api('GET', '/staff/users')).users.filter(u => u.role === 'student'); } catch {}
+  renderRoster();
+}
+function renderRoster() {
+  $('rosterCount').textContent = roster.length;
+  $('roster').innerHTML = roster.map(u => `<div><span>${esc(u.username)}</span><button data-id="${u.id}" data-name="${esc(u.username)}">Reiniciar PIN</button></div>`).join('') || '<div class="mute">Todavía no hay alumnos. Agregue uno o pídales crear su cuenta en la dirección de arriba.</div>';
+  for (const b of $('roster').querySelectorAll('button')) b.onclick = async () => {
+    try {
+      const r = await api('POST', `/staff/users/${b.dataset.id}/reset-pin`);
+      $('pinNote').textContent = `PIN temporal de ${b.dataset.name}: ${r.temporary_pin}. Al entrar deberá elegir un PIN nuevo.`;
+      $('pinNote').hidden = false;
+    } catch (e) { rosterErr(e.message); }
+  };
+}
+const rosterErr = m => { $('rosterErr').textContent = m; $('rosterErr').hidden = !m; };
+$('addStudent').onclick = async () => {
+  const username = $('newUser').value.trim(), pin = $('newPin').value.trim();
+  if (!username || !pin) return rosterErr('Escriba usuario y PIN');
+  try {
+    await api('POST', '/staff/users', { username, pin, role: 'student' });
+    $('newUser').value = $('newPin').value = ''; rosterErr('');
+    loadRoster();
+  } catch (e) { rosterErr(e.status === 409 ? 'Ese usuario ya existe' : e.message); }
+};
+
+/* ---- controls ---- */
+$('back').onclick = () => { wizard = 'topic'; render(); };
+$('voice').onclick = () => { voice = voice === 'es' ? 'quc' : 'es'; render(); };
+$('inc').onclick = () => { count = Math.min(20, count + 1); render(); };
+$('dec').onclick = () => { count = Math.max(3, count - 1); render(); };
+$('skip').onclick = () => { voiceDone = S.current_round.round_index; render(); };
+$('play').onclick = () => { voiceDone = S.current_round.round_index; render(); }; // ponytail: Week 4 Jetson TTS endpoint; wire the explanation here
+$('secondary').onclick = async () => {
+  if (stepOf() === 'topic') { await auth.logout(); return toLogin(); }
+  sid = null; S = null; report = null; gen = null; genToken++; wizard = 'topic';
+  localStorage.removeItem('tb_session');
+  render();
+};
+$('primary').onclick = async () => {
+  const step = stepOf();
+  try {
+    if (step === 'topic') wizard = 'count';
+    else if (step === 'count') { $('countNote').hidden = true; wizard = 'lobby'; loadRoster(); startGeneration(); }
+    else if (step === 'lobby') S = await api('POST', `/session/${sid}/start`);
+    else if (step === 'question') { await api('POST', `/session/${sid}/reveal`); S = await api('GET', `/session/${sid}`, undefined, false); }
+    else if (step === 'reveal') S = await api('POST', `/session/${sid}/next`);
+    else return $('secondary').onclick();
+  } catch (e) { if (e.status === 401) return toLogin(); }
+  render();
+};
+
+/* ---- rendering ---- */
+function render() {
+  const step = stepOf(), r = S && S.current_round, last = S && S.current_round_index + 1 >= S.question_count;
+  show(step);
+  $('subtitle').textContent = TITLES[step][0];
+  $('title').textContent = TITLES[step][1];
+  $('back').disabled = step !== 'count';
+  $('voice').textContent = voice === 'es' ? 'Voz ES' : "Voz K'iche'";
+  $('primary').textContent = { topic: 'Continuar', count: 'Crear las preguntas', lobby: gen && !S ? 'Creando preguntas…' : 'Comenzar el juego', question: r && r.status === 'closed' ? 'Ver resultado' : 'Terminar la pregunta', reveal: last ? 'Ver resultados' : 'Siguiente pregunta', stats: 'Nuevo juego' }[step] || '';
+  $('primary').classList.toggle('ok', step === 'lobby');
+  $('primary').disabled = step === 'lobby' && !(S && S.status === 'lobby');
+  $('secondary').hidden = !(step === 'stats' || step === 'topic' || step === 'lobby');
+  $('secondary').textContent = { topic: 'Salir', lobby: 'Cancelar', stats: 'Inicio' }[step] || '';
+  const idx = ['topic', 'count', 'lobby'].indexOf(step);
+  $('dots').innerHTML = idx < 0 ? '' : [0, 1, 2].map(i => `<i class="${i <= idx ? 'on' : ''} ${i === idx ? 'cur' : ''}"></i>`).join('');
+  ({ topic: renderTopics, count: renderCount, lobby: renderLobby, question: renderQuestion, reveal: renderReveal, stats: renderStats }[step] || (() => {}))();
+}
+
+function renderTopics() {
+  const el = $('topics');
+  if (!el.children.length && topics.length) {
+    el.innerHTML = ['', ...topics.map(t => t.name)].map(id => `<button class="topic" data-id="${esc(id)}"><span class="glyph">${esc((TOPIC[id] || [0, '?'])[1])}</span><span class="grow"><div class="l">${esc(topicLabel(id))}</div><div class="m">${id ? 'Preguntas creadas por el modelo' : 'Mezcla de todos los temas'}</div></span><span class="tick"></span></button>`).join('');
+    for (const b of el.children) b.onclick = () => { topic = b.dataset.id; render(); };
+  }
+  for (const b of el.children) { const on = b.dataset.id === topic; b.classList.toggle('on', on); b.lastElementChild.textContent = on ? '✓' : ''; }
+}
+
+function renderCount() {
+  $('count').textContent = count;
+  $('minutes').textContent = Math.max(2, Math.round(count * 0.6));
+  $('topicLabel').textContent = topicLabel(topic);
+}
+
+function renderLobby() {
+  $('addr').textContent = `${location.host}/alumno`;
+  if (S) {
+    $('heroLbl').textContent = 'PREGUNTAS LISTAS';
+    $('heroBig').textContent = S.question_count;
+    $('genHelp').textContent = 'Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.';
+  } else if (gen) {
+    $('heroLbl').textContent = 'TUTORBOX ESTÁ CREANDO';
+    $('heroBig').textContent = `Pregunta ${Math.min(gen.done + 1, gen.total)} de ${gen.total}`;
+    $('genHelp').textContent = 'El modelo local escribe cada pregunta y la revisa con matemáticas.' + (gen.eta ? ` Tarda aprox. ${gen.eta} s por pregunta.` : '');
+  }
+  const failed = gen && gen.failed;
+  $('genNote').hidden = !failed;
+  $('genNote').textContent = failed ? `${failed} pregunta(s) no salieron del modelo; el juego tendrá ${gen.ids.length} preguntas.` : '';
+}
+
+function renderQuestion() {
+  const r = S.current_round;
+  ring('ring', r.status === 'open' ? r.time_remaining : 0, r.duration_seconds);
+  $('qcounter').textContent = `Pregunta ${r.round_index + 1} de ${S.question_count}`;
+  $('qtext').textContent = r.question ? r.question.question_text : '';
+  $('answered').textContent = r.votes_cast;
+  $('answeredLbl').textContent = r.votes_cast === 1 ? 'respuesta recibida' : 'respuestas recibidas';
+  if (r.question) bars($('qbars'), r.question.options, null, 0);
+  $('qhelp').textContent = r.status === 'closed' ? 'Tiempo terminado. Nadie más puede responder.' : r.time_remaining == null ? 'Sin cronómetro (el servidor se reinició). Termine la pregunta cuando quiera.' : '';
+}
+
+function renderReveal() {
+  const r = S.current_round, res = r.result, t = res.tally, d = res.decision;
+  $('correct').textContent = `${t.correct_option} · ${r.question.options[t.correct_option]}`;
+  bars($('rbars'), r.question.options, t.counts, t.total_votes);
+  const showAlert = d.should_speak && voiceDone !== r.round_index;
+  $('ralert').hidden = !showAlert;
+  if (showAlert) {
+    $('ralertTitle').textContent = `${t.counts[d.dominant_distractor]} de ${t.total_votes} eligieron ${r.question.options[d.dominant_distractor]}`;
+    $('explain').textContent = d.explanation;
+    $('play').textContent = voice === 'es' ? 'Explicar en español' : "Explicar en k'iche'";
+  }
+  $('hits').textContent = `${t.correct_count}/${t.total_votes}`;
+}
+
+function topWrong(h) {
+  const wrong = ['A', 'B', 'C', 'D'].filter(k => k !== h.tally.correct_option).map(k => [k, h.tally.counts[k]]).sort((a, b) => b[1] - a[1])[0];
+  return wrong && wrong[1] >= 2 ? { choice: wrong[0], count: wrong[1] } : null;
+}
+function renderStats() {
+  $('avg').textContent = report ? Math.round(report.average_accuracy_percentage) + '%' : '…';
+  $('part').textContent = report ? `${report.total_votes_cast} en ${report.total_rounds} preg.` : '…';
+  const tone = p => p < 40 ? 'var(--bad)' : p < 70 ? 'var(--C)' : 'var(--D)';
+  const hard = [...history].sort((a, b) => a.tally.correct_percentage - b.tally.correct_percentage).slice(0, 3);
+  $('hard').innerHTML = hard.map(h => { const p = Math.round(h.tally.correct_percentage); return `<div><div class="h"><span>${esc(h.text)}</span><b style="color:${tone(p)}">${p}% acierto</b></div><div class="track"><div style="width:${p}%;background:${tone(p)}"></div></div></div>`; }).join('') || '<div class="mute">Sin preguntas respondidas.</div>';
+  const errs = history.map(h => ({ h, w: topWrong(h) })).filter(x => x.w).sort((a, b) => b.w.count - a.w.count).slice(0, 3);
+  $('errors').innerHTML = errs.map(({ h, w }) => `<div>En <b>${esc(h.text)}</b>, ${w.count} alumnos eligieron <b>${esc(h.options[w.choice])}</b>: ${esc(h.explanations[w.choice] || '')}</div>`).join('') || '<div>Ningún error se repitió en el grupo.</div>';
+  const csv = ['pregunta,correcta,respondieron,aciertos', ...history.map(h => `"${h.text.replace(/"/g, '""')}",${h.tally.correct_option} ${h.options[h.tally.correct_option]},${h.tally.total_votes},${h.tally.correct_count}`)].join('\n') + '\n';
+  $('export').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+}
+
+/* ---- session polling: the backend engine is the only source of truth ---- */
+poll(async () => {
+  if (!me || !sid) return;
+  try { S = await api('GET', `/session/${sid}`, undefined, false); }
+  catch (e) { if (e.status === 404) { sid = null; S = null; localStorage.removeItem('tb_session'); render(); } return; }
+  const r = S.current_round;
+  if (r && r.status === 'open' && r.time_remaining === 0 && closing !== r.round_id) { // lock votes the moment the clock runs out
+    closing = r.round_id;
+    api('POST', `/session/${sid}/close`).catch(() => {});
+  }
+  if (r && r.status === 'revealed' && r.result && !history.some(h => h.round_id === r.round_id)) {
+    history.push({ round_id: r.round_id, text: r.question.question_text, options: r.question.options, tally: r.result.tally, explanations: r.result.explanations });
+    saveHist();
+  }
+  if (S.status === 'completed' && !report) report = await api('GET', `/session/${sid}/report`);
+  render();
+});
+
+/* ---- boot ---- */
+function toLogin() { me = null; S = null; localStorage.removeItem('tb_token'); render(); }
+async function start(m) {
+  if (!['teacher', 'admin'].includes(m.role)) { await auth.logout(); $('lerr').textContent = 'Esta página es para docentes. Los alumnos entran en /alumno/'; $('lerr').hidden = false; return; }
+  me = m;
+  try { topics = await api('GET', '/quiz/topics', undefined, false); } catch {}
+  if (sid) {
+    try { S = await api('GET', `/session/${sid}`, undefined, false); loadHist(); if (S.status === 'lobby') loadRoster(); }
+    catch { sid = null; localStorage.removeItem('tb_session'); }
+  }
+  render();
+}
+bindLogin({ show, onDone: start });
+fetch('/health').then(r => r.json()).then(h => { $('health').className = 'status ' + (h.status === 'ok' ? 'ok' : ''); $('health').lastElementChild.textContent = h.status === 'ok' ? 'TutorBox listo' : 'TutorBox con problemas: ' + h.database; }).catch(() => { $('health').lastElementChild.textContent = 'Sin conexión con TutorBox'; });
+auth.me().then(m => m ? start(m) : render());
+</script>
+</body>
+</html>

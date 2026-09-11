@@ -88,3 +88,70 @@ def test_build_session_state_with_active_round(session_db):
     assert state_active.current_round.status == "open"
     assert state_active.current_round.time_remaining is not None
     assert state_active.current_round.time_remaining > 0.0
+
+
+def test_question_hidden_in_lobby_and_visible_once_open(session_db):
+    conn, question_ids = session_db
+    engine = QuizSessionEngine(conn)
+    engine.create_session("s_view", "Title", "arithmetic", question_ids)
+
+    lobby = build_session_state(conn, "s_view", engine).current_round
+    assert lobby is not None
+    assert lobby.question is None and lobby.result is None and lobby.votes_cast == 0
+
+    engine.start_session("s_view")
+    opened = build_session_state(conn, "s_view", engine).current_round
+    assert opened is not None and opened.question is not None
+    assert opened.question.question_text == "1 + 1?"
+    assert opened.question.options == {"A": "2", "B": "3", "C": "4", "D": "0"}
+    assert opened.result is None
+    # The answer must not leak anywhere in the public payload while voting is open.
+    assert "correct_option" not in opened.model_dump_json()
+
+
+def test_votes_cast_and_result_after_reveal(session_db):
+    conn, question_ids = session_db
+    engine = QuizSessionEngine(conn)
+    conn.execute(
+        "INSERT INTO users (id, username, hashed_pin, role) "
+        "VALUES (7, 'kid', 'hash', 'student')"
+    )
+    engine.create_session("s_res", "Title", "arithmetic", question_ids)
+    engine.start_session("s_res")
+    round_id = "s_res_r0"
+    engine.cast_vote("s_res", round_id, 7, "B")
+
+    voting = build_session_state(conn, "s_res", engine).current_round
+    assert voting is not None and voting.votes_cast == 1 and voting.result is None
+
+    engine.close_round("s_res", round_id)
+    tally, decision = engine.reveal_round("s_res", round_id)
+    revealed = build_session_state(conn, "s_res", engine).current_round
+    assert revealed is not None and revealed.status == "revealed"
+    assert revealed.result is not None
+    # Read-only recompute matches exactly what POST /reveal returned.
+    assert revealed.result.tally == tally
+    assert revealed.result.decision == decision
+    assert revealed.result.tally.correct_option == "A"
+    assert revealed.result.tally.counts == {"A": 0, "B": 1, "C": 0, "D": 0}
+    assert revealed.result.decision.should_speak is True
+    assert revealed.result.explanations == {
+        "B": "Sumaste uno de mas.",
+        "C": "Sumaste dos de mas.",
+        "D": "Colocaste valor cero.",
+    }
+    assert revealed.question is not None  # still shown alongside the result
+
+
+def test_deleted_question_yields_no_question_view(session_db):
+    conn, question_ids = session_db
+    engine = QuizSessionEngine(conn)
+    engine.create_session("s_gone", "Title", "arithmetic", question_ids)
+    engine.start_session("s_gone")
+    conn.execute(
+        "UPDATE quiz_questions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (question_ids[0],),
+    )
+    info = build_session_state(conn, "s_gone", engine).current_round
+    assert info is not None and info.status == "open"
+    assert info.question is None and info.result is None

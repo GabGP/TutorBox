@@ -17,6 +17,7 @@ Deployment configurations, systemd service units, and isolated networking setup 
 
 * **Core AI Appliance (NVIDIA Jetson Orin Nano)**:
   * **Systemd Service Units**: Process supervision for `llama.cpp` inference server, FastAPI backend (`:8000`), and HDMI classroom display.
+  * **BLE Clicker Provisioner** (`tutorbox-provisioner.service`, planned for Week 7): always-on Bluetooth GATT service that hands ESP32 clickers the classroom Wi-Fi and their device secret — see [ESP32 Clicker Protocol](../docs/architecture/esp32-protocol.md).
   * **Web Server & Reverse Proxy**: Nginx configuration serving compiled PWA static files and routing API/WebSocket connections.
   * **Audio Output & TTS**: ALSA/PulseAudio configuration routing offline Spanish TTS and K'iche' native audio output to classroom speakers.
   * **System Tuning**: Headless mode, 25W performance mode, and persistent `jetson_clocks` execution.

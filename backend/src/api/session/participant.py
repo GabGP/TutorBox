@@ -13,7 +13,7 @@ from api.session.schemas import (
 from api.session.state_builder import build_session_state
 from core.db.database import get_db
 from core.db.round_repository import get_round_by_index
-from core.db.session_repository import get_quiz_session
+from core.db.session_repository import get_current_quiz_session, get_quiz_session
 from core.security import AuthContext, get_current_session
 from modes.quiz.session.engine import QuizSessionEngine
 from modes.quiz.session.exceptions import (
@@ -26,6 +26,18 @@ from modes.quiz.session.exceptions import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+@router.get("/current", response_model=SessionStateResponse)
+def get_current_session_state() -> SessionStateResponse:
+    """Newest lobby/active session, so student and screen clients can join without an id."""
+    with get_db() as conn:
+        session = get_current_quiz_session(conn)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="No active session."
+            )
+        return build_session_state(conn, session.id, QuizSessionEngine(conn))
 
 
 @router.get("/{session_id}", response_model=SessionStateResponse)

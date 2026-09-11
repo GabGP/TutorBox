@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TutorBox · Pantalla del aula</title>
-<link rel="stylesheet" href="/tb.css">
+<link rel="stylesheet" href="/static/tb.css">
 <style>
-  /* HDMI class screen (/pantalla/): question + timer only. Never per-student votes. */
+  /* HDMI class screen (/pantalla/): question + timer, then the aggregate result. Never per-student votes. */
   body { background: var(--navy); color: #fff; min-height: 100vh; padding: 4vh 4vw; display: flex; flex-direction: column; }
   section { flex: 1; display: flex; flex-direction: column; animation: stepIn .4s ease; }
   .center { align-items: center; justify-content: center; text-align: center; gap: 18px; }
@@ -27,27 +27,25 @@
   .reveal { display: flex; align-items: center; gap: 24px; animation: popIn .4s cubic-bezier(.2,.9,.3,1); }
   .reveal i { width: 104px; height: 104px; border-radius: 30px; display: grid; place-items: center; font-size: 52px; font-weight: 700; font-style: normal; }
   .reveal b { font-size: 92px; font-weight: 700; line-height: 1; }
-  .podium { display: flex; align-items: flex-end; gap: 18px; }
-  .podium > div { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 24px; color: var(--navy-soft); }
-  .podium > div > div { width: 150px; border-radius: 20px 20px 0 0; display: grid; place-items: center; font-size: 40px; font-weight: 700; color: #fff; }
-  .podium .first { font-size: 28px; color: #fff; font-weight: 600; }
-  .podium .first > div { height: 152px; background: var(--C); font-size: 48px; }
-  .podium .second > div { height: 108px; background: var(--B); }
-  .podium .third > div { height: 82px; background: var(--D); font-size: 36px; }
+  #rbars { width: min(900px, 90vw); gap: 14px; margin-top: 20px; }
+  #rbars .bar .letter { width: 56px; height: 56px; flex-basis: 56px; border-radius: 16px; font-size: 26px; }
+  #rbars .bar .txt { font-size: 28px; color: #fff; flex-basis: 160px; }
+  #rbars .bar .track { height: 22px; border-radius: 11px; background: rgba(255,255,255,.14); }
+  #rbars .bar .n { font-size: 26px; color: var(--navy-soft); width: 60px; }
 </style>
 </head>
 <body>
 <section id="s-idle" class="center">
   <div class="logo">T</div>
   <div class="h">TutorBox está listo</div>
-  <div class="sub">Esperando a que el docente inicie el juego</div>
+  <div class="sub" id="idleSub">Esperando a que el docente inicie el juego</div>
   <div class="count" id="ready"></div>
 </section>
 
 <section id="s-question" hidden>
   <div class="top">
     <div class="sub" id="counter"></div>
-    <div class="ring" id="ring"><div id="timer"></div></div>
+    <div class="ring" id="ring"><div></div></div>
   </div>
   <div class="q" id="qtext"></div>
   <div class="opts" id="opts">
@@ -61,43 +59,45 @@
 <section id="s-reveal" class="center" hidden>
   <div class="lbl">RESPUESTA CORRECTA</div>
   <div class="reveal"><i id="cletter"></i><b id="ctext"></b></div>
+  <div class="bars grow" id="rbars"></div>
 </section>
 
 <section id="s-stats" class="center" hidden>
   <div class="h">¡Buen trabajo, grupo!</div>
-  <div class="podium" id="podium"></div>
+  <div class="sub">Terminó el juego</div>
 </section>
 
+<script src="/static/tb.js"></script>
 <script>
-const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const SCREEN = { lobby: 'idle', generating: 'idle', question: 'question', revealed: 'reveal', finished: 'stats' };
-
 function render(s) {
-  const cur = SCREEN[s.phase] || 'idle';
+  const r = s && s.current_round;
+  const cur = !s || s.status === 'lobby' || !r || !r.question ? 'idle' : s.status === 'completed' ? 'stats' : r.status === 'revealed' ? 'reveal' : 'question';
   for (const k of ['idle', 'question', 'reveal', 'stats']) $('s-' + k).hidden = k !== cur;
-  if (cur === 'idle') $('ready').textContent = `${s.players} alumnos listos`;
+  if (cur === 'idle') {
+    $('idleSub').textContent = s ? 'El docente está preparando el juego' : 'Esperando a que el docente inicie el juego';
+    $('ready').textContent = `${location.host}/alumno`;
+  }
   if (cur === 'question') {
-    $('counter').textContent = `Pregunta ${s.index + 1} de ${s.total}`;
-    $('timer').textContent = s.remaining;
-    $('ring').style.setProperty('--pct', 100 * s.remaining / 20);
-    $('ring').classList.toggle('low', s.remaining <= 5);
-    $('qtext').textContent = s.question.text;
-    [...$('opts').children].forEach((el, i) => el.lastElementChild.textContent = s.question.options['ABCD'[i]]);
+    $('counter').textContent = `Pregunta ${r.round_index + 1} de ${s.question_count} · ${r.votes_cast} respuestas`;
+    ring('ring', r.status === 'open' ? r.time_remaining : 0, r.duration_seconds);
+    $('qtext').textContent = r.question.question_text;
+    [...$('opts').children].forEach((el, i) => el.lastElementChild.textContent = r.question.options['ABCD'[i]]);
   }
   if (cur === 'reveal') {
-    $('cletter').textContent = s.correct;
-    $('cletter').className = 'k-' + s.correct;
-    $('ctext').textContent = s.question.options[s.correct];
-  }
-  if (cur === 'stats') {
-    const p = s.podium || [];
-    const label = n => n.replace(/^Clicker #(\d+)$/, 'Mando $1');
-    const slot = (i, cls) => p[i] ? `<div class="${cls}">${esc(label(p[i][0]))}<div>${i + 1}</div></div>` : '';
-    $('podium').innerHTML = slot(1, 'second') + slot(0, 'first') + slot(2, 'third');
+    const t = r.result.tally;
+    $('cletter').textContent = t.correct_option;
+    $('cletter').className = 'k-' + t.correct_option;
+    $('ctext').textContent = r.question.options[t.correct_option];
+    bars($('rbars'), r.question.options, t.counts, t.total_votes);
   }
 }
-(async function poll() { try { render(await fetch('state').then(r => r.json())); } catch {} setTimeout(poll, 1000); })();
+let sid = null;
+poll(async () => {
+  try { const s = await api('GET', sessionPath(), undefined, false); sid = s.id; return render(s); }
+  catch (e) { if (e.status !== 404) return; }
+  if (!sid) return render(null); // /current ignores completed sessions: keep showing ours until the next match
+  try { render(await api('GET', '/session/' + sid, undefined, false)); } catch { render(null); }
+});
 </script>
 </body>
 </html>
