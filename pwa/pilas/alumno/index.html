@@ -14,8 +14,9 @@
   header { height: 52px; flex: 0 0 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: var(--mute2); font-size: 13px; font-weight: 500; }
   body[data-mood] header { color: rgba(255,255,255,.8); }
   header i { width: 8px; height: 8px; border-radius: 50%; background: var(--D); display: inline-block; margin-right: 6px; }
-  #out { color: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; margin-left: 10px; }
-  main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 20px 8px; max-width: 420px; width: 100%; margin: 0 auto; }
+  #out { color: inherit; font-size: 13px; font-weight: 600; height: 30px; padding: 0 12px; margin-left: 8px; border-radius: 15px; background: rgba(19,30,35,.06); }
+  body[data-mood] #out { background: rgba(255,255,255,.2); }
+  main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 20px 12px; max-width: 440px; width: 100%; margin: 0 auto; }
   section { flex: 1; display: flex; flex-direction: column; gap: 20px; animation: stepIn .34s cubic-bezier(.2,.85,.25,1); }
   .center { align-items: center; justify-content: center; text-align: center; }
   h1 { font-size: 28px; font-weight: 600; line-height: 1.15; letter-spacing: -.4px; margin: 0; }
@@ -32,11 +33,21 @@
   .q { font-size: 23px; font-weight: 600; line-height: 1.25; text-wrap: pretty; }
   #s-play { gap: 14px; padding-top: 4px; }
   .tiles { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; padding-bottom: 8px; }
-  .tile { border-radius: 24px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: opacity .25s ease, transform .18s cubic-bezier(.2,.85,.25,1); min-height: 110px; }
-  .tile:active { transform: scale(.96); }
-  .tile:disabled { opacity: .6; }
-  .tile i { width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.26); display: grid; place-items: center; font-size: 19px; font-weight: 700; font-style: normal; }
-  .tile span { font-size: 26px; font-weight: 700; }
+  /* The answer buttons are the only control a student ever touches: big targets, a physical press,
+     and the chosen one stays lit while the vote travels over the classroom AP. */
+  .tile { position: relative; border-radius: 26px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; min-height: clamp(96px, 17vh, 190px); user-select: none;
+          box-shadow: 0 12px 22px -14px rgba(6,45,63,.8), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -3px 0 rgba(0,0,0,.14);
+          transition: opacity .22s ease, transform .16s cubic-bezier(.2,.85,.25,1), box-shadow .16s ease, filter .2s ease; }
+  .tile:hover:not(:disabled) { filter: brightness(1.06); }
+  .tile:active:not(:disabled) { transform: scale(.955); box-shadow: 0 3px 8px -6px rgba(6,45,63,.8), inset 0 3px 8px rgba(0,0,0,.2); }
+  .tile:focus-visible { outline: 4px solid #fff; outline-offset: -6px; }
+  .tile i { position: absolute; top: 12px; left: 12px; width: 38px; height: 38px; border-radius: 13px; background: rgba(255,255,255,.26); display: grid; place-items: center; font-size: 19px; font-weight: 700; font-style: normal; }
+  .tile span { font-size: clamp(20px, 6.6vw, 32px); font-weight: 700; line-height: 1.15; text-align: center; overflow-wrap: anywhere; max-width: 100%; padding: 16px 2px 0; }
+  /* pressed: the pick keeps its colour and wears a ring, the rest step back */
+  .tiles.locked .tile { pointer-events: none; }
+  .tiles.locked .tile:not(.picked) { opacity: .26; transform: scale(.955); box-shadow: none; }
+  .tile.picked { transform: scale(1.02); box-shadow: inset 0 0 0 4px rgba(255,255,255,.92), 0 16px 26px -14px rgba(6,45,63,.85); }
+  .tile.picked::after { content: '✓'; position: absolute; top: 9px; right: 13px; font-size: 19px; font-weight: 700; }
   .pick { width: 108px; height: 108px; border-radius: 34px; color: #fff; background: var(--tint2); display: grid; place-items: center; font-size: 46px; font-weight: 700; animation: popIn .32s cubic-bezier(.2,.9,.3,1); }
   #s-sent h1 { font-size: 26px; }
   .glyph { width: 116px; height: 116px; border-radius: 36px; background: rgba(255,255,255,.22); color: #fff; display: grid; place-items: center; font-size: 54px; font-weight: 700; animation: popIn .34s cubic-bezier(.2,.9,.3,1); }
@@ -49,6 +60,27 @@
   .score { font-size: 74px; font-weight: 700; line-height: 1; }
   #s-final p { font-size: 20px; }
   #s-final h1 { font-size: 24px; max-width: 250px; }
+
+  /* tablet / laptop: the same layout, just bigger */
+  @media (min-width: 700px) {
+    main { max-width: 620px; padding-bottom: 20px; }
+    .tiles { gap: 16px; }
+    .tile { border-radius: 30px; }
+    .tile i { width: 44px; height: 44px; border-radius: 15px; font-size: 21px; top: 14px; left: 14px; }
+    .tile span { font-size: clamp(24px, 2.6vw, 36px); }
+    .q { font-size: 28px; }
+    #s-result p, .explain { max-width: 420px; }
+  }
+  /* phone on its side / small netbook: shrink the chrome, never the tap targets */
+  @media (max-height: 560px) {
+    header { height: 42px; flex-basis: 42px; }
+    .tile { min-height: 72px; gap: 4px; padding: 8px; }
+    .tile i { width: 30px; height: 30px; border-radius: 10px; font-size: 16px; top: 8px; left: 8px; }
+    .tile span { font-size: clamp(17px, 4.4vw, 24px); padding-top: 10px; }
+    .q { font-size: 19px; }
+    .bubble, .glyph { width: 76px; height: 76px; font-size: 34px; border-radius: 24px; }
+    .score { font-size: 54px; }
+  }
 </style>
 </head>
 <body>
@@ -115,6 +147,7 @@
 <script src="/static/tb.js"></script>
 <script>
 let me = null, sid = localStorage.getItem('tb_last_session'), cur = null, shownAt = 0, votes = null, hits = null;
+let pending = null; // option being sent: the 1s poll must not wipe the pressed state mid-flight
 // ponytail: per-device score in localStorage; a reveal this phone never saw is not counted
 const store = () => localStorage.setItem('tb_votes_' + sid, JSON.stringify({ votes, hits }));
 function attach(id) {
@@ -172,22 +205,46 @@ function render(s) {
   $('counter').textContent = `Pregunta ${r.round_index + 1} de ${s.question_count}`;
   ring('ring', r.time_remaining, r.duration_seconds);
   $('qtext').textContent = q.question_text;
-  for (const b of $('tiles').children) { b.lastElementChild.textContent = q.options[b.dataset.k]; b.disabled = false; }
+  for (const b of $('tiles').children) {
+    b.lastElementChild.textContent = q.options[b.dataset.k];
+    b.setAttribute('aria-label', `Opción ${b.dataset.k}: ${q.options[b.dataset.k]}`);
+  }
+  lock(pending);
   show('play');
 }
 
-for (const b of document.querySelectorAll('.tile')) b.onclick = async () => {
-  if (!cur) return;
-  for (const t of $('tiles').children) t.disabled = true;
-  try {
-    await api('POST', `/session/${sid}/vote`, { selected_option: b.dataset.k, transport_type: 'web', response_time_ms: Math.round(performance.now() - shownAt) });
-    votes[cur.round_id] = b.dataset.k; store();
-    sent(b.dataset.k);
-  } catch (e) {
-    if (e.status === 401) return toLogin(); // 409 = already voted or window closed: the next poll shows the right screen
-    for (const t of $('tiles').children) t.disabled = false;
+function lock(picked) {
+  $('tiles').classList.toggle('locked', !!picked);
+  for (const t of $('tiles').children) {
+    const on = t.dataset.k === picked;
+    t.classList.toggle('picked', on);
+    t.setAttribute('aria-pressed', on);
+    t.disabled = !!picked;
   }
-};
+}
+
+async function vote(k) {
+  if (!cur || pending || $('s-play').hidden) return;
+  pending = k; lock(k);
+  navigator.vibrate?.(15);
+  try {
+    await api('POST', `/session/${sid}/vote`, { selected_option: k, transport_type: 'web', response_time_ms: Math.round(performance.now() - shownAt) });
+    votes[cur.round_id] = k; store();
+    pending = null;
+    sent(k);
+  } catch (e) {
+    pending = null;
+    if (e.status === 401) return toLogin(); // 409 = already voted or window closed: the next poll shows the right screen
+    lock(null);
+  }
+}
+
+for (const b of document.querySelectorAll('.tile')) b.onclick = () => vote(b.dataset.k);
+// A-D and 1-4 for tablets with a keyboard; the tiles stay the primary control
+addEventListener('keydown', e => {
+  const k = { a: 'A', b: 'B', c: 'C', d: 'D', 1: 'A', 2: 'B', 3: 'C', 4: 'D' }[e.key.toLowerCase()];
+  if (k && !$('s-play').hidden) { e.preventDefault(); vote(k); }
+});
 
 function toLogin() { me = null; localStorage.removeItem('tb_token'); show('login'); }
 function start(m) { me = m; show('wait'); }

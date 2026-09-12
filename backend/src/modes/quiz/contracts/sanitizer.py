@@ -114,7 +114,11 @@ def sanitize_quiz_dict(data: dict[str, Any]) -> dict[str, Any]:
     if "distractors" in sanitized_data and isinstance(
         sanitized_data["distractors"], dict
     ):
-        sanitized_data["distractors"] = sanitize_distractors_dict(
-            sanitized_data["distractors"]
-        )
+        correct_key = sanitized_data.get("correct_option")
+        distractors_copy = {
+            k: v
+            for k, v in sanitized_data["distractors"].items()
+            if k != correct_key
+        }
+        sanitized_data["distractors"] = sanitize_distractors_dict(distractors_copy)
     return sanitized_data

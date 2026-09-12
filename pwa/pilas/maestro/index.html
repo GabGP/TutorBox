@@ -6,24 +6,28 @@
 <title>TutorBox · Panel del docente</title>
 <link rel="stylesheet" href="/static/tb.css">
 <style>
-  /* Teacher phone (/maestro/). login/topic/count live in the browser; lobby/question/reveal/stats follow the backend session. */
+  /* Teacher console (/maestro/): one responsive page — a single phone column that opens into a
+     two-column desktop layout, no simulated device frame. login/topic/count live in the browser;
+     lobby/question/reveal/stats follow the backend session. */
+  :root { --gut: max(18px, calc((100% - 1080px) / 2)); }
   body { background: var(--panel); min-height: 100vh; display: flex; flex-direction: column; }
-  #shell { display: flex; flex-direction: column; flex: 1; background: var(--panel); }
-  @media (min-width: 600px) {
-    body { background: var(--bg); }
-    #shell { width: 396px; height: 792px; flex: 0 0 auto; margin: 24px auto; border-radius: 42px; border: 1px solid #D3E1E8; box-shadow: 0 24px 60px -24px rgba(11,60,84,.38); overflow: hidden; }
-  }
-  header { height: 60px; flex: 0 0 60px; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 6px; border-bottom: 1px solid var(--line); }
-  #back { width: 48px; height: 48px; border-radius: 24px; font-size: 24px; color: var(--ink2); display: grid; place-items: center; }
+  #shell { display: flex; flex-direction: column; flex: 1; min-height: 100vh; }
+  @supports (min-height: 100dvh) { body, #shell { min-height: 100dvh; } }
+
+  header { position: sticky; top: 0; z-index: 5; min-height: 62px; flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px var(--gut); border-bottom: 1px solid var(--line); background: var(--panel); }
+  #back { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 24px; font-size: 24px; color: var(--ink2); display: grid; place-items: center; transition: background .16s ease; }
   #back:hover { background: var(--line); }
-  #back:disabled { opacity: 0; }
+  #back:disabled { opacity: 0; pointer-events: none; width: 0; flex-basis: 0; overflow: hidden; }
   header .t { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   header .s { font-size: 13px; color: var(--mute2); }
-  #voice { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--tint2); color: var(--tint-ink); font-size: 13px; font-weight: 600; }
+  #voice { flex: 0 0 auto; height: 40px; padding: 0 16px; border-radius: 20px; background: var(--tint2); color: var(--tint-ink); font-size: 14px; font-weight: 600; transition: background .16s ease; }
   #voice:hover { background: #C2DBE6; }
-  main { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 18px 8px; }
-  h1 { font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; margin: 0; }
-  footer { flex: 0 0 auto; padding: 14px 18px 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+
+  main { flex: 1; display: flex; flex-direction: column; padding: 20px var(--gut) 28px; }
+  main > section { flex: 1; }
+  h1 { font-size: clamp(26px, 3vw, 34px); font-weight: 600; line-height: 1.2; letter-spacing: -.4px; margin: 0; }
+
+  footer { position: sticky; bottom: 0; z-index: 5; flex: 0 0 auto; padding: 14px var(--gut) calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 10px; }
   .btns { display: flex; gap: 10px; }
   .btns .btn { flex: 1; }
   .btns .outline { flex: 0 0 124px; }
@@ -31,11 +35,15 @@
   .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line3); transition: all .3s ease; }
   .dots i.on { background: var(--p); }
   .dots i.cur { width: 26px; }
-  .help { font-size: 15px; color: var(--mute2); line-height: 1.5; margin: 0; }
+  .help { font-size: 15px; color: var(--mute2); line-height: 1.5; margin: 0; max-width: 62ch; }
   .note { border-radius: 24px; background: var(--bad-bg); border: 1px solid var(--bad-line); padding: 16px 18px; color: var(--bad-ink); font-size: 15px; line-height: 1.45; }
 
+  /* page body: stacked on a phone, side by side once there is room (see the 900px block) */
+  .cols { display: grid; gap: 16px; }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
   /* login */
-  #s-login, #s-pin { justify-content: center; min-height: 100%; }
+  #s-login, #s-pin { justify-content: center; max-width: 430px; width: 100%; margin: 0 auto; }
   .logo { width: 76px; height: 76px; border-radius: 24px; background: var(--p); color: #fff; display: grid; place-items: center; font-size: 36px; font-weight: 700; }
   .status { font-size: 14px; color: var(--mute2); display: flex; align-items: center; gap: 8px; }
   .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--line3); }
@@ -43,8 +51,8 @@
 
   /* step 1 · topic */
   .topics { display: flex; flex-direction: column; gap: 12px; }
-  .topic { border-radius: 26px; background: #fff; border: 2px solid var(--line2); padding: 18px 20px; display: flex; align-items: center; gap: 16px; text-align: left; width: 100%; transition: transform .18s cubic-bezier(.2,.85,.25,1); }
-  .topic:hover { transform: translateY(-2px); }
+  .topic { border-radius: 26px; background: #fff; border: 2px solid var(--line2); padding: 18px 20px; display: flex; align-items: center; gap: 16px; text-align: left; width: 100%; transition: transform .18s cubic-bezier(.2,.85,.25,1), border-color .18s ease, box-shadow .18s ease; }
+  .topic:hover { transform: translateY(-2px); border-color: var(--p-soft); box-shadow: 0 12px 24px -18px rgba(11,60,84,.6); }
   .topic.on { background: var(--tint); border-color: var(--p); }
   .topic .glyph { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 18px; background: var(--tint); color: var(--p); display: grid; place-items: center; font-size: 22px; font-weight: 700; }
   .topic.on .glyph { background: var(--p); color: #fff; }
@@ -57,30 +65,31 @@
   .counter .num { font-size: 68px; font-weight: 700; color: var(--p); line-height: 1; }
   .counter .sub { font-size: 15px; color: var(--mute); }
   .pm { display: flex; gap: 14px; }
-  .pm button { width: 76px; height: 66px; border-radius: 24px; font-size: 34px; background: #fff; border: 1px solid var(--line3); color: var(--p); user-select: none; }
+  .pm button { width: 76px; height: 66px; border-radius: 24px; font-size: 34px; background: #fff; border: 1px solid var(--line3); color: var(--p); user-select: none; transition: transform .16s cubic-bezier(.2,.85,.25,1), background .16s ease; }
   .pm button:hover { background: #F1F8FB; }
+  .pm button:active { transform: scale(.94); }
   .pm button.p { background: var(--p); color: #fff; border: 0; }
   .pm button.p:hover { background: var(--p-dark); }
   .card .h { font-size: 16px; font-weight: 600; }
   .card .p-text { font-size: 17px; color: var(--p); font-weight: 500; margin-top: 6px; }
 
   /* step 3 · lobby (generation + roster) */
-  .hero { border-radius: 28px; background: var(--p); color: #fff; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hero { border-radius: 28px; background: var(--p); color: #fff; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .hero .lbl { font-size: 14px; opacity: .82; letter-spacing: .4px; }
-  .hero .big { font-size: 40px; font-weight: 700; line-height: 1.15; }
-  .hero .addr { font-size: 17px; font-weight: 600; text-align: right; word-break: break-all; }
+  .hero .big { font-size: clamp(34px, 4vw, 48px); font-weight: 700; line-height: 1.15; }
+  .hero .addr { font-size: clamp(17px, 2vw, 22px); font-weight: 600; text-align: right; word-break: break-all; }
   .rowb { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--mute2); }
   .rowb b { font-size: 18px; color: var(--ink); }
   .roster { display: flex; flex-direction: column; gap: 8px; }
   .roster div { display: flex; align-items: center; gap: 10px; font-size: 16px; padding: 6px 0; border-bottom: 1px solid var(--line); }
   .roster div span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .roster button { color: var(--p); font-weight: 600; font-size: 14px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--tint); }
-  .add { display: flex; gap: 8px; }
+  .roster button { color: var(--p); font-weight: 600; font-size: 14px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--tint); transition: background .16s ease; }
+  .roster button:hover { background: var(--tint2); }
+  .add { display: flex; gap: 8px; max-width: 560px; }
   .add input { height: 52px; border-radius: 20px; font-size: 17px; padding: 0 16px; }
   .add button { flex: 0 0 auto; }
 
   /* step 4 · live question */
-  #s-question, #s-reveal { gap: 14px; }
   .qhead { display: flex; align-items: center; gap: 14px; }
   .qhead .ring { width: 74px; height: 74px; flex: 0 0 74px; }
   .qhead .ring > div { width: 58px; height: 58px; font-size: 24px; }
@@ -92,7 +101,7 @@
   /* step 5 · reveal */
   .okcard { border-radius: 28px; background: var(--ok-bg); padding: 22px 24px; color: var(--ok); display: flex; flex-direction: column; gap: 6px; }
   .okcard .lbl { font-size: 14px; font-weight: 500; letter-spacing: .3px; }
-  .okcard .big { font-size: 28px; font-weight: 700; line-height: 1.15; }
+  .okcard .big { font-size: clamp(28px, 3vw, 36px); font-weight: 700; line-height: 1.15; }
   .alert.lg { border-radius: 28px; padding: 20px; gap: 14px; font-size: 15px; line-height: 1.5; }
   .alert.lg b { font-size: 18px; }
   .alert .btns .btn { height: 56px; border-radius: 28px; font-size: 17px; }
@@ -117,7 +126,37 @@
   .hard .track div { height: 100%; border-radius: 5px; }
   .errs { display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.5; }
   .alert.lg .errs b { display: inline; font-size: inherit; }
-  #export { margin-bottom: 6px; color: var(--p); font-weight: 600; height: 60px; }
+  #export { margin-top: auto; color: var(--p); font-weight: 600; height: 60px; }
+
+  /* tablet: the action bar stops stretching edge to edge */
+  @media (min-width: 760px) {
+    main { padding-top: 26px; gap: 4px; }
+    footer { flex-direction: row-reverse; align-items: center; justify-content: space-between; padding-top: 16px; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+    footer .btns { flex: 0 0 auto; gap: 12px; }
+    footer .btns .btn { flex: 0 0 auto; min-width: 250px; }
+    footer .btns .outline { flex: 0 0 auto; min-width: 150px; }
+  }
+  /* desktop: every step spreads into two columns instead of a tall phone scroll */
+  @media (min-width: 900px) {
+    .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+    .cols.wide { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+    .roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); column-gap: 26px; }
+    .rowb, .add { max-width: 560px; }
+    .hero { padding: 26px 30px; }
+    /* the two live steps are short: centre them instead of stranding them under the header */
+    #s-question, #s-reveal { justify-content: center; }
+    .qtext { font-size: 24px; }
+    .qhead .ring { width: 92px; height: 92px; flex-basis: 92px; }
+    .qhead .ring > div { width: 74px; height: 74px; font-size: 30px; }
+    .answered b { font-size: 38px; }
+    #qbars, #rbars { gap: 12px; }
+    #qbars .letter, #rbars .letter { width: 42px; height: 42px; flex-basis: 42px; border-radius: 14px; font-size: 18px; }
+    #qbars .txt, #rbars .txt { font-size: 18px; flex-basis: 130px; }
+    #qbars .track, #rbars .track { height: 16px; border-radius: 8px; }
+    #qbars .n, #rbars .n { font-size: 18px; width: 34px; }
+    #export { min-width: 320px; align-self: flex-start; }
+  }
 </style>
 </head>
 <body>
@@ -156,14 +195,20 @@
 
     <section id="s-count" class="step" hidden>
       <h1>¿Cuántas preguntas?</h1>
-      <div class="counter">
-        <div class="num" id="count">10</div>
-        <div class="sub">preguntas · aprox. <span id="minutes">6</span> min de juego</div>
-        <div class="pm"><button id="dec">−</button><button id="inc" class="p">+</button></div>
+      <div class="cols">
+        <div class="col">
+          <div class="counter">
+            <div class="num" id="count">10</div>
+            <div class="sub">preguntas · aprox. <span id="minutes">6</span> min de juego</div>
+            <div class="pm"><button id="dec" aria-label="Una pregunta menos">−</button><button id="inc" class="p" aria-label="Una pregunta más">+</button></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card"><div class="h">Tema elegido</div><div class="p-text" id="topicLabel"></div></div>
+          <p class="help">El modelo local escribe cada pregunta y la revisa con matemáticas antes de usarla. Cada pregunta dura 20 segundos.</p>
+          <div class="note" id="countNote" hidden></div>
+        </div>
       </div>
-      <div class="card"><div class="h">Tema elegido</div><div class="p-text" id="topicLabel"></div></div>
-      <p class="help">El modelo local escribe cada pregunta y la revisa con matemáticas antes de usarla. Cada pregunta dura 20 segundos.</p>
-      <div class="note" id="countNote" hidden></div>
     </section>
 
     <section id="s-lobby" class="step" hidden>
@@ -181,34 +226,52 @@
     </section>
 
     <section id="s-question" class="step" hidden>
-      <div class="qhead">
-        <div class="ring" id="ring"><div></div></div>
-        <div class="grow"><div class="c" id="qcounter"></div><div class="qtext" id="qtext"></div></div>
+      <div class="cols wide">
+        <div class="col">
+          <div class="qhead">
+            <div class="ring" id="ring"><div></div></div>
+            <div class="grow"><div class="c" id="qcounter"></div><div class="qtext" id="qtext"></div></div>
+          </div>
+          <div class="answered"><b id="answered">0</b><span id="answeredLbl">respuestas recibidas</span></div>
+          <p class="help" id="qhelp"></p>
+        </div>
+        <div class="col">
+          <div class="bars" id="qbars"></div>
+        </div>
       </div>
-      <div class="answered"><b id="answered">0</b><span id="answeredLbl">respuestas recibidas</span></div>
-      <div class="bars" id="qbars"></div>
-      <p class="help" id="qhelp"></p>
     </section>
 
     <section id="s-reveal" class="step" hidden>
-      <div class="okcard"><div class="lbl">RESPUESTA CORRECTA</div><div class="big" id="correct"></div></div>
-      <div class="bars grow" id="rbars"></div>
-      <div class="alert lg" id="ralert" hidden>
-        <b id="ralertTitle"></b>
-        <div id="explain"></div>
-        <div class="btns"><button id="play" class="btn p">Explicar en español</button><button id="skip" class="btn outline">Saltar</button></div>
+      <div class="cols">
+        <div class="col">
+          <div class="okcard"><div class="lbl">RESPUESTA CORRECTA</div><div class="big" id="correct"></div></div>
+          <div class="bars grow" id="rbars"></div>
+        </div>
+        <div class="col">
+          <div class="alert lg" id="ralert" hidden>
+            <b id="ralertTitle"></b>
+            <div id="explain"></div>
+            <div class="btns"><button id="play" class="btn p">Explicar en español</button><button id="skip" class="btn outline">Saltar</button></div>
+          </div>
+          <div class="card row"><span>Aciertos en esta pregunta</span><b id="hits"></b></div>
+        </div>
       </div>
-      <div class="card row"><span>Aciertos en esta pregunta</span><b id="hits"></b></div>
     </section>
 
     <section id="s-stats" class="step" hidden>
-      <div class="two">
-        <div class="stat tint"><div>Promedio del grupo</div><div class="n" id="avg"></div></div>
-        <div class="stat ok"><div>Respuestas</div><div class="n" id="part"></div></div>
+      <div class="cols">
+        <div class="col">
+          <div class="two">
+            <div class="stat tint"><div>Promedio del grupo</div><div class="n" id="avg"></div></div>
+            <div class="stat ok"><div>Respuestas</div><div class="n" id="part"></div></div>
+          </div>
+          <div class="card white"><h2>Preguntas más difíciles</h2><div class="hard" id="hard"></div></div>
+        </div>
+        <div class="col">
+          <div class="alert lg"><b>Errores que se repiten</b><div class="errs" id="errors"></div></div>
+          <a id="export" class="btn outline" href="#" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
+        </div>
       </div>
-      <div class="card white"><h2>Preguntas más difíciles</h2><div class="hard" id="hard"></div></div>
-      <div class="alert lg"><b>Errores que se repiten</b><div class="errs" id="errors"></div></div>
-      <a id="export" class="btn outline" href="#" download="reporte-tutorbox.csv">Guardar reporte del grupo</a>
     </section>
   </main>
 

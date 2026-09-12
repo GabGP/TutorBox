@@ -34,15 +34,16 @@ def build_quiz_system_prompt(
         '2. "correct_option" must be one of "A", "B", "C", "D" and mathematically true. '
         "Distribute the correct answer and distinct distractor misconceptions arbitrarily among options A through D.\n"
         '3. "distractors" must be a dictionary with exactly 3 keys for the non-correct options.\n'
-        '4. Each distractor MUST include "misconception" (slug) and "explanation" (a friendly Spanish explanation for primary school).\n'
+        '4. Each distractor MUST include "misconception" (the exact English slug from the whitelist, NEVER translated) and "explanation" (a friendly Spanish explanation for primary school).\n'
         '5. The "question_text" and distractor "explanation" fields MUST be in Spanish. '
-        '"question_text" MUST explicitly formulate the mathematical equation, operation, or problem to solve.\n'
+        '"question_text" MUST explicitly formulate the mathematical equation, operation, or problem using standard format (e.g. "Resuelve la ecuación: 2x + 4 = 12" or "Calcula: 25 + 17 ="). Avoid conversational filler words before the formula.\n'
         "6. ANTI-CONTRADICTION RULE: NEVER state a calculated number in an explanation that contradicts the corresponding option value (e.g., never say 'obtendrías 24' if the option is '0').\n"
         "7. Output ONLY the raw JSON object without markdown formatting, preamble, or commentary.\n"
         "8. NOVELTY RULE: You MUST invent a brand-new, unique question with different numerical values, operations, or coefficients.\n"
         "9. Do NOT use LaTeX math delimiters like $x$ or $...$. Write all variables, numbers, and equations as plain text without dollar signs.\n"
         "10. Each value in 'options' must be a concise numerical or algebraic result (e.g. '7', '-3'). NEVER put explanations, sentences, or words like 'correcto' inside options.\n"
-        "11. 'question_text' must contain ONLY the question and equation. NEVER append or list options A, B, C, D inside 'question_text'."
+        "11. 'question_text' must contain ONLY the question and equation. NEVER append or list options A, B, C, D inside 'question_text'.\n"
+        '12. The "topic" and "subconcept" fields MUST be the exact English strings requested (e.g. "pre_algebra", "fractions"). NEVER translate them to Spanish.'
     )
 
 
