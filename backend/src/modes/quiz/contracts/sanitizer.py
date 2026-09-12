@@ -116,9 +116,9 @@ def sanitize_quiz_dict(data: dict[str, Any]) -> dict[str, Any]:
     ):
         correct_key = sanitized_data.get("correct_option")
         distractors_copy = {
-            k: v
-            for k, v in sanitized_data["distractors"].items()
-            if k != correct_key
+            option_key: explanation
+            for option_key, explanation in sanitized_data["distractors"].items()
+            if option_key != correct_key
         }
         sanitized_data["distractors"] = sanitize_distractors_dict(distractors_copy)
     return sanitized_data
