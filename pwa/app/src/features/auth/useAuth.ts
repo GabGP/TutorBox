@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { storage } from '../../shared/lib/storage';
 import { User } from './auth.types';
 import { authApi } from './authApi';
 
@@ -22,9 +23,18 @@ export function useAuth() {
     setLoading(true);
     try {
       const currentUser = await authApi.getCurrentUser();
-      setUser(currentUser);
+      if (currentUser?.must_change_pin) {
+        storage.clearToken();
+        setUser(null);
+        setMustChangePin(false);
+        setPendingCredentials(null);
+      } else {
+        setUser(currentUser);
+        setMustChangePin(false);
+      }
     } catch {
       setUser(null);
+      setMustChangePin(false);
     } finally {
       setLoading(false);
     }
@@ -39,7 +49,9 @@ export function useAuth() {
     if (res.must_change_pin) {
       setPendingCredentials({ username, currentPin: pin });
       setMustChangePin(true);
-      return { mustChangePin: true };
+      const currentUser = await authApi.getCurrentUser();
+      setUser(currentUser);
+      return { mustChangePin: true, user: currentUser };
     }
     const currentUser = await authApi.getCurrentUser();
     setUser(currentUser);

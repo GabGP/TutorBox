@@ -64,7 +64,19 @@ export const authApi = {
       return null;
     }
     try {
-      return await requestApi<User>('GET', '/users/me');
+      const data = await requestApi<{
+        user_id?: number | string;
+        id?: number | string;
+        username: string;
+        role: User['role'];
+        must_change_pin?: boolean;
+      }>('GET', '/users/me');
+      return {
+        id: String(data.user_id ?? data.id ?? ''),
+        username: data.username,
+        role: data.role,
+        must_change_pin: Boolean(data.must_change_pin),
+      };
     } catch (e) {
       if ((e as { status?: number }).status === 401) {
         storage.clearToken();

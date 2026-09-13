@@ -9,12 +9,8 @@ import { OptionLetter } from '../../features/voting/voting.types';
 import { useOptionKeyboard } from '../../shared/lib/keyboard';
 import { storage } from '../../shared/lib/storage';
 import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
-import { StudentFinalScreen } from './StudentFinalScreen';
-import { StudentPlayScreen } from './StudentPlayScreen';
-import { StudentResultScreen } from './StudentResultScreen';
-import { StudentSentScreen } from './StudentSentScreen';
+import { StudentScreens } from './StudentScreens';
 import styles from './StudentView.module.css';
-import { StudentWaitScreen } from './StudentWaitScreen';
 
 /**
  * Main Student Role View for the classroom mobile web client.
@@ -86,6 +82,10 @@ export const StudentView: React.FC = () => {
       : '';
 
   const renderContent = () => {
+    if (mustChangePin) {
+      return <ForcedPinModal currentPin={pendingPin} onPinChange={handlePinChange} />;
+    }
+
     if (!user || ['teacher', 'admin'].includes(user.role)) {
       return (
         <LoginForm
@@ -98,44 +98,23 @@ export const StudentView: React.FC = () => {
       );
     }
 
-    if (mustChangePin) {
-      return <ForcedPinModal currentPin={pendingPin} onPinChange={handlePinChange} />;
-    }
-
     return (
-      <>
-        {step === 'wait' && <StudentWaitScreen username={user.username} />}
-        {step === 'play' && q && (
-          <StudentPlayScreen
-            roundIndex={currentRound?.round_index ?? 0}
-            questionCount={session?.question_count}
-            timeRemaining={currentRound?.time_remaining}
-            durationSeconds={currentRound?.duration_seconds}
-            questionText={q.question_text}
-            options={q.options}
-            selectedOption={currentVote as OptionLetter}
-            onVote={castVote}
-          />
-        )}
-        {step === 'sent' && <StudentSentScreen myVote={myVote} />}
-        {step === 'result' && (
-          <StudentResultScreen
-            isHit={isHit}
-            myVote={myVote}
-            answer={answer}
-            why={why}
-            score={score}
-            roundIndex={currentRound?.round_index ?? 0}
-          />
-        )}
-        {step === 'final' && (
-          <StudentFinalScreen
-            score={score}
-            questionCount={session?.question_count}
-            username={user.username}
-          />
-        )}
-      </>
+      <StudentScreens
+        step={step}
+        username={user.username}
+        roundIndex={currentRound?.round_index ?? 0}
+        questionCount={session?.question_count}
+        timeRemaining={currentRound?.time_remaining}
+        durationSeconds={currentRound?.duration_seconds}
+        question={q}
+        selectedOption={currentVote as OptionLetter}
+        myVote={myVote}
+        isHit={isHit}
+        answer={answer}
+        why={why}
+        score={score}
+        onVote={castVote}
+      />
     );
   };
 

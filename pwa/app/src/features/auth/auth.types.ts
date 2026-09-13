@@ -4,6 +4,7 @@ export interface User {
   id: string;
   username: string;
   role: UserRole;
+  must_change_pin?: boolean;
 }
 
 export interface LoginResponse {

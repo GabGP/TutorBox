@@ -122,7 +122,7 @@ Inside `pwa/app/`:
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (13 suites, 48 tests)
+pnpm test       # Execute Vitest test suite (13 suites, 49 tests)
 pnpm build      # Build production bundle to dist/
 ```
 

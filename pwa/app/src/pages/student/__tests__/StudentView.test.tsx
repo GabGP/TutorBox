@@ -206,4 +206,28 @@ describe('StudentView Component', () => {
     expect(screen.getByText('1 de 1 correctas')).toBeInTheDocument();
     expect(document.body.dataset.mood).toBe('good');
   });
+
+  it('renders forced PIN rotation modal when mustChangePin is true', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      mustChangePin: true,
+      pendingPin: '123456',
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useSessionEngine).mockReturnValue({
+      session: null,
+      error: null,
+      refresh: vi.fn(),
+      setSession: vi.fn(),
+    });
+
+    render(<StudentView />);
+    expect(screen.getByText('Elige tu PIN nuevo')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)')).toBeInTheDocument();
+  });
 });
