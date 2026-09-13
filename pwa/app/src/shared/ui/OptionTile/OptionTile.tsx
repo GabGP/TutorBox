@@ -13,7 +13,7 @@ export interface OptionTileProps {
 
 /**
  * Quiz Response Option Button Tile.
- * Accessible, color-coded touch target (A=Blue, B=Amber, C=Coral, D=Green)
+ * Accessible, color-coded touch target (A=Crimson, B=Blue, C=Amber, D=Green)
  * supporting selection states, lock status, and keyboard interaction.
  *
  * @param {OptionTileProps} props - Component props containing option letter, text, picked/locked status, and click callback.
