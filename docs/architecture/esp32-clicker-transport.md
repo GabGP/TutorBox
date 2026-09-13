@@ -163,29 +163,29 @@ sequenceDiagram
     participant Screen as Classroom HDMI Display
 
     Note over Teacher,DB: Step 1: Teacher Pairing (In-Band Auth)
-    Teacher->>API: POST /devices/1/assign {"user_id": 12} (Bearer Token)
+    Teacher->>API: POST /api/v1/devices/1/assign {"user_id": 12} (Bearer Token)
     API->>DB: UPDATE devices SET assigned_user_id = 12 WHERE device_id = '1'
     API-->>Teacher: 200 OK {"device_id": "1", "assigned_user_id": 12, "assigned_username": "juan_p"}
 
     Note over Student,Screen: Step 2: Quiz Turn & Voting + Telemetry
-    Teacher->>API: POST /quiz/session/start-question (Timer Opens)
-    API->>Screen: Render Question & A-D Options on HDMI Display
+    Teacher->>API: POST /api/v1/session/{id}/start (Voting Window Opens)
+    API->>Screen: Render Question & A-D Options on HDMI Display (/pantalla/)
     Student->>ESP32: Presses Button 'B'
     ESP32->>ESP32: Vote LED = BLINK YELLOW (TX in-flight)
-    ESP32->>API: POST /vote/device {"device_id": "1", "choice": "B", "battery_pct": 88, "rssi": -55}
-    API->>DB: SELECT assigned_user_id FROM devices WHERE device_id = '1'
-    Note over API: Resolves device_id '1' -> user_id 12 (Juan) & logs telemetry
-    API-->>ESP32: 200 OK {"status": "recorded", "choice": "B"}
+    ESP32->>API: POST /api/v1/session/{id}/vote {"selected_option": "B", "transport_type": "hardware", "device_id": "1", "response_time_ms": 1200.0}
+    API->>DB: INSERT INTO quiz_session_votes (round_id, student_id, selected_option, ...)
+    Note over API: Enforces first-press lock (UNIQUE round_id, student_id); maps device_id '1' -> student_id 12
+    API-->>ESP32: 200 OK {"status": "recorded", "selected_option": "B"}
     ESP32->>ESP32: Vote LED = SOLID GREEN (1.5s)
-    API->>Screen: Update HDMI live grid: Clicker #1 turns GREEN [1: ✓]
-    API->>Teacher: WebSocket/Polling: Clicker #1 [Juan] voted (Battery: 88%, Signal: Good)
+    API->>Screen: Update live aggregate turnout count
+    API->>Teacher: Live turnout update on /maestro/ console
 ```
 
 ---
 
 ## <a id="5-abstract-votetransport-architecture-week-3--week-7-bridge"></a>5. Abstract `VoteTransport` Architecture (Week 3 & Week 7 Bridge)
 
-To enforce **System Guardrail #5 (Hardware-Agnostic Transport)**, voting logic is completely decoupled behind an abstract `VoteTransport` interface:
+To enforce **System Guardrail #5 (Hardware-Agnostic Transport)**, voting logic is decoupled from client implementations:
 
 ```mermaid
 classDiagram
@@ -217,6 +217,14 @@ classDiagram
     VoteTransport <|-- Esp32HardwareTransport
     QuizSessionEngine --> VoteTransport
 ```
+
+> [!NOTE]
+> **Architectural Decision (Week 3 Evaluation): Wire Protocol Seam vs. In-Process OOP Abstraction**
+> While early design diagrams envisioned an in-memory Python class hierarchy (`VoteTransport` OOP interface), distributed heterogeneous clients (ESP32 microcontrollers running embedded C++ and student smartphones running JavaScript PWA) operate over physical network boundaries and cannot share an in-memory Python runtime.
+>
+> Therefore, the **Wire Protocol contract (`POST /api/v1/session/{id}/vote`)** serves as the true hardware-agnostic transport layer. The payload accepts `"transport_type": "web" | "hardware" | "mock"` alongside optional `"device_id"`, decoupling client implementations from server state without artificial in-process OOP boilerplate.
+>
+> This architecture is formally validated in Week 3 via an automated 15-client concurrent test match (`test_session_concurrency.py`), proving 100% first-press lock enforcement and 0 lost votes under simultaneous mixed web and hardware traffic. See [ESP32 Clicker Protocol](esp32-protocol.md) for the complete provisioning and HTTP voting flow.
 
 ---
 

@@ -75,7 +75,7 @@ gantt
 | :---: | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
-| **3** ⏳ | [Session Engine & Browser Voting](week-3-session-engine.md) | Agnostic `VoteTransport`, session engine (>51% rule), A–D web client (15 clients, 0 lost votes) | **B** / A |
+| **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ⏳ | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
@@ -120,23 +120,27 @@ gantt
 
 ---
 
-### <a id="week-3"></a>⏳ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
+### <a id="week-3"></a>✅ Week 3 — Session Engine & Browser Voting (Pilot: B · Copilot: A)
 * **Focus**: Core quiz turn state machine, browser-based voting, and deterministic >51% distractor rule evaluation.
-* **Student B (Pilot - In Progress)**:
-  * Device-agnostic `VoteTransport` abstract interface.
-  * Lightweight mobile web voting client (A–D buttons) for student smartphones/tablets.
-  * Teacher management web app to select topics and launch quiz sessions.
-* **Student A (Copilot - Completed)**:
-  * Real-time session engine (voting window timer, vote aggregation, distribution calculation) with 589 green tests and 100% statement coverage.
+* **Student B (Pilot - Delivered)**:
+  * Wire Protocol `VoteTransport` seam over versioned REST API contract (`POST /api/v1/session/{id}/vote`).
+  * Lightweight mobile web voting client (`pwa/pilas/alumno/`) with real-time sync and first-press locking.
+  * Teacher management portal (`pwa/pilas/maestro/`) and classroom screen (`pantalla/`).
+  * ESP32 hardware protocol specification (`docs/architecture/esp32-protocol.md`).
+  * Spoken distractor remediation voice integration in `maestro/` (`GET /api/v1/session/{id}/speech`).
+  * Captive portal subsystem (`backend/src/api/captive.py` & `infra/captive-portal.md`).
+* **Student A (Copilot - Delivered)**:
+  * Real-time session engine (voting window timer, vote aggregation, distribution calculation) with 685 green tests and 100% statement coverage.
   * Formal validation of the **>51% Rule** across all 12 edge cases.
-  * Database persistence (`010_add_quiz_sessions_and_votes.sql`) with first-press locks and 8 versioned REST endpoints (`/api/v1/session`).
+  * Database persistence (`010_add_quiz_sessions_and_votes.sql`) with first-press locks and versioned REST endpoints (`/api/v1/session`).
+  * Concurrency verification suite (`test_session_concurrency.py`) proving 15 simultaneous clients with 0 lost votes and first-press race resolution.
 * **Tuesday Defense (Presented by Copilot A)**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
   1. Data flow of a single vote from client touch to server aggregation.
   2. Rationale behind the 51% threshold and edge-case behavior.
-  3. Benefits of decoupling session logic behind an abstract transport interface.
+  3. Benefits of decoupling session logic behind the Wire Protocol abstraction.
 * **Acceptance Criteria & Deliverables**:
-  * Live 5-question test match conducted with 15 simultaneous web clients with 0 lost votes.
-  * Unit test suite verifying `VoteTransport` against simulated mock transports.
+  * Live 5-question test match conducted with 15 simultaneous clients with 0 lost votes (verified in CI via `test_session_concurrency.py`).
+  * Automated test suite verifying Wire Protocol transport decoupling across mixed web and hardware devices.
 * **Detailed Milestone Report**: [Week 3 Milestone Synthesis](week-3-session-engine.md).
 
 ---

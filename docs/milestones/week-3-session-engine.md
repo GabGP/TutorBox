@@ -17,16 +17,20 @@ This document summarizes the technical deliverables, architectural implementatio
 
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
-* **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) In Progress**
-* **Backend Test Suite**: **605 / 605 passing tests** (86 new integration and unit tests added in Week 3 across persistence, aggregation, rule evaluation, lifecycle, schema contracts, event dispatching, and API layers).
-* **Statement Coverage**: **100.00% coverage** across all 2,924 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Status**: **Week 3 Milestone Complete & Green**
+* **Backend Test Suite**: **685 / 685 passing tests** (166 new integration, unit, speech, captive, and concurrency tests added in Week 3 across persistence, aggregation, rule evaluation, lifecycle, schema contracts, event dispatching, public phase-gated state, concurrent load, offline TTS, and captive portal).
+* **Statement Coverage**: **100.00% coverage** across all 3,251 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
-* **Modularity Compliance**: **100% of source files $\le 133$ LoC** (well under the $\le 150$ LoC hard ceiling) and **100% of test files $\le 256$ LoC** (well under the $\le 300$ LoC ceiling), verified by `test_modularity_policy.py`.
+* **Modularity Compliance**: **100% of source files $\le 146$ LoC** (Week 3 session modules $\le 139$ LoC, well under the $\le 150$ LoC hard ceiling) and **100% of test files $\le 299$ LoC** (well under the $\le 300$ LoC ceiling), verified by `test_modularity_policy.py`.
 * **Key Milestone Artifacts**:
   * Idempotent migration `010_add_quiz_sessions_and_votes.sql` enforcing first-press locks via `UNIQUE(round_id, student_id)`.
   * Deterministic **>51% Rule** evaluator with formal validation across all 12 edge cases.
   * Monotonic countdown timer with simulated clock injection for deterministic TTL window expiration.
   * Versioned REST API endpoints (`/api/v1/session`) coordinating match creation, turn lifecycle, and student voting.
+  * Concurrency verification suite (`backend/tests/api/session/test_session_concurrency.py`) proving 15 simultaneous clients (web + hardware), 0 lost votes, and first-press lock race resolution.
+  * Public phase-gating (`state_builder.py`) hiding question answers during active voting and dynamically publishing diagnostic explanations upon reveal.
+  * Offline TTS speech synthesis pipeline (`backend/src/api/session/speech.py`, `backend/src/core/tts/espeak.py`) generating WAV audio for >51% distractor remediation.
+  * Captive portal subsystem (`backend/src/api/captive.py`, `infra/captive-portal.md`) providing zero-configuration classroom discovery.
   * Event dispatcher (`session/events.py`) and entity resolver (`api/session/dependencies.py`) maintaining strict Single Responsibility decoupling.
 
 ---
@@ -61,10 +65,13 @@ This document summarizes the technical deliverables, architectural implementatio
      * `reports.py`: Aggregate match reporting (`GET /{session_id}/report`) with accuracy calculations.
      * Registered in `backend/src/api/router.py`.
 6. **Architectural Hardening & Modularity Decompression**:
-   * Extracted `modes/quiz/session/events.py` (23 LoC) to encapsulate event dispatching and shared in-memory timer/listener state, decompressing `modes/quiz/session/engine.py` from 148 to 131 LoC.
-   * Extracted `api/session/dependencies.py` (25 LoC) to centralize session and round entity resolution, reducing `api/session/host.py` from 149 to 116 LoC.
-   * Extracted `modes/quiz/validation/similarity_helpers.py` (38 LoC) to isolate text normalization and string distance math, reducing `modes/quiz/validation/deduplication.py` from 148 to 103 LoC.
-   * Standardized `api/staff/` action modules (`user_delete.py`, `user_recover.py`, `user_reset_pin.py`) and centralized DTO schemas across all API packages, establishing 100% compliance with $\le 133$ LoC ceilings across all production modules.
+   * Extracted `modes/quiz/session/events.py` (35 LoC) to encapsulate event dispatching and shared in-memory timer/listener state, decompressing `modes/quiz/session/engine.py` from 148 to 139 LoC.
+   * Extracted `api/session/dependencies.py` (30 LoC) to centralize session and round entity resolution, reducing `api/session/host.py` from 149 to 130 LoC.
+   * Extracted `modes/quiz/validation/similarity_helpers.py` (44 LoC) to isolate text normalization and string distance math, reducing `modes/quiz/validation/deduplication.py` from 148 to 114 LoC.
+   * Standardized `api/staff/` action modules (`user_delete.py`, `user_recover.py`, `user_reset_pin.py`) and centralized DTO schemas across all API packages, establishing 100% compliance with $\le 146$ LoC across all production modules (well below the $\le 150$ LoC ceiling).
+7. **Phase-Gated Public State & 15-Client Concurrency Verification Suite**:
+   * Answer-Safe Public State (`api/session/state_builder.py`): Dynamic phase-gating for `GET /api/v1/session/current` and `GET /api/v1/session/{id}`, masking `correct_option` and distractor explanations during active voting while dynamically projecting aggregate counts and diagnostic explanations upon turn reveal.
+   * Concurrency Verification Suite (`backend/tests/api/session/test_session_concurrency.py`, 273 LoC): Simulated live 5-question match with 15 simultaneous clients (10 web PWA + 5 ESP32 clickers) casting 75 total votes, proving 100% first-press lock enforcement, 0 lost votes, and immediate race condition resolution under concurrent load.
 
 ---
 
@@ -85,16 +92,26 @@ This document summarizes the technical deliverables, architectural implementatio
   * Accepts `{"selected_option": "A"|"B"|"C"|"D", "transport_type": "web"|"hardware", "device_id": "...", "response_time_ms": 1200.0}`.
   * Returns `200 OK` with recorded vote details, or `409 Conflict` if the student or clicker has already voted in this round.
 
-**Work Packages** *[In Progress / Student B to complete]*:
+**Work Packages & Architectural Deliverables:**
 
-1. **Device-Agnostic `VoteTransport` Abstract Interface**:
-   * Define the production `VoteTransport` interface abstracting web browser connections, ESP32 clicker radio frames, and testing harnesses.
-2. **Mobile Web Voting Client (`pwa/quiz/student.html`)**:
-   * Responsive A–D voting keypad optimized for student smartphones and tablets connected to the local classroom AP.
-   * Real-time visual feedback indicating when the voting window is open, countdown remaining, and acknowledgment upon successful first-press lock.
-3. **Teacher Management Portal (`pwa/quiz/host.html`)**:
-   * Host UI to select topics, initiate quiz sessions, control turn progression (`Start`, `Close`, `Reveal`, `Next`), and inspect live turnout charts.
-4. **Tuesday Jury Defense**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
-   1. The lifecycle of a single vote from touch interface through transport abstraction to database persistence.
-   2. Mathematical justification and edge cases of the >51% threshold for spoken distractor remediation.
-   3. Architectural advantages of decoupling real-time session state from transport protocols.
+1. **Architectural Decision: Wire Protocol Seam over In-Process `VoteTransport`**:
+   * *Architectural Evolution*: Early planning envisioned an in-process Python class hierarchy (`VoteTransport` OOP interface). However, distributed heterogeneous clients (ESP32 microcontrollers running embedded C++ and student smartphones running JavaScript PWA) operate over physical network boundaries and cannot share an in-memory Python runtime.
+   * *The Wire Protocol Seam*: The **HTTP REST API contract (`POST /api/v1/session/{id}/vote`)** serves as the true hardware-agnostic transport layer. The engine ingests votes identically regardless of whether the source is `transport_type: "web"` or `"hardware"`.
+   * *Verification*: Automated 15-client concurrency test match (`backend/tests/api/session/test_session_concurrency.py`) proving 100% first-press lock enforcement and **0 lost votes** across 5 rounds with 75 total votes under simultaneous mixed web and hardware traffic.
+2. **Mobile Web Voting Client (`pwa/pilas/alumno/index.html`)**:
+   * Delivered responsive A–D voting keypad served directly by FastAPI.
+   * Features real-time state synchronization via `/api/v1/session/current`, first-press locking upon selection, and post-reveal distractor explanation feedback.
+3. **Teacher Management Portal & Screen (`pwa/pilas/maestro/` & `pantalla/`)**:
+   * Delivered teacher console for session creation, real-time turnout monitoring, and turn progression controls (`Start`, `Close`, `Reveal`, `Next`).
+   * Delivered dedicated HDMI screen interface (`pantalla/index.html`) presenting answer-safe countdowns and aggregate bar distributions without individual student identities.
+4. **ESP32 Hardware Protocol Specification (`docs/architecture/esp32-protocol.md`)**:
+   * Authored comprehensive 537-line engineering specification detailing BLE GATT provisioning, HTTP polling loops, token auth lifecycle, and network capacity planning for Week 7.
+5. **Spoken Remediation Voice Integration (`pwa/pilas/maestro/` & Speech API)**:
+   * Connected teacher portal to `GET /api/v1/session/{session_id}/speech?lang=es|quc` with audio streaming via offline eSpeak-ng engine (`backend/src/core/tts/espeak.py`).
+   * Implemented iOS silent-WAV audio context priming, real-time speech indicator state (`loading`, `playing`, `done`, `error`), and bilingual toggle (Spanish vs K'iche').
+6. **Captive Portal Architecture & Offline DNS (`backend/src/api/captive.py` & `infra/captive-portal.md`)**:
+   * Implemented RFC 8952 captive portal API and OS detection probe handlers (`/generate_204`, `/hotspot-detect.html`, `/ncsi.txt`) with Nginx redirection to `/alumno/`.
+7. **Tuesday Jury Defense (Presented by Copilot A)**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
+   1. Data flow of a single vote from client touch/hardware button through the Wire Protocol to database persistence with first-press locking.
+   2. Mathematical justification and formal edge cases of the >51% threshold for spoken distractor remediation.
+   3. Architectural benefits of the Wire Protocol abstraction, proven via the 15-client concurrency test with zero lost votes.
