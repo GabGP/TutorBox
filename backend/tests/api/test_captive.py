@@ -48,7 +48,12 @@ def test_probe_paths_hidden_from_openapi(captive_env, temp_db, client):
 
 
 def test_unknown_path_on_foreign_host_redirects(captive_env, temp_db, client):
-    for host in ("www.msftconnecttest.com", "captive.apple.com:8080", "testserver"):
+    for host in (
+        "www.msftconnecttest.com",
+        "captive.apple.com:8080",
+        "testserver",
+        "8.8.8.8",
+    ):
         resp = _get(client, "/some/page", host)
         assert resp.status_code == 302, host
         assert resp.headers["location"] == STUDENT_URL

@@ -62,10 +62,10 @@ def _is_appliance_host(hostname: str | None, redirect_url: str) -> bool:
     if hostname == (urlsplit(redirect_url).hostname or "").lower():
         return True
     try:
-        ipaddress.ip_address(hostname)
+        ip = ipaddress.ip_address(hostname)
+        return ip.is_private or ip.is_loopback
     except ValueError:
         return False
-    return True
 
 
 def _redirect(url: str) -> RedirectResponse:
