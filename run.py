@@ -19,7 +19,12 @@ BACKEND_DIR = ROOT_DIR / "backend"
 
 def check_prerequisites() -> None:
     # 1. espeak-ng check
-    tts_bin = shutil.which("espeak-ng") or shutil.which("espeak")
+    tts_custom = os.getenv("TTS_ESPEAK_BINARY", "").strip()
+    tts_bin = (
+        shutil.which(tts_custom)
+        if tts_custom
+        else (shutil.which("espeak-ng") or shutil.which("espeak"))
+    )
     if not tts_bin:
         print(
             "[\033[33mWARN\033[0m] espeak-ng not found. Spoken voice (>51% distractor rule) will be unavailable."
@@ -63,11 +68,15 @@ def load_env(env_path: Path) -> None:
             if not stripped or stripped.startswith("#") or "=" not in stripped:
                 continue
             key, val = stripped.split("=", 1)
-            os.environ.setdefault(key.strip(), val.strip())
+            clean_key = key.strip()
+            clean_val = val.strip().strip("'\"")
+            if clean_key and clean_key not in os.environ:
+                os.environ[clean_key] = clean_val
 
 
 def main() -> None:
     load_env(ROOT_DIR / ".env")
+    load_env(BACKEND_DIR / ".env")
     cache_venv = ROOT_DIR / ".cache" / "venv"
     os.environ.setdefault("UV_PROJECT_ENVIRONMENT", str(cache_venv))
 
