@@ -50,6 +50,7 @@ from core.config.settings import (
     clear_settings_cache,
     get_settings,
 )
+from core.config.tts_settings import build_tts_config
 
 __all__ = [
     "DEFAULT_AUTH_LOCKOUT_SECONDS",
@@ -87,6 +88,7 @@ __all__ = [
     "Settings",
     "TTSConfig",
     "build_captive_portal_config",
+    "build_tts_config",
     "clear_settings_cache",
     "get_settings",
     "load_env_file",

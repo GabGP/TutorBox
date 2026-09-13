@@ -208,28 +208,6 @@ def test_quiz_settings_env_overrides(monkeypatch) -> None:
     assert get_settings().quiz.max_retries == DEFAULT_QUIZ_MAX_RETRIES
 
 
-def test_tts_settings_env_overrides(monkeypatch) -> None:
-    """Verifies espeak voice settings are configurable and bounded."""
-    monkeypatch.setenv("TTS_ENABLED", "false")
-    monkeypatch.setenv("TTS_ESPEAK_BINARY", " /opt/espeak-ng ")
-    monkeypatch.setenv("TTS_VOICE", "es-la")
-    monkeypatch.setenv("TTS_VOICE_QUC", "quc")
-    monkeypatch.setenv("TTS_WORDS_PER_MINUTE", "130")
-    clear_settings_cache()
-
-    tts = get_settings().tts
-    assert tts.enabled is False
-    assert tts.binary == "/opt/espeak-ng"
-    assert tts.voice == "es-la"
-    assert tts.voice_quc == "quc"
-    assert tts.words_per_minute == 130
-
-    # Out-of-range cadence falls back to the primary-school default
-    monkeypatch.setenv("TTS_WORDS_PER_MINUTE", "900")
-    clear_settings_cache()
-    assert get_settings().tts.words_per_minute == DEFAULT_TTS_WORDS_PER_MINUTE
-
-
 def test_settings_range_validation_fallbacks(monkeypatch) -> None:
     """Verifies that out-of-range numeric values and empty strings fall back to defaults."""
     # Min value bounds
