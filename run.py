@@ -9,7 +9,7 @@ import argparse
 import os
 import shutil
 import subprocess
-import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -34,7 +34,7 @@ def check_prerequisites() -> None:
         req = urllib.request.Request(f"{slm_url.rstrip('/')}/models", method="GET")
         with urllib.request.urlopen(req, timeout=1.5):
             print(f"[\033[32mOK\033[0m] Local SLM engine reachable at {slm_url}")
-    except Exception:
+    except (urllib.error.URLError, TimeoutError, OSError):
         print(
             f"[\033[33mINFO\033[0m] SLM engine not detected at {slm_url}. Dynamic quiz generation requires llama-server."
         )
@@ -55,11 +55,21 @@ def resolve_uv() -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="TutorBox Appliance Dev & Production Launcher")
-    parser.add_argument("--host", default="0.0.0.0", help="Host address to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
-    parser.add_argument("--no-reload", action="store_true", help="Disable auto-reloading")
-    parser.add_argument("--check-only", action="store_true", help="Check prerequisites and exit")
+    parser = argparse.ArgumentParser(
+        description="TutorBox Appliance Dev & Production Launcher"
+    )
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Host address to bind (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Port to bind (default: 8000)"
+    )
+    parser.add_argument(
+        "--no-reload", action="store_true", help="Disable auto-reloading"
+    )
+    parser.add_argument(
+        "--check-only", action="store_true", help="Check prerequisites and exit"
+    )
     args = parser.parse_args()
 
     print("==================================================")
@@ -96,7 +106,7 @@ def main() -> None:
     print("==================================================")
 
     try:
-        subprocess.run(cmd, cwd=str(ROOT_DIR))
+        subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
     except KeyboardInterrupt:
         print("\nTutorBox server stopped.")
 
