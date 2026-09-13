@@ -1,0 +1,15 @@
+.tiles {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  padding-bottom: 8px;
+  width: 100%;
+}
+
+@media (min-width: 700px) {
+  .tiles {
+    gap: 16px;
+  }
+}
