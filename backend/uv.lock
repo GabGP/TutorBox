@@ -910,7 +910,7 @@ wheels = [
 [[package]]
 name = "tutorbox-backend"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "bcrypt" },
     { name = "fastapi" },

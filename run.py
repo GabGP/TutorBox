@@ -54,7 +54,23 @@ def resolve_uv() -> str:
     return "uv"
 
 
+def load_env(env_path: Path) -> None:
+    if not env_path.is_file():
+        return
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, val = stripped.split("=", 1)
+            os.environ.setdefault(key.strip(), val.strip())
+
+
 def main() -> None:
+    load_env(ROOT_DIR / ".env")
+    cache_venv = ROOT_DIR / ".cache" / "venv"
+    os.environ.setdefault("UV_PROJECT_ENVIRONMENT", str(cache_venv))
+
     parser = argparse.ArgumentParser(
         description="TutorBox Appliance Dev & Production Launcher"
     )
