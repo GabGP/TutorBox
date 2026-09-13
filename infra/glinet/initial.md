@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Infra](../README.md) › **GL.iNet Initial Setup** • **Related:** [Hardware Topology](../../docs/architecture/hardware-topology.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md)
+📍 [Infra](../README.md) › **GL.iNet Initial Setup** • **Related:** [Captive Portal](../captive-portal.md) • [Hardware Topology](../../docs/architecture/hardware-topology.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md)
 
 </div>
 
@@ -52,11 +52,13 @@ either the web UI (LuCI / GL.iNet Admin Panel) or `uci` over SSH. Relevant chara
 | Host | Address | Assignment |
 | :--- | :--- | :--- |
 | Router (gateway + DNS + DHCP) | `192.168.8.1` | Static, firmware default |
-| Jetson Orin Nano (Nginx :80) | `192.168.8.2` | Static DHCP lease by MAC (§5) |
+| Jetson Orin Nano (nginx :80 → FastAPI :8000) | `192.168.8.2` | Static DHCP lease by MAC (§5) |
 | Student devices & ESP32 clickers | `192.168.8.100 – 192.168.8.159` | DHCP pool, 60 addresses for 15–20 sessions |
 | Reserved / staff laptop | `192.168.8.3 – 192.168.8.99` | Manual, outside the pool |
 
-Students reach the PWA at **`http://192.168.8.2`** or **`http://tutorbox`** (local DNS, §5).
+Students reach the PWA at **`http://192.168.8.2`** or **`http://tutorbox`** (local DNS, §5) — and, once
+§5 is applied, a phone that joins the Wi-Fi opens `http://tutorbox/alumno/` by itself (see
+[Captive Portal](../captive-portal.md)).
 
 ---
 
@@ -73,8 +75,8 @@ You are about to delete the router's only route to the outside world. Two escape
 Before starting, **write down the Jetson's Ethernet MAC address** — §5 needs it:
 
 ```bash
-# On the Jetson
-ip link show eth0 | awk '/link\/ether/ {print $2}'
+# On the Jetson (the wired interface is enP8p1s0 on the Orin Nano dev kit; check `ip -brief link`)
+ip link show enP8p1s0 | awk '/link\/ether/ {print $2}'
 ```
 
 Keep one wired laptop on the LAN port through the whole procedure. Do not do this over Wi-Fi only.
@@ -149,7 +151,8 @@ Two decisions worth understanding:
 
 ## <a id="5-step-3--lan-dhcp--the-jetson-static-lease"></a>5. Step 3 — LAN, DHCP & the Jetson Static Lease
 
-Size the pool for the classroom and pin the Jetson so the PWA URL never moves:
+Size the pool for the classroom and pin the Jetson so the PWA URL never moves. **All of this block
+is required** — the captive portal (§5b) depends on the name *and* the catch-all:
 
 ```sh
 # DHCP pool: .100 through .159
@@ -162,22 +165,43 @@ uci add dhcp host
 uci set dhcp.@host[-1].name='tutorbox'
 uci set dhcp.@host[-1].mac='AA:BB:CC:DD:EE:FF'
 uci set dhcp.@host[-1].ip='192.168.8.2'
+uci set dhcp.@host[-1].dns='1'               # publish the name even before the lease is active
+
+# Catch-all DNS: every name resolves to the Jetson
+uci add_list dhcp.@dnsmasq[0].address='/#/192.168.8.2'
 uci commit dhcp
 /etc/init.d/dnsmasq restart
 ```
 
 The `name='tutorbox'` entry makes dnsmasq resolve `http://tutorbox` to `192.168.8.2` for every DHCP
-client — friendlier than an IP for students typing on tablets.
+client — friendlier than an IP for students typing on tablets. The catch-all resolves *every* other
+domain to the Jetson too, so any address a student types lands on the PWA instead of a browser error —
+and, more importantly, the phones' connectivity probes reach the appliance (§5b).
 
-**Optional catch-all DNS.** Resolving *every* domain to the Jetson means any address a student
-types lands on the PWA instead of a browser error:
+If the Jetson already holds a dynamic lease, renew it after the commit: on the Jetson,
+`sudo nmcli device reapply enP8p1s0` (or reboot), then confirm `ip -brief addr show enP8p1s0` shows `.2`.
 
-```sh
-uci add_list dhcp.@dnsmasq[0].address='/#/192.168.8.2'
-uci commit dhcp && /etc/init.d/dnsmasq restart
-```
+### <a id="5b-captive-portal"></a>5b. Captive portal — why the DNS block above is not optional
 
-Skip this if you prefer failed lookups to look like failures.
+Right after joining, every phone fetches a fixed HTTP URL (`http://connectivitycheck.gstatic.com/generate_204`
+on Android, `http://captive.apple.com/hotspot-detect.html` on iOS, `http://www.msftconnecttest.com/connecttest.txt`
+on Windows). With the catch-all, that name resolves to the Jetson; nginx on `:80` hands the request to the
+backend, which answers `302 → http://tutorbox/alumno/`; the phone concludes "sign-in page" and opens the
+student page in its captive-portal browser. Without the catch-all the lookup simply fails and the phone
+reports "no internet" — nothing opens.
+
+Mechanics worth knowing on the router side:
+
+- dnsmasq prefers the most specific `address=` entry, so GL.iNet's own `console.gl-inet.com` keeps
+  pointing at the router.
+- The catch-all answers `A` queries only; `AAAA` gets no address, so probes stay on IPv4. Do not
+  touch `network.lan.ip6assign` / odhcpd unless devices misbehave (rollback would be
+  `uci set network.lan.ip6assign=''` + `uci commit network` + `/etc/init.d/network restart`).
+- DHCP option 114 (RFC 8910, "captive-portal API URL") is deliberately **not** set: the API it
+  advertises must be HTTPS with a trusted certificate, which an offline LAN cannot provide.
+
+The Jetson-side pieces (nginx, backend endpoints, phone behaviour, limitations) are in
+[Captive Portal](../captive-portal.md).
 
 ---
 
@@ -297,8 +321,14 @@ passes only because no cable is attached proves nothing.
 
 - [ ] SSID `TutorBox` is visible and a phone joins with the WPA2 passphrase.
 - [ ] The joined phone receives an address in `192.168.8.100–159`: check *Clients* in the admin panel.
-- [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show eth0` on the Jetson.
+- [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show enP8p1s0` on the Jetson.
 - [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://tutorbox`.
+- [ ] `nslookup captive.apple.com 192.168.8.1` answers `192.168.8.2` (catch-all active).
+- [ ] From a laptop on the Wi-Fi: `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/hotspot-detect.html`
+      returns `302` with `Location: http://tutorbox/alumno/`, while
+      `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/api/v1/nope` returns `404`.
+- [ ] Forget the network on an iPhone and rejoin: the sign-in sheet shows the student page. Same on an
+      Android phone joined from the Wi-Fi picker (see [Captive Portal §7](../captive-portal.md#7-verification)).
 - [ ] From the router: `ip route show` prints **no** `default via` line.
 - [ ] From the router with the live uplink cable plugged into WAN: `ping -c2 8.8.8.8` fails, and
       `ip -brief link` shows the WAN device `DOWN`.
@@ -306,6 +336,7 @@ passes only because no cable is attached proves nothing.
       PWA still works.
 - [ ] Backend health probe answers through the AP: `curl http://192.168.8.2/health` from a laptop
       on the classroom Wi-Fi (see [System & Health API Specification](../../docs/api/system.md)).
+      This needs nginx and the backend unit running on the Jetson ([Captive Portal §4](../captive-portal.md#4-port-80-on-the-jetson-nginx--systemd)).
 - [ ] Reboot once more and re-check the last three items — this catches config that was never
       committed and rules that do not survive a power cycle.
 
@@ -330,6 +361,8 @@ can be rebuilt from scratch without repeating the discovery work.
   assuming the link holds.
 - **Client isolation is on**, so any future feature needing device-to-device traffic must revisit
   §4 rather than silently failing.
+- **Every name resolves to the Jetson** (§5). A laptop on the classroom Wi-Fi cannot reach anything
+  else by name — that is the point, but remember it when a "broken" site is reported.
 - **16 MB flash**: resist installing diagnostic packages. Use the built-in `logread`, `ip`, and
   `ping` instead.
 

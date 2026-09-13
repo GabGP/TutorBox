@@ -96,7 +96,9 @@ def test_pilas_pages_are_served_by_the_backend(staff_db, client):
         assert resp.status_code == 200, path
         assert resp.headers["content-type"].startswith("text/html")
     assert client.get("/static/tb.css").status_code == 200
-    assert client.get("/", follow_redirects=False).headers["location"] == "/alumno/"
+    # TestClient's default Host ("testserver") is a foreign name for the captive portal.
+    root = client.get("/", headers={"host": "localhost"}, follow_redirects=False)
+    assert root.headers["location"] == "/alumno/"
     # Mounting pages must not change API behaviour for unknown paths.
     assert client.get("/api/v1/session/does-not-exist").json() == {
         "detail": "Session 'does-not-exist' not found."

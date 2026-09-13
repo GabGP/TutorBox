@@ -8,6 +8,8 @@ from core.config.constants import (
     DEFAULT_AUTH_MAX_TRACKED_KEYS,
     DEFAULT_BCRYPT_ROUNDS,
     DEFAULT_BUSY_TIMEOUT_MS,
+    DEFAULT_CAPTIVE_PORTAL_ENABLED,
+    DEFAULT_CAPTIVE_PORTAL_URL,
     DEFAULT_DB_PATH,
     DEFAULT_QUIZ_MAX_RETRIES,
     DEFAULT_SEED_TEACHER_PIN,
@@ -18,6 +20,15 @@ from core.config.constants import (
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
+    DEFAULT_TTS_AMPLITUDE,
+    DEFAULT_TTS_BINARY,
+    DEFAULT_TTS_ENABLED,
+    DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_TIMEOUT_SECONDS,
+    DEFAULT_TTS_VOICE,
+    DEFAULT_TTS_VOICE_QUC,
+    DEFAULT_TTS_WORDS_PER_MINUTE,
 )
 
 
@@ -53,8 +64,33 @@ class QuizConfig:
 
 
 @dataclass(frozen=True)
+class TTSConfig:
+    """Offline espeak voice that reads distractor explanations to the classroom."""
+
+    enabled: bool = DEFAULT_TTS_ENABLED
+    binary: str = DEFAULT_TTS_BINARY
+    voice: str = DEFAULT_TTS_VOICE
+    voice_quc: str = DEFAULT_TTS_VOICE_QUC
+    words_per_minute: int = DEFAULT_TTS_WORDS_PER_MINUTE
+    pitch: int = DEFAULT_TTS_PITCH
+    amplitude: int = DEFAULT_TTS_AMPLITUDE
+    timeout_seconds: float = DEFAULT_TTS_TIMEOUT_SECONDS
+    max_chars: int = DEFAULT_TTS_MAX_CHARS
+
+
+@dataclass(frozen=True)
+class CaptivePortalConfig:
+    """Where phone captive-portal probes are redirected when a device joins the AP."""
+
+    enabled: bool = DEFAULT_CAPTIVE_PORTAL_ENABLED
+    redirect_url: str = DEFAULT_CAPTIVE_PORTAL_URL
+
+
+@dataclass(frozen=True)
 class Settings:
     database: DatabaseConfig
     security: SecurityConfig
     llm: LLMConfig
     quiz: QuizConfig
+    tts: TTSConfig
+    captive_portal: CaptivePortalConfig

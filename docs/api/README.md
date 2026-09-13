@@ -31,10 +31,10 @@ Comprehensive technical specification, security architecture, and integration co
 
 The TutorBox API runs on the NVIDIA Jetson Orin Nano edge appliance and communicates with the React/Vite Progressive Web Application (PWA) and ESP32 hardware clickers over the local classroom WLAN/Ethernet network.
 
-* **Base URL**: `http://<appliance-ip>:8000` (e.g., `http://127.0.0.1:8000` in local development)
+* **Base URL**: `http://tutorbox` / `http://192.168.8.2` in the classroom (nginx on :80, see [Infra](../../infra/README.md)); `http://127.0.0.1:8000` in local development
 * **Classroom client (Pilas)**: served by the same process at `/maestro/`, `/alumno/` and `/pantalla/` (see [PWA](../../pwa/README.md))
 * **API v1 Prefix**: `/api/v1` (e.g., `/api/v1/auth/login`, `/api/v1/quiz/generate`)
-* **Unversioned Probes**: `/health`
+* **Unversioned Probes**: `/health`, plus the captive-portal connectivity probes (`/generate_204`, `/hotspot-detect.html`, `/connecttest.txt`, …) answered with a `302` to the student page — see [system.md](system.md)
 * **Interactive Swagger UI**: `http://<appliance-ip>:8000/docs`
 * **Raw OpenAPI JSON Schema**: `http://<appliance-ip>:8000/openapi.json`
 * **Content-Type**: `application/json` (unless otherwise noted)
@@ -47,7 +47,7 @@ The API specification is decomposed into cohesive domain modules:
 
 | Domain | Specification Document | Key Endpoints | Roles |
 | :--- | :--- | :--- | :---: |
-| **System & Health** | **[system.md](system.md)** | `GET /health` | Public |
+| **System & Health** | **[system.md](system.md)** | `GET /health`<br>`GET /generate_204` and the other captive-portal probes | Public |
 | **Authentication & Users** | **[auth.md](auth.md)** | `POST /api/v1/auth/login`<br>`POST /api/v1/auth/logout`<br>`POST /api/v1/users/signup`<br>`GET /api/v1/users/me`<br>`PATCH /api/v1/users/me/pin`<br>`PATCH /api/v1/users/me/username` | Public,<br>Student,<br>Staff |
 | **Staff Administration** | **[staff.md](staff.md)** | `GET /api/v1/staff/users`<br>`POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
 | **Hardware Devices** | **[devices.md](devices.md)** | `GET /api/v1/staff/devices`<br>`POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
@@ -101,6 +101,7 @@ TutorBox enforces strict role-based access across three user roles:
 | Endpoint | Method | Public | Student | Teacher | Admin | Gated by Pending Rotation? | Spec Document |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | `/health` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [system.md](system.md) |
+| Captive-portal probes (`/generate_204`, …) | `GET`/`HEAD` | ✅ (302) | ✅ | ✅ | ✅ | No (Public) | [system.md](system.md) |
 | `/api/v1/users/signup` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) | [auth.md](auth.md) |
 | `/api/v1/auth/login` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) | [auth.md](auth.md) |
 | `/api/v1/auth/logout` | `POST` | ❌ | ✅ | ✅ | ✅ | No (Allowlist) | [auth.md](auth.md) |
@@ -169,6 +170,12 @@ All error responses return a standardized JSON structure with an actionable `det
   "detail": "Descriptive error message."
 }
 ```
+
+> [!NOTE]
+> `/api/*` and `/health` always answer with this JSON shape. Outside those prefixes, a `GET` for an
+> unknown page requested through a name that is not the appliance's own (only possible because the
+> classroom router resolves every name to the Jetson) is answered with `302 → /alumno/` instead of a
+> 404 — see [Captive Portal](../../infra/captive-portal.md).
 
 ### Standard Status Codes
 * `400 Bad Request`: Malformed parameters or invalid vote option.

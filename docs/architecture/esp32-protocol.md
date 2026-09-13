@@ -84,7 +84,7 @@ sequenceDiagram
 - **BlueZ ≥ 5.50** (JetPack 5 / 6 ship 5.53 / 5.64). GATT servers are exposed over D-Bus (`org.bluez.GattManager1`, `org.bluez.LEAdvertisingManager1`); the provisioner is a Python process talking to that bus.
 - **Turn the Jetson's own Wi-Fi off** (`nmcli radio wifi off`). The appliance is wired to the router (see [hardware topology](hardware-topology.md)); BT and Wi-Fi share the same RTL8822CE radio and coexistence only costs you BLE reliability.
 - **The appliance must know the Wi-Fi it hands out.** The GL.iNet SSID/passphrase are set in [`infra/glinet/initial.md` §4](../../infra/glinet/initial.md#4-step-2--wi-fi-ssid-tutorbox); the provisioner reads them from its own env file (§7). Keep that file `0600`, owned by the service user.
-- **A stable API address**: the Jetson holds the static lease `192.168.8.2` (`infra/glinet/initial.md` §5), so the packet can carry `http://192.168.8.2:8000/api/v1` (or `http://tutorbox/api/v1` once Nginx fronts the backend on :80 — either way it is *data in the packet*, not something baked into firmware).
+- **A stable API address**: the Jetson holds the static lease `192.168.8.2` (`infra/glinet/initial.md` §5), so the packet can carry `http://192.168.8.2/api/v1` (nginx on :80, [`infra/nginx/tutorbox.conf`](../../infra/nginx/tutorbox.conf); `:8000` reaches uvicorn directly — either way it is *data in the packet*, not something baked into firmware). The captive portal never redirects `/api/*`, so clickers are unaffected by it.
 
 ### ESP32
 - **ESP32-S2 has no Bluetooth at all** — it cannot be used with this design. Original ESP32 (WROOM-32), ESP32-S3, ESP32-C3 and C6 all have BLE. The C3 / WROOM-32 in the [BOM](esp32-clicker-transport.md#2-hardware-specifications--bill-of-materials) are fine.
@@ -159,7 +159,7 @@ All values are UTF-8 JSON, **≤ 512 bytes** (the ATT maximum attribute length).
 **`provision`** — read after `hello`. One of:
 ```json
 {"v": 1, "status": "assigned", "ssid": "TutorBox", "psk": "<classroom passphrase>",
- "api": "http://192.168.8.2:8000/api/v1", "device_id": "ESP32-A4CF12",
+ "api": "http://192.168.8.2/api/v1", "device_id": "ESP32-A4CF12",
  "username": "ana", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
 ```
 ```json
@@ -272,7 +272,7 @@ PROVISIONER_USERNAME=provisioner      # admin account created once with POST /st
 PROVISIONER_PIN=
 CLICKER_WIFI_SSID=TutorBox
 CLICKER_WIFI_PSK=
-CLICKER_API_BASE=http://192.168.8.2:8000/api/v1
+CLICKER_API_BASE=http://192.168.8.2/api/v1
 ```
 The provisioner logs in with `POST /auth/login` at start-up and re-logs on any `401`, exactly as the old Pilas server did with the teacher account.
 
@@ -377,7 +377,7 @@ WantedBy=multi-user.target
 | Key | Type | Notes |
 | :--- | :--- | :--- |
 | `ssid`, `psk` | string | from the packet |
-| `api` | string | API base, e.g. `http://192.168.8.2:8000/api/v1` |
+| `api` | string | API base, e.g. `http://192.168.8.2/api/v1` |
 | `dev` | string | `device_id` (also recomputed from MAC; stored for the mismatch check) |
 | `secret` | string | rotated on every provisioning |
 | — | — | the bearer token is **never** written to NVS |

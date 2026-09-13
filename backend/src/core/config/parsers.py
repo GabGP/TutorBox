@@ -4,7 +4,23 @@ import os
 
 from core.config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
 
-__all__ = ["parse_db_path", "parse_float", "parse_int"]
+__all__ = ["parse_bool", "parse_db_path", "parse_float", "parse_int"]
+
+_TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
+_FALSE_VALUES = frozenset({"0", "false", "no", "off"})
+
+
+def parse_bool(env_var_name: str, default_value: bool) -> bool:
+    """Parses a boolean environment variable, falling back on unrecognized values."""
+    raw_value = os.environ.get(env_var_name)
+    if raw_value is None:
+        return default_value
+    normalized = raw_value.strip().lower()
+    if normalized in _TRUE_VALUES:
+        return True
+    if normalized in _FALSE_VALUES:
+        return False
+    return default_value
 
 
 def parse_db_path(raw_path: str | None) -> str:

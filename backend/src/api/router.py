@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from api.auth import router as auth_router
+from api.captive import router as captive_router
 from api.health import router as health_router
 from api.quiz import router as quiz_router
 from api.session import router as session_router
@@ -18,6 +19,7 @@ api_v1_router.include_router(session_router, prefix="/session")
 
 root_router = APIRouter()
 root_router.include_router(health_router)
+root_router.include_router(captive_router)
 root_router.include_router(api_v1_router)
 
 __all__ = ["api_v1_router", "root_router"]

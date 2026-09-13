@@ -68,4 +68,4 @@ sequenceDiagram
 ### Core Invariants:
 1. **SymPy as Single Source of Truth**: All mathematical equality, factoring, and equation solving is evaluated strictly by SymPy.
 2. **Deterministic Fallbacks**: If an SLM response fails containment, a pre-validated fallback pedagogical template is selected.
-3. **Bilingual Neural Speech Synthesis**: Spoken explanations are synthesized in Spanish and K'iche' using offline neural TTS (Piper-TTS / Sherpa-ONNX) running locally on the Jetson appliance.
+3. **Offline Speech Synthesis**: Spoken explanations are synthesized locally on the Jetson appliance — today with espeak-ng in Latin American Spanish (`es-419`), with K'iche' and a neural voice (Piper-TTS / Sherpa-ONNX) planned behind the same `GET /session/{id}/speech` contract.

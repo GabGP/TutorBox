@@ -89,7 +89,7 @@ All components operate **100% offline** without WAN connectivity.
 * **Frontend**: React / Vite Progressive Web App (PWA), mobile-first, hosted directly on the Jetson appliance via Nginx.
 * **Deterministic Math Engine**: **SymPy** for all mathematical parsing, algebraic verification, and equivalence checking.
 * **LLM Engine**: **Gemma 4 A2B** quantized to `Q4_K_M` running via `llama.cpp` (`llama-server`) bound strictly to `127.0.0.1:8080`.
-* **Voice Output**: Dual-language offline neural **Text-to-Speech (TTS)** in **Spanish** and **K'iche'** (`quc_Latn`) running via ONNX Runtime (Piper-TTS / Sherpa-ONNX) for dynamic distractor explanations and audio feedback.
+* **Voice Output**: Offline **Text-to-Speech (TTS)** for distractor explanations, shipped today as **espeak-ng** in Latin American Spanish (`es-419`, `sudo apt install espeak-ng`) — no model files, negligible RAM, sub-second synthesis. K'iche' (`quc_Latn`) and a neural voice (Piper-TTS / Sherpa-ONNX via ONNX Runtime) remain planned upgrades behind the same endpoint.
 * **Student Input**: Mobile web clicker interface (A–D buttons) and physical ESP32 clickers (strictly zero voice/microphone input).
 
 ---
@@ -98,7 +98,7 @@ All components operate **100% offline** without WAN connectivity.
 
 1. **No LLM Math**: The LLM is strictly prohibited from evaluating mathematical accuracy. SymPy is the sole authority for verification.
 2. **Containment Guardrail**: Before any LLM response is returned to the user, SymPy solves the mathematical problem. If the generated text contains the final solution or an equivalent symbolic answer, the response is intercepted and regenerated.
-3. **Audio Feedback & >51% Rule**: Offline neural TTS only speaks explanations when >51% of participating students select a specific diagnostic distractor (remaining silent on correct answers or dispersed votes).
+3. **Audio Feedback & >51% Rule**: Offline TTS only speaks explanations when >51% of participating students select a specific diagnostic distractor (remaining silent on correct answers or dispersed votes). The rule is evaluated server-side; the teacher's device merely plays the audio the appliance synthesized.
 4. **Security & Privacy**: Student PINs are hashed using `bcrypt` and must never appear in plain text in the database, memory dumps, or log files.
 5. **Memory Budget**: The 8GB unified memory on the Jetson Orin Nano is strictly budgeted to support **15–20 concurrent student sessions** without triggering Out-Of-Memory (OOM) failures.
 
@@ -110,7 +110,7 @@ All components operate **100% offline** without WAN connectivity.
 TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
 ├── pwa/          # React/Vite Progressive Web App source code (hosted on Jetson)
-├── infra/        # Systemd service definitions, Nginx reverse proxy configs, setup scripts
+├── infra/        # Systemd unit, nginx :80 config, captive portal, GL.iNet AP runbook
 └── docs/         # Architecture specs, pedagogical state machine rules, API documentation
 ```
 

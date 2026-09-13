@@ -14,6 +14,12 @@ from core.config.constants import (
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
+    DEFAULT_TTS_AMPLITUDE,
+    DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_TIMEOUT_SECONDS,
+    DEFAULT_TTS_VOICE,
+    DEFAULT_TTS_WORDS_PER_MINUTE,
     PROJECT_ROOT,
 )
 from core.config.settings import (
@@ -38,6 +44,20 @@ def test_default_settings(monkeypatch) -> None:
     monkeypatch.delenv("SLM_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("SLM_TIMEOUT", raising=False)
     monkeypatch.delenv("QUIZ_MAX_RETRIES", raising=False)
+    for tts_var in (
+        "TTS_ENABLED",
+        "TTS_ESPEAK_BINARY",
+        "TTS_VOICE",
+        "TTS_VOICE_QUC",
+        "TTS_WORDS_PER_MINUTE",
+        "TTS_PITCH",
+        "TTS_AMPLITUDE",
+        "TTS_TIMEOUT_SECONDS",
+        "TTS_MAX_CHARS",
+        "CAPTIVE_PORTAL_ENABLED",
+        "CAPTIVE_PORTAL_URL",
+    ):
+        monkeypatch.delenv(tts_var, raising=False)
 
     clear_settings_cache()
     settings = get_settings()
@@ -62,6 +82,17 @@ def test_default_settings(monkeypatch) -> None:
 
     # Quiz
     assert settings.quiz.max_retries == DEFAULT_QUIZ_MAX_RETRIES
+
+    # Offline classroom voice (espeak)
+    assert settings.tts.enabled is True
+    assert settings.tts.binary == ""
+    assert settings.tts.voice == DEFAULT_TTS_VOICE
+    assert settings.tts.voice_quc == ""
+    assert settings.tts.words_per_minute == DEFAULT_TTS_WORDS_PER_MINUTE
+    assert settings.tts.pitch == DEFAULT_TTS_PITCH
+    assert settings.tts.amplitude == DEFAULT_TTS_AMPLITUDE
+    assert settings.tts.timeout_seconds == DEFAULT_TTS_TIMEOUT_SECONDS
+    assert settings.tts.max_chars == DEFAULT_TTS_MAX_CHARS
 
 
 def test_database_settings_env_overrides(monkeypatch) -> None:
@@ -175,6 +206,28 @@ def test_quiz_settings_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("QUIZ_MAX_RETRIES", "invalid_number")
     clear_settings_cache()
     assert get_settings().quiz.max_retries == DEFAULT_QUIZ_MAX_RETRIES
+
+
+def test_tts_settings_env_overrides(monkeypatch) -> None:
+    """Verifies espeak voice settings are configurable and bounded."""
+    monkeypatch.setenv("TTS_ENABLED", "false")
+    monkeypatch.setenv("TTS_ESPEAK_BINARY", " /opt/espeak-ng ")
+    monkeypatch.setenv("TTS_VOICE", "es-la")
+    monkeypatch.setenv("TTS_VOICE_QUC", "quc")
+    monkeypatch.setenv("TTS_WORDS_PER_MINUTE", "130")
+    clear_settings_cache()
+
+    tts = get_settings().tts
+    assert tts.enabled is False
+    assert tts.binary == "/opt/espeak-ng"
+    assert tts.voice == "es-la"
+    assert tts.voice_quc == "quc"
+    assert tts.words_per_minute == 130
+
+    # Out-of-range cadence falls back to the primary-school default
+    monkeypatch.setenv("TTS_WORDS_PER_MINUTE", "900")
+    clear_settings_cache()
+    assert get_settings().tts.words_per_minute == DEFAULT_TTS_WORDS_PER_MINUTE
 
 
 def test_settings_range_validation_fallbacks(monkeypatch) -> None:

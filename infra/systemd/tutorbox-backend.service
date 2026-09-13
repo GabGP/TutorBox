@@ -1,0 +1,36 @@
+# TutorBox backend — FastAPI API + Pilas classroom pages + captive-portal answers.
+#
+# Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/tutorbox.conf)
+# publishes it on port 80. The three lines marked ADJUST assume this dev-kit layout
+# (checkout in /home/damarti, run as that user); change them for /opt/tutorbox or another user.
+#
+# Install:
+#   sudo cp infra/systemd/tutorbox-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now tutorbox-backend
+#   systemctl status tutorbox-backend && ss -ltnp | grep ':8000 '
+#
+# No EnvironmentFile: the app reads <repo>/.env itself (backend/src/core/config/env_loader.py);
+# an EnvironmentFile here would silently override it. Single worker only: SQLite plus
+# in-memory rate limiters and session state must not be duplicated across processes.
+
+[Unit]
+Description=TutorBox backend (FastAPI + Pilas pages) on :8000
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# ADJUST the next three lines for a different user or checkout location.
+User=damarti
+WorkingDirectory=/home/damarti/Documents/TutorBox/backend
+ExecStart=/home/damarti/Documents/TutorBox/backend/.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=2
+# The app only writes under <repo>/.cache (SQLite DB); keep the rest of the system read-only.
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -2,10 +2,11 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from api.captive import captive_not_found_handler, foreign_host_redirect
 from api.router import root_router
 from core.config import load_env_file
 from core.db.database import get_db_path
@@ -22,6 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger("tutorbox")
 # Pilas classroom client (pwa/pilas) served same-origin so pages call /api/v1 directly.
 # Mounted per folder (not at "/") so unknown API paths keep their JSON 404 and slash redirects.
+# Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
 PILAS_DIR = Path(__file__).resolve().parents[2] / "pwa" / "pilas"
 PILAS_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 
@@ -50,6 +52,8 @@ app = FastAPI(
 )
 
 app.include_router(root_router)
+# Captive portal: unknown pages requested through a hijacked name land on /alumno/.
+app.add_exception_handler(404, captive_not_found_handler)
 for _name in PILAS_MOUNTS:
     app.mount(
         f"/{_name}", StaticFiles(directory=PILAS_DIR / _name, html=True), name=_name
@@ -57,6 +61,10 @@ for _name in PILAS_MOUNTS:
 
 
 @app.get("/", include_in_schema=False)
-def pilas_root() -> RedirectResponse:
-    """Students land on the appliance address; the teacher opens /maestro/ explicitly."""
-    return RedirectResponse("/alumno/")
+def pilas_root(request: Request) -> RedirectResponse:
+    """Students land on the appliance address; the teacher opens /maestro/ explicitly.
+
+    A hijacked name (a student typing any website, NetworkManager's root probe) is sent
+    to the canonical address so the browser keeps one origin for its stored login.
+    """
+    return foreign_host_redirect(request) or RedirectResponse("/alumno/")

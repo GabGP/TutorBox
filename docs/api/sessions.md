@@ -27,6 +27,7 @@ These endpoints coordinate real-time classroom quiz matches: teacher match initi
 | `POST` | `/api/v1/session/{session_id}/close` | Teacher, Admin | Close the active voting window |
 | `POST` | `/api/v1/session/{session_id}/reveal` | Teacher, Admin | Aggregate votes and evaluate >51% Rule |
 | `POST` | `/api/v1/session/{session_id}/next` | Teacher, Admin | Advance to next round or complete match |
+| `GET` | `/api/v1/session/{session_id}/speech` | Teacher, Admin | Spoken misconception explanation (WAV) when the >51% Rule fired |
 | `GET` | `/api/v1/session/{session_id}/report` | Teacher, Admin | Performance summary and accuracy statistics |
 
 ---
@@ -238,6 +239,41 @@ Advances the session to the next question round, or marks the match as `complete
 * **Responses**:
   * `200 OK`: `SessionStateResponse` with incremented `current_round_index` and round status `open`, or session status `completed`.
   * `404 Not Found`: Session not found.
+
+---
+
+### <a id="get-session-speech"></a>`GET /api/v1/session/{session_id}/speech`
+
+Synthesizes the misconception explanation of the **current revealed round** as offline speech, so
+the teacher's device reads out loud *why* the answer the class shared is wrong. The rule is
+re-evaluated server-side from the persisted votes: a client cannot make the appliance speak for a
+round that did not trigger it.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Query Parameters**:
+  * `lang` (`string`, optional, default `es`): `es` (Latin American Spanish, espeak-ng voice
+    `es-419`) or `quc` (K'iche', only when `TTS_VOICE_QUC` names an installed voice).
+* **Spoken script**: `Atención: {dominant_percentage} por ciento del grupo respondió {option}.` +
+  the distractor explanation + `La respuesta correcta es {correct}.` Arithmetic is rewritten into
+  words before synthesis (`6/8` → *seis sobre ocho*, `75%` → *setenta y cinco por ciento*).
+* **Responses**:
+  * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by espeak-ng on the
+    appliance. Typical size: ~20 KB per sentence; synthesis latency well under 1 s on the Jetson.
+  * `403 Forbidden`: Student device; only the teacher's client may pull the audio.
+  * `404 Not Found`: Session, active round, or its question not found.
+  * `409 Conflict`: Round is not `revealed`, or the >51% Rule did not trigger (detail names the
+    evaluator `reason`, e.g. `majority_correct`, `tie_between_distractors`).
+  * `422 Unprocessable Entity`: `lang` outside `es` / `quc`.
+  * `500 Internal Server Error`: espeak ran but produced no audio.
+  * `503 Service Unavailable`: espeak-ng is not installed, `TTS_ENABLED=false`, or no voice is
+    configured for the requested language. The detail names the missing piece
+    (`sudo apt install espeak-ng`).
+
+**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`),
+`TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`), `TTS_PITCH`, `TTS_AMPLITUDE`,
+`TTS_TIMEOUT_SECONDS`, `TTS_MAX_CHARS`.
 
 ---
 

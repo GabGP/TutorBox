@@ -21,6 +21,20 @@ async function api(method, path, body, auth = true) {
   return data;
 }
 
+/* Bearer-authenticated binary GET (the >51% voice clip): <audio src> cannot carry the token,
+   so the WAV is fetched and handed to the player as an object URL the caller must revoke. */
+async function apiBlobUrl(path) {
+  const token = localStorage.getItem('tb_token');
+  let r;
+  try { r = await fetch(API + path, { headers: token ? { Authorization: 'Bearer ' + token } : {} }); }
+  catch { throw Object.assign(new Error(ERR[0]), { status: 0 }); }
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    throw Object.assign(new Error(ERR[r.status] || data.detail || `Error ${r.status}`), { status: r.status, detail: data.detail });
+  }
+  return URL.createObjectURL(await r.blob());
+}
+
 const auth = {
   async login(username, pin) {
     const r = await api('POST', '/auth/login', { username, pin }, false);

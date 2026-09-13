@@ -22,16 +22,18 @@ backend session engine is the only source of truth and the pages poll it once pe
 
 | URL | Who | What it does |
 | :--- | :--- | :--- |
-| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. |
-| `/alumno/` | Students | Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
+| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline espeak-ng, Latin American Spanish). |
+| `/alumno/` | Students | **Opens by itself when a phone joins the `TutorBox` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
 | `/pantalla/` | HDMI classroom screen | Question + countdown + vote count, then the correct answer with the aggregate bars. Never per-student votes. |
-| `/` | — | Redirects to `/alumno/`. |
+| `/` | — | Redirects to `/alumno/` (to `http://tutorbox/alumno/` when reached through any other name). |
 
 ### Run it
 
 ```bash
+sudo apt install espeak-ng                           # offline voice for the >51% intervention
 cd backend
 python -m uvicorn src.main:app --host 0.0.0.0        # teacher: http://<appliance-ip>:8000/maestro/
+# classroom: nginx publishes the same process on :80 → http://tutorbox/maestro/ (infra/nginx/tutorbox.conf)
 ```
 
 Bootstrap teacher: `teacher1` / `1234` (`SEED_TEACHER_*` in `.env`). The model must be reachable at
@@ -48,6 +50,7 @@ served from the question bank.
 | `GET /staff/users`, `POST /staff/users`, `POST /staff/users/{id}/reset-pin` | teacher roster |
 | `GET /quiz/topics`, `POST /quiz/generate` (`save_to_bank: true`), `GET /quiz/generation-metrics` | topic cards, question generation, ETA |
 | `POST /session`, `/start`, `/close`, `/reveal`, `/next`, `GET /session/{id}/report` | teacher match control |
+| `GET /session/{id}/speech?lang=es` | teacher device: espeak-ng (es-419) WAV read out loud when the >51% rule fires |
 | `GET /session/current`, `GET /session/{id}` | students and screen (polling), teacher (own match) |
 | `POST /session/{id}/vote` | student vote |
 
@@ -60,7 +63,7 @@ clicker transport (Week 7) is not part of Pilas; the vote endpoint already accep
 
 ## 2. Architecture & Offline Design
 
-* **Network Delivery**: Static pages served by the appliance over the isolated `TutorBox` AP; Nginx in front is optional.
+* **Network Delivery**: Static pages served by the appliance over the isolated `TutorBox` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.
 * **Hardware Agnostic**: Built to communicate via standard HTTP endpoints, seamlessly interoperating alongside physical ESP32 clickers.
 

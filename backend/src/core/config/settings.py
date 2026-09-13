@@ -2,6 +2,7 @@
 
 import os
 
+from core.config.captive_settings import build_captive_portal_config
 from core.config.constants import (
     DEFAULT_AUTH_LOCKOUT_SECONDS,
     DEFAULT_AUTH_MAX_ATTEMPTS,
@@ -17,6 +18,15 @@ from core.config.constants import (
     DEFAULT_SLM_MODEL_NAME,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
+    DEFAULT_TTS_AMPLITUDE,
+    DEFAULT_TTS_BINARY,
+    DEFAULT_TTS_ENABLED,
+    DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_TIMEOUT_SECONDS,
+    DEFAULT_TTS_VOICE,
+    DEFAULT_TTS_VOICE_QUC,
+    DEFAULT_TTS_WORDS_PER_MINUTE,
 )
 from core.config.models import (
     DatabaseConfig,
@@ -24,8 +34,9 @@ from core.config.models import (
     QuizConfig,
     SecurityConfig,
     Settings,
+    TTSConfig,
 )
-from core.config.parsers import parse_db_path, parse_float, parse_int
+from core.config.parsers import parse_bool, parse_db_path, parse_float, parse_int
 
 __all__ = ["clear_settings_cache", "get_settings"]
 
@@ -102,5 +113,28 @@ def get_settings(*, reload: bool = False) -> Settings:
                 "QUIZ_MAX_RETRIES", DEFAULT_QUIZ_MAX_RETRIES, min_value=1
             ),
         ),
+        tts=TTSConfig(
+            enabled=parse_bool("TTS_ENABLED", DEFAULT_TTS_ENABLED),
+            binary=os.environ.get("TTS_ESPEAK_BINARY", DEFAULT_TTS_BINARY).strip(),
+            voice=os.environ.get("TTS_VOICE") or DEFAULT_TTS_VOICE,
+            voice_quc=os.environ.get("TTS_VOICE_QUC", DEFAULT_TTS_VOICE_QUC).strip(),
+            words_per_minute=parse_int(
+                "TTS_WORDS_PER_MINUTE",
+                DEFAULT_TTS_WORDS_PER_MINUTE,
+                min_value=80,
+                max_value=450,
+            ),
+            pitch=parse_int("TTS_PITCH", DEFAULT_TTS_PITCH, min_value=0, max_value=99),
+            amplitude=parse_int(
+                "TTS_AMPLITUDE", DEFAULT_TTS_AMPLITUDE, min_value=0, max_value=200
+            ),
+            timeout_seconds=parse_float(
+                "TTS_TIMEOUT_SECONDS", DEFAULT_TTS_TIMEOUT_SECONDS, min_value=0.5
+            ),
+            max_chars=parse_int(
+                "TTS_MAX_CHARS", DEFAULT_TTS_MAX_CHARS, min_value=40, max_value=5000
+            ),
+        ),
+        captive_portal=build_captive_portal_config(),
     )
     return _settings_instance

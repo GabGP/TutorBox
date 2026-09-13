@@ -45,7 +45,7 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 ### Domain Endpoint Specifications
 | Subsystem | Specification Document | Primary Endpoints |
 | :--- | :--- | :--- |
-| **System & Health** | **[api/system.md](api/system.md)** | `GET /health` |
+| **System & Health** | **[api/system.md](api/system.md)** | `GET /health`, captive-portal probes (`GET /generate_204`, `/hotspot-detect.html`, …) |
 | **Authentication & Users** | **[api/auth.md](api/auth.md)** | `POST /auth/login`, `POST /auth/logout`, `/users/*` (signup, me, pin, username) |
 | **Staff Administration** | **[api/staff.md](api/staff.md)** | `GET/POST /staff/users`, PIN resets, soft-delete, account recovery, audit logs |
 | **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete |
@@ -68,7 +68,8 @@ Technical reference for the local SQLite edge database engine:
 Setup guides and runbooks for offline edge deployment:
 
 * **[Infrastructure Hub](../infra/README.md)**: Overview of classroom hardware topology and networking.
-* **[GL.iNet GL-AR300M16 Initial Setup](../infra/glinet/initial.md)**: 6-step provisioning runbook for isolated classroom AP, static DHCP leases, and 4-layer WAN disconnection.
+* **[GL.iNet GL-AR300M16 Initial Setup](../infra/glinet/initial.md)**: 6-step provisioning runbook for isolated classroom AP, static DHCP leases, catch-all DNS, and 4-layer WAN disconnection.
+* **[Captive Portal](../infra/captive-portal.md)**: Why a phone that joins the `TutorBox` Wi-Fi opens `/alumno/` by itself — probe table per OS, backend redirect rules, nginx on :80, systemd unit, limitations, and the phone verification checklist.
 * **[Hardware Topology & Memory Budget](architecture/hardware-topology.md)**: Jetson Orin Nano 8GB unified memory allocation across SLM, TTS, FastAPI, and SQLite.
 
 ---

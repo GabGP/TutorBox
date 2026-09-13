@@ -104,6 +104,11 @@
   .okcard .big { font-size: clamp(28px, 3vw, 36px); font-weight: 700; line-height: 1.15; }
   .alert.lg { border-radius: 28px; padding: 20px; gap: 14px; font-size: 15px; line-height: 1.5; }
   .alert.lg b { font-size: 18px; }
+  .voice { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--warn); }
+  .voice i { width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: var(--warn); }
+  .voice.on i { background: var(--D); animation: pulseSoft 1s ease-in-out infinite; }
+  .voice.bad { color: var(--bad-ink); }
+  .voice.bad i { background: var(--bad); }
   .alert .btns .btn { height: 56px; border-radius: 28px; font-size: 17px; }
   .alert .btns .outline { flex: 0 0 116px; }
   .row { display: flex; align-items: center; justify-content: space-between; font-size: 16px; color: var(--ink2); }
@@ -251,7 +256,8 @@
           <div class="alert lg" id="ralert" hidden>
             <b id="ralertTitle"></b>
             <div id="explain"></div>
-            <div class="btns"><button id="play" class="btn p">Explicar en español</button><button id="skip" class="btn outline">Saltar</button></div>
+            <div class="voice" id="speechState" hidden><i></i><span></span></div>
+            <div class="btns"><button id="play" class="btn p">Escuchar en español</button><button id="skip" class="btn outline">Saltar</button></div>
           </div>
           <div class="card row"><span>Aciertos en esta pregunta</span><b id="hits"></b></div>
         </div>
@@ -294,6 +300,12 @@ const DURATION = 20;
 
 let me = null, topics = [], topic = '', count = 10, voice = 'es', voiceDone = -1, wizard = 'topic';
 let sid = localStorage.getItem('tb_session'), S = null, report = null, gen = null, genToken = 0, closing = null;
+/* >51% rule: when one wrong answer takes more than half the class the backend synthesizes the
+   explanation with espeak (es-419) and this device reads it out loud. */
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+const player = new Audio();
+const tts = { round: -1, state: 'idle', msg: '' };
+let clipUrl = null;
 let roster = [], history = [];
 const saveHist = () => localStorage.setItem('tb_hist_' + sid, JSON.stringify(history));
 const loadHist = () => { history = JSON.parse(localStorage.getItem('tb_hist_' + sid) || '[]'); };
@@ -380,9 +392,14 @@ $('back').onclick = () => { wizard = 'topic'; render(); };
 $('voice').onclick = () => { voice = voice === 'es' ? 'quc' : 'es'; render(); };
 $('inc').onclick = () => { count = Math.min(20, count + 1); render(); };
 $('dec').onclick = () => { count = Math.max(3, count - 1); render(); };
-$('skip').onclick = () => { voiceDone = S.current_round.round_index; render(); };
-$('play').onclick = () => { voiceDone = S.current_round.round_index; render(); }; // ponytail: Week 4 Jetson TTS endpoint; wire the explanation here
+$('skip').onclick = () => { // stops the reading first, dismisses the card on a second press
+  if (tts.state === 'loading' || tts.state === 'playing') stopSpeech();
+  else { stopSpeech(); voiceDone = S.current_round.round_index; }
+  render();
+};
+$('play').onclick = () => speak(S.current_round.round_index);
 $('secondary').onclick = async () => {
+  stopSpeech();
   if (stepOf() === 'topic') { await auth.logout(); return toLogin(); }
   sid = null; S = null; report = null; gen = null; genToken++; wizard = 'topic';
   localStorage.removeItem('tb_session');
@@ -394,12 +411,66 @@ $('primary').onclick = async () => {
     if (step === 'topic') wizard = 'count';
     else if (step === 'count') { $('countNote').hidden = true; wizard = 'lobby'; loadRoster(); startGeneration(); }
     else if (step === 'lobby') S = await api('POST', `/session/${sid}/start`);
-    else if (step === 'question') { await api('POST', `/session/${sid}/reveal`); S = await api('GET', `/session/${sid}`, undefined, false); }
-    else if (step === 'reveal') S = await api('POST', `/session/${sid}/next`);
+    else if (step === 'question') { unlockAudio(); await api('POST', `/session/${sid}/reveal`); S = await api('GET', `/session/${sid}`, undefined, false); }
+    else if (step === 'reveal') { stopSpeech(); S = await api('POST', `/session/${sid}/next`); }
     else return $('secondary').onclick();
   } catch (e) { if (e.status === 401) return toLogin(); }
   render();
 };
+
+/* ---- spoken >51% intervention ---- */
+// iOS only lets an <audio> play if it was first started inside a tap: prime it on the reveal press.
+function unlockAudio() {
+  player.src = SILENT_WAV;
+  player.play().catch(() => {});
+}
+
+function stopSpeech() {
+  player.pause();
+  if (clipUrl) { URL.revokeObjectURL(clipUrl); clipUrl = null; }
+  if (tts.state === 'playing' || tts.state === 'loading') { tts.state = 'idle'; tts.msg = ''; }
+}
+
+async function speak(roundIndex) {
+  stopSpeech();
+  tts.round = roundIndex; tts.state = 'loading'; tts.msg = 'Preparando la voz…';
+  render();
+  let url;
+  try {
+    url = await apiBlobUrl(`/session/${sid}/speech?lang=${voice}`);
+  } catch (e) {
+    if (e.status === 401) return toLogin();
+    tts.state = 'error';
+    tts.msg = e.status !== 503 ? 'No se pudo preparar la voz.'
+      : voice === 'quc' ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
+      : 'Este aparato no tiene voz instalada (espeak-ng).';
+    return render();
+  }
+  if (tts.round !== roundIndex) return URL.revokeObjectURL(url); // the teacher already moved on
+  clipUrl = url;
+  player.src = clipUrl;
+  player.onended = () => { if (tts.state === 'playing') { tts.state = 'done'; tts.msg = 'Explicación leída.'; render(); } };
+  player.onerror = () => { if (tts.state === 'playing') { tts.state = 'error'; tts.msg = 'No se pudo reproducir el audio.'; render(); } };
+  tts.state = 'playing'; tts.msg = 'Leyendo la explicación en voz alta…';
+  render();
+  try { await player.play(); }
+  catch {
+    tts.state = 'blocked'; tts.msg = 'Toque “Escuchar” para reproducir la explicación.';
+    render();
+  }
+}
+
+function renderVoice(roundIndex) {
+  if (tts.round !== roundIndex) speak(roundIndex); // reads itself once per question
+  const voiceLabel = voice === 'es' ? 'Escuchar en español' : "Escuchar en k'iche'";
+  $('play').textContent = { loading: 'Preparando la voz…', playing: 'Leyendo…', done: 'Escuchar otra vez' }[tts.state] || voiceLabel;
+  $('play').disabled = tts.state === 'loading' || tts.state === 'playing';
+  $('skip').textContent = tts.state === 'loading' || tts.state === 'playing' ? 'Detener' : 'Saltar';
+  const el = $('speechState');
+  el.hidden = !tts.msg;
+  el.className = 'voice' + (tts.state === 'playing' ? ' on' : tts.state === 'error' ? ' bad' : '');
+  el.lastElementChild.textContent = tts.msg;
+}
 
 /* ---- rendering ---- */
 function render() {
@@ -468,9 +539,9 @@ function renderReveal() {
   const showAlert = d.should_speak && voiceDone !== r.round_index;
   $('ralert').hidden = !showAlert;
   if (showAlert) {
-    $('ralertTitle').textContent = `${t.counts[d.dominant_distractor]} de ${t.total_votes} eligieron ${r.question.options[d.dominant_distractor]}`;
+    $('ralertTitle').textContent = `${t.counts[d.dominant_distractor]} de ${t.total_votes} (${Math.round(d.dominant_percentage)}%) eligieron ${r.question.options[d.dominant_distractor]}`;
     $('explain').textContent = d.explanation;
-    $('play').textContent = voice === 'es' ? 'Explicar en español' : "Explicar en k'iche'";
+    renderVoice(r.round_index);
   }
   $('hits').textContent = `${t.correct_count}/${t.total_votes}`;
 }

@@ -130,7 +130,7 @@ graph TD
 * **Pre-Shared Appliance Network**: Every TutorBox appliance kit includes a pre-configured router (GL-AR300M16) with fixed network parameters:
   - **SSID**: `TutorBox`
   - **WPA2 Pre-Shared Key**: Configured in appliance manufacturing
-  - **Backend Gateway**: `192.168.8.1:8000` (static router IP)
+  - **Backend API**: `http://192.168.8.2/api/v1` (Jetson static lease; see [ESP32 Clicker Protocol](esp32-protocol.md))
 * **Firmware Embedding**: When the batch of 30 clickers is flashed in Week 7, the Wi-Fi credentials, gateway IP, and unique `device_id` (e.g. `"1"`, `"2"`, `"ESP32_01"`) are burned into the ESP32 Non-Volatile Storage (NVS).
 * **Classroom Experience**: The student simply turns on the device switch. The ESP32 boots in $< 0.8\text{s}$, automatically associates to the `TutorBox` AP, and enters the low-power listening loop. **Zero configuration is required in the classroom.**
 

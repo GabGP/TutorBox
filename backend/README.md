@@ -37,7 +37,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ## <a id="1-components--architecture"></a>1. Components & Architecture
 
 - **FastAPI Core Application**:
-  - Modular sub-routers for health probes, authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
+  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
   - OpenAPI automated documentation generator (`/docs` and `/openapi.json`).
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
@@ -46,11 +46,12 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Bearer session token lifecycle with active session deactivation.
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Platform Infrastructure (`core/`)**:
-  - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
+  - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`, `TTSConfig`, `CaptivePortalConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
   - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, and generation telemetry.
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
+  - **Offline Voice (`core/tts`)**: espeak-ng synthesizer for the >51% spoken intervention — binary auto-detection (espeak-ng, then legacy espeak), Latin American Spanish voice resolution (`es-419` → `es-la` → `es`), classroom text preparation (arithmetic read as words), and WAV streamed from the engine's stdout.
 
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
@@ -59,7 +60,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 The following items are planned deliverables across upcoming milestone phases:
 
-- **Offline Voice Feedback (Week 4)**: Jetson offline neural TTS (Piper-TTS / Sherpa-ONNX) in Spanish and K'iche' for distractor remediation.
+- **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention ships on offline espeak-ng (`core/tts/`, Latin American Spanish `es-419`, `GET /session/{id}/speech`); a neural voice (Piper-TTS / Sherpa-ONNX) and a K'iche' voice slot into the same endpoint via `TTS_VOICE` / `TTS_VOICE_QUC`.
 - **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
@@ -153,6 +154,8 @@ Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 ```bash
 python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 ```
+
+On the appliance this command is supervised by [`infra/systemd/tutorbox-backend.service`](../infra/systemd/tutorbox-backend.service), and [`infra/nginx/tutorbox.conf`](../infra/nginx/tutorbox.conf) publishes it on port 80 (`http://tutorbox`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
 
 The database `tutorbox.db` will be initialized inside `.cache/db/` and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
 

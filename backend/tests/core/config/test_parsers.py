@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from core.config.constants import DEFAULT_DB_PATH, PROJECT_ROOT
-from core.config.parsers import parse_db_path, parse_float, parse_int
+from core.config.parsers import parse_bool, parse_db_path, parse_float, parse_int
 
 
 def test_parse_db_path_none_and_empty() -> None:
@@ -85,3 +85,23 @@ def test_parse_float_normal_and_fallbacks(monkeypatch) -> None:
     # Max bound violation
     monkeypatch.setenv("TEST_FLOAT_VAR", "5.0")
     assert parse_float("TEST_FLOAT_VAR", 1.5, max_value=2.0) == 1.5
+
+
+def test_parse_bool_normal_and_fallbacks(monkeypatch) -> None:
+    """Verifies parse_bool accepts the usual truthy spellings and falls back otherwise."""
+    # Unset env var returns default
+    monkeypatch.delenv("TEST_BOOL_VAR", raising=False)
+    assert parse_bool("TEST_BOOL_VAR", True) is True
+    assert parse_bool("TEST_BOOL_VAR", False) is False
+
+    for truthy in ("1", "true", "TRUE", " yes ", "on"):
+        monkeypatch.setenv("TEST_BOOL_VAR", truthy)
+        assert parse_bool("TEST_BOOL_VAR", False) is True
+
+    for falsy in ("0", "false", "No", "off"):
+        monkeypatch.setenv("TEST_BOOL_VAR", falsy)
+        assert parse_bool("TEST_BOOL_VAR", True) is False
+
+    # Unrecognized value keeps the default
+    monkeypatch.setenv("TEST_BOOL_VAR", "maybe")
+    assert parse_bool("TEST_BOOL_VAR", True) is True
