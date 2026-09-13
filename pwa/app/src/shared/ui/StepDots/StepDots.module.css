@@ -1,0 +1,23 @@
+.dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line3);
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.on {
+  background: var(--p);
+}
+
+.cur {
+  width: 26px;
+}
