@@ -80,79 +80,87 @@ For further details check these documents:
 
 ## <a id="3-environment-setup"></a>3. Environment Setup
 
-Ensure you are using Python 3.10 or newer.
+Ensure you are using Python 3.10 or newer. TutorBox uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
 
-### Create and Activate Virtual Environment
+### A. Recommended: Instant Setup with `uv`
+
+If `uv` is not already installed:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Sync all dependencies (including dev tools) deterministically from `uv.lock`:
+```bash
+cd backend
+uv sync --all-extras
+```
+
+### B. Alternative: Standard Virtual Environment (`venv` + `pip`)
 
 #### Windows (PowerShell)
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
-*(If `python` is not available, use `py -3.10 -m venv .venv`)*
 
-#### Linux
+#### Linux / Jetson
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
-```
-
-#### Conda (Windows or Linux)
-```bash
-conda create -n tutorbox-backend python=3.10
-conda activate tutorbox-backend
-python -m pip install --upgrade pip
+python3 -m pip install -e ".[dev]"
 ```
 
 ### Environment Variables & Configuration (`.env`)
 
 Copy the template `.env.example` to `.env` in the repository root to customize database paths, bcrypt work factors, rate limits, and SLM inference parameters:
 
-
 ---
 
 ## <a id="4-installation--workflow"></a>4. Installation & Workflow
 
-Choose the installation mode matching your target environment:
-
 ### <a id="a-development-mode-local-coding--testing"></a>A. Development Mode (Local Coding & Testing)
 
-Installs the package in **editable mode** (`-e`) along with development dependencies (`pytest`, `pytest-cov`, `pytest-env`, `pytest-xdist`, `ruff`, `pre-commit`):
-
+#### 1. From the `backend/` directory:
+Run Uvicorn with `--reload` via `uv` (creates/syncs `.venv` automatically if needed):
 ```bash
-python -m pip install -e ".[dev]"
+uv run uvicorn src.main:app --reload
 ```
+
+#### 2. Or from the repository root:
+You can start the full stack directly using the root runner:
+```bash
+./run.py
+# or via uv:
+uv run --directory backend uvicorn src.main:app --reload
+```
+
+The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
 > [!IMPORTANT]
 > **Developer Reminder: Install Pre-Commit Hooks**
-> All developers contributing code must install the Git pre-commit hooks to enforce automatic formatting, linting (Ruff), and syntax validation before every commit:
+> All developers contributing code must install the Git pre-commit hooks:
 > ```bash
-> pre-commit install
+> uv run pre-commit install
 > ```
-
-#### Running in Development:
-Run Uvicorn with `--reload` to automatically refresh the server whenever you edit source code:
-```bash
-python -m uvicorn src.main:app --reload
-```
-The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
 ---
 
 ### <a id="b-production-mode"></a>B. Production Mode
 
-Installs a **static production package** with minimal runtime dependencies (excluding dev tools and test suites):
-
+Install production dependencies without dev tools:
 ```bash
-python -m pip install .
+uv sync --no-dev
 ```
 
 #### Running in Production:
 Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 ```bash
-python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+# or direct binary execution:
+.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 ```
 
 On the appliance this command is supervised by [`infra/systemd/tutorbox-backend.service`](../infra/systemd/tutorbox-backend.service), and [`infra/nginx/tutorbox.conf`](../infra/nginx/tutorbox.conf) publishes it on port 80 (`http://tutorbox`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
@@ -166,35 +174,33 @@ The database `tutorbox.db` will be initialized inside `.cache/db/` and migrated 
 ### Running the Test Suite:
 Run pytest with code coverage across the entire test suite:
 ```bash
-python -m pytest
+uv run pytest
 ```
 
 ### Running Parallel Tests (`pytest-xdist`):
-Distribute test execution across multiple CPU workers (useful as test volume scales):
+Distribute test execution across multiple CPU workers:
 ```bash
-python -m pytest -n auto
-# Or specify worker count:
-python -m pytest -n 4
+uv run pytest -n auto
 ```
 
 ### Running Scoped Subpackage Tests:
 Run isolated test directories during focused development:
 ```bash
-python -m pytest tests/api/staff/ -o addopts="--strict-markers"
-python -m pytest tests/core/security/ -o addopts="--strict-markers"
-python -m pytest tests/modes/quiz/ -o addopts="--strict-markers"
+uv run pytest tests/api/staff/ -o addopts="--strict-markers"
+uv run pytest tests/core/security/ -o addopts="--strict-markers"
+uv run pytest tests/modes/quiz/ -o addopts="--strict-markers"
 ```
 
 ### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:
-Run Ruff linter and formatter checks manually:
+Run Ruff linter and formatter checks:
 ```bash
-ruff check .
-ruff format --check .
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 Auto-format all code:
 ```bash
-ruff format .
+uv run ruff format .
 ```
 
 ---

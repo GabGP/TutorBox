@@ -40,6 +40,12 @@ async def lifespan(app: FastAPI):
     logger.info("Question bank ready (newly seeded questions: %d).", seeded_count)
     if seed_teacher(db_path):
         logger.info("Bootstrap teacher account created.")
+    logger.info(
+        "TutorBox Ready: Maestro -> http://localhost:8000/maestro/ | "
+        "Alumno -> http://localhost:8000/alumno/ | "
+        "Pantalla -> http://localhost:8000/pantalla/ | "
+        "Docs -> http://localhost:8000/docs"
+    )
     yield
     logger.info("Shutting down TutorBox backend appliance...")
 

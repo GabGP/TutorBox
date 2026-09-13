@@ -109,14 +109,40 @@ All components operate **100% offline** without WAN connectivity.
 ```text
 TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
-├── pwa/          # React/Vite Progressive Web App source code (hosted on Jetson)
+├── pwa/          # Classroom web clients (Pilas maestro, alumno, pantalla) & static assets
 ├── infra/        # Systemd unit, nginx :80 config, captive portal, GL.iNet AP runbook
-└── docs/         # Architecture specs, pedagogical state machine rules, API documentation
+├── docs/         # Architecture specs, pedagogical state machine rules, API documentation
+└── run.py        # One-command development & appliance startup runner (uv-powered)
 ```
 
 ---
 
-## <a id="6-technical-documentation"></a>6. Technical Documentation
+## <a id="6-quick-start"></a>6. Quick Start
+
+TutorBox uses **[uv](https://docs.astral.sh/uv/)** for fast, zero-configuration environment startup:
+
+```bash
+# 1. Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Boot everything with one command
+./run.py
+```
+
+`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`), runs database migrations, seeds the question bank, mounts the classroom client pages, and starts Uvicorn:
+* **Teacher Host**: `http://localhost:8000/maestro/`
+* **Student Voting**: `http://localhost:8000/alumno/`
+* **Classroom Screen**: `http://localhost:8000/pantalla/`
+* **API Documentation**: `http://localhost:8000/docs`
+
+Or run directly with `uv`:
+```bash
+uv run --directory backend uvicorn src.main:app --reload
+```
+
+---
+
+## <a id="7-technical-documentation"></a>7. Technical Documentation
 
 * **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications across all subsystems.
 * **[Database Schema & ER Model](docs/database/README.md)**: SQLite schema dictionaries, ER diagrams, indexes, and policies (with the **[Migrations Playbook](docs/database/migrations.md)**).
