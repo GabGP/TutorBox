@@ -1,0 +1,151 @@
+.displayShell {
+  background: var(--navy);
+  color: #fff;
+  min-height: 100vh;
+  padding: 4vh 4vw;
+  display: flex;
+  flex-direction: column;
+}
+
+@supports (min-height: 100dvh) {
+  .displayShell { min-height: 100dvh; }
+}
+
+.section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: stepIn 0.4s ease;
+}
+
+.center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+
+.logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 30px;
+  background: var(--p);
+  display: grid;
+  place-items: center;
+  font-size: 46px;
+  font-weight: 700;
+}
+
+.h {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.sub {
+  font-size: 24px;
+  color: var(--navy-mute);
+}
+
+.count {
+  font-size: 30px;
+  color: var(--navy-soft);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.top .sub { font-size: 22px; }
+
+.q {
+  font-size: 54px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -1px;
+  text-wrap: pretty;
+  margin-bottom: 26px;
+}
+
+.opts {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.opt {
+  border-radius: 22px;
+  padding: 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 92px;
+  font-size: 38px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.opt i {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.24);
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.opt span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lbl {
+  font-size: 26px;
+  color: var(--navy-mute);
+  letter-spacing: 1px;
+}
+
+.reveal {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  animation: popIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.reveal i {
+  width: 104px;
+  height: 104px;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 52px;
+  font-weight: 700;
+  font-style: normal;
+  color: #fff;
+}
+
+.reveal b {
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rbarsContainer {
+  width: min(900px, 90vw);
+  margin-top: 20px;
+}
+
+.k_A { background: var(--A); }
+.k_B { background: var(--B); }
+.k_C { background: var(--C); }
+.k_D { background: var(--D); }
