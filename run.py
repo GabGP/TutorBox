@@ -77,8 +77,11 @@ def load_env(env_path: Path) -> None:
 def main() -> None:
     load_env(ROOT_DIR / ".env")
     load_env(BACKEND_DIR / ".env")
-    cache_venv = ROOT_DIR / ".cache" / "venv"
-    os.environ.setdefault("UV_PROJECT_ENVIRONMENT", str(cache_venv))
+    raw_venv = os.environ.get("UV_PROJECT_ENVIRONMENT")
+    venv_path = Path(raw_venv) if raw_venv else ROOT_DIR / ".cache" / "venv"
+    if not venv_path.is_absolute():
+        venv_path = (ROOT_DIR / venv_path).resolve()
+    os.environ["UV_PROJECT_ENVIRONMENT"] = str(venv_path)
 
     parser = argparse.ArgumentParser(
         description="TutorBox Appliance Dev & Production Launcher"
