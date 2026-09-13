@@ -98,9 +98,7 @@ for _path in PROBE_PATHS:
     )
 
 
-async def captive_not_found_handler(
-    request: Request, exc: StarletteHTTPException
-) -> Response:
+async def captive_not_found_handler(request: Request, exc: Exception) -> Response:
     """Walled garden: unknown pages on hijacked names go to the student page."""
     if request.method in ("GET", "HEAD") and not request.url.path.startswith(
         RESERVED_PREFIXES
@@ -108,4 +106,9 @@ async def captive_not_found_handler(
         redirect = foreign_host_redirect(request)
         if redirect is not None:
             return redirect
-    return await http_exception_handler(request, exc)
+    http_exc = (
+        exc
+        if isinstance(exc, StarletteHTTPException)
+        else StarletteHTTPException(status_code=404, detail=str(exc))
+    )
+    return await http_exception_handler(request, http_exc)
