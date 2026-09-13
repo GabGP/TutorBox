@@ -7,6 +7,7 @@ from modes.quiz.session.aggregator import (
 )
 from modes.quiz.session.evaluator import (
     STRICT_THRESHOLD_RATIO,
+    evaluate_round_outcome,
     evaluate_turn_decision,
 )
 from modes.quiz.session.exceptions import (
@@ -54,6 +55,7 @@ __all__ = [
     "VoteAlreadyCastError",
     "compute_round_tally",
     "compute_tally_from_counts",
+    "evaluate_round_outcome",
     "evaluate_turn_decision",
     "find_top_distractor",
 ]

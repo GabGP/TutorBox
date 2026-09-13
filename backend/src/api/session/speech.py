@@ -17,8 +17,7 @@ from core.db.question_repository import get_question_by_id
 from core.db.vote_repository import get_votes_for_round
 from core.security import AuthContext, require_roles
 from core.tts import TTSSynthesisError, TTSUnavailableError, synthesize_wav
-from modes.quiz.session.aggregator import compute_round_tally
-from modes.quiz.session.evaluator import evaluate_turn_decision
+from modes.quiz.session.evaluator import evaluate_round_outcome
 from modes.quiz.session.models import RoundStatus
 from modes.quiz.session.speech import build_intervention_script
 
@@ -70,8 +69,9 @@ def round_speech(
             )
         votes = get_votes_for_round(conn, current_round.id)
 
-    tally = compute_round_tally(votes, question.correct_option)
-    decision = evaluate_turn_decision(tally, question.distractors)
+    tally, decision = evaluate_round_outcome(
+        votes, question.correct_option, question.distractors
+    )
     if not decision.should_speak:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

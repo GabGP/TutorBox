@@ -15,9 +15,8 @@ from core.db.round_repository import get_round_by_index
 from core.db.session_repository import get_quiz_session
 from core.db.vote_repository import count_votes_for_round, get_votes_for_round
 from modes.quiz.contracts.models import QuizQuestionResponse
-from modes.quiz.session.aggregator import compute_round_tally
 from modes.quiz.session.engine import QuizSessionEngine
-from modes.quiz.session.evaluator import evaluate_turn_decision
+from modes.quiz.session.evaluator import evaluate_round_outcome
 from modes.quiz.session.models import QuizRoundRecord, RoundStatus
 
 __all__ = ["build_session_state"]
@@ -30,8 +29,9 @@ def _round_result(
 ) -> RoundResultView:
     """Recomputes the reveal outcome read-only, with the same functions /reveal uses."""
     votes = get_votes_for_round(conn, round_record.id)
-    tally = compute_round_tally(votes, question.correct_option)
-    decision = evaluate_turn_decision(tally, question.distractors)
+    tally, decision = evaluate_round_outcome(
+        votes, question.correct_option, question.distractors
+    )
     return RoundResultView(
         round_id=round_record.id,
         tally=tally,

@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from modes.quiz.session.aggregator import find_top_distractor
-from modes.quiz.session.models import RoundTally, TurnDecision
+from modes.quiz.session.aggregator import compute_round_tally, find_top_distractor
+from modes.quiz.session.models import RoundTally, StudentVoteRecord, TurnDecision
 
 STRICT_THRESHOLD_RATIO: float = 0.51
 
@@ -102,3 +102,14 @@ def evaluate_turn_decision(
         misconception=None,
         explanation=None,
     )
+
+
+def evaluate_round_outcome(
+    votes: list[StudentVoteRecord],
+    correct_option: str,
+    distractors: dict[str, Any] | None = None,
+) -> tuple[RoundTally, TurnDecision]:
+    """Computes round vote tally and evaluates the >51% pedagogical turn decision."""
+    tally = compute_round_tally(votes, correct_option)
+    decision = evaluate_turn_decision(tally, distractors)
+    return tally, decision

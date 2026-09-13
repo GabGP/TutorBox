@@ -10,8 +10,7 @@ from core.db.round_repository import (
     update_quiz_round_status,
 )
 from core.db.vote_repository import get_votes_for_round
-from modes.quiz.session.aggregator import compute_round_tally
-from modes.quiz.session.evaluator import evaluate_turn_decision
+from modes.quiz.session.evaluator import evaluate_round_outcome
 from modes.quiz.session.exceptions import (
     InvalidRoundStateError,
     RoundNotFoundError,
@@ -103,8 +102,7 @@ def reveal_turn_round(
     distractors = question.distractors if question else None
 
     votes = get_votes_for_round(conn, round_id)
-    tally = compute_round_tally(votes, correct_option)
-    decision = evaluate_turn_decision(tally, distractors)
+    tally, decision = evaluate_round_outcome(votes, correct_option, distractors)
 
     update_quiz_round_status(conn, round_id, RoundStatus.REVEALED.value)
     return tally, decision

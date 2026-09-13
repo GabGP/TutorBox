@@ -194,3 +194,40 @@ def test_evaluator_zero_distractor_votes_and_minority_correct():
     assert decision.should_speak is False
     assert decision.reason == "threshold_not_reached"
     assert decision.dominant_distractor is None
+
+
+def test_evaluate_round_outcome():
+    from modes.quiz.session.evaluator import evaluate_round_outcome
+    from modes.quiz.session.models import StudentVoteRecord, TransportType
+
+    votes = [
+        StudentVoteRecord(
+            id="v1",
+            session_id="s1",
+            round_id="r1",
+            student_id=1,
+            selected_option="B",
+            transport_type=TransportType.WEB.value,
+        ),
+        StudentVoteRecord(
+            id="v2",
+            session_id="s1",
+            round_id="r1",
+            student_id=2,
+            selected_option="B",
+            transport_type=TransportType.WEB.value,
+        ),
+        StudentVoteRecord(
+            id="v3",
+            session_id="s1",
+            round_id="r1",
+            student_id=3,
+            selected_option="A",
+            transport_type=TransportType.WEB.value,
+        ),
+    ]
+    tally, decision = evaluate_round_outcome(votes, "A", MOCK_DISTRACTORS)
+    assert tally.total_votes == 3
+    assert tally.counts["B"] == 2
+    assert decision.should_speak is True
+    assert decision.dominant_distractor == "B"
