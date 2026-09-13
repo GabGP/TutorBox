@@ -1,6 +1,6 @@
 # TutorBox Frontend (PWA)
 
-Classroom web client hosted directly on the NVIDIA Jetson Orin Nano appliance (vanilla HTML/JS today; a React/Vite PWA is a later milestone).
+Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance (both the vanilla HTML/JS reference client in `pilas/` and the modular React 19 + TypeScript PWA in `app/`).
 
 <div align="center">
 
@@ -61,7 +61,74 @@ clicker transport (Week 7) is not part of Pilas; the vote endpoint already accep
 
 ---
 
-## 2. Architecture & Offline Design
+## 2. React PWA — Modern Modular Classroom Client (`pwa/app/`)
+
+`pwa/app/` is the modular, type-safe React 19 + TypeScript + Vite Progressive Web Application designed under Feature-Sliced Design (FSD). It maintains strict 1-to-1 feature parity with `pilas/` while eliminating monolithic code and providing automated test coverage.
+
+### Directory Structure & FSD Architecture
+
+```
+pwa/
+├── pilas/                  # Reference classroom client (vanilla HTML/JS)
+├── app/                    # Modern classroom client (React 19 + TypeScript + Vite FSD)
+│   ├── index.html          # SPA HTML template
+│   ├── package.json        # Dependencies & scripts (React 19, TypeScript, Vite, Vitest)
+│   ├── tsconfig.json       # Strict TypeScript compiler options
+│   ├── vite.config.ts      # Multi-route distribution plugin (.cache/pwa/dist)
+│   ├── vitest.config.ts    # Component & logic test runner configuration
+│   └── src/
+│       ├── main.tsx        # Application mount entry point
+│       ├── app/            # Global application layer
+│       │   ├── App.tsx             # Route selector (/alumno, /maestro, /pantalla)
+│       │   ├── ErrorBoundary.tsx   # Top-level fault isolation boundary
+│       │   └── styles/             # CSS design tokens & animations
+│       ├── pages/          # Role-based page views
+│       │   ├── student/            # Student mobile voting interface (/alumno/)
+│       │   ├── teacher/            # Teacher control console (/maestro/)
+│       │   └── display/            # Projector display view (/pantalla/)
+│       ├── features/       # Isolated domain feature slices
+│       │   ├── auth/               # Login form, PIN reset modal, auth hook
+│       │   ├── session-engine/     # Round state machine & polling coordinator
+│       │   ├── voting/             # Voting grid, response latency & first-press lock
+│       │   ├── roster/             # Student management & PIN resets
+│       │   ├── question-generator/ # Topic selector & question count picker
+│       │   ├── speech/             # TTS audio playback & status badge
+│       │   └── match-report/       # Aggregate analytics, remediation alert & CSV export
+│       ├── shared/         # Cross-cutting primitives & design system
+│       │   ├── api/                # Type-safe fetch client & endpoint contracts
+│       │   ├── lib/                # Storage & audio synthesis helpers
+│       │   └── ui/                 # Reusable accessible UI components
+│       └── test/           # Vitest environment mocks & setup
+└── README.md
+```
+
+### Serving via Backend
+
+The backend (`backend/src/main.py`) supports runtime selection of the frontend directory via the `PWA_STATIC_DIR` environment variable:
+
+```bash
+# Default: serves pwa/pilas
+python -m uvicorn src.main:app
+
+# Serve React PWA production build (emitted to .cache/pwa/dist):
+export PWA_STATIC_DIR="../.cache/pwa/dist"
+python -m uvicorn src.main:app
+```
+
+### Development & Build Commands
+
+Inside `pwa/app/`:
+
+```bash
+pnpm dev        # Launch Vite development server on port 5173 with API proxying
+pnpm typecheck  # Strict TypeScript verification (0 errors)
+pnpm test       # Execute Vitest test suite (13 suites, 48 tests)
+pnpm build      # Build production bundle to dist/
+```
+
+---
+
+## 3. Architecture & Offline Design
 
 * **Network Delivery**: Static pages served by the appliance over the isolated `TutorBox` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.

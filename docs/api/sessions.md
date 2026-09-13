@@ -260,7 +260,9 @@ round that did not trigger it.
   words before synthesis (`6/8` → *seis sobre ocho*, `75%` → *setenta y cinco por ciento*).
 * **Responses**:
   * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by espeak-ng on the
-    appliance. Typical size: ~20 KB per sentence; synthesis latency well under 1 s on the Jetson.
+    appliance. Repeated requests for the same `(round_id, lang)` return instantly from a bounded
+    in-memory cache (32 entries max) to avoid redundant synthesis during classroom re-plays.
+    Typical size: ~20 KB per sentence; synthesis latency well under 1 s on the Jetson.
   * `403 Forbidden`: Student device; only the teacher's client may pull the audio.
   * `404 Not Found`: Session, active round, or its question not found.
   * `409 Conflict`: Round is not `revealed`, or the >51% Rule did not trigger (detail names the

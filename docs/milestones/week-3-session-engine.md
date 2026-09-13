@@ -18,8 +18,8 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 * **Theme**: *"From Button to Pedagogical Decision: Anatomy of a Quiz Turn"*
 * **Status**: **Week 3 Milestone Complete & Green**
-* **Backend Test Suite**: **685 / 685 passing tests** (166 new integration, unit, speech, captive, and concurrency tests added in Week 3 across persistence, aggregation, rule evaluation, lifecycle, schema contracts, event dispatching, public phase-gated state, concurrent load, offline TTS, and captive portal).
-* **Statement Coverage**: **100.00% coverage** across all 3,251 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
+* **Backend Test Suite**: **693 / 693 passing tests** (174 new integration, unit, speech, captive, and concurrency tests added across persistence, aggregation, rule evaluation, lifecycle, schema contracts, event dispatching, public phase-gated state, concurrent load, offline TTS, audio caching, and captive portal).
+* **Statement Coverage**: **100.00% coverage** across all 3,281 statements (`pyproject.toml` enforces `--cov-fail-under=80`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
 * **Modularity Compliance**: **100% of source files $\le 146$ LoC** (Week 3 session modules $\le 139$ LoC, well under the $\le 150$ LoC hard ceiling) and **100% of test files $\le 299$ LoC** (well under the $\le 300$ LoC ceiling), verified by `test_modularity_policy.py`.
 * **Key Milestone Artifacts**:

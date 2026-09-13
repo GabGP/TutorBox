@@ -26,8 +26,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -235,3 +235,14 @@ agents/
 CLAUDE.md
 claude.md
 progress.md
+GEMINI.md
+
+# Frontend dependencies & build artifacts
+node_modules/
+pwa/node_modules/
+pwa/dist/
+pwa/app/node_modules/
+pwa/app/dist/
+.vite/
+*.tsbuildinfo
+pnpm-debug.log*
