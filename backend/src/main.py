@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from api.captive import captive_not_found_handler, foreign_host_redirect
 from api.router import root_router
 from core.config import load_env_file
+from core.config.constants import PROJECT_ROOT
 from core.db.database import get_db_path
 from core.db.migrations import apply_migrations
 from core.db.seed_users import seed_teacher
@@ -21,15 +23,29 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("tutorbox")
+
+
 # Pilas classroom client (pwa/pilas) served same-origin so pages call /api/v1 directly.
 # Mounted per folder (not at "/") so unknown API paths keep their JSON 404 and slash redirects.
 # Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
-PILAS_DIR = Path(__file__).resolve().parents[2] / "pwa" / "pilas"
+def resolve_pilas_dir(raw_dir: str | None = None) -> Path:
+    """Resolve directory for serving classroom web client assets."""
+    target = raw_dir if raw_dir is not None else os.getenv("PWA_STATIC_DIR")
+    if target and target.strip():
+        resolved = Path(target.strip())
+        return (
+            resolved if resolved.is_absolute() else (PROJECT_ROOT / resolved).resolve()
+        )
+    return (PROJECT_ROOT / "pwa" / "pilas").resolve()
+
+
+PILAS_DIR = resolve_pilas_dir()
 PILAS_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage appliance initialization, migrations, database seeds, and shutdown."""
     logger.info("Initializing TutorBox backend appliance...")
     db_path = get_db_path()
     logger.info("Running database migrations on %s...", db_path)

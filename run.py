@@ -18,6 +18,10 @@ BACKEND_DIR = ROOT_DIR / "backend"
 
 
 def check_prerequisites() -> None:
+    """Verifies that runtime dependencies (espeak-ng and local SLM server) are available.
+
+    Logs informative warning messages if optional runtime engines are not reachable.
+    """
     # 1. espeak-ng check
     tts_custom = os.getenv("TTS_ESPEAK_BINARY", "").strip()
     tts_bin = (
@@ -47,6 +51,7 @@ def check_prerequisites() -> None:
 
 
 def resolve_uv() -> str:
+    """Finds and returns the executable path for the uv package manager."""
     found = shutil.which("uv")
     if found:
         return found
@@ -60,6 +65,7 @@ def resolve_uv() -> str:
 
 
 def load_env(env_path: Path) -> None:
+    """Loads key-value pairs from an env file into os.environ if not already defined."""
     if not env_path.is_file():
         return
     with open(env_path, encoding="utf-8") as f:
@@ -75,6 +81,7 @@ def load_env(env_path: Path) -> None:
 
 
 def main() -> None:
+    """Boots the TutorBox appliance development server and launches Uvicorn."""
     load_env(ROOT_DIR / ".env")
     load_env(BACKEND_DIR / ".env")
     raw_venv = os.environ.get("UV_PROJECT_ENVIRONMENT")
@@ -123,7 +130,15 @@ def main() -> None:
         str(args.port),
     ]
     if not args.no_reload:
-        cmd.append("--reload")
+        cmd.extend(
+            [
+                "--reload",
+                "--reload-dir",
+                str(BACKEND_DIR / "src"),
+                "--reload-dir",
+                str(BACKEND_DIR / "migrations"),
+            ]
+        )
 
     print(f"Running: {' '.join(cmd)}")
     print("Classroom Client URLs:")

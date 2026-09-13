@@ -26,6 +26,30 @@ router = APIRouter()
 
 SpeechLanguage = Literal["es", "quc"]
 
+_SPEECH_CACHE: dict[tuple[str, str], bytes] = {}
+_MAX_CACHE_ENTRIES = 32
+
+
+def clear_speech_cache() -> None:
+    """Clears cached synthesized audio bytes."""
+    _SPEECH_CACHE.clear()
+
+
+def _get_cached_or_synthesize(
+    round_id: str, script: str, voice: str, lang: str
+) -> bytes:
+    """Returns cached WAV bytes or synthesizes offline and stores in cache."""
+    cache_key = (round_id, lang)
+    cached = _SPEECH_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    audio = synthesize_wav(script, voice=voice)
+    if len(_SPEECH_CACHE) >= _MAX_CACHE_ENTRIES:
+        _SPEECH_CACHE.pop(next(iter(_SPEECH_CACHE)))
+    _SPEECH_CACHE[cache_key] = audio
+    return audio
+
 
 def _voice_for_language(language: SpeechLanguage) -> str:
     """Maps a classroom language to an installed espeak voice."""
@@ -81,7 +105,7 @@ def round_speech(
     voice = _voice_for_language(lang)
     script = build_intervention_script(question.options, tally, decision)
     try:
-        audio = synthesize_wav(script, voice=voice)
+        audio = _get_cached_or_synthesize(current_round.id, script, voice, lang)
     except TTSUnavailableError as err:
         logger.warning("Speech unavailable for session %s: %s", session_id, err)
         raise HTTPException(

@@ -1,12 +1,13 @@
 """Unit and integration tests for FastAPI main application lifecycle, router mounts, and env loading."""
 
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from main import app, lifespan, load_env_file
+from main import app, lifespan, load_env_file, resolve_pilas_dir
 
 
 def test_load_env_file_parses_unloaded_keys(monkeypatch):
@@ -56,3 +57,27 @@ def test_app_routes_mounted():
     assert any(path.startswith("/api/v1/users") for path in paths)
     assert any(path.startswith("/api/v1/staff") for path in paths)
     assert any(path.startswith("/api/v1/quiz") for path in paths)
+
+
+def test_resolve_pilas_dir_defaults_to_pwa_pilas(monkeypatch):
+    """Verifies resolve_pilas_dir returns default pwa/pilas when env is unset."""
+    monkeypatch.delenv("PWA_STATIC_DIR", raising=False)
+    resolved = resolve_pilas_dir()
+    assert resolved.name == "pilas"
+    assert resolved.parent.name == "pwa"
+
+
+def test_resolve_pilas_dir_handles_empty_string(monkeypatch):
+    """Verifies resolve_pilas_dir returns default when given empty or whitespace."""
+    monkeypatch.delenv("PWA_STATIC_DIR", raising=False)
+    assert resolve_pilas_dir("   ").name == "pilas"
+
+
+def test_resolve_pilas_dir_resolves_relative_and_absolute_paths():
+    """Verifies resolve_pilas_dir handles both custom relative and absolute paths."""
+    rel = resolve_pilas_dir("custom/static/dir")
+    assert rel.name == "dir"
+    assert rel.parent.name == "static"
+
+    abs_path = Path.cwd().resolve()
+    assert resolve_pilas_dir(str(abs_path)) == abs_path

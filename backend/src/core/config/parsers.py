@@ -33,7 +33,7 @@ def parse_db_path(raw_path: str | None) -> str:
         return DEFAULT_DB_PATH
     if raw_path == ":memory:":
         return ":memory:"
-    if os.path.isabs(raw_path):
+    if os.path.isabs(raw_path) or raw_path.startswith(("/", "\\")):
         return raw_path
     return str((PROJECT_ROOT / raw_path).resolve())
 

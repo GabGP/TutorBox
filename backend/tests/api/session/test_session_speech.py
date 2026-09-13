@@ -7,6 +7,7 @@ without the engine gets a clear 503 instead of a broken reveal screen.
 
 import pytest
 
+from api.session.speech import clear_speech_cache
 from core.config import clear_settings_cache
 from core.db.question_repository import create_question
 from core.tts import TTSSynthesisError, TTSUnavailableError
@@ -22,23 +23,24 @@ def _clean_tts_settings(monkeypatch: pytest.MonkeyPatch):
     for name in ("TTS_ENABLED", "TTS_VOICE", "TTS_VOICE_QUC", "TTS_ESPEAK_BINARY"):
         monkeypatch.delenv(name, raising=False)
     clear_settings_cache()
+    clear_speech_cache()
     yield
     clear_settings_cache()
+    clear_speech_cache()
 
 
 def _seed_question(conn) -> str:
+    """Seeds a test fractions question with diagnostic distractors and returns its ID."""
     distractors = {
         "B": DistractorDetail(
             misconception="halved_num",
             explanation="Dividiste sólo el numerador entre 2.",
         ),
         "C": DistractorDetail(
-            misconception="wrong_factor",
-            explanation="Usaste el factor equivocado.",
+            misconception="wrong_factor", explanation="Usaste el factor equivocado."
         ),
         "D": DistractorDetail(
-            misconception="kept_denom",
-            explanation="Conservaste el denominador.",
+            misconception="kept_denom", explanation="Conservaste el denominador."
         ),
     }
     qid = create_question(
@@ -81,6 +83,7 @@ def _play_round(
 
 
 def _play_b_round(client, conn, teacher, reveal: bool = True) -> str:
+    """Creates and plays a round where students vote exclusively for distractor B."""
     return _play_round(
         client, conn, teacher, {"student1": "B", "student2": "B"}, reveal=reveal
     )
@@ -267,3 +270,29 @@ def test_speech_without_the_round_question_is_404(
     response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
     assert response.status_code == 404
     assert "Question" in response.json()["detail"]
+
+
+def test_speech_returns_cached_audio_on_subsequent_calls(
+    staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
+):
+    """Verifies that repeatedly calling /speech returns cached audio and bounds cache size."""
+    from api.session.speech import _SPEECH_CACHE
+
+    _, conn = staff_db
+    calls: list[str] = []
+    monkeypatch.setattr(
+        "api.session.speech.synthesize_wav",
+        lambda text, voice=None: calls.append(text) or FAKE_WAV,
+    )
+    monkeypatch.setattr("api.session.speech._MAX_CACHE_ENTRIES", 1)
+    _SPEECH_CACHE[("old_round", "es")] = b"old"
+
+    sid = _play_b_round(client, conn, teacher_headers)
+
+    res1 = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
+    assert res1.status_code == 200 and res1.content == FAKE_WAV
+    assert len(calls) == 1 and ("old_round", "es") not in _SPEECH_CACHE
+
+    res2 = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
+    assert res2.status_code == 200 and res2.content == FAKE_WAV
+    assert len(calls) == 1
