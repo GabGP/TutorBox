@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { GenerationProgress, TopicModel } from './generator.types';
+import { GenerationProgress, QuestionGenerationStatus, TopicModel } from './generator.types';
 import { generatorApi } from './generatorApi';
 
 /**
@@ -27,15 +27,23 @@ export function useQuestionGenerator() {
       setIsGenerating(true);
       setError(null);
 
-      let eta: number | null = null;
+      const startTime = Date.now();
+      let eta = 12;
       try {
         const metrics = await generatorApi.getMetrics(topic || undefined);
-        eta = metrics.avg_duration_ms
-          ? Math.max(1, Math.round(metrics.avg_duration_ms / 1000))
-          : null;
+        if (metrics && metrics.avg_duration_ms > 0) {
+          eta = Math.max(1, Math.round(metrics.avg_duration_ms / 1000));
+        }
       } catch {
-        // ETA metric is non-critical
+        // Fall back to baseline 12s
       }
+
+      const initialTopic =
+        topic ||
+        (availableTopics.length > 0 ? availableTopics[0].name : 'arithmetic');
+
+      const statuses: QuestionGenerationStatus[] = Array(count).fill('pending');
+      if (count > 0) statuses[0] = 'generating';
 
       const currentProgress: GenerationProgress = {
         done: 0,
@@ -43,6 +51,10 @@ export function useQuestionGenerator() {
         failed: 0,
         ids: [],
         eta,
+        currentIndex: 1,
+        currentTopic: initialTopic,
+        currentSubconcept: null,
+        statuses: [...statuses],
       };
       setProgress({ ...currentProgress });
 
@@ -61,6 +73,13 @@ export function useQuestionGenerator() {
           ? subconcepts[i % subconcepts.length].name
           : null;
 
+        statuses[i] = 'generating';
+        currentProgress.currentIndex = i + 1;
+        currentProgress.currentTopic = effectiveTopic;
+        currentProgress.currentSubconcept = subconcept;
+        currentProgress.statuses = [...statuses];
+        setProgress({ ...currentProgress });
+
         try {
           const res = await generatorApi.generateQuestion({
             topic: effectiveTopic,
@@ -69,12 +88,22 @@ export function useQuestionGenerator() {
           });
           if (tokenRef.current !== currentToken) return null;
           currentProgress.ids.push(res.question.id);
+          statuses[i] = 'success';
         } catch {
           if (tokenRef.current !== currentToken) return null;
           currentProgress.failed++;
+          statuses[i] = 'failed';
         }
 
         currentProgress.done++;
+        const elapsedMs = Date.now() - startTime;
+        if (currentProgress.done > 0) {
+          currentProgress.eta = Math.max(1, Math.round(elapsedMs / (currentProgress.done * 1000)));
+        }
+        if (i + 1 < count) {
+          statuses[i + 1] = 'generating';
+        }
+        currentProgress.statuses = [...statuses];
         setProgress({ ...currentProgress });
       }
 

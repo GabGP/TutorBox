@@ -26,6 +26,28 @@ export function getTopicLabel(topicName: string): string {
   return TOPIC_METADATA[topicName]?.label || topicName || 'Todos los temas';
 }
 
+const SUBCONCEPT_LABELS: Record<string, string> = {
+  addition_subtraction: 'Suma y resta',
+  multiplication_division: 'Multiplicación y división',
+  order_of_operations: 'Jerarquía de operaciones',
+  simplification: 'Simplificación',
+  one_step_equations: 'Ecuaciones de 1 paso',
+  two_step_equations: 'Ecuaciones de 2 pasos',
+  decimal_operations: 'Operaciones con decimales',
+  percentages: 'Porcentajes',
+};
+
+/**
+ * Resolves human-readable Spanish display labels for curriculum subconcepts.
+ *
+ * @param {string | null | undefined} subconceptName - Internal taxonomy subconcept slug.
+ * @returns {string} Friendly Spanish subconcept label.
+ */
+export function getSubconceptLabel(subconceptName?: string | null): string {
+  if (!subconceptName) return '';
+  return SUBCONCEPT_LABELS[subconceptName] || subconceptName;
+}
+
 /**
  * Topic Selector grid component.
  * Allows teachers to select a pedagogical topic (or mixed topics) for quiz generation.

@@ -125,4 +125,55 @@ describe('TeacherView Component', () => {
     fireEvent.click(voiceBtn);
     expect(screen.getByRole('button', { name: "Voz K'iche'" })).toBeInTheDocument();
   });
+
+  it('renders QuestionGenerationProgress when generating in lobby', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 't1', username: 'profe', role: 'teacher' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useTeacherCoordinator).mockReturnValue({
+      sid: null,
+      wizard: 'lobby',
+      setWizard: vi.fn(),
+      topic: 'fractions',
+      setTopic: vi.fn(),
+      count: 5,
+      setCount: vi.fn(),
+      topics: [{ name: 'fractions', subconcepts: [] }],
+      session: null,
+      progress: {
+        done: 1,
+        total: 5,
+        failed: 0,
+        ids: ['q1'],
+        eta: 10,
+        currentIndex: 2,
+        currentTopic: 'fractions',
+        currentSubconcept: null,
+      },
+      isGenerating: true,
+      genError: null,
+      history: [],
+      report: null,
+      advancePrimary: vi.fn(),
+      resetSession: vi.fn(),
+    });
+
+    render(<TeacherView />);
+    expect(
+      screen.getByText('Creando las preguntas con IA...')
+    ).toBeInTheDocument();
+    expect(screen.getByText('⚡ P2')).toBeInTheDocument();
+
+    const primaryBtn = screen.getByRole('button', { name: /Creando preguntas/ });
+    expect(primaryBtn).toBeDisabled();
+    expect(primaryBtn.className).not.toContain('ok');
+  });
 });

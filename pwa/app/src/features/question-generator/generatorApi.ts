@@ -30,7 +30,7 @@ export const generatorApi = {
       'GET',
       `/quiz/generation-metrics${query}`,
       undefined,
-      false
+      true
     );
   },
 

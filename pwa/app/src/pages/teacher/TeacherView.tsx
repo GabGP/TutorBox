@@ -136,7 +136,7 @@ export const TeacherView: React.FC = () => {
         primaryText={primaryText}
         secondaryText={secondaryText}
         isPrimaryDisabled={coordinator.isGenerating || (step === 'lobby' && !coordinator.session)}
-        isLobbySuccess={step === 'lobby'}
+        isLobbySuccess={step === 'lobby' && Boolean(coordinator.session)}
         wizardIndex={wizardIdx}
         onPrimary={handlePrimary}
         onSecondary={handleSecondary}

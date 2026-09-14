@@ -29,6 +29,32 @@
   word-break: break-all;
 }
 
+.connectionCard {
+  border-radius: 16px;
+  background: var(--tint, #e7f1f6);
+  border: 1px solid var(--line3, #c9dbe4);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.connectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--p, #0b6e99);
+}
+
+.connectionAddr {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink, #131e23);
+  word-break: break-all;
+}
+
 @media (min-width: 900px) {
   .hero {
     padding: 26px 30px;
