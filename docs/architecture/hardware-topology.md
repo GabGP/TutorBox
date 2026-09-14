@@ -74,7 +74,7 @@ On the **NVIDIA Jetson Orin Nano (8GB)**, CPU and GPU share a single unified LPD
 | :--- | :---: | :---: | :---: | :--- |
 | **OS & Kernel Baseline** | 600 MB | 200 MB | **~0.8 GB** | Headless Ubuntu 22.04 LTS (GUI disabled, 25W mode, `jetson_clocks`). |
 | **HDMI Classroom UI** | 400 MB | 200 MB | **~0.6 GB** | Lightweight Chromium kiosk rendering question timer and live voting charts. |
-| **FastAPI + SQLite + Nginx** | 300 MB | 200 MB | **~0.5 GB** | Python 3.10 runtime, SymPy AST engine, SQLite WAL cache, and Nginx proxy. |
+| **FastAPI + SQLite + Nginx** | 300 MB | 200 MB | **~0.5 GB** | Python 3.11 runtime, SymPy AST engine, SQLite WAL cache, and Nginx proxy. |
 | **Offline Neural TTS (Spanish & K'iche')** | 100 MB | 200 MB | **~0.3 GB** | ONNX Runtime (`Piper-TTS` / `Sherpa-ONNX` VITS model). |
 | **SLM Inference (`llama.cpp`)** | 1,500 MB | 700 MB | **~2.2 GB** | • **Model Weights (`Q4_K_M`)**: ~1.5 GB (Dense 2B class)<br/>• **CUDA Runtime Context**: ~400 MB<br/>• **KV Cache (2K context)**: ~300 MB |
 | **Dynamic Classroom Pool** | — | 500 MB | **~0.5 GB** | Active WebSocket buffers and concurrent state for 15–20 student sessions. |

@@ -89,7 +89,7 @@ For further details check these documents:
 
 ## <a id="3-environment-setup"></a>3. Environment Setup
 
-Ensure you are using Python 3.10 or newer. TutorBox uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
+Ensure you are using Python 3.11 or newer. TutorBox uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
 
 ### A. Recommended: Instant Setup with `uv`
 

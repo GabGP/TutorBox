@@ -85,7 +85,7 @@ All components operate **100% offline** without WAN connectivity.
 
 ## <a id="3-software--ai-stack"></a>3. Software & AI Stack
 
-* **Backend**: Python 3.10+, FastAPI, WebSockets (real-time chat & room management), SQLite (with idempotent SQL migrations).
+* **Backend**: Python 3.11+, FastAPI, WebSockets (real-time chat & room management), SQLite (with idempotent SQL migrations).
 * **Frontend**: React / Vite Progressive Web App (PWA), mobile-first, hosted directly on the Jetson appliance via Nginx.
 * **Deterministic Math Engine**: **SymPy** for all mathematical parsing, algebraic verification, and equivalence checking.
 * **LLM Engine**: **Gemma 4 A2B** quantized to `Q4_K_M` running via `llama.cpp` (`llama-server`) bound strictly to `127.0.0.1:8080`.
