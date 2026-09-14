@@ -70,8 +70,15 @@ def temp_db(monkeypatch: pytest.MonkeyPatch, _migrated_template_db: str):
     yield db_path, conn
 
     conn.close()
-    if os.path.exists(db_path):
-        os.remove(db_path)
+    del conn
+    import gc
+
+    gc.collect()
+    try:
+        if os.path.exists(db_path):
+            os.remove(db_path)
+    except OSError:
+        pass
 
 
 @pytest.fixture
