@@ -1,0 +1,68 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.track {
+  flex: 1;
+  background: var(--line2, #e1ebf0);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  transform: translateZ(0);
+}
+
+.sm .track {
+  height: 6px;
+}
+
+.md .track {
+  height: 10px;
+}
+
+.lg .track {
+  height: 16px;
+}
+
+.fill {
+  height: 100%;
+  background: var(--p, #0b6e99);
+  border-radius: 9999px;
+  transition: width 0.4s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+  position: relative;
+}
+
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--shimmer-track);
+  animation: shimmerBeam var(--speed, var(--speed-shimmer, 5.5s)) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
+}
+
+@keyframes shimmerBeam {
+  0% {
+    transform: translateX(-100%);
+  }
+  65% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute, #4e5c63);
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

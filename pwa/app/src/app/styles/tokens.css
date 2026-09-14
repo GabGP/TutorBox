@@ -33,6 +33,28 @@
   --B: #1368CE;
   --C: #C98A00;
   --D: #1E7B2E;
+
+  /* Accent & Shimmer Brand Tokens */
+  --p-bright: #5BC0EB;
+  --shimmer-glow: rgba(91, 192, 235, 0.28);
+  --shimmer-core: rgba(255, 255, 255, 0.45);
+  --shimmer-track: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(91, 192, 235, 0.12) 20%,
+    var(--shimmer-glow) 40%,
+    var(--shimmer-core) 50%,
+    var(--shimmer-glow) 60%,
+    rgba(91, 192, 235, 0.12) 80%,
+    transparent 100%
+  );
+
+  /* Animation Pacing & Easing Tokens */
+  --speed-stage: 5.5s;
+  --speed-shimmer: 5.5s;
+  --speed-orbit: 3.6s;
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-shimmer: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 * {

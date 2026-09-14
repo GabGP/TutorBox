@@ -1,0 +1,31 @@
+.shiny {
+  background: linear-gradient(
+    90deg,
+    var(--ink, #131e23) 0%,
+    var(--ink, #131e23) 35%,
+    var(--p, #0b6e99) 45%,
+    var(--p-bright, #5bc0eb) 50%,
+    var(--p, #0b6e99) 55%,
+    var(--ink, #131e23) 65%,
+    var(--ink, #131e23) 100%
+  );
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine var(--speed, var(--speed-shimmer, 5.5s)) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
+  display: inline-block;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 100% 0;
+  }
+  65% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
