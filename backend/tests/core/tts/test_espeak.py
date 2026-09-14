@@ -189,7 +189,7 @@ def test_synthesize_sends_normalized_text_on_stdin(
     monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
     synthesize_wav("6/8 es igual a 3/4")
 
-    assert captured["input"].decode("utf-8") == "6 sobre 8 es igual a 3 sobre 4"
+    assert captured["input"].decode("utf-8") == "6 octavos es igual a 3 cuartos"
 
 
 def test_synthesize_respects_requested_voice(monkeypatch: pytest.MonkeyPatch) -> None:
