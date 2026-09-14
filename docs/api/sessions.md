@@ -273,9 +273,14 @@ round that did not trigger it.
     configured for the requested language. The detail names the missing piece
     (`sudo apt install espeak-ng`).
 
-**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`),
-`TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`), `TTS_PITCH`, `TTS_AMPLITUDE`,
-`TTS_TIMEOUT_SECONDS`, `TTS_MAX_CHARS`.
+**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `auto`, `piper`, `espeak`),
+`TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`), `TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`),
+`TTS_PITCH`, `TTS_AMPLITUDE`, `TTS_TIMEOUT_SECONDS`, `TTS_MAX_CHARS`,
+`TTS_PIPER_BINARY`, `TTS_PIPER_MODEL_DIR` (default `/opt/tutorbox/models/tts`),
+`TTS_PIPER_MODEL_ES` (default `es_ES-sharvard-medium.onnx`), `TTS_PIPER_SPEAKER_ES` (default `1`),
+`TTS_PIPER_MODEL_QUC` (default `quc_Latn-maya-medium.onnx`), `TTS_PIPER_SPEAKER_QUC` (default `0`),
+`TTS_PIPER_LENGTH_SCALE` (default `1.12`), `TTS_PIPER_NOISE_SCALE` (default `0.35`),
+`TTS_PIPER_NOISE_W_SCALE` (default `0.45`).
 
 ---
 

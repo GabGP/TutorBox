@@ -24,8 +24,9 @@ DEFAULT_SLM_TIMEOUT_SECONDS: float = 60.0
 
 DEFAULT_QUIZ_MAX_RETRIES: int = 3
 
-# Offline classroom voice (espeak-ng) used by the >51% spoken intervention.
+# Offline classroom voice (espeak-ng & neural Piper) used by the >51% spoken intervention.
 DEFAULT_TTS_ENABLED: bool = True
+DEFAULT_TTS_ENGINE: str = "auto"  # "auto", "piper", "espeak"
 DEFAULT_TTS_BINARY: str = ""  # empty: auto-detect espeak-ng, then legacy espeak
 DEFAULT_TTS_VOICE: str = "es-419"  # espeak-ng Latin American Spanish
 DEFAULT_TTS_VOICE_QUC: str = ""  # no K'iche' voice ships with espeak-ng yet
@@ -36,6 +37,17 @@ DEFAULT_TTS_PITCH: int = 45
 DEFAULT_TTS_AMPLITUDE: int = 180
 DEFAULT_TTS_TIMEOUT_SECONDS: float = 10.0
 DEFAULT_TTS_MAX_CHARS: int = 600
+
+# Neural Piper configuration defaults
+DEFAULT_TTS_PIPER_BINARY: str = ""  # empty: auto-detect piper in PATH
+DEFAULT_TTS_PIPER_MODEL_DIR: str = "/opt/tutorbox/models/tts"
+DEFAULT_TTS_PIPER_MODEL_ES: str = "es_ES-sharvard-medium.onnx"
+DEFAULT_TTS_PIPER_SPEAKER_ES: int = 1  # 1 = female educator, 0 = male educator
+DEFAULT_TTS_PIPER_MODEL_QUC: str = "quc_Latn-maya-medium.onnx"
+DEFAULT_TTS_PIPER_SPEAKER_QUC: int = 0
+DEFAULT_TTS_PIPER_LENGTH_SCALE: float = 1.12
+DEFAULT_TTS_PIPER_NOISE_SCALE: float = 0.35
+DEFAULT_TTS_PIPER_NOISE_W_SCALE: float = 0.45
 
 # Captive portal: answer phone connectivity probes with a redirect to the student
 # page so the OS sign-in browser opens it automatically when a device joins the AP.

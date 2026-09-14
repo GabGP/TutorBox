@@ -4,7 +4,17 @@ from core.config import (
     DEFAULT_TTS_AMPLITUDE,
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
+    DEFAULT_TTS_ENGINE,
     DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_PIPER_BINARY,
+    DEFAULT_TTS_PIPER_LENGTH_SCALE,
+    DEFAULT_TTS_PIPER_MODEL_DIR,
+    DEFAULT_TTS_PIPER_MODEL_ES,
+    DEFAULT_TTS_PIPER_MODEL_QUC,
+    DEFAULT_TTS_PIPER_NOISE_SCALE,
+    DEFAULT_TTS_PIPER_NOISE_W_SCALE,
+    DEFAULT_TTS_PIPER_SPEAKER_ES,
+    DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
@@ -20,6 +30,7 @@ def test_build_tts_config_defaults() -> None:
     """Verifies default values when no environment variables are set."""
     config = build_tts_config()
     assert config.enabled == DEFAULT_TTS_ENABLED
+    assert config.engine == DEFAULT_TTS_ENGINE
     assert config.binary == DEFAULT_TTS_BINARY
     assert config.voice == DEFAULT_TTS_VOICE
     assert config.voice_quc == DEFAULT_TTS_VOICE_QUC
@@ -29,10 +40,22 @@ def test_build_tts_config_defaults() -> None:
     assert config.timeout_seconds == DEFAULT_TTS_TIMEOUT_SECONDS
     assert config.max_chars == DEFAULT_TTS_MAX_CHARS
 
+    # Neural Piper defaults
+    assert config.piper_binary == DEFAULT_TTS_PIPER_BINARY
+    assert config.piper_model_dir == DEFAULT_TTS_PIPER_MODEL_DIR
+    assert config.piper_model_es == DEFAULT_TTS_PIPER_MODEL_ES
+    assert config.piper_speaker_es == DEFAULT_TTS_PIPER_SPEAKER_ES
+    assert config.piper_model_quc == DEFAULT_TTS_PIPER_MODEL_QUC
+    assert config.piper_speaker_quc == DEFAULT_TTS_PIPER_SPEAKER_QUC
+    assert config.piper_length_scale == DEFAULT_TTS_PIPER_LENGTH_SCALE
+    assert config.piper_noise_scale == DEFAULT_TTS_PIPER_NOISE_SCALE
+    assert config.piper_noise_w_scale == DEFAULT_TTS_PIPER_NOISE_W_SCALE
+
 
 def test_build_tts_config_env_overrides(monkeypatch) -> None:
-    """Verifies espeak voice settings are configurable via environment."""
+    """Verifies all TTS settings are configurable via environment variables."""
     monkeypatch.setenv("TTS_ENABLED", "false")
+    monkeypatch.setenv("TTS_ENGINE", "piper")
     monkeypatch.setenv("TTS_ESPEAK_BINARY", " /opt/espeak-ng ")
     monkeypatch.setenv("TTS_VOICE", "es-la")
     monkeypatch.setenv("TTS_VOICE_QUC", "quc")
@@ -42,8 +65,19 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_TIMEOUT_SECONDS", "15.5")
     monkeypatch.setenv("TTS_MAX_CHARS", "800")
 
+    monkeypatch.setenv("TTS_PIPER_BINARY", " /usr/local/bin/piper ")
+    monkeypatch.setenv("TTS_PIPER_MODEL_DIR", " /var/models/tts ")
+    monkeypatch.setenv("TTS_PIPER_MODEL_ES", "custom_es.onnx")
+    monkeypatch.setenv("TTS_PIPER_SPEAKER_ES", "2")
+    monkeypatch.setenv("TTS_PIPER_MODEL_QUC", "custom_quc.onnx")
+    monkeypatch.setenv("TTS_PIPER_SPEAKER_QUC", "3")
+    monkeypatch.setenv("TTS_PIPER_LENGTH_SCALE", "1.25")
+    monkeypatch.setenv("TTS_PIPER_NOISE_SCALE", "0.45")
+    monkeypatch.setenv("TTS_PIPER_NOISE_W_SCALE", "0.55")
+
     config = build_tts_config()
     assert config.enabled is False
+    assert config.engine == "piper"
     assert config.binary == "/opt/espeak-ng"
     assert config.voice == "es-la"
     assert config.voice_quc == "quc"
@@ -53,14 +87,30 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.timeout_seconds == 15.5
     assert config.max_chars == 800
 
+    assert config.piper_binary == "/usr/local/bin/piper"
+    assert config.piper_model_dir == "/var/models/tts"
+    assert config.piper_model_es == "custom_es.onnx"
+    assert config.piper_speaker_es == 2
+    assert config.piper_model_quc == "custom_quc.onnx"
+    assert config.piper_speaker_quc == 3
+    assert config.piper_length_scale == 1.25
+    assert config.piper_noise_scale == 0.45
+    assert config.piper_noise_w_scale == 0.55
+
 
 def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
-    """Verifies out-of-range cadence and parameters fall back to defaults."""
+    """Verifies out-of-range parameters fall back to safe defaults."""
     monkeypatch.setenv("TTS_WORDS_PER_MINUTE", "900")
     monkeypatch.setenv("TTS_PITCH", "200")
     monkeypatch.setenv("TTS_AMPLITUDE", "500")
     monkeypatch.setenv("TTS_TIMEOUT_SECONDS", "0.1")
     monkeypatch.setenv("TTS_MAX_CHARS", "10")
+
+    monkeypatch.setenv("TTS_ENGINE", "unknown_engine")
+    monkeypatch.setenv("TTS_PIPER_SPEAKER_ES", "-1")
+    monkeypatch.setenv("TTS_PIPER_LENGTH_SCALE", "5.0")
+    monkeypatch.setenv("TTS_PIPER_NOISE_SCALE", "-0.5")
+    monkeypatch.setenv("TTS_PIPER_NOISE_W_SCALE", "9.0")
 
     config = build_tts_config()
     assert config.words_per_minute == DEFAULT_TTS_WORDS_PER_MINUTE
@@ -69,13 +119,33 @@ def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
     assert config.timeout_seconds == DEFAULT_TTS_TIMEOUT_SECONDS
     assert config.max_chars == DEFAULT_TTS_MAX_CHARS
 
+    assert config.engine == DEFAULT_TTS_ENGINE
+    assert config.piper_speaker_es == DEFAULT_TTS_PIPER_SPEAKER_ES
+    assert config.piper_length_scale == DEFAULT_TTS_PIPER_LENGTH_SCALE
+    assert config.piper_noise_scale == DEFAULT_TTS_PIPER_NOISE_SCALE
+    assert config.piper_noise_w_scale == DEFAULT_TTS_PIPER_NOISE_W_SCALE
+
+
+def test_build_tts_config_engine_variants(monkeypatch) -> None:
+    """Verifies valid engine case normalization and variants."""
+    monkeypatch.setenv("TTS_ENGINE", " ESPEAK ")
+    assert build_tts_config().engine == "espeak"
+
+    monkeypatch.setenv("TTS_ENGINE", "PIPER")
+    assert build_tts_config().engine == "piper"
+
+    monkeypatch.setenv("TTS_ENGINE", "AUTO")
+    assert build_tts_config().engine == "auto"
+
 
 def test_get_settings_integrates_tts_config(monkeypatch) -> None:
     """Verifies get_settings correctly integrates build_tts_config."""
     monkeypatch.setenv("TTS_VOICE", "es-test")
+    monkeypatch.setenv("TTS_ENGINE", "piper")
     clear_settings_cache()
     try:
         settings = get_settings()
         assert settings.tts.voice == "es-test"
+        assert settings.tts.engine == "piper"
     finally:
         clear_settings_cache()

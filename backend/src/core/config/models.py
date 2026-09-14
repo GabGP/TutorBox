@@ -23,7 +23,17 @@ from core.config.constants import (
     DEFAULT_TTS_AMPLITUDE,
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
+    DEFAULT_TTS_ENGINE,
     DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_PIPER_BINARY,
+    DEFAULT_TTS_PIPER_LENGTH_SCALE,
+    DEFAULT_TTS_PIPER_MODEL_DIR,
+    DEFAULT_TTS_PIPER_MODEL_ES,
+    DEFAULT_TTS_PIPER_MODEL_QUC,
+    DEFAULT_TTS_PIPER_NOISE_SCALE,
+    DEFAULT_TTS_PIPER_NOISE_W_SCALE,
+    DEFAULT_TTS_PIPER_SPEAKER_ES,
+    DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
@@ -65,9 +75,10 @@ class QuizConfig:
 
 @dataclass(frozen=True)
 class TTSConfig:
-    """Offline espeak voice that reads distractor explanations to the classroom."""
+    """Offline classroom voice (Neural Piper + Formant eSpeak fallback)."""
 
     enabled: bool = DEFAULT_TTS_ENABLED
+    engine: str = DEFAULT_TTS_ENGINE
     binary: str = DEFAULT_TTS_BINARY
     voice: str = DEFAULT_TTS_VOICE
     voice_quc: str = DEFAULT_TTS_VOICE_QUC
@@ -76,6 +87,17 @@ class TTSConfig:
     amplitude: int = DEFAULT_TTS_AMPLITUDE
     timeout_seconds: float = DEFAULT_TTS_TIMEOUT_SECONDS
     max_chars: int = DEFAULT_TTS_MAX_CHARS
+
+    # Neural Piper configuration
+    piper_binary: str = DEFAULT_TTS_PIPER_BINARY
+    piper_model_dir: str = DEFAULT_TTS_PIPER_MODEL_DIR
+    piper_model_es: str = DEFAULT_TTS_PIPER_MODEL_ES
+    piper_speaker_es: int = DEFAULT_TTS_PIPER_SPEAKER_ES
+    piper_model_quc: str = DEFAULT_TTS_PIPER_MODEL_QUC
+    piper_speaker_quc: int = DEFAULT_TTS_PIPER_SPEAKER_QUC
+    piper_length_scale: float = DEFAULT_TTS_PIPER_LENGTH_SCALE
+    piper_noise_scale: float = DEFAULT_TTS_PIPER_NOISE_SCALE
+    piper_noise_w_scale: float = DEFAULT_TTS_PIPER_NOISE_W_SCALE
 
 
 @dataclass(frozen=True)
