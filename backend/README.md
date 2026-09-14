@@ -16,21 +16,30 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [1. Components & Architecture](#1-components--architecture)
-- [2. API Contracts & Specifications](#2-api-contracts--specifications)
-- [3. Environment Setup](#3-environment-setup)
-  - [Create and Activate Virtual Environment](#create-and-activate-virtual-environment)
-  - [Environment Variables & Configuration (`.env`)](#environment-variables--configuration-env)
-- [4. Installation & Workflow](#4-installation--workflow)
-  - [A. Development Mode (Local Coding & Testing)](#a-development-mode-local-coding--testing)
-  - [B. Production Mode](#b-production-mode)
-- [5. Testing & Quality Assurance](#5-testing--quality-assurance)
-  - [Running the Test Suite](#running-the-test-suite)
-  - [Running Parallel Tests (`pytest-xdist`)](#running-parallel-tests-pytest-xdist)
-  - [Running Scoped Subpackage Tests](#running-scoped-subpackage-tests)
-  - [Code Formatting & Static Analysis](#code-formatting--static-analysis)
-- [6. Project Structure](#6-project-structure)
-- [Next Steps](#next-steps)
+- [TutorBox Backend](#tutorbox-backend)
+  - [Table of Contents](#table-of-contents)
+  - [1. Components \& Architecture](#1-components--architecture)
+  - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
+  - [3. Environment Setup](#3-environment-setup)
+    - [A. Recommended: Instant Setup with `uv`](#a-recommended-instant-setup-with-uv)
+    - [B. Alternative: Standard Virtual Environment (`venv` + `pip`)](#b-alternative-standard-virtual-environment-venv--pip)
+      - [Windows (PowerShell)](#windows-powershell)
+      - [Linux / Jetson](#linux--jetson)
+    - [Environment Variables \& Configuration (`.env`)](#environment-variables--configuration-env)
+  - [4. Installation \& Workflow](#4-installation--workflow)
+    - [A. Development Mode (Local Coding \& Testing)](#a-development-mode-local-coding--testing)
+      - [1. From the `backend/` directory:](#1-from-the-backend-directory)
+      - [2. Or from the repository root:](#2-or-from-the-repository-root)
+    - [B. Production Mode](#b-production-mode)
+      - [Running in Production:](#running-in-production)
+  - [5. Testing \& Quality Assurance](#5-testing--quality-assurance)
+    - [Running the Test Suite:](#running-the-test-suite)
+    - [Running Parallel Tests (`pytest-xdist`):](#running-parallel-tests-pytest-xdist)
+    - [Running Scoped Subpackage Tests:](#running-scoped-subpackage-tests)
+    - [Benchmarking Offline Speech Synthesis:](#benchmarking-offline-speech-synthesis)
+    - [Code Formatting \& Static Analysis:](#code-formatting--static-analysis)
+  - [6. Project Structure](#6-project-structure)
+  - [Next Steps](#next-steps)
 
 ---
 
@@ -189,6 +198,17 @@ Run isolated test directories during focused development:
 uv run pytest tests/api/staff/ -o addopts="--strict-markers"
 uv run pytest tests/core/security/ -o addopts="--strict-markers"
 uv run pytest tests/modes/quiz/ -o addopts="--strict-markers"
+```
+
+### <a id="benchmarking-offline-speech-synthesis"></a>Benchmarking Offline Speech Synthesis:
+Benchmark speech synthesis latency, Real-Time Factor (RTF), and audio levels on the appliance:
+```bash
+# Run the TTS profiler CLI:
+uv run python -m core.tts.profiler
+```
+Run automated latency SLA assertions ($\le 3.0$ seconds):
+```bash
+uv run pytest tests/core/tts/test_tts_benchmark.py -v
 ```
 
 ### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:

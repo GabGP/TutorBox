@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md)
+📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md)
 
 </div>
 
@@ -21,7 +21,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
   - [Week 1 — Appliance Baseline & Storage Infrastructure](#week-1)
   - [Week 2 — Quiz Contract & Diagnostic Distractors](#week-2)
   - [Week 3 — Session Engine & Browser Voting](#week-3)
-  - [Week 4 — Full Quiz Mode with Offline Spanish Voice](#week-4)
+  - [Week 4 — Full Quiz Mode with Offline Spanish & Mayan Voice](#week-4)
   - [Week 5 — Socratic Tutor Mode](#week-5)
   - [Week 6 — Offline Primary Games & Log Synchronization](#week-6)
   - [Week 7 — ESP32 Physical Clickers](#week-7)
@@ -53,11 +53,11 @@ gantt
 
     section Classroom Quiz Subsystem
     Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :w2, 2026-08-30, 2026-09-06
-    Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :active, w3, 2026-09-06, 2026-09-13
-    Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):w4, 2026-09-13, 2026-09-20
+    Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :done, w3, 2026-09-06, 2026-09-13
+    Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):done, w4, 2026-09-13, 2026-09-20
 
     section Socratic & Games Subsystems
-    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :w5, 2026-09-20, 2026-09-27
+    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :active, w5, 2026-09-20, 2026-09-27
     Week 6 - Offline Games & Log Sync (Pilot A / Copilot B)    :w6, 2026-09-27, 2026-10-04
 
     section Hardware, Analytics & Stress
@@ -72,11 +72,11 @@ gantt
 ## <a id="3-weekly-milestone-summary-table"></a>3. Weekly Milestone Summary Table
 
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
-| :---: | :--- | :--- | :---: |
+| :---: | :--- | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
-| **4** ⏳ | Full Quiz Mode with Offline Spanish Voice | Jetson offline TTS ($\le 3$s latency), error explanation on >51%, classroom HDMI screen | **A** / B |
+| **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Neural Piper VITS ($\le 3$s latency), oral math adaptation, K'iche' routing seam, >51% voice gating, 4B RAM profile | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
@@ -145,11 +145,14 @@ gantt
 
 ---
 
-### <a id="week-4"></a>⏳ Week 4 — Full Quiz Mode with Offline Spanish Voice (Pilot: A · Copilot: B)
+### <a id="week-4"></a>✅ Week 4 — Full Quiz Mode with Offline Spanish & Mayan Voice (Pilot: A · Copilot: B)
 * **Focus**: Complete the end-to-end Classroom Quiz mode with spoken conceptual explanations.
-* **Student A (Pilot)**:
-  * Offline Spanish TTS engine on Jetson Orin Nano integrated to read distractor explanations out loud.
-  * Text adaptation for primary-school clarity; synthesis latency and RAM footprint profiling.
+* **Student A (Pilot - Delivered)**:
+  * Pluggable offline neural voice engine (Piper-TTS VITS via ONNX Runtime) with formant fallback (`espeak-ng`).
+  * Text adaptation layer converting oral fractions, exponents, and negative numbers for primary-school clarity.
+  * Mayan language routing seam for K'iche' (`quc_Latn`) with strict failure isolation.
+  * Latency profiler asserting synthesis $\le 3$ seconds (empirically $0.237$s, RTF $0.044$x).
+  * Co-resident Jetson Orin Nano 8GB RAM profile co-existing with `llama.cpp` 4B (4.70 GB total working set).
 * **Student B (Copilot)**:
   * Classroom HDMI display interface (presenting question, timer, and aggregate voting charts) decoupled from teacher admin portal.
   * Physical audio output verification and integration of TTS triggers into the match flow.
@@ -158,9 +161,11 @@ gantt
   2. Voice explanation as a targeted intervention rather than continuous narration.
   3. End-to-end live demonstration of a complete quiz turn.
 * **Acceptance Criteria & Deliverables**:
-  * 10-question match where TTS speaks explanations strictly when $>51\%$ choose a distractor and remains silent otherwise.
-  * Text-to-audio synthesis latency $\le 3$ seconds.
+  * 10-question match where TTS speaks explanations strictly when $>51\%$ choose a distractor and remains silent otherwise (`test_session_10_round_speech.py`).
+  * Text-to-audio synthesis latency $\le 3$ seconds (verified via `test_tts_benchmark.py`).
   * Updated RAM memory profile with co-resident TTS, SLM (`llama.cpp`), and FastAPI.
+* **Detailed Milestone Report**: [Week 4 Milestone Synthesis](week-4-voice-quiz.md).
+
 
 ---
 
