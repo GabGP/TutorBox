@@ -10,7 +10,7 @@ name = "tutorbox-backend"
 version = "0.1.0"
 description = "TutorBox FastAPI Backend & AI Socratic Engine"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.141.1",
     "uvicorn[standard]>=0.53.0",
