@@ -2,7 +2,7 @@
 
 The teacher's browser cannot be trusted with the pedagogical rule, so this endpoint recomputes
 the tally and the decision server-side and only returns audio when a single distractor really
-did take more than 51% of the class. espeak-ng synthesizes it offline on the appliance.
+did take more than 51% of the class. Synthesis is delegated to the pluggable offline TTS engine.
 """
 
 import logging
@@ -11,12 +11,16 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from api.session.dependencies import get_session_and_current_round
-from core.config import get_settings
 from core.db.database import get_db
 from core.db.question_repository import get_question_by_id
 from core.db.vote_repository import get_votes_for_round
 from core.security import AuthContext, require_roles
-from core.tts import TTSSynthesisError, TTSUnavailableError, synthesize_wav
+from core.tts import (
+    TTSSynthesisError,
+    TTSUnavailableError,
+    clear_speech_cache,
+    synthesize_speech,
+)
 from modes.quiz.session.evaluator import evaluate_round_outcome
 from modes.quiz.session.models import RoundStatus
 from modes.quiz.session.speech import build_intervention_script
@@ -26,41 +30,7 @@ router = APIRouter()
 
 SpeechLanguage = Literal["es", "quc"]
 
-_SPEECH_CACHE: dict[tuple[str, str], bytes] = {}
-_MAX_CACHE_ENTRIES = 32
-
-
-def clear_speech_cache() -> None:
-    """Clears cached synthesized audio bytes."""
-    _SPEECH_CACHE.clear()
-
-
-def _get_cached_or_synthesize(
-    round_id: str, script: str, voice: str, lang: str
-) -> bytes:
-    """Returns cached WAV bytes or synthesizes offline and stores in cache."""
-    cache_key = (round_id, lang)
-    cached = _SPEECH_CACHE.get(cache_key)
-    if cached is not None:
-        return cached
-
-    audio = synthesize_wav(script, voice=voice)
-    if len(_SPEECH_CACHE) >= _MAX_CACHE_ENTRIES:
-        _SPEECH_CACHE.pop(next(iter(_SPEECH_CACHE)))
-    _SPEECH_CACHE[cache_key] = audio
-    return audio
-
-
-def _voice_for_language(language: SpeechLanguage) -> str:
-    """Maps a classroom language to an installed espeak voice."""
-    tts = get_settings().tts
-    voice = tts.voice if language == "es" else tts.voice_quc
-    if not voice:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"No speech voice is configured for language '{language}'.",
-        )
-    return voice
+__all__ = ["SpeechLanguage", "clear_speech_cache", "round_speech", "router"]
 
 
 @router.get(
@@ -102,10 +72,9 @@ def round_speech(
             detail=f"The >51% rule did not trigger for this round ({decision.reason}).",
         )
 
-    voice = _voice_for_language(lang)
     script = build_intervention_script(question.options, tally, decision)
     try:
-        audio = _get_cached_or_synthesize(current_round.id, script, voice, lang)
+        audio = synthesize_speech(script, lang=lang)
     except TTSUnavailableError as err:
         logger.warning("Speech unavailable for session %s: %s", session_id, err)
         raise HTTPException(

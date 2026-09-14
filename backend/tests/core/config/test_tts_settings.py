@@ -1,5 +1,7 @@
 """Tests for the TTS configuration builder (src/core/config/tts_settings.py)."""
 
+import pytest
+
 from core.config import (
     DEFAULT_TTS_AMPLITUDE,
     DEFAULT_TTS_BINARY,
@@ -24,6 +26,38 @@ from core.config import (
     get_settings,
 )
 from core.config.tts_settings import build_tts_config
+
+_TTS_ENV_VARS = (
+    "TTS_ENABLED",
+    "TTS_ENGINE",
+    "TTS_ESPEAK_BINARY",
+    "TTS_VOICE",
+    "TTS_VOICE_QUC",
+    "TTS_WORDS_PER_MINUTE",
+    "TTS_PITCH",
+    "TTS_AMPLITUDE",
+    "TTS_TIMEOUT_SECONDS",
+    "TTS_MAX_CHARS",
+    "TTS_PIPER_BINARY",
+    "TTS_PIPER_MODEL_DIR",
+    "TTS_PIPER_MODEL_ES",
+    "TTS_PIPER_MODEL_QUC",
+    "TTS_PIPER_SPEAKER_ES",
+    "TTS_PIPER_SPEAKER_QUC",
+    "TTS_PIPER_LENGTH_SCALE",
+    "TTS_PIPER_NOISE_SCALE",
+    "TTS_PIPER_NOISE_W_SCALE",
+)
+
+
+@pytest.fixture(autouse=True)
+def _clean_tts_env(monkeypatch: pytest.MonkeyPatch):
+    """Keeps TTS environment hermetic across test execution."""
+    for var in _TTS_ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
+    clear_settings_cache()
+    yield
+    clear_settings_cache()
 
 
 def test_build_tts_config_defaults() -> None:

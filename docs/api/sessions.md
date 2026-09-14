@@ -259,19 +259,18 @@ round that did not trigger it.
   the distractor explanation + `La respuesta correcta es {correct}.` Arithmetic is rewritten into
   words before synthesis (`6/8` → *seis sobre ocho*, `75%` → *setenta y cinco por ciento*).
 * **Responses**:
-  * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by espeak-ng on the
-    appliance. Repeated requests for the same `(round_id, lang)` return instantly from a bounded
-    in-memory cache (32 entries max) to avoid redundant synthesis during classroom re-plays.
-    Typical size: ~20 KB per sentence; synthesis latency well under 1 s on the Jetson.
+  * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by Piper-TTS VITS
+    neural voice (or espeak-ng fallback) on the appliance. Repeated requests return instantly from
+    a bounded in-memory LRU cache (32 entries max) to avoid redundant synthesis during classroom re-plays.
+    Typical size: ~150-350 KB per sentence; synthesis latency ~0.24 s on the appliance.
   * `403 Forbidden`: Student device; only the teacher's client may pull the audio.
   * `404 Not Found`: Session, active round, or its question not found.
   * `409 Conflict`: Round is not `revealed`, or the >51% Rule did not trigger (detail names the
     evaluator `reason`, e.g. `majority_correct`, `tie_between_distractors`).
   * `422 Unprocessable Entity`: `lang` outside `es` / `quc`.
-  * `500 Internal Server Error`: espeak ran but produced no audio.
-  * `503 Service Unavailable`: espeak-ng is not installed, `TTS_ENABLED=false`, or no voice is
-    configured for the requested language. The detail names the missing piece
-    (`sudo apt install espeak-ng`).
+  * `500 Internal Server Error`: Synthesizer ran but crashed or produced no audio.
+  * `503 Service Unavailable`: Voice engine is disabled (`TTS_ENABLED=false`), missing required models,
+    or no voice is configured for the requested language.
 
 **Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `auto`, `piper`, `espeak`),
 `TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`), `TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`),

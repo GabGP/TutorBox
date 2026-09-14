@@ -231,7 +231,7 @@ def test_synthesize_reports_engine_failure(monkeypatch: pytest.MonkeyPatch) -> N
 def test_synthesize_reports_empty_audio(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies a successful exit with no audio is still an error."""
     _install_fake_espeak(monkeypatch, [], synth_result=_FakeCompleted(stdout=b""))
-    with pytest.raises(TTSSynthesisError, match="no audio produced"):
+    with pytest.raises(TTSSynthesisError, match="no audio"):
         synthesize_wav("Hola grupo.")
 
 
@@ -253,3 +253,30 @@ def test_synthesize_reports_unexecutable_binary(
     _install_fake_espeak(monkeypatch, [], synth_result=OSError("permission denied"))
     with pytest.raises(TTSUnavailableError, match="could not be executed"):
         synthesize_wav("Hola grupo.")
+
+
+def test_espeak_backend_is_available_and_synthesize(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies the EspeakBackend class implements TTSBackend protocol."""
+    from core.tts.espeak import EspeakBackend
+
+    calls: list[list[str]] = []
+    _install_fake_espeak(monkeypatch, calls)
+    backend = EspeakBackend()
+    assert backend.is_available() is True
+    assert backend.is_available("es-419") is True
+    assert backend.is_available("nonexistent-voice-123") is False
+    assert backend.synthesize("Hola mundo.") == FAKE_WAV
+
+
+def test_espeak_backend_unavailable_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies EspeakBackend reports false when TTS is disabled or missing."""
+    from core.tts.espeak import EspeakBackend
+
+    monkeypatch.setenv("TTS_ENABLED", "false")
+    clear_settings_cache()
+    backend = EspeakBackend()
+    assert backend.is_available() is False

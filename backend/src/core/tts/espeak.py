@@ -1,8 +1,7 @@
-"""Offline classroom voice: espeak-ng synthesizing Latin American Spanish on the appliance.
+"""Offline classroom voice: espeak-ng synthesizing Latin American Spanish.
 
-espeak-ng is a formant synthesizer: no model files, ~10 MB of RAM and well under the 3 s
-synthesis budget on the Jetson, which is what keeps the >51% intervention instant and offline.
-The engine writes a RIFF/WAVE stream to stdout; the teacher's browser plays those bytes.
+Formant synthesizer: zero model weights, ~10 MB RAM, sub-second synthesis.
+Writes RIFF/WAVE stream to stdout for classroom audio playback.
 """
 
 import logging
@@ -13,6 +12,7 @@ from core.config import get_settings
 from core.tts.text import normalize_for_speech
 
 __all__ = [
+    "EspeakBackend",
     "TTSSynthesisError",
     "TTSUnavailableError",
     "resolve_binary",
@@ -23,8 +23,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 BINARY_CANDIDATES: tuple[str, ...] = ("espeak-ng", "espeak")
-# es-419 is espeak-ng's Latin American Spanish; legacy espeak ships the same voice as es-la,
-# and plain es (Castilian) is the last resort so a class still hears the explanation.
 VOICE_FALLBACKS: dict[str, tuple[str, ...]] = {
     "es-419": ("es-la", "es-419-latin", "es"),
     "es-la": ("es-419", "es"),
@@ -33,7 +31,7 @@ _VOICE_LIST_TIMEOUT_SECONDS: float = 5.0
 
 
 class TTSUnavailableError(RuntimeError):
-    """espeak is disabled, not installed, or has no voice for the requested language."""
+    """espeak is disabled, not installed, or has no voice for the language."""
 
 
 class TTSSynthesisError(RuntimeError):
@@ -46,10 +44,10 @@ def resolve_binary(configured: str = "") -> str:
         resolved = shutil.which(candidate)
         if resolved:
             return resolved
+    candidates_str = configured or ", ".join(BINARY_CANDIDATES)
     raise TTSUnavailableError(
-        f"espeak is not installed on this appliance (looked for: "
-        f"{configured or ', '.join(BINARY_CANDIDATES)}). Install it with: "
-        f"sudo apt install espeak-ng"
+        f"espeak is not installed (looked for: {candidates_str}). "
+        "Install it with: sudo apt install espeak-ng"
     )
 
 
@@ -65,7 +63,6 @@ def _installed_voices(binary: str) -> set[str]:
     except (OSError, subprocess.SubprocessError) as err:
         logger.warning("Could not list espeak voices: %s", err)
         return set()
-    # Columns: Pty Language Age/Gender VoiceName File Other Languages
     voices: set[str] = set()
     for line in listing.stdout.decode("utf-8", errors="replace").splitlines()[1:]:
         columns = line.split()
@@ -77,7 +74,6 @@ def _installed_voices(binary: str) -> set[str]:
 def resolve_voice(binary: str, requested: str) -> str:
     """Picks the requested voice, or the closest installed Spanish fallback."""
     installed = _installed_voices(binary)
-    # An unreadable listing must not block a class: trust the configuration and let espeak decide.
     if not installed:
         return requested
     for candidate in (requested, *VOICE_FALLBACKS.get(requested, ())):
@@ -88,7 +84,7 @@ def resolve_voice(binary: str, requested: str) -> str:
                 )
             return candidate
     raise TTSUnavailableError(
-        f"espeak has no voice for '{requested}'. Installed voices: "
+        f"espeak has no voice for '{requested}'. Installed: "
         f"{', '.join(sorted(installed)[:12])}"
     )
 
@@ -104,20 +100,14 @@ def synthesize_wav(text: str, voice: str | None = None) -> bytes:
         raise TTSSynthesisError("There is no text to speak.")
 
     binary = resolve_binary(settings.binary)
-    command = [
-        binary,
-        "-v",
-        resolve_voice(binary, voice or settings.voice),
-        "-s",
+    v = resolve_voice(binary, voice or settings.voice)
+    s, p, a = (
         str(settings.words_per_minute),
-        "-p",
         str(settings.pitch),
-        "-a",
         str(settings.amplitude),
-        "--stdout",
-    ]
+    )
+    command = [binary, "-v", v, "-s", s, "-p", p, "-a", a, "--stdout"]
     try:
-        # Text goes over stdin: no argv length limit and no quoting surprises.
         result = subprocess.run(
             command,
             input=spoken_text.encode("utf-8"),
@@ -134,7 +124,27 @@ def synthesize_wav(text: str, voice: str | None = None) -> bytes:
 
     if result.returncode != 0 or not result.stdout:
         detail = result.stderr.decode("utf-8", errors="replace").strip()[:200]
-        raise TTSSynthesisError(
-            f"espeak exited with code {result.returncode}: {detail or 'no audio produced'}"
-        )
+        msg = f"espeak exited with code {result.returncode}: {detail or 'no audio'}"
+        raise TTSSynthesisError(msg)
     return result.stdout
+
+
+class EspeakBackend:
+    """Formant speech synthesis backend conforming to TTSBackend protocol."""
+
+    def is_available(self, voice: str | None = None) -> bool:
+        """Returns True if espeak is installed and enabled."""
+        settings = get_settings().tts
+        if not settings.enabled:
+            return False
+        try:
+            binary = resolve_binary(settings.binary)
+            if voice:
+                resolve_voice(binary, voice)
+            return True
+        except TTSUnavailableError:
+            return False
+
+    def synthesize(self, text: str, voice: str | None = None) -> bytes:
+        """Synthesizes text using espeak-ng formant synthesis."""
+        return synthesize_wav(text, voice=voice)
