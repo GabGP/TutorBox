@@ -1,4 +1,5 @@
 import React from 'react';
+import { ConfettiCanvas } from '../../shared/ui/Confetti/ConfettiCanvas';
 import styles from './StudentResultScreen.module.css';
 
 export interface StudentResultScreenProps {
@@ -14,6 +15,7 @@ export interface StudentResultScreenProps {
  * Individual Student Round Result Screen.
  * Displays immediate personal feedback (check/cross glyph, correct answer text,
  * pedagogical explanation, and current cumulative score).
+ * Triggers confetti animation on correct answers.
  *
  * @param {StudentResultScreenProps} props - Component props containing correctness flag, user vote, and cumulative score.
  * @returns {JSX.Element} The rendered student round outcome screen.
@@ -28,6 +30,7 @@ export const StudentResultScreen: React.FC<StudentResultScreenProps> = ({
 }) => {
   return (
     <section id="s-result" className={`${styles.section} ${styles.center}`}>
+      <ConfettiCanvas active={isHit} />
       <div className={`${styles.glyph} ${isHit ? styles.glyphHit : ''}`} id="glyph">
         {isHit ? '✓' : myVote ? '✕' : '–'}
       </div>
