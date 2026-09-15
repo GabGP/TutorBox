@@ -18,6 +18,25 @@ BACKEND_DIR = ROOT_DIR / "backend"
 PWA_APP_DIR = ROOT_DIR / "pwa" / "app"
 PWA_DIST_DIR = ROOT_DIR / ".cache" / "pwa" / "dist"
 
+# Console output tags and shared PWA messages (single source of truth for
+# user-facing runner output; backend tests assert on the message bodies).
+TAG_INFO = "[\033[33mINFO\033[0m]"
+TAG_WARN = "[\033[33mWARN\033[0m]"
+TAG_FAIL = "[\033[31mFAIL\033[0m]"
+TAG_BUILD = "[\033[34mBUILD\033[0m]"
+TAG_OK = "[\033[32mOK\033[0m]"
+
+PWA_DIST_LABEL = ".cache/pwa/dist"
+PWA_BUILD_CMD = "pnpm --dir pwa/app run build"
+LEGACY_CLIENT_ENV = "PWA_STATIC_DIR=pwa/pilas"
+MSG_BACKEND_FAIL_FAST = f"Backend default ({PWA_DIST_LABEL}) will fail fast on startup."
+
+
+def _print_fail_fast_hint() -> None:
+    """Shared closing note when the PWA bundle is unavailable."""
+    print(f"       {MSG_BACKEND_FAIL_FAST}")
+    print(f"       Explicitly set {LEGACY_CLIENT_ENV} for the legacy client.")
+
 
 def resolve_pnpm() -> str | None:
     """Finds and returns the executable path for the pnpm package manager."""
@@ -47,38 +66,39 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
     if not resolved_pnpm:
         if (PWA_DIST_DIR / "index.html").is_file():
             print(
-                "[\033[33mINFO\033[0m] pnpm not detected; using existing pre-built bundle in .cache/pwa/dist."
+                f"{TAG_INFO} pnpm not detected; using existing pre-built bundle in {PWA_DIST_LABEL}."
             )
             os.environ.setdefault("PWA_STATIC_DIR", str(PWA_DIST_DIR))
             return True
         print(
-            "[\033[33mWARN\033[0m] pnpm not found and no pre-built bundle exists in .cache/pwa/dist."
+            f"{TAG_WARN} pnpm not found and no pre-built bundle exists in {PWA_DIST_LABEL}."
         )
-        print("       Appliance will serve reference classroom client (pwa/pilas).")
+        print(f"       Install pnpm, then build with ({PWA_BUILD_CMD}).")
+        _print_fail_fast_hint()
         return False
 
     if not (PWA_APP_DIR / "node_modules").is_dir():
-        print(
-            "[\033[34mBUILD\033[0m] Installing frontend dependencies (pnpm install)..."
-        )
+        print(f"{TAG_BUILD} Installing frontend dependencies (pnpm install)...")
         install_res = subprocess.run(
             [resolved_pnpm, "install"], cwd=str(PWA_APP_DIR), check=False
         )
         if install_res.returncode != 0:
-            print("[\033[31mFAIL\033[0m] 'pnpm install' failed. Skipping PWA build.")
+            print(f"{TAG_FAIL} 'pnpm install' failed. Skipping PWA build.")
+            _print_fail_fast_hint()
             return False
 
-    print("[\033[34mBUILD\033[0m] Compiling modular PWA frontend (pnpm run build)...")
+    print(f"{TAG_BUILD} Compiling modular PWA frontend (pnpm run build)...")
     build_res = subprocess.run(
         [resolved_pnpm, "run", "build"], cwd=str(PWA_APP_DIR), check=False
     )
     if build_res.returncode != 0:
         print(
-            "[\033[31mFAIL\033[0m] PWA frontend build failed. Check compilation errors above."
+            f"{TAG_FAIL} PWA frontend build failed. Check compilation errors above."
         )
+        _print_fail_fast_hint()
         return False
 
-    print("[\033[32mOK\033[0m] PWA frontend successfully compiled to .cache/pwa/dist")
+    print(f"{TAG_OK} PWA frontend successfully compiled to {PWA_DIST_LABEL}")
     os.environ.setdefault("PWA_STATIC_DIR", str(PWA_DIST_DIR))
     return True
 
@@ -97,21 +117,21 @@ def check_prerequisites() -> None:
     )
     if not tts_bin:
         print(
-            "[\033[33mWARN\033[0m] espeak-ng not found. Spoken voice (>51% distractor rule) will be unavailable."
+            f"{TAG_WARN} espeak-ng not found. Spoken voice (>51% distractor rule) will be unavailable."
         )
         print("       Install on Ubuntu/Debian: sudo apt install espeak-ng")
     else:
-        print(f"[\033[32mOK\033[0m] Found TTS engine: {tts_bin}")
+        print(f"{TAG_OK} Found TTS engine: {tts_bin}")
 
     # 2. llama.cpp / SLM check
     slm_url = os.getenv("SLM_BASE_URL", "http://127.0.0.1:8080/v1")
     try:
         req = urllib.request.Request(f"{slm_url.rstrip('/')}/models", method="GET")
         with urllib.request.urlopen(req, timeout=1.5):
-            print(f"[\033[32mOK\033[0m] Local SLM engine reachable at {slm_url}")
+            print(f"{TAG_OK} Local SLM engine reachable at {slm_url}")
     except (urllib.error.URLError, TimeoutError, OSError):
         print(
-            f"[\033[33mINFO\033[0m] SLM engine not detected at {slm_url}. Dynamic quiz generation requires llama-server."
+            f"{TAG_INFO} SLM engine not detected at {slm_url}. Dynamic quiz generation requires llama-server."
         )
         print("       (Seed question bank will still work seamlessly offline.)")
 
@@ -119,13 +139,13 @@ def check_prerequisites() -> None:
     pnpm_bin = resolve_pnpm()
     if not pnpm_bin:
         print(
-            "[\033[33mWARN\033[0m] pnpm not found. Frontend PWA auto-compilation will be unavailable."
+            f"{TAG_WARN} pnpm not found. Frontend PWA auto-compilation will be unavailable."
         )
         print(
             "       Install via: npm install -g pnpm  or  curl -fsSL https://get.pnpm.io/install.sh | sh"
         )
     else:
-        print(f"[\033[32mOK\033[0m] Found frontend package manager: {pnpm_bin}")
+        print(f"{TAG_OK} Found frontend package manager: {pnpm_bin}")
 
 
 def resolve_uv() -> str:

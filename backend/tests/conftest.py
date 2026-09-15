@@ -7,6 +7,11 @@ import tempfile
 # Use minimum work factor for fast test execution (240x speedup)
 os.environ["BCRYPT_ROUNDS"] = "4"
 
+# Backend tests pin the legacy pilas client so the suite runs without a built
+# React PWA. Production default is .cache/pwa/dist (see src/main.py); must be
+# set before importing the app because mounts resolve at import time.
+os.environ.setdefault("PWA_STATIC_DIR", "pwa/pilas")
+
 import pytest
 from fastapi.testclient import TestClient
 

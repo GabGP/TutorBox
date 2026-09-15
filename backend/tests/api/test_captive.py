@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from api.captive import PROBE_PATHS, RESERVED_PREFIXES
 from core.config import clear_settings_cache
-from main import PILAS_MOUNTS
+from main import CLIENT_MOUNTS
 
 STUDENT_URL = "http://tutorbox/alumno/"
 FOREIGN = {"host": "captive.apple.com"}
@@ -102,8 +102,8 @@ def test_reserved_prefixes_keep_asset_404(captive_env, temp_db, client):
         assert resp.json() == {"detail": "Not Found"}
 
 
-def test_reserved_prefixes_cover_pilas_mounts():
-    for mount in PILAS_MOUNTS:
+def test_reserved_prefixes_cover_client_mounts():
+    for mount in CLIENT_MOUNTS:
         assert f"/{mount}/" in RESERVED_PREFIXES
     assert "/api/" in RESERVED_PREFIXES
     assert "/health" in RESERVED_PREFIXES

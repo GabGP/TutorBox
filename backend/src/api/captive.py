@@ -44,7 +44,7 @@ PROBE_PATHS: tuple[str, ...] = (
 
 # Paths whose 404s must stay JSON/plain regardless of Host: the API (clickers), the health
 # probe, and the pilas mounts (a missing asset must not come back as an HTML redirect).
-# Mirrors PILAS_MOUNTS in main.py (guarded by tests/api/test_captive.py).
+# Mirrors CLIENT_MOUNTS in main.py (guarded by tests/api/test_captive.py).
 RESERVED_PREFIXES: tuple[str, ...] = (
     "/api/",
     "/health",

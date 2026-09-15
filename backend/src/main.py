@@ -23,22 +23,47 @@ setup_logging()
 logger = logging.getLogger("tutorbox")
 
 
-# Pilas classroom client (pwa/pilas) served same-origin so pages call /api/v1 directly.
+# Classroom web client (React PWA build output) served same-origin so pages call /api/v1 directly.
+# Default: .cache/pwa/dist (built from pwa/app via `pnpm run build` / `python run.py`).
+# Legacy fallback: pwa/pilas (vanilla reference client) — select explicitly via
+# PWA_STATIC_DIR=pwa/pilas. A missing default fails fast instead of silently serving stale UI.
 # Mounted per folder (not at "/") so unknown API paths keep their JSON 404 and slash redirects.
 # Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
-def resolve_pilas_dir(raw_dir: str | None = None) -> Path:
-    """Resolve directory for serving classroom web client assets."""
+CLIENT_MOUNTS = ("maestro", "alumno", "pantalla", "static")
+
+DEFAULT_CLIENT_DIR = (PROJECT_ROOT / ".cache" / "pwa" / "dist").resolve()
+
+
+def resolve_client_dir(raw_dir: str | None = None) -> Path:
+    """Resolve directory for serving classroom web client assets.
+
+    Defaults to the React PWA build output (.cache/pwa/dist). Pass
+    PWA_STATIC_DIR=pwa/pilas (or raw_dir) to opt into the legacy client.
+    """
     target = raw_dir if raw_dir is not None else os.getenv("PWA_STATIC_DIR")
     if target and target.strip():
         resolved = Path(target.strip())
         return (
             resolved if resolved.is_absolute() else (PROJECT_ROOT / resolved).resolve()
         )
-    return (PROJECT_ROOT / "pwa" / "pilas").resolve()
+    return DEFAULT_CLIENT_DIR
 
 
-PILAS_DIR = resolve_pilas_dir()
-PILAS_MOUNTS = ("maestro", "alumno", "pantalla", "static")
+def validate_client_dir(directory: Path) -> Path:
+    """Fail fast when the resolved client directory lacks the mounted folders."""
+    missing = [name for name in CLIENT_MOUNTS if not (directory / name).is_dir()]
+    if missing:
+        raise RuntimeError(
+            f"Classroom web client directory missing: {directory} "
+            f"(missing: {', '.join(missing)}). Build the React PWA with "
+            f"`pnpm --dir pwa/app install && pnpm --dir pwa/app run build` or "
+            f"`python run.py`, or explicitly opt into the legacy client with "
+            f"`PWA_STATIC_DIR=pwa/pilas`."
+        )
+    return directory
+
+
+CLIENT_DIR = validate_client_dir(resolve_client_dir())
 
 
 @asynccontextmanager
@@ -75,14 +100,14 @@ app = FastAPI(
 app.include_router(root_router)
 # Captive portal: unknown pages requested through a hijacked name land on /alumno/.
 app.add_exception_handler(404, captive_not_found_handler)
-for _name in PILAS_MOUNTS:
+for _name in CLIENT_MOUNTS:
     app.mount(
-        f"/{_name}", StaticFiles(directory=PILAS_DIR / _name, html=True), name=_name
+        f"/{_name}", StaticFiles(directory=CLIENT_DIR / _name, html=True), name=_name
     )
 
 
 @app.get("/", include_in_schema=False)
-def pilas_root(request: Request) -> RedirectResponse:
+def client_root(request: Request) -> RedirectResponse:
     """Students land on the appliance address; the teacher opens /maestro/ explicitly.
 
     A hijacked name (a student typing any website, NetworkManager's root probe) is sent

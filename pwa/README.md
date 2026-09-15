@@ -16,7 +16,7 @@ Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance (
 ## 1. Pilas — the classroom quiz client (`pilas/`)
 
 Pilas is the shipped Classroom Quiz client: three vanilla HTML pages plus a shared `static/tb.js`,
-served by the FastAPI backend itself (`backend/src/main.py` mounts `pwa/pilas` per folder), so every
+served by the FastAPI backend itself (`backend/src/main.py` mounts the client directory per folder), so every
 page talks to `/api/v1` on the same origin. There is no build step and no state of its own: the
 backend session engine is the only source of truth and the pages poll it once per second.
 
@@ -104,14 +104,16 @@ pwa/
 
 ### Serving via Backend
 
-The backend (`backend/src/main.py`) supports runtime selection of the frontend directory via the `PWA_STATIC_DIR` environment variable:
+The backend (`backend/src/main.py`) serves the React PWA build output (`.cache/pwa/dist`)
+by default and supports runtime selection of the frontend directory via the `PWA_STATIC_DIR`
+environment variable:
 
 ```bash
-# Default: serves pwa/pilas
+# Default: serves .cache/pwa/dist (built from pwa/app; fails fast if never built)
 python -m uvicorn src.main:app
 
-# Serve React PWA production build (emitted to .cache/pwa/dist):
-export PWA_STATIC_DIR="../.cache/pwa/dist"
+# Legacy fallback: serve the vanilla reference client explicitly:
+export PWA_STATIC_DIR="pwa/pilas"
 python -m uvicorn src.main:app
 ```
 
