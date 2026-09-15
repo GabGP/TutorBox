@@ -24,10 +24,15 @@ Type=simple
 # ADJUST the next three lines for a different user or checkout location.
 User=damarti
 WorkingDirectory=/home/damarti/Documents/TutorBox/backend
-ExecStart=/home/damarti/Documents/TutorBox/backend/.venv/bin/python -m uvicorn main:app --app-dir /home/damarti/Documents/TutorBox/backend/src --host 0.0.0.0 --port 8000
+ExecStart=/home/damarti/Documents/TutorBox/.cache/venv/bin/python -m uvicorn main:app --app-dir /home/damarti/Documents/TutorBox/backend/src --host 0.0.0.0 --port 8000
+# Keep ALL __pycache__ under <repo>/.cache/pycache (repo policy). Must be set
+# here (not in .env) because Python reads it at startup, before .env is loaded.
+# ADJUST the path together with ExecStart when relocating the checkout.
+Environment=PYTHONPYCACHEPREFIX=/home/damarti/Documents/TutorBox/.cache/pycache
 Restart=on-failure
 RestartSec=2
-# The app only writes under <repo>/.cache (SQLite DB); keep the rest of the system read-only.
+# The app only writes under <repo>/.cache (SQLite DB, bytecode, caches);
+# keep the rest of the system read-only.
 NoNewPrivileges=true
 ProtectSystem=full
 PrivateTmp=true

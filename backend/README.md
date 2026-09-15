@@ -170,9 +170,17 @@ uv sync --no-dev
 Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 ```bash
 uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
-# or direct binary execution:
-.venv/bin/python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
+# or direct binary execution (shared repo venv):
+../.cache/venv/bin/python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
 ```
+
+> [!NOTE]
+> **All caches live in `<repo>/.cache/`** (SQLite, uv, ruff, pytest, PWA, and
+> Python bytecode via `PYTHONPYCACHEPREFIX=.cache/pycache`). Export
+> `PYTHONPYCACHEPREFIX` and `UV_PROJECT_ENVIRONMENT` (see root `.env.example` §9)
+> in your shell before `uv sync`/`uv run` so no `__pycache__` or `backend/.venv`
+> is recreated next to sources. `pytest` sets the prefix automatically via
+> `[tool.pytest_env]`.
 
 On the appliance this command is supervised by [`infra/systemd/tutorbox-backend.service`](../infra/systemd/tutorbox-backend.service), and [`infra/nginx/tutorbox.conf`](../infra/nginx/tutorbox.conf) publishes it on port 80 (`http://tutorbox`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
 

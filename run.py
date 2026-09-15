@@ -18,6 +18,25 @@ BACKEND_DIR = ROOT_DIR / "backend"
 PWA_APP_DIR = ROOT_DIR / "pwa" / "app"
 PWA_DIST_DIR = ROOT_DIR / ".cache" / "pwa" / "dist"
 
+# Centralize ALL bytecode caches under .cache (repo policy).
+# NOTE: for run.py's own __pycache__, PYTHONPYCACHEPREFIX must already be
+# exported in the shell before `python run.py` starts (see .env.example §9).
+# This setdefault covers the uvicorn subprocess; sys.pycache_prefix covers
+# any late imports in this process.
+_PYCACHE_DIR = ROOT_DIR / ".cache" / "pycache"
+try:
+    _PYCACHE_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    pass
+os.environ.setdefault("PYTHONPYCACHEPREFIX", str(_PYCACHE_DIR))
+try:
+    import sys
+
+    if getattr(sys, "pycache_prefix", None) is None:
+        sys.pycache_prefix = str(_PYCACHE_DIR)
+except Exception:
+    pass
+
 # Console output tags and shared PWA messages (single source of truth for
 # user-facing runner output; backend tests assert on the message bodies).
 TAG_INFO = "[\033[33mINFO\033[0m]"
