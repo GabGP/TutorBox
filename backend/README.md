@@ -139,10 +139,12 @@ uv run uvicorn src.main:app --reload
 ```
 
 #### 2. Or from the repository root:
-You can start the full stack directly using the root runner:
+You can start the full stack directly using the root runner (which verifies `pnpm`, builds the PWA, and launches Uvicorn):
 ```bash
 ./run.py
-# or via uv:
+# or skip frontend compilation:
+./run.py --no-build
+# or via uv directly:
 uv run --directory backend uvicorn src.main:app --reload
 ```
 

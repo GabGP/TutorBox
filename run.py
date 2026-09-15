@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """TutorBox Appliance & Development Runner.
 
-Checks runtime prerequisites (uv, espeak-ng, local llama-server) and boots
-the TutorBox FastAPI backend & Pilas classroom web clients.
+Checks runtime prerequisites (uv, espeak-ng, local llama-server, pnpm) and boots
+the TutorBox FastAPI backend & classroom web clients.
 """
 
 import argparse
@@ -15,10 +15,76 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "backend"
+PWA_APP_DIR = ROOT_DIR / "pwa" / "app"
+PWA_DIST_DIR = ROOT_DIR / ".cache" / "pwa" / "dist"
+
+
+def resolve_pnpm() -> str | None:
+    """Finds and returns the executable path for the pnpm package manager."""
+    found = shutil.which("pnpm")
+    if found:
+        return found
+    for fallback in [
+        Path.home() / ".local" / "share" / "pnpm" / "pnpm",
+        Path.home() / ".local" / "bin" / "pnpm",
+        Path.home() / "AppData" / "Roaming" / "npm" / "pnpm.cmd",
+    ]:
+        if fallback.is_file() and (os.name == "nt" or os.access(fallback, os.X_OK)):
+            return str(fallback)
+    return None
+
+
+def build_pwa(pnpm_bin: str | None = None) -> bool:
+    """Compiles the React 19 + TypeScript PWA in pwa/app to .cache/pwa/dist.
+
+    Verifies dependencies, runs the Vite production build, and ensures
+    fresh assets are ready before the backend server boots.
+    """
+    if not (PWA_APP_DIR / "package.json").is_file():
+        return False
+
+    resolved_pnpm = pnpm_bin or resolve_pnpm()
+    if not resolved_pnpm:
+        if (PWA_DIST_DIR / "index.html").is_file():
+            print(
+                "[\033[33mINFO\033[0m] pnpm not detected; using existing pre-built bundle in .cache/pwa/dist."
+            )
+            os.environ.setdefault("PWA_STATIC_DIR", str(PWA_DIST_DIR))
+            return True
+        print(
+            "[\033[33mWARN\033[0m] pnpm not found and no pre-built bundle exists in .cache/pwa/dist."
+        )
+        print("       Appliance will serve reference classroom client (pwa/pilas).")
+        return False
+
+    if not (PWA_APP_DIR / "node_modules").is_dir():
+        print(
+            "[\033[34mBUILD\033[0m] Installing frontend dependencies (pnpm install)..."
+        )
+        install_res = subprocess.run(
+            [resolved_pnpm, "install"], cwd=str(PWA_APP_DIR), check=False
+        )
+        if install_res.returncode != 0:
+            print("[\033[31mFAIL\033[0m] 'pnpm install' failed. Skipping PWA build.")
+            return False
+
+    print("[\033[34mBUILD\033[0m] Compiling modular PWA frontend (pnpm run build)...")
+    build_res = subprocess.run(
+        [resolved_pnpm, "run", "build"], cwd=str(PWA_APP_DIR), check=False
+    )
+    if build_res.returncode != 0:
+        print(
+            "[\033[31mFAIL\033[0m] PWA frontend build failed. Check compilation errors above."
+        )
+        return False
+
+    print("[\033[32mOK\033[0m] PWA frontend successfully compiled to .cache/pwa/dist")
+    os.environ.setdefault("PWA_STATIC_DIR", str(PWA_DIST_DIR))
+    return True
 
 
 def check_prerequisites() -> None:
-    """Verifies that runtime dependencies (espeak-ng and local SLM server) are available.
+    """Verifies runtime dependencies (espeak-ng, SLM server, and pnpm).
 
     Logs informative warning messages if optional runtime engines are not reachable.
     """
@@ -48,6 +114,18 @@ def check_prerequisites() -> None:
             f"[\033[33mINFO\033[0m] SLM engine not detected at {slm_url}. Dynamic quiz generation requires llama-server."
         )
         print("       (Seed question bank will still work seamlessly offline.)")
+
+    # 3. pnpm check
+    pnpm_bin = resolve_pnpm()
+    if not pnpm_bin:
+        print(
+            "[\033[33mWARN\033[0m] pnpm not found. Frontend PWA auto-compilation will be unavailable."
+        )
+        print(
+            "       Install via: npm install -g pnpm  or  curl -fsSL https://get.pnpm.io/install.sh | sh"
+        )
+    else:
+        print(f"[\033[32mOK\033[0m] Found frontend package manager: {pnpm_bin}")
 
 
 def resolve_uv() -> str:
@@ -103,6 +181,9 @@ def main() -> None:
         "--no-reload", action="store_true", help="Disable auto-reloading"
     )
     parser.add_argument(
+        "--no-build", action="store_true", help="Skip frontend PWA compilation"
+    )
+    parser.add_argument(
         "--check-only", action="store_true", help="Check prerequisites and exit"
     )
     args = parser.parse_args()
@@ -115,6 +196,10 @@ def main() -> None:
 
     if args.check_only:
         return
+
+    if not args.no_build:
+        build_pwa()
+        print("--------------------------------------------------")
 
     uv_cmd = resolve_uv()
     cmd = [

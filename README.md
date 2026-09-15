@@ -129,7 +129,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./run.py
 ```
 
-`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`), runs database migrations, seeds the question bank, mounts the classroom client pages, and starts Uvicorn:
+`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`, `pnpm`), compiles the modern PWA frontend (`pwa/app`), runs database migrations, seeds the question bank, mounts the classroom client pages, and starts Uvicorn:
 * **Teacher Host**: `http://localhost:8000/maestro/`
 * **Student Voting**: `http://localhost:8000/alumno/`
 * **Classroom Screen**: `http://localhost:8000/pantalla/`
