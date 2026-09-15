@@ -187,3 +187,5 @@ def test_main_no_build(monkeypatch):
         run.main()
         mock_build.assert_not_called()
         mock_sub.assert_called_once()
+        cmd = mock_sub.call_args[0][0]
+        assert "--log-config" in cmd

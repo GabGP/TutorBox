@@ -14,14 +14,12 @@ from core.config.constants import PROJECT_ROOT
 from core.db.database import get_db_path
 from core.db.migrations import apply_migrations
 from core.db.seed_users import seed_teacher
+from core.logging import setup_logging
 from modes.quiz.seed_data import seed_question_bank
 
 load_env_file()
+setup_logging()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
 logger = logging.getLogger("tutorbox")
 
 
@@ -46,6 +44,7 @@ PILAS_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage appliance initialization, migrations, database seeds, and shutdown."""
+    setup_logging()
     logger.info("Initializing TutorBox backend appliance...")
     db_path = get_db_path()
     logger.info("Running database migrations on %s...", db_path)

@@ -225,6 +225,10 @@ def main() -> None:
             ]
         )
 
+    log_config_path = BACKEND_DIR / "logging_config.json"
+    if log_config_path.is_file():
+        cmd.extend(["--log-config", str(log_config_path)])
+
     print(f"Running: {' '.join(cmd)}")
     print("Classroom Client URLs:")
     print(f"  * Maestro (Teacher) : http://localhost:{args.port}/maestro/")
