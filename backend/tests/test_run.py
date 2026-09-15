@@ -179,13 +179,33 @@ def test_main_check_only(monkeypatch):
 def test_main_no_build(monkeypatch):
     """Verifies that --no-build skips PWA build step and launches uvicorn."""
     monkeypatch.setattr(sys, "argv", ["run.py", "--no-build"])
+
+    def fake_is_file(self):
+        return self.name == "logging_config.json"
+
     with (
         patch("run.check_prerequisites"),
         patch("run.build_pwa") as mock_build,
         patch("subprocess.run") as mock_sub,
+        patch("pathlib.Path.is_file", fake_is_file),
     ):
         run.main()
         mock_build.assert_not_called()
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
         assert "--log-config" in cmd
+
+
+def test_main_omits_log_config_when_missing(monkeypatch):
+    """Verifies --log-config is omitted when logging_config.json is absent."""
+    monkeypatch.setattr(sys, "argv", ["run.py", "--no-build"])
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.build_pwa"),
+        patch("subprocess.run") as mock_sub,
+        patch("pathlib.Path.is_file", return_value=False),
+    ):
+        run.main()
+        mock_sub.assert_called_once()
+        cmd = mock_sub.call_args[0][0]
+        assert "--log-config" not in cmd

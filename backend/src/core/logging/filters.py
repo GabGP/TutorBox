@@ -5,6 +5,7 @@ import logging
 PROBE_PATHS: frozenset[str] = frozenset(
     {
         "/generate_204",
+        "/generate204",
         "/gen_204",
         "/hotspot-detect.html",
         "/library/test/success.html",
@@ -14,6 +15,7 @@ PROBE_PATHS: frozenset[str] = frozenset(
         "/success.txt",
         "/canonical.html",
         "/check_network_status.txt",
+        "/wpad.dat",
     }
 )
 
@@ -25,5 +27,5 @@ class ProbeFilter(logging.Filter):
         """Returns False if log record matches known captive portal probes."""
         if not record.args or len(record.args) < 3:
             return True
-        path = str(record.args[2])
+        path = str(record.args[2]).split("?", 1)[0].split("#", 1)[0]
         return path not in PROBE_PATHS

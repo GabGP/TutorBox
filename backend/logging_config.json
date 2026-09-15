@@ -3,15 +3,16 @@
   "disable_existing_loggers": false,
   "formatters": {
     "default": {
-      "()": "uvicorn.logging.DefaultFormatter",
+      "()": "core.logging.formatter.TutorBoxFormatter",
       "fmt": "%(asctime)s %(levelprefix)s %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S",
       "use_colors": null
     },
     "access": {
-      "()": "uvicorn.logging.AccessFormatter",
+      "()": "core.logging.formatter.TutorBoxAccessFormatter",
       "fmt": "%(asctime)s %(levelprefix)s %(client_addr)s - \"%(request_line)s\" %(status_code)s",
-      "datefmt": "%Y-%m-%d %H:%M:%S"
+      "datefmt": "%Y-%m-%d %H:%M:%S",
+      "use_colors": null
     }
   },
   "handlers": {
@@ -33,7 +34,9 @@
       "propagate": false
     },
     "uvicorn.error": {
-      "level": "INFO"
+      "handlers": ["default"],
+      "level": "INFO",
+      "propagate": false
     },
     "uvicorn.access": {
       "handlers": ["access"],

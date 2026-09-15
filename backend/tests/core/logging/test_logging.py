@@ -1,6 +1,11 @@
 """Unit tests for TutorBox unified logging, formatters, and filters."""
 
+import json
 import logging
+import logging.config
+from pathlib import Path
+
+import pytest
 
 from core.logging import (
     ACCESS_LOG_FORMAT,
@@ -10,6 +15,59 @@ from core.logging import (
     TutorBoxFormatter,
     setup_logging,
 )
+from core.logging.setup import QUIET_THIRD_PARTY_LOGGERS
+
+_TRACKED_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access")
+
+
+@pytest.fixture(autouse=True)
+def _preserve_logging_state():
+    """Fully restores global logging state (level/handlers/propagate/formatter)."""
+    root = logging.getLogger()
+    saved_root_level = root.level
+    saved_root_handlers = root.handlers[:]
+    saved_root_state = {id(h): (h.formatter, h.filters[:]) for h in root.handlers}
+    saved = {}
+    for name in (*_TRACKED_LOGGERS, *QUIET_THIRD_PARTY_LOGGERS):
+        logger = logging.getLogger(name)
+        saved[name] = (
+            logger.level,
+            logger.handlers[:],
+            logger.propagate,
+            logger.disabled,
+            {id(h): (h.formatter, h.filters[:]) for h in logger.handlers},
+        )
+    yield
+    root.setLevel(saved_root_level)
+    root.handlers = saved_root_handlers
+    for handler in saved_root_handlers:
+        if id(handler) in saved_root_state:
+            formatter, filters = saved_root_state[id(handler)]
+            handler.setFormatter(formatter)
+            handler.filters = filters[:]
+    for name, (level, handlers, propagate, disabled, handler_state) in saved.items():
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        logger.handlers = handlers
+        logger.propagate = propagate
+        logger.disabled = disabled
+        for handler in handlers:
+            if id(handler) in handler_state:
+                formatter, filters = handler_state[id(handler)]
+                handler.setFormatter(formatter)
+                handler.filters = filters[:]
+
+
+def _make_record(path: str) -> logging.LogRecord:
+    return logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="",
+        lineno=0,
+        msg="",
+        args=("192.168.4.10", "GET", path, "1.1", 200),
+        exc_info=None,
+    )
 
 
 def test_tutorbox_formatter_includes_timestamp_and_levelprefix():
@@ -74,6 +132,21 @@ def test_probe_filter_blocks_captive_probes():
     assert probe_filter.filter(allowed_record) is True
 
 
+def test_probe_filter_strips_query_and_fragment():
+    """Verifies probes with query strings or fragments are still filtered."""
+    probe_filter = ProbeFilter()
+    assert probe_filter.filter(_make_record("/generate_204?cmode=1")) is False
+    assert probe_filter.filter(_make_record("/hotspot-detect.html?x=1#y")) is False
+    assert probe_filter.filter(_make_record("/alumno/?next=/maestro/")) is True
+
+
+def test_probe_filter_blocks_extended_probe_paths():
+    """Verifies WPAD and extensionless Android probes are filtered."""
+    probe_filter = ProbeFilter()
+    assert probe_filter.filter(_make_record("/wpad.dat")) is False
+    assert probe_filter.filter(_make_record("/generate204")) is False
+
+
 def test_probe_filter_allows_malformed_or_non_http_records():
     """Verifies ProbeFilter safely allows records with incomplete args."""
     probe_filter = ProbeFilter()
@@ -128,13 +201,92 @@ def test_setup_logging_quiets_noisy_loggers_when_info():
     assert logging.getLogger("multipart").level == logging.WARNING
 
 
+def test_setup_logging_restores_noisy_loggers_on_debug():
+    """Verifies INFO -> DEBUG doesn't leave third-party loggers stuck at WARNING."""
+    setup_logging(log_level="INFO")
+    assert logging.getLogger("httpx").level == logging.WARNING
+    setup_logging(log_level="DEBUG")
+    assert logging.getLogger("httpx").level == logging.DEBUG
+
+
+def test_setup_logging_invalid_level_falls_back_to_info():
+    """Verifies unknown LOG_LEVEL strings fall back to INFO."""
+    setup_logging(log_level="BOGUS_LEVEL")
+    assert logging.getLogger().level == logging.INFO
+    # logging.BASIC_FORMAT is a str, so getattr returns non-int -> INFO fallback.
+    setup_logging(log_level="basic_format")
+    assert logging.getLogger().level == logging.INFO
+
+
+def test_setup_logging_leaves_foreign_root_handlers_alone():
+    """Verifies external root handlers (e.g. pytest caplog) keep their formatter."""
+    root = logging.getLogger()
+    foreign = logging.StreamHandler()
+    sentinel = logging.Formatter("%(message)s FOREIGN")
+    foreign.setFormatter(sentinel)
+    root.handlers = [foreign]
+
+    setup_logging(log_level="INFO")
+
+    assert root.handlers == [foreign]
+    assert foreign.formatter is sentinel
+
+
+def test_setup_logging_leaves_foreign_uvicorn_handlers_alone():
+    """Verifies shared/foreign handlers (e.g. pytest capture) never get access format."""
+    foreign_formatter = logging.Formatter("%(message)s FOREIGN")
+    shared = logging.StreamHandler()
+    shared.setFormatter(foreign_formatter)
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.handlers = [shared]
+
+    setup_logging(log_level="INFO", suppress_probes=True)
+
+    assert shared.formatter is foreign_formatter
+    assert not any(isinstance(f, ProbeFilter) for f in shared.filters)
+    # Normal records must still format through the untouched foreign handler.
+    record = logging.LogRecord(
+        name="tutorbox",
+        level=logging.INFO,
+        pathname="",
+        lineno=0,
+        msg="hello",
+        args=(),
+        exc_info=None,
+    )
+    assert "hello" in shared.format(record)
+
+
+def test_setup_logging_reformats_owned_root_handler():
+    """Verifies a second setup_logging call refreshes the owned root handler."""
+    root = logging.getLogger()
+    root.handlers = []
+    setup_logging(log_level="INFO")
+    assert len(root.handlers) == 1
+    owned = root.handlers[0]
+    setup_logging(log_level="DEBUG")
+    assert root.handlers == [owned]
+    assert root.level == logging.DEBUG
+
+
 def test_setup_logging_creates_stream_handler_if_none_present():
     """Verifies that a stream handler is created on root logger if handlers list was empty."""
     root = logging.getLogger()
-    saved_handlers = root.handlers[:]
-    try:
-        root.handlers = []
-        setup_logging(log_level="INFO")
-        assert len(root.handlers) >= 1
-    finally:
-        root.handlers = saved_handlers
+    root.handlers = []
+    setup_logging(log_level="INFO")
+    assert len(root.handlers) >= 1
+
+
+def test_logging_config_uses_tutorbox_formatters():
+    """Verifies logging_config.json loads and uses TutorBox formatter classes."""
+    config_path = Path(__file__).resolve().parents[3] / "logging_config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    logging.config.dictConfig(config)
+
+    uv_error = logging.getLogger("uvicorn.error")
+    assert uv_error.handlers, "uvicorn.error must have handlers from dictConfig"
+    assert isinstance(uv_error.handlers[0].formatter, TutorBoxFormatter)
+
+    access_logger = logging.getLogger("uvicorn.access")
+    assert access_logger.handlers
+    assert isinstance(access_logger.handlers[0].formatter, TutorBoxAccessFormatter)
