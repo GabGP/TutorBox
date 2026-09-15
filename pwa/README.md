@@ -32,7 +32,7 @@ backend session engine is the only source of truth and the pages poll it once pe
 ```bash
 sudo apt install espeak-ng                           # offline voice for the >51% intervention
 cd backend
-python -m uvicorn src.main:app --host 0.0.0.0        # teacher: http://<appliance-ip>:8000/maestro/
+python -m uvicorn main:app --app-dir src --host 0.0.0.0        # teacher: http://<appliance-ip>:8000/maestro/
 # classroom: nginx publishes the same process on :80 → http://tutorbox/maestro/ (infra/nginx/tutorbox.conf)
 ```
 
@@ -110,11 +110,11 @@ environment variable:
 
 ```bash
 # Default: serves .cache/pwa/dist (built from pwa/app; fails fast if never built)
-python -m uvicorn src.main:app
+python -m uvicorn main:app --app-dir backend/src
 
 # Legacy fallback: serve the vanilla reference client explicitly:
 export PWA_STATIC_DIR="pwa/pilas"
-python -m uvicorn src.main:app
+python -m uvicorn main:app --app-dir backend/src
 ```
 
 ### Development & Build Commands

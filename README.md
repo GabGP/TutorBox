@@ -137,7 +137,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 Or run directly with `uv`:
 ```bash
-uv run --directory backend uvicorn src.main:app --reload
+uv run --directory backend uvicorn main:app --app-dir src --reload
 ```
 
 ---

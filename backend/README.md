@@ -135,7 +135,7 @@ Copy the template `.env.example` to `.env` in the repository root to customize d
 #### 1. From the `backend/` directory:
 Run Uvicorn with `--reload` via `uv` (creates/syncs `.venv` automatically if needed):
 ```bash
-uv run uvicorn src.main:app --reload
+uv run uvicorn main:app --app-dir src --reload
 ```
 
 #### 2. Or from the repository root:
@@ -145,7 +145,7 @@ You can start the full stack directly using the root runner (which verifies `pnp
 # or skip frontend compilation:
 ./run.py --no-build
 # or via uv directly:
-uv run --directory backend uvicorn src.main:app --reload
+uv run --directory backend uvicorn main:app --app-dir src --reload
 ```
 
 The interactive API documentation is available at <http://127.0.0.1:8000/docs>.
@@ -169,9 +169,9 @@ uv sync --no-dev
 #### Running in Production:
 Run Uvicorn bound to all network interfaces (`0.0.0.0`) without `--reload`:
 ```bash
-uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
 # or direct binary execution:
-.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+.venv/bin/python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
 ```
 
 On the appliance this command is supervised by [`infra/systemd/tutorbox-backend.service`](../infra/systemd/tutorbox-backend.service), and [`infra/nginx/tutorbox.conf`](../infra/nginx/tutorbox.conf) publishes it on port 80 (`http://tutorbox`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).

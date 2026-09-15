@@ -24,7 +24,7 @@ Type=simple
 # ADJUST the next three lines for a different user or checkout location.
 User=damarti
 WorkingDirectory=/home/damarti/Documents/TutorBox/backend
-ExecStart=/home/damarti/Documents/TutorBox/backend/.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+ExecStart=/home/damarti/Documents/TutorBox/backend/.venv/bin/python -m uvicorn main:app --app-dir /home/damarti/Documents/TutorBox/backend/src --host 0.0.0.0 --port 8000
 Restart=on-failure
 RestartSec=2
 # The app only writes under <repo>/.cache (SQLite DB); keep the rest of the system read-only.
