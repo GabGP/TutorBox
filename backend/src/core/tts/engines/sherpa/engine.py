@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from core.config import get_settings
+from core.tts.engines.provider import resolve_execution_provider
 from core.tts.engines.sherpa.models import resolve_sherpa_paths, samples_to_wav
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
@@ -74,18 +75,35 @@ class SherpaBackend:
             noise_scale=tts_cfg.piper_noise_scale,
             noise_scale_w=tts_cfg.piper_noise_w_scale,
         )
-        model_config = sherpa_onnx.OfflineTtsModelConfig(
-            vits=vits_cfg,
-            num_threads=tts_cfg.sherpa_threads,
-        )
-        engine_config = sherpa_onnx.OfflineTtsConfig(model=model_config)
+        provider = resolve_execution_provider(tts_cfg.sherpa_provider)
         try:
-            self._tts = sherpa_onnx.OfflineTts(engine_config)
+            model_config = sherpa_onnx.OfflineTtsModelConfig(
+                vits=vits_cfg,
+                num_threads=tts_cfg.sherpa_threads,
+                provider=provider,
+            )
+            self._tts = sherpa_onnx.OfflineTts(
+                sherpa_onnx.OfflineTtsConfig(model=model_config)
+            )
             self._current_model = model_name
         except Exception as err:
-            raise TTSUnavailableError(
-                f"Failed to initialize Sherpa-ONNX: {err}"
-            ) from err
+            if provider == "cuda":
+                logger.info(
+                    "Sherpa CUDA init unavailable; falling back to CPU: %s", err
+                )
+                model_config = sherpa_onnx.OfflineTtsModelConfig(
+                    vits=vits_cfg,
+                    num_threads=tts_cfg.sherpa_threads,
+                    provider="cpu",
+                )
+                self._tts = sherpa_onnx.OfflineTts(
+                    sherpa_onnx.OfflineTtsConfig(model=model_config)
+                )
+                self._current_model = model_name
+            else:
+                raise TTSUnavailableError(
+                    f"Failed to initialize Sherpa-ONNX: {err}"
+                ) from err
 
         return (time.perf_counter() - start_time) * 1000.0
 

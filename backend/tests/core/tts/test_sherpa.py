@@ -52,9 +52,12 @@ def test_sherpa_is_available_model_missing(monkeypatch, tmp_path):
 
 def test_samples_to_wav():
     samples = [-1.5, -0.5, 0.0, 0.5, 1.5]
-    wav_bytes = samples_to_wav(samples, 22050)
+    wav_bytes = samples_to_wav(samples, 22050, target_peak=0.78)
     assert wav_bytes.startswith(b"RIFF")
     assert b"WAVE" in wav_bytes[:16]
+
+    empty_wav = samples_to_wav([], 22050)
+    assert empty_wav.startswith(b"RIFF")
 
 
 def test_find_espeak_data(tmp_path):
@@ -113,23 +116,43 @@ def test_sherpa_preload_import_error():
         backend.preload()
 
 
-def test_sherpa_preload_init_failure(tmp_path, monkeypatch):
+def test_sherpa_preload_init_failure_cpu(tmp_path, monkeypatch):
     mock_model = tmp_path / "dummy.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_dummy.txt").write_text("a 1\n")
     (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "dummy.onnx")
+    monkeypatch.setenv("TTS_SHERPA_PROVIDER", "cpu")
     clear_settings_cache()
 
     backend = SherpaBackend()
     mock_sherpa = MagicMock()
-    mock_sherpa.OfflineTts.side_effect = RuntimeError("Broken model")
+    mock_sherpa.OfflineTts.side_effect = RuntimeError("Broken CPU model")
     with (
         patch.dict("sys.modules", {"sherpa_onnx": mock_sherpa}),
         pytest.raises(TTSUnavailableError, match="Failed to initialize"),
     ):
         backend.preload()
+
+
+def test_sherpa_preload_cuda_fallback_to_cpu(tmp_path, monkeypatch):
+    mock_model = tmp_path / "dummy.onnx"
+    mock_model.write_text("fake")
+    (tmp_path / "tokens_dummy.txt").write_text("a 1\n")
+    (tmp_path / "espeak-ng-data").mkdir()
+    monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
+    monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "dummy.onnx")
+    monkeypatch.setenv("TTS_SHERPA_PROVIDER", "cuda")
+    clear_settings_cache()
+
+    backend = SherpaBackend()
+    mock_sherpa = MagicMock()
+    # First attempt (cuda) raises, second attempt (cpu fallback) succeeds
+    mock_sherpa.OfflineTts.side_effect = [RuntimeError("No CUDA"), MagicMock()]
+    with patch.dict("sys.modules", {"sherpa_onnx": mock_sherpa}):
+        assert backend.preload() >= 0
+        assert backend.is_loaded()
 
 
 def test_sherpa_lifecycle_and_synthesize(tmp_path, monkeypatch):

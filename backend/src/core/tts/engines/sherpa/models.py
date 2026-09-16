@@ -107,10 +107,24 @@ def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
     return resolved_model, tokens_path, data_dir
 
 
-def samples_to_wav(samples: Sequence[float], sample_rate: int) -> bytes:
-    """Converts normalized float audio samples (-1.0 to 1.0) into standard RIFF/WAV bytes."""
+def samples_to_wav(
+    samples: Sequence[float],
+    sample_rate: int,
+    target_peak: float = 0.78,
+) -> bytes:
+    """Converts float audio samples into RIFF/WAV bytes with calibrated peak amplitude."""
+    if not samples:
+        scale = 1.0
+    else:
+        max_amplitude = max(abs(sample) for sample in samples)
+        scale = (
+            (target_peak / max_amplitude)
+            if (max_amplitude > 0.0 and target_peak > 0.0)
+            else 1.0
+        )
+
     int16_samples = array.array(
-        "h", (int(max(-1.0, min(1.0, s)) * 32767) for s in samples)
+        "h", (int(max(-1.0, min(1.0, s * scale)) * 32767) for s in samples)
     )
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wav_file:
