@@ -120,6 +120,7 @@ def test_tts_voices_listing(
     assert any(v["engine"] == "espeak" for v in voices_es)
     assert any(v["engine"] == "sherpa" for v in voices_es)
     assert any(v["engine"] == "kokoro" for v in voices_es)
+    assert any(v["engine"] == "qwen3-tts" for v in voices_es)
 
     res_sherpa = client.get(
         "/api/v1/tts/voices?lang=es&engine=sherpa", headers=teacher_headers
@@ -127,6 +128,13 @@ def test_tts_voices_listing(
     assert res_sherpa.status_code == 200
     assert len(res_sherpa.json()) == 1
     assert res_sherpa.json()[0]["engine"] == "sherpa"
+
+    res_qwen = client.get(
+        "/api/v1/tts/voices?lang=es&engine=qwen3-tts", headers=teacher_headers
+    )
+    assert res_qwen.status_code == 200
+    assert len(res_qwen.json()) == 1
+    assert res_qwen.json()[0]["engine"] == "qwen3-tts"
 
     res_quc = client.get("/api/v1/tts/voices?lang=quc", headers=teacher_headers)
     assert res_quc.status_code == 200

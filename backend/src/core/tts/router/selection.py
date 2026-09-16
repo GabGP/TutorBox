@@ -9,6 +9,7 @@ from core.tts.protocols import TTSBackend
 
 __all__ = [
     "_MAX_CACHE_ENTRIES",
+    "get_auto_backends",
     "get_engine_status",
     "get_max_cache_entries",
     "resolve_target_backend",
@@ -17,6 +18,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 _MAX_CACHE_ENTRIES = 32
+_AUTO_ENGINE_ORDER: tuple[str, ...] = ("qwen3-tts", "sherpa", "piper", "espeak")
 
 
 def get_max_cache_entries() -> int:
@@ -24,6 +26,18 @@ def get_max_cache_entries() -> int:
     import core.tts.router as r_pkg
 
     return getattr(r_pkg, "_MAX_CACHE_ENTRIES", _MAX_CACHE_ENTRIES)
+
+
+def get_auto_backends(
+    backends: dict[str, TTSBackend], lang: str = "es"
+) -> tuple[TTSBackend, ...]:
+    """Returns available Spanish auto-tier backends in quality-first order."""
+    available: list[TTSBackend] = []
+    for engine_name in _AUTO_ENGINE_ORDER:
+        backend = backends.get(engine_name)
+        if backend is not None and backend.is_available(lang):
+            available.append(backend)
+    return tuple(available)
 
 
 def _resolve_quc_backend(
@@ -91,12 +105,11 @@ def resolve_target_backend(
             f"TTS engine '{target_engine}' is not registered or not installed."
         )
 
-    # Default 'auto': prefer neural Piper, gracefully fallback to eSpeak
-    if piper.is_available(lang):
-        return piper
-    logger.info("Piper voice unavailable for '%s'; falling back to eSpeak", lang)
-    if espeak.is_available(lang):
-        return espeak
+    # Default 'auto': prefer Qwen3-TTS, then Sherpa-ONNX, Piper, and eSpeak.
+    available_backends = get_auto_backends(backends, lang)
+    if available_backends:
+        return available_backends[0]
+    logger.info("No auto-tier voice is available for '%s'", lang)
     raise TTSUnavailableError(f"No TTS engine available for '{lang}'.")
 
 
@@ -127,7 +140,7 @@ def get_engine_status(backend: TTSBackend) -> dict[str, Any]:
         "moss-nano": cfg.moss_model,
         "kokoro": cfg.kokoro_voice,
         "melo": cfg.melo_voice,
-        "qwen-gguf": cfg.qwen_gguf_path,
+        "qwen3-tts": cfg.qwen_gguf_path,
     }
     model_id = mid_map.get(backend.engine_name, cfg.voice)
     return {

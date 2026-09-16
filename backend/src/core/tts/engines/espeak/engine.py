@@ -10,6 +10,7 @@ import subprocess
 import time
 
 from core.config import get_settings
+from core.tts.audio import calibrate_wav_peak
 from core.tts.engines.espeak.cli import (
     BINARY_CANDIDATES,
     VOICE_FALLBACKS,
@@ -72,4 +73,4 @@ class EspeakBackend:
 
     def synthesize(self, text: str, voice: str | None = None) -> bytes:
         """Synthesizes text using espeak-ng formant synthesis."""
-        return synthesize_wav(text, voice=voice)
+        return calibrate_wav_peak(synthesize_wav(text, voice=voice))

@@ -25,6 +25,7 @@ from core.config import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_QWEN_BINARY,
     DEFAULT_TTS_QWEN_GGUF_PATH,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
@@ -69,6 +70,7 @@ _TTS_ENV_VARS = (
     "TTS_KOKORO_SPEAKER_ID",
     "TTS_KOKORO_PROVIDER",
     "TTS_MELO_VOICE",
+    "TTS_QWEN_BINARY",
     "TTS_QWEN_GGUF_PATH",
     "TTS_QWEN_THREADS",
 )
@@ -120,6 +122,7 @@ def test_build_tts_config_defaults() -> None:
     assert config.kokoro_speaker_id == DEFAULT_TTS_KOKORO_SPEAKER_ID
     assert config.kokoro_provider == DEFAULT_TTS_KOKORO_PROVIDER
     assert config.melo_voice == DEFAULT_TTS_MELO_VOICE
+    assert config.qwen_binary == DEFAULT_TTS_QWEN_BINARY
     assert config.qwen_gguf_path == DEFAULT_TTS_QWEN_GGUF_PATH
     assert config.qwen_threads == DEFAULT_TTS_QWEN_THREADS
 
@@ -157,6 +160,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_KOKORO_SPEAKER_ID", "42")
     monkeypatch.setenv("TTS_KOKORO_PROVIDER", "cuda")
     monkeypatch.setenv("TTS_MELO_VOICE", "custom_melo")
+    monkeypatch.setenv("TTS_QWEN_BINARY", "/opt/llama/bin/llama-tts")
     monkeypatch.setenv("TTS_QWEN_GGUF_PATH", "/path/to/qwen.gguf")
     monkeypatch.setenv("TTS_QWEN_THREADS", "6")
 
@@ -192,6 +196,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.kokoro_speaker_id == 42
     assert config.kokoro_provider == "cuda"
     assert config.melo_voice == "custom_melo"
+    assert config.qwen_binary == "/opt/llama/bin/llama-tts"
     assert config.qwen_gguf_path == "/path/to/qwen.gguf"
     assert config.qwen_threads == 6
 
@@ -241,6 +246,8 @@ def test_build_tts_config_engine_variants(monkeypatch) -> None:
         "kokoro",
         "melo",
         "qwen-gguf",
+        "qwen3-tts",
+        "qwen",
     ):
         monkeypatch.setenv("TTS_ENGINE", f" {eng.upper()} ")
         assert build_tts_config().engine == eng

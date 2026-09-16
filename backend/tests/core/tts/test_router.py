@@ -1,8 +1,4 @@
-"""Unit tests for the pluggable TTS router and in-memory LRU audio caching.
-
-Tests engine selection, Spanish/K'iche' dispatch, neural-to-formant fallback,
-and cache hit/eviction semantics.
-"""
+"""Unit tests for TTS routing, fallback, and in-memory LRU audio caching."""
 
 from unittest.mock import MagicMock, patch
 
@@ -40,7 +36,7 @@ def _clean_router_settings(monkeypatch: pytest.MonkeyPatch):
 
 
 def _make_mock_router():
-    """Builds a TTSRouter with controllable mock Piper and eSpeak backends."""
+    """Builds a router with controllable mocks for every auto-tier backend."""
     mock_piper = MagicMock()
     mock_piper.is_available.return_value = True
     mock_piper.synthesize.return_value = FAKE_PIPER_WAV
@@ -49,23 +45,49 @@ def _make_mock_router():
     mock_espeak.is_available.return_value = True
     mock_espeak.synthesize.return_value = FAKE_ESPEAK_WAV
 
-    router = TTSRouter(piper=mock_piper, espeak=mock_espeak)
+    mock_sherpa = MagicMock()
+    mock_sherpa.engine_name = "sherpa"
+    mock_sherpa.is_available.return_value = False
+
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = False
+
+    router = TTSRouter(
+        piper=mock_piper,
+        espeak=mock_espeak,
+        sherpa=mock_sherpa,
+        qwen=mock_qwen,
+    )
     return router, mock_piper, mock_espeak
 
 
 def test_select_backend_auto_prefers_piper_when_available():
-    """Verifies default 'auto' engine prefers Piper when its model is present."""
+    """Verifies auto reaches Piper after Qwen3-TTS and Sherpa are unavailable."""
     router, mock_piper, _ = _make_mock_router()
     backend = router.select_backend("es")
     assert backend is mock_piper
 
 
 def test_select_backend_auto_falls_back_to_espeak_when_piper_unavailable():
-    """Verifies default 'auto' engine falls back to eSpeak when Piper is absent."""
+    """Verifies auto reaches eSpeak when neural Spanish tiers are absent."""
     router, mock_piper, mock_espeak = _make_mock_router()
     mock_piper.is_available.return_value = False
     backend = router.select_backend("es")
     assert backend is mock_espeak
+
+
+def test_select_backend_auto_prefers_qwen3_tts():
+    """Verifies Qwen3-TTS is the first automatic Spanish tier."""
+    router, _, _ = _make_mock_router()
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = True
+    router.qwen = mock_qwen
+    router._backends["qwen3-tts"] = mock_qwen
+    router._backends["qwen"] = mock_qwen
+
+    assert router.select_backend("es") is mock_qwen
 
 
 def test_select_backend_explicit_espeak(monkeypatch: pytest.MonkeyPatch):
@@ -146,6 +168,12 @@ def test_synthesize_caches_and_evicts_lru(monkeypatch: pytest.MonkeyPatch):
     assert ("Frase 3", "es", "") in router._cache
 
 
+def test_get_backend_none_is_safe():
+    """Verifies optional engine lookups do not call lower() on None."""
+    router, _, _ = _make_mock_router()
+    assert router.get_backend(None) is None
+
+
 def test_synthesize_gracefully_falls_back_when_piper_crashes():
     """Verifies runtime Piper failure falls back to eSpeak for Spanish."""
     router, mock_piper, mock_espeak = _make_mock_router()
@@ -212,6 +240,17 @@ def test_select_backend_explicit_engine_no_fallback():
     r_sherpa = TTSRouter(sherpa=mock_sherpa)
     assert r_sherpa.get_backend("sherpa") is mock_sherpa
     assert r_sherpa.status(engine="sherpa")["engine"] == "sherpa"
+
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = True
+    mock_qwen.is_loaded.return_value = True
+    r_qwen = TTSRouter(qwen=mock_qwen)
+    assert r_qwen.get_backend("qwen3-tts") is mock_qwen
+    assert r_qwen.get_backend("qwen") is mock_qwen
+    assert r_qwen.status(engine="qwen")["engine"] == "qwen3-tts"
+    assert r_qwen.unload("qwen3-tts") == "qwen3-tts"
+    assert r_qwen.unload(None) == "all"
 
 
 def test_select_backend_configured_engine_no_fallback(monkeypatch: pytest.MonkeyPatch):

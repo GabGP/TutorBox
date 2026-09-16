@@ -11,7 +11,9 @@ from core.tts.constants import (
 )
 from core.tts.engines import (
     EspeakBackend,
+    KokoroBackend,
     PiperBackend,
+    QwenBackend,
     SherpaBackend,
 )
 from core.tts.engines.espeak import (
@@ -42,7 +44,9 @@ __all__ = [
     "PCM_CHANNELS_MONO",
     "PCM_SAMPLE_WIDTH_BYTES",
     "EspeakBackend",
+    "KokoroBackend",
     "PiperBackend",
+    "QwenBackend",
     "SherpaBackend",
     "TTSBackend",
     "TTSError",

@@ -1,9 +1,4 @@
-"""Integration tests for the spoken >51% intervention endpoint.
-
-Speech engines may not be present in CI, so synthesis is mocked; what these tests pin down
-is that audio is only ever produced when a single distractor really passed the rule, and that an
-appliance without an engine gets a clear 503 instead of a broken reveal screen.
-"""
+"""Integration tests for the spoken >51% intervention endpoint."""
 
 import pytest
 
@@ -279,6 +274,8 @@ def test_speech_returns_cached_audio_on_subsequent_calls(
     calls: list[str] = []
     router = get_tts_router()
     router.clear_cache()
+    monkeypatch.setattr(router.qwen, "is_available", lambda voice=None: False)
+    monkeypatch.setattr(router.sherpa, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.piper, "is_available", lambda voice=None: False)
     monkeypatch.setattr(
         router.espeak,

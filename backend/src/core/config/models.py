@@ -42,6 +42,7 @@ from core.config.constants import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_QWEN_BINARY,
     DEFAULT_TTS_QWEN_GGUF_PATH,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
@@ -87,7 +88,7 @@ class QuizConfig:
 
 @dataclass(frozen=True)
 class TTSConfig:
-    """Offline classroom voice (Neural Piper + Formant eSpeak fallback)."""
+    """Offline classroom voice with neural tiers and an eSpeak safety fallback."""
 
     enabled: bool = DEFAULT_TTS_ENABLED
     engine: str = DEFAULT_TTS_ENGINE
@@ -122,6 +123,7 @@ class TTSConfig:
     kokoro_speaker_id: int = DEFAULT_TTS_KOKORO_SPEAKER_ID
     kokoro_provider: str = DEFAULT_TTS_KOKORO_PROVIDER
     melo_voice: str = DEFAULT_TTS_MELO_VOICE
+    qwen_binary: str = DEFAULT_TTS_QWEN_BINARY
     qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
     qwen_threads: int = DEFAULT_TTS_QWEN_THREADS
 

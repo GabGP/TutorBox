@@ -117,6 +117,14 @@ def list_tts_voices(
             )
         if tts.kokoro_voice:
             voices.append(TTSVoiceItem(id=tts.kokoro_voice, lang="es", engine="kokoro"))
+        voices.append(
+            TTSVoiceItem(
+                # The deployed Qwen3-TTS Base checkpoint has no named speaker catalog.
+                id="base-default",
+                lang="es",
+                engine="qwen3-tts",
+            )
+        )
     elif lang == "quc":
         voices.append(TTSVoiceItem(id=tts.piper_model_quc, lang="quc", engine="piper"))
         if tts.voice_quc:

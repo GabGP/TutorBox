@@ -24,9 +24,11 @@ DEFAULT_SLM_TIMEOUT_SECONDS: float = 60.0
 
 DEFAULT_QUIZ_MAX_RETRIES: int = 3
 
-# Offline classroom voice (espeak-ng & neural Piper) used by the >51% spoken intervention.
+# Offline classroom voice (multi-tier: qwen3-tts → sherpa/piper → espeak) for >51% spoken intervention.
 DEFAULT_TTS_ENABLED: bool = True
-DEFAULT_TTS_ENGINE: str = "auto"  # "auto", "piper", "espeak"
+DEFAULT_TTS_ENGINE: str = (
+    "auto"  # "auto", "qwen3-tts", "sherpa", "piper", "kokoro", "espeak"
+)
 DEFAULT_TTS_BINARY: str = ""  # empty: auto-detect espeak-ng, then legacy espeak
 DEFAULT_TTS_VOICE: str = "es-419"  # espeak-ng Latin American Spanish
 DEFAULT_TTS_VOICE_QUC: str = ""  # no K'iche' voice ships with espeak-ng yet
@@ -61,6 +63,7 @@ DEFAULT_TTS_KOKORO_SPEAKER_ID: int = 53  # 53 = em_santa (Spanish)
 DEFAULT_TTS_KOKORO_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
 DEFAULT_TTS_MELO_VOICE: str = "ES"
 DEFAULT_TTS_QWEN_GGUF_PATH: str = ""
+DEFAULT_TTS_QWEN_BINARY: str = ""  # empty: auto-detect llama-tts in standard paths/PATH
 DEFAULT_TTS_QWEN_THREADS: int = 6
 
 # Captive portal: answer phone connectivity probes with a redirect to the student

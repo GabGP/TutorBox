@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from core.config import get_settings
-from core.tts.audio import pcm_to_wav
+from core.tts.audio import calibrate_wav_peak, pcm_to_wav
 from core.tts.constants import (
     DEFAULT_PIPER_SAMPLE_RATE_HZ,
     MILLISECONDS_PER_SECOND,
@@ -105,7 +105,7 @@ class PiperBackend:
         for chunk in voice.synthesize(text, syn_config=syn_cfg):
             raw_pcm.extend(chunk.audio_int16_bytes)
 
-        return pcm_to_wav(raw_pcm, voice.config.sample_rate)
+        return calibrate_wav_peak(pcm_to_wav(raw_pcm, voice.config.sample_rate))
 
     def _synthesize_subprocess(
         self, model_path: Path, text: str, speaker_id: int
@@ -119,7 +119,7 @@ class PiperBackend:
         )
         if res.returncode != SUBPROCESS_SUCCESS_EXIT_CODE or not res.stdout:
             raise TTSSynthesisError(f"Piper exited with code {res.returncode}")
-        return pcm_to_wav(res.stdout, DEFAULT_PIPER_SAMPLE_RATE_HZ)
+        return calibrate_wav_peak(pcm_to_wav(res.stdout, DEFAULT_PIPER_SAMPLE_RATE_HZ))
 
     def synthesize(self, text: str, voice: str | None = None) -> bytes:
         """Synthesizes spoken WAV audio for the given text using Piper VITS."""
