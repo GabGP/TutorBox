@@ -56,6 +56,7 @@ DEFAULT_TTS_SHERPA_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
 DEFAULT_TTS_MOSS_MODEL: str = "moss-nano-es.onnx"
 DEFAULT_TTS_KOKORO_VOICE: str = "es"
 DEFAULT_TTS_KOKORO_MODEL_DIR: str = "kokoro-int8-multi-lang-v1_0"
+DEFAULT_TTS_KOKORO_MODEL_FILE: str = "model.onnx"
 DEFAULT_TTS_KOKORO_SPEAKER_ID: int = 53  # 53 = em_santa (Spanish)
 DEFAULT_TTS_KOKORO_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
 DEFAULT_TTS_MELO_VOICE: str = "ES"

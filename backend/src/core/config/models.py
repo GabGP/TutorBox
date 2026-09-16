@@ -25,6 +25,7 @@ from core.config.constants import (
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
     DEFAULT_TTS_KOKORO_MODEL_DIR,
+    DEFAULT_TTS_KOKORO_MODEL_FILE,
     DEFAULT_TTS_KOKORO_PROVIDER,
     DEFAULT_TTS_KOKORO_SPEAKER_ID,
     DEFAULT_TTS_KOKORO_VOICE,
@@ -117,6 +118,7 @@ class TTSConfig:
     moss_model: str = DEFAULT_TTS_MOSS_MODEL
     kokoro_voice: str = DEFAULT_TTS_KOKORO_VOICE
     kokoro_model_dir: str = DEFAULT_TTS_KOKORO_MODEL_DIR
+    kokoro_model_file: str = DEFAULT_TTS_KOKORO_MODEL_FILE
     kokoro_speaker_id: int = DEFAULT_TTS_KOKORO_SPEAKER_ID
     kokoro_provider: str = DEFAULT_TTS_KOKORO_PROVIDER
     melo_voice: str = DEFAULT_TTS_MELO_VOICE

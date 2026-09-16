@@ -8,6 +8,7 @@ from core.config.constants import (
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
     DEFAULT_TTS_KOKORO_MODEL_DIR,
+    DEFAULT_TTS_KOKORO_MODEL_FILE,
     DEFAULT_TTS_KOKORO_SPEAKER_ID,
     DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
@@ -129,6 +130,9 @@ def build_tts_config() -> TTSConfig:
         ).strip(),
         kokoro_model_dir=os.environ.get(
             "TTS_KOKORO_MODEL_DIR", DEFAULT_TTS_KOKORO_MODEL_DIR
+        ).strip(),
+        kokoro_model_file=os.environ.get(
+            "TTS_KOKORO_MODEL_FILE", DEFAULT_TTS_KOKORO_MODEL_FILE
         ).strip(),
         kokoro_speaker_id=parse_int(
             "TTS_KOKORO_SPEAKER_ID", DEFAULT_TTS_KOKORO_SPEAKER_ID, min_value=0

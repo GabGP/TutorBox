@@ -8,6 +8,7 @@ from core.config import (
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
     DEFAULT_TTS_KOKORO_MODEL_DIR,
+    DEFAULT_TTS_KOKORO_MODEL_FILE,
     DEFAULT_TTS_KOKORO_PROVIDER,
     DEFAULT_TTS_KOKORO_SPEAKER_ID,
     DEFAULT_TTS_KOKORO_VOICE,
@@ -64,6 +65,7 @@ _TTS_ENV_VARS = (
     "TTS_MOSS_MODEL",
     "TTS_KOKORO_VOICE",
     "TTS_KOKORO_MODEL_DIR",
+    "TTS_KOKORO_MODEL_FILE",
     "TTS_KOKORO_SPEAKER_ID",
     "TTS_KOKORO_PROVIDER",
     "TTS_MELO_VOICE",
@@ -114,6 +116,7 @@ def test_build_tts_config_defaults() -> None:
     assert config.moss_model == DEFAULT_TTS_MOSS_MODEL
     assert config.kokoro_voice == DEFAULT_TTS_KOKORO_VOICE
     assert config.kokoro_model_dir == DEFAULT_TTS_KOKORO_MODEL_DIR
+    assert config.kokoro_model_file == DEFAULT_TTS_KOKORO_MODEL_FILE
     assert config.kokoro_speaker_id == DEFAULT_TTS_KOKORO_SPEAKER_ID
     assert config.kokoro_provider == DEFAULT_TTS_KOKORO_PROVIDER
     assert config.melo_voice == DEFAULT_TTS_MELO_VOICE
@@ -150,6 +153,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_MOSS_MODEL", "custom_moss.onnx")
     monkeypatch.setenv("TTS_KOKORO_VOICE", "custom_kokoro")
     monkeypatch.setenv("TTS_KOKORO_MODEL_DIR", "custom_kokoro_dir")
+    monkeypatch.setenv("TTS_KOKORO_MODEL_FILE", "custom_kokoro.onnx")
     monkeypatch.setenv("TTS_KOKORO_SPEAKER_ID", "42")
     monkeypatch.setenv("TTS_KOKORO_PROVIDER", "cuda")
     monkeypatch.setenv("TTS_MELO_VOICE", "custom_melo")
@@ -184,6 +188,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.moss_model == "custom_moss.onnx"
     assert config.kokoro_voice == "custom_kokoro"
     assert config.kokoro_model_dir == "custom_kokoro_dir"
+    assert config.kokoro_model_file == "custom_kokoro.onnx"
     assert config.kokoro_speaker_id == 42
     assert config.kokoro_provider == "cuda"
     assert config.melo_voice == "custom_melo"

@@ -49,7 +49,10 @@ def _find_kokoro_dir(target_name: str) -> Path | None:
     return None
 
 
-def resolve_kokoro_paths(model_dir_name: str | None = None) -> KokoroModelPaths:
+def resolve_kokoro_paths(
+    model_dir_name: str | None = None,
+    model_file_name: str | None = None,
+) -> KokoroModelPaths:
     """Resolves all file and directory paths for Kokoro-82M ONNX model."""
     tts_cfg = get_settings().tts
     target_name = model_dir_name or tts_cfg.kokoro_model_dir
@@ -59,8 +62,12 @@ def resolve_kokoro_paths(model_dir_name: str | None = None) -> KokoroModelPaths:
             f"Kokoro model directory '{target_name}' was not found in search paths."
         )
 
+    pref = (model_file_name or tts_cfg.kokoro_model_file).strip()
+    candidates = tuple(
+        dict.fromkeys(filter(None, (pref, "model.onnx", "model.int8.onnx")))
+    )
     model_file: Path | None = None
-    for candidate in ("model.int8.onnx", "model.onnx"):
+    for candidate in candidates:
         p = model_dir / candidate
         if p.is_file():
             model_file = p.resolve()
@@ -74,12 +81,8 @@ def resolve_kokoro_paths(model_dir_name: str | None = None) -> KokoroModelPaths:
                 f"Kokoro '{required}' not found in '{model_dir}'."
             )
 
-    voices_file = (model_dir / "voices.bin").resolve()
-    tokens_file = (model_dir / "tokens.txt").resolve()
-    data_dir = (model_dir / "espeak-ng-data").resolve()
     dict_candidate = model_dir / "dict"
     dict_dir = dict_candidate.resolve() if dict_candidate.is_dir() else None
-
     lexicons = tuple(
         (model_dir / name).resolve()
         for name in ("lexicon-us-en.txt", "lexicon-zh.txt")
@@ -88,9 +91,9 @@ def resolve_kokoro_paths(model_dir_name: str | None = None) -> KokoroModelPaths:
 
     return KokoroModelPaths(
         model_path=model_file,
-        voices_path=voices_file.resolve(),
-        tokens_path=tokens_file.resolve(),
-        data_dir=data_dir.resolve(),
+        voices_path=(model_dir / "voices.bin").resolve(),
+        tokens_path=(model_dir / "tokens.txt").resolve(),
+        data_dir=(model_dir / "espeak-ng-data").resolve(),
         dict_dir=dict_dir,
         lexicon_paths=lexicons,
     )
@@ -102,15 +105,8 @@ def samples_to_wav(
     target_peak: float = 0.78,
 ) -> bytes:
     """Converts float audio samples into RIFF/WAV bytes with calibrated peak amplitude."""
-    if not samples:
-        scale = 1.0
-    else:
-        max_amplitude = max(abs(sample) for sample in samples)
-        scale = (
-            (target_peak / max_amplitude)
-            if (max_amplitude > 0.0 and target_peak > 0.0)
-            else 1.0
-        )
+    max_amp = max((abs(s) for s in samples), default=0.0)
+    scale = (target_peak / max_amp) if (max_amp > 0.0 and target_peak > 0.0) else 1.0
 
     int16_samples = array.array(
         "h", (int(max(-1.0, min(1.0, s * scale)) * 32767) for s in samples)
