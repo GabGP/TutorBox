@@ -115,6 +115,8 @@ def list_tts_voices(
             voices.append(
                 TTSVoiceItem(id=tts.sherpa_model_es, lang="es", engine="sherpa")
             )
+        if tts.kokoro_voice:
+            voices.append(TTSVoiceItem(id=tts.kokoro_voice, lang="es", engine="kokoro"))
     elif lang == "quc":
         voices.append(TTSVoiceItem(id=tts.piper_model_quc, lang="quc", engine="piper"))
         if tts.voice_quc:

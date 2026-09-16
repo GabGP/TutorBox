@@ -51,12 +51,16 @@ DEFAULT_TTS_PIPER_NOISE_W_SCALE: float = 0.45
 
 # Extended Spanish TTS candidate engine defaults for A/B benchmarking
 DEFAULT_TTS_SHERPA_MODEL_ES: str = "es_ES-sharvard-medium.onnx"
-DEFAULT_TTS_SHERPA_THREADS: int = 4
+DEFAULT_TTS_SHERPA_THREADS: int = 6  # 6 cores on Jetson Orin Nano
+DEFAULT_TTS_SHERPA_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
 DEFAULT_TTS_MOSS_MODEL: str = "moss-nano-es.onnx"
 DEFAULT_TTS_KOKORO_VOICE: str = "es"
+DEFAULT_TTS_KOKORO_MODEL_DIR: str = "kokoro-int8-multi-lang-v1_0"
+DEFAULT_TTS_KOKORO_SPEAKER_ID: int = 53  # 53 = em_santa (Spanish)
+DEFAULT_TTS_KOKORO_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
 DEFAULT_TTS_MELO_VOICE: str = "ES"
 DEFAULT_TTS_QWEN_GGUF_PATH: str = ""
-DEFAULT_TTS_QWEN_THREADS: int = 4
+DEFAULT_TTS_QWEN_THREADS: int = 6
 
 # Captive portal: answer phone connectivity probes with a redirect to the student
 # page so the OS sign-in browser opens it automatically when a device joins the AP.

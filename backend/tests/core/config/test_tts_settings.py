@@ -7,6 +7,9 @@ from core.config import (
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
+    DEFAULT_TTS_KOKORO_MODEL_DIR,
+    DEFAULT_TTS_KOKORO_PROVIDER,
+    DEFAULT_TTS_KOKORO_SPEAKER_ID,
     DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
@@ -24,6 +27,7 @@ from core.config import (
     DEFAULT_TTS_QWEN_GGUF_PATH,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
+    DEFAULT_TTS_SHERPA_PROVIDER,
     DEFAULT_TTS_SHERPA_THREADS,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
@@ -55,9 +59,13 @@ _TTS_ENV_VARS = (
     "TTS_PIPER_NOISE_SCALE",
     "TTS_PIPER_NOISE_W_SCALE",
     "TTS_SHERPA_MODEL_ES",
+    "TTS_SHERPA_PROVIDER",
     "TTS_SHERPA_THREADS",
     "TTS_MOSS_MODEL",
     "TTS_KOKORO_VOICE",
+    "TTS_KOKORO_MODEL_DIR",
+    "TTS_KOKORO_SPEAKER_ID",
+    "TTS_KOKORO_PROVIDER",
     "TTS_MELO_VOICE",
     "TTS_QWEN_GGUF_PATH",
     "TTS_QWEN_THREADS",
@@ -102,8 +110,12 @@ def test_build_tts_config_defaults() -> None:
     # Candidate engine defaults
     assert config.sherpa_model_es == DEFAULT_TTS_SHERPA_MODEL_ES
     assert config.sherpa_threads == DEFAULT_TTS_SHERPA_THREADS
+    assert config.sherpa_provider == DEFAULT_TTS_SHERPA_PROVIDER
     assert config.moss_model == DEFAULT_TTS_MOSS_MODEL
     assert config.kokoro_voice == DEFAULT_TTS_KOKORO_VOICE
+    assert config.kokoro_model_dir == DEFAULT_TTS_KOKORO_MODEL_DIR
+    assert config.kokoro_speaker_id == DEFAULT_TTS_KOKORO_SPEAKER_ID
+    assert config.kokoro_provider == DEFAULT_TTS_KOKORO_PROVIDER
     assert config.melo_voice == DEFAULT_TTS_MELO_VOICE
     assert config.qwen_gguf_path == DEFAULT_TTS_QWEN_GGUF_PATH
     assert config.qwen_threads == DEFAULT_TTS_QWEN_THREADS
@@ -134,8 +146,12 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
 
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "custom_sherpa.onnx")
     monkeypatch.setenv("TTS_SHERPA_THREADS", "8")
+    monkeypatch.setenv("TTS_SHERPA_PROVIDER", "cuda")
     monkeypatch.setenv("TTS_MOSS_MODEL", "custom_moss.onnx")
     monkeypatch.setenv("TTS_KOKORO_VOICE", "custom_kokoro")
+    monkeypatch.setenv("TTS_KOKORO_MODEL_DIR", "custom_kokoro_dir")
+    monkeypatch.setenv("TTS_KOKORO_SPEAKER_ID", "42")
+    monkeypatch.setenv("TTS_KOKORO_PROVIDER", "cuda")
     monkeypatch.setenv("TTS_MELO_VOICE", "custom_melo")
     monkeypatch.setenv("TTS_QWEN_GGUF_PATH", "/path/to/qwen.gguf")
     monkeypatch.setenv("TTS_QWEN_THREADS", "6")
@@ -164,8 +180,12 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
 
     assert config.sherpa_model_es == "custom_sherpa.onnx"
     assert config.sherpa_threads == 8
+    assert config.sherpa_provider == "cuda"
     assert config.moss_model == "custom_moss.onnx"
     assert config.kokoro_voice == "custom_kokoro"
+    assert config.kokoro_model_dir == "custom_kokoro_dir"
+    assert config.kokoro_speaker_id == 42
+    assert config.kokoro_provider == "cuda"
     assert config.melo_voice == "custom_melo"
     assert config.qwen_gguf_path == "/path/to/qwen.gguf"
     assert config.qwen_threads == 6
@@ -180,6 +200,9 @@ def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
     monkeypatch.setenv("TTS_MAX_CHARS", "10")
 
     monkeypatch.setenv("TTS_ENGINE", "unknown_engine")
+    monkeypatch.setenv("TTS_SHERPA_PROVIDER", "invalid_provider")
+    monkeypatch.setenv("TTS_KOKORO_PROVIDER", "invalid_provider")
+    monkeypatch.setenv("TTS_KOKORO_SPEAKER_ID", "-1")
     monkeypatch.setenv("TTS_PIPER_SPEAKER_ES", "-1")
     monkeypatch.setenv("TTS_PIPER_LENGTH_SCALE", "5.0")
     monkeypatch.setenv("TTS_PIPER_NOISE_SCALE", "-0.5")
@@ -193,6 +216,9 @@ def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
     assert config.max_chars == DEFAULT_TTS_MAX_CHARS
 
     assert config.engine == DEFAULT_TTS_ENGINE
+    assert config.sherpa_provider == DEFAULT_TTS_SHERPA_PROVIDER
+    assert config.kokoro_provider == DEFAULT_TTS_KOKORO_PROVIDER
+    assert config.kokoro_speaker_id == DEFAULT_TTS_KOKORO_SPEAKER_ID
     assert config.piper_speaker_es == DEFAULT_TTS_PIPER_SPEAKER_ES
     assert config.piper_length_scale == DEFAULT_TTS_PIPER_LENGTH_SCALE
     assert config.piper_noise_scale == DEFAULT_TTS_PIPER_NOISE_SCALE

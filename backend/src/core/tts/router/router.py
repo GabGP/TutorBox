@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from core.config import get_settings
-from core.tts.engines import EspeakBackend, PiperBackend, SherpaBackend
+from core.tts.engines import EspeakBackend, KokoroBackend, PiperBackend, SherpaBackend
 from core.tts.exceptions import TTSUnavailableError
 from core.tts.protocols import TTSBackend
 from core.tts.router.selection import (
@@ -32,15 +32,18 @@ class TTSRouter:
         piper: TTSBackend | None = None,
         espeak: TTSBackend | None = None,
         sherpa: TTSBackend | None = None,
+        kokoro: TTSBackend | None = None,
         backends: dict[str, TTSBackend] | None = None,
     ) -> None:
         self.piper = piper or PiperBackend()
         self.espeak = espeak or EspeakBackend()
         self.sherpa = sherpa or SherpaBackend()
+        self.kokoro = kokoro or KokoroBackend()
         self._backends: dict[str, TTSBackend] = {
             "piper": self.piper,
             "espeak": self.espeak,
             "sherpa": self.sherpa,
+            "kokoro": self.kokoro,
             **(backends or {}),
         }
         self._cache: dict[tuple[str, ...], bytes] = {}

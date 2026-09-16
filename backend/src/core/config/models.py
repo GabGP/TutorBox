@@ -24,6 +24,9 @@ from core.config.constants import (
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
+    DEFAULT_TTS_KOKORO_MODEL_DIR,
+    DEFAULT_TTS_KOKORO_PROVIDER,
+    DEFAULT_TTS_KOKORO_SPEAKER_ID,
     DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
@@ -41,6 +44,7 @@ from core.config.constants import (
     DEFAULT_TTS_QWEN_GGUF_PATH,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
+    DEFAULT_TTS_SHERPA_PROVIDER,
     DEFAULT_TTS_SHERPA_THREADS,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
@@ -109,8 +113,12 @@ class TTSConfig:
     # Candidate engine configuration for A/B benchmarking
     sherpa_model_es: str = DEFAULT_TTS_SHERPA_MODEL_ES
     sherpa_threads: int = DEFAULT_TTS_SHERPA_THREADS
+    sherpa_provider: str = DEFAULT_TTS_SHERPA_PROVIDER
     moss_model: str = DEFAULT_TTS_MOSS_MODEL
     kokoro_voice: str = DEFAULT_TTS_KOKORO_VOICE
+    kokoro_model_dir: str = DEFAULT_TTS_KOKORO_MODEL_DIR
+    kokoro_speaker_id: int = DEFAULT_TTS_KOKORO_SPEAKER_ID
+    kokoro_provider: str = DEFAULT_TTS_KOKORO_PROVIDER
     melo_voice: str = DEFAULT_TTS_MELO_VOICE
     qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
     qwen_threads: int = DEFAULT_TTS_QWEN_THREADS

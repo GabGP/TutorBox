@@ -119,6 +119,7 @@ def test_tts_voices_listing(
     assert any(v["engine"] == "piper" for v in voices_es)
     assert any(v["engine"] == "espeak" for v in voices_es)
     assert any(v["engine"] == "sherpa" for v in voices_es)
+    assert any(v["engine"] == "kokoro" for v in voices_es)
 
     res_sherpa = client.get(
         "/api/v1/tts/voices?lang=es&engine=sherpa", headers=teacher_headers

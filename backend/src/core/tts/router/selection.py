@@ -121,7 +121,14 @@ def resolve_voice_for_backend(
 def get_engine_status(backend: TTSBackend) -> dict[str, Any]:
     """Returns the readiness status and model identifier for a backend."""
     cfg = get_settings().tts
-    mid_map = {"piper": cfg.piper_model_es, "sherpa": cfg.sherpa_model_es}
+    mid_map = {
+        "piper": cfg.piper_model_es,
+        "sherpa": cfg.sherpa_model_es,
+        "moss-nano": cfg.moss_model,
+        "kokoro": cfg.kokoro_voice,
+        "melo": cfg.melo_voice,
+        "qwen-gguf": cfg.qwen_gguf_path,
+    }
     model_id = mid_map.get(backend.engine_name, cfg.voice)
     return {
         "engine": backend.engine_name,
