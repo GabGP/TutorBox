@@ -15,10 +15,11 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 
-from benchmark.tts.metrics import profile_engine
+from benchmark.tts.metrics import _detect_engine_provider, profile_engine
 
 COLUMNS_ORDER: tuple[str, ...] = (
     "engine",
+    "provider",
     "cold_first_s",
     "warm_p50_s",
     "warm_p95_s",
@@ -82,7 +83,14 @@ def main() -> int:
                 ImportError,
             ) as err:  # missing model/dep
                 print(f"[{eng}] unavailable: {err}")
-                rows.append({"engine": eng, "text_idx": idx, "error": str(err)[:160]})
+                rows.append(
+                    {
+                        "engine": eng,
+                        "provider": _detect_engine_provider(eng),
+                        "text_idx": idx,
+                        "error": str(err)[:160],
+                    }
+                )
                 continue
 
             name = wavdir / f"{eng}_es_{idx}.wav"
@@ -94,7 +102,7 @@ def main() -> int:
             }
             rows.append(row)  # type: ignore[arg-type]
             print(
-                f"[{eng} #{idx}] cold={row['cold_first_s']}s warm_p50={row['warm_p50_s']}s "
+                f"[{eng}:{row.get('provider', 'cpu')} #{idx}] cold={row['cold_first_s']}s warm_p50={row['warm_p50_s']}s "
                 f"rtf={row['rtf_p50']} peak={row['peak']} rss+{row['rss_delta_mb']}MB -> {name}"
             )
 

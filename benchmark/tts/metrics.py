@@ -65,6 +65,7 @@ class EngineStats:
     engine: str
     runs: tuple[ProfileResult, ...]
     wav_bytes: bytes  # last warm run audio bytes for evaluation
+    provider: str = "cpu"
 
     @property
     def warm(self) -> tuple[ProfileResult, ...]:
@@ -81,6 +82,7 @@ class EngineStats:
 
         return {
             "engine": self.engine,
+            "provider": self.provider,
             "cold_first_s": round(first_run.latency_seconds, 3),
             "warm_p50_s": round(statistics.median(latencies), 3),
             "warm_p95_s": round(latencies[p95_index], 3),
@@ -287,7 +289,32 @@ def profile_engine(
         )
         runs.append(_make_profile_result(text, wav_bytes, warm_latency, cold=False))
 
-    return EngineStats(engine=engine, runs=tuple(runs), wav_bytes=wav_bytes)
+    active_provider = _detect_engine_provider(engine)
+    return EngineStats(
+        engine=engine,
+        runs=tuple(runs),
+        wav_bytes=wav_bytes,
+        provider=active_provider,
+    )
+
+
+def _detect_engine_provider(engine: str) -> str:
+    """Returns the resolved execution provider ('cpu' or 'cuda') for an engine."""
+    if engine in ("kokoro", "sherpa"):
+        try:
+            from core.config import get_settings
+            from core.tts.engines.provider import resolve_execution_provider
+
+            tts_cfg = get_settings().tts
+            cfg_val = (
+                tts_cfg.kokoro_provider
+                if engine == "kokoro"
+                else tts_cfg.sherpa_provider
+            )
+            return resolve_execution_provider(cfg_val)
+        except Exception:
+            return "cpu"
+    return "cpu"
 
 
 def main() -> None:
