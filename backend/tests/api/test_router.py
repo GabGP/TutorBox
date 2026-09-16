@@ -17,6 +17,9 @@ def test_api_v1_router_prefixes():
     assert any(path.startswith("/api/v1/users") for path in paths)
     assert any(path.startswith("/api/v1/staff") for path in paths)
     assert any(path.startswith("/api/v1/quiz") for path in paths)
+    assert any(path.startswith("/api/v1/session") for path in paths)
+    assert any(path.startswith("/api/v1/tts") for path in paths)
+    assert any(path.startswith("/api/v1/llm") for path in paths)
 
 
 def test_root_router_mounts_health_and_v1():
