@@ -255,3 +255,10 @@ def test_select_backend_quc_additional_branches(monkeypatch: pytest.MonkeyPatch)
 
     with pytest.raises(TTSUnavailableError, match="not registered or does not support"):
         router.select_backend("quc", engine="unknown_engine")
+
+
+def test_synthesize_custom_voice_override():
+    """Verifies explicit voice parameter overrides default voice mapping."""
+    router, mock_piper, _ = _make_mock_router()
+    router.synthesize("Texto", lang="es", voice="custom-voice-id")
+    mock_piper.synthesize.assert_called_with("Texto", voice="custom-voice-id")
