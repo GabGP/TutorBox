@@ -29,7 +29,7 @@ This document summarizes the technical deliverables, architectural implementatio
   * Versioned REST API endpoints (`/api/v1/session`) coordinating match creation, turn lifecycle, and student voting.
   * Concurrency verification suite (`backend/tests/api/session/test_session_concurrency.py`) proving 15 simultaneous clients (web + hardware), 0 lost votes, and first-press lock race resolution.
   * Public phase-gating (`state_builder.py`) hiding question answers during active voting and dynamically publishing diagnostic explanations upon reveal.
-  * Offline TTS speech synthesis pipeline (`backend/src/api/session/speech.py`, `backend/src/core/tts/espeak.py`) generating WAV audio for >51% distractor remediation.
+  * Offline TTS speech synthesis pipeline (`backend/src/api/session/speech.py`, `backend/src/core/tts/`) generating WAV audio for >51% distractor remediation.
   * Captive portal subsystem (`backend/src/api/captive.py`, `infra/captive-portal.md`) providing zero-configuration classroom discovery.
   * Event dispatcher (`session/events.py`) and entity resolver (`api/session/dependencies.py`) maintaining strict Single Responsibility decoupling.
 
@@ -107,7 +107,7 @@ This document summarizes the technical deliverables, architectural implementatio
 4. **ESP32 Hardware Protocol Specification (`docs/architecture/esp32-protocol.md`)**:
    * Authored comprehensive 537-line engineering specification detailing BLE GATT provisioning, HTTP polling loops, token auth lifecycle, and network capacity planning for Week 7.
 5. **Spoken Remediation Voice Integration (`pwa/pilas/maestro/` & Speech API)**:
-   * Connected teacher portal to `GET /api/v1/session/{session_id}/speech?lang=es|quc` with audio streaming via offline eSpeak-ng engine (`backend/src/core/tts/espeak.py`).
+   * Connected teacher portal to `GET /api/v1/session/{session_id}/speech?lang=es|quc` with audio streaming via the offline multi-tier TTS router (`backend/src/core/tts/`).
    * Implemented iOS silent-WAV audio context priming, real-time speech indicator state (`loading`, `playing`, `done`, `error`), and bilingual toggle (Spanish vs K'iche').
 6. **Captive Portal Architecture & Offline DNS (`backend/src/api/captive.py` & `infra/captive-portal.md`)**:
    * Implemented RFC 8952 captive portal API and OS detection probe handlers (`/generate_204`, `/hotspot-detect.html`, `/ncsi.txt`) with Nginx redirection to `/alumno/`.

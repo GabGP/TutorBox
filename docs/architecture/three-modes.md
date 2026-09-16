@@ -44,7 +44,7 @@ graph TD
 * **Workflow**: The teacher initiates a quiz session from her mobile browser. Students connect over the local Wi-Fi AP using their devices (or ESP32 clickers in Week 7).
 * **Diagnostic Distractors**: Every question contains exactly 4 options (A–D): 1 mathematically correct answer and 3 diagnostic distractors. Each distractor intentionally maps to a concrete conceptual misconception and primary-school explanation.
 * **The >51% Audio Intervention Rule**:
-  * If **>51%** of participating students select the same diagnostic distractor, the appliance synthesizes the misconception explanation offline (espeak-ng, Latin American Spanish `es-419`) and the teacher's device reads it out loud to the classroom. The threshold is strict: exactly 51% stays silent.
+  * If **>51%** of participating students select the same diagnostic distractor, the appliance synthesizes the misconception explanation offline using the `qwen3-tts -> sherpa -> piper -> espeak` Spanish fallback chain, and the teacher's device reads it out loud to the classroom. The threshold is strict: exactly 51% stays silent.
   * If students answer correctly or votes are scattered, the system proceeds silently.
 
 #### Diagnostic Question JSON Schema Contract (Week 2):

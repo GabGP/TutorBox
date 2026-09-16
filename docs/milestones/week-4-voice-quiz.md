@@ -24,7 +24,7 @@ This document summarizes the technical deliverables, architectural implementatio
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
 * **Modularity Compliance**: **100% of production source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC**, strictly validated by `tests/test_modularity_policy.py`.
 * **Key Milestone Artifacts**:
-  * **Pluggable Voice Architecture**: Hardware-agnostic `TTSBackend` protocol with in-memory `PiperBackend` (ONNX VITS), `EspeakBackend` (formant fallback), and `TTSRouter` with 32-entry LRU cache.
+  * **Pluggable Voice Architecture**: Hardware-agnostic `TTSBackend` protocol with Qwen3-TTS as the primary Spanish backend, Sherpa-ONNX/Piper VITS fallbacks, `EspeakBackend` as the formant safety fallback, and a `TTSRouter` with 32-entry LRU cache.
   * **Primary-School Text Adaptation**: Oral fraction conversions, LaTeX sanitization, exponent reading, and natural sentence pacing (`core/tts/text.py`).
   * **Mayan Language Routing Seam**: Dedicated routing seam for Mayan K'iche' (`quc_Latn`) in `TTSRouter` with fail-safe error isolation (`503 Service Unavailable` when model checkpoint is absent).
   * **Latency & Acoustic Profiler**: Unified benchmarking harness (`benchmark/tts/metrics.py` and `ab.py`, runnable via `uv run python benchmark/tts/metrics.py`) measuring wall-clock synthesis time and Real-Time Factor ($0.237$s latency, $0.044$x RTF, exceeding $\le 3.0$s SLA by 92%).
@@ -56,11 +56,11 @@ This document summarizes the technical deliverables, architectural implementatio
    * **Automatic Config Sanitization**: Dynamically fixes legacy `"PhonemeType.ESPEAK"` string literals in `.onnx.json` model descriptors to prevent runtime enum exceptions.
    * `engines/sherpa/`: Embedded Sherpa-ONNX VITS neural synthesis engine (`engine.py`, `models.py`) with token generation and sample conversion.
    * `engines/espeak/`: Formant synthesizer implementing `TTSBackend` protocol as ultra-lightweight fallback (`engine.py`, `cli.py`).
-   * `router/`: Pluggable dispatcher (`router.py`, `selection.py`) selecting engines (`auto`, `piper`, `sherpa`, `espeak`), routing Mayan K'iche' (`quc_Latn`), falling back gracefully from neural to eSpeak for Spanish, and caching generated audio in an in-memory 32-entry LRU cache.
+   * `router/`: Pluggable dispatcher (`router.py`, `selection.py`) selecting the Spanish tiers (`qwen3-tts`, `sherpa`, `piper`, `espeak`) in quality-first order, routing Mayan K'iche' (`quc_Latn`), falling back gracefully between Spanish tiers, and caching generated audio in an in-memory 32-entry LRU cache.
    * `api/session/speech.py`: Refactored to delegate synthesis directly to `core.tts.synthesize_speech()`.
 4. **Latency Profiler & Benchmark Harness (`benchmark/tts/metrics.py` & `ab.py`)**:
    * Diagnostic profiler measuring wall-clock synthesis time, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude levels.
-   * Executable directly from terminal via `uv run python benchmark/tts/metrics.py --engine piper` or programmatically via `profile_speech_synthesis()`.
+   * Executable directly from terminal via `uv run python benchmark/tts/metrics.py --engine qwen3-tts` or programmatically via `profile_speech_synthesis()`.
    * Empirical results: **0.237 s latency**, **0.044x RTF** (22.8x faster than real-time playback), meeting the $\le 3.0$s SLA requirement with a 92% margin.
 5. **Jetson Orin Nano 8GB Unified Memory Profile**:
    * Detailed RAM budget co-locating `llama.cpp` (4B model, ~2.80 GB RSS), Piper-TTS VITS (~0.25 GB RSS), FastAPI (~0.15 GB), SQLite WAL (~0.50 GB), and OS (~1.00 GB).
@@ -99,7 +99,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ### Key Talking Points for the Jury:
 
 1. **Acoustic Architecture & Model Selection**:
-   * Explain why **Piper-TTS VITS** on ONNX Runtime was chosen: human-sounding natural enunciation, sub-second latency ($0.237$s), ~150MB RAM footprint, and architectural routing support for Mayan language checkpoints (`quc_Latn`).
+   * Explain why **Qwen3-TTS** is the current quality winner, and why Sherpa-ONNX/Piper provide sub-second fallbacks while eSpeak-ng remains the robotic availability safety net.
    * Why Spanish Harvard Sentences (`es_ES-sharvard-medium`, Speaker 1) was selected as the educational default over Mexican regional voices (`es_MX-ald`, `es_MX-claude`): neutral, textbook-clean diction preventing regional bias in Central American classrooms.
 2. **Deterministic >51% Gating (Targeted Intervention vs Narration)**:
    * Emphasize that TutorBox is **not a screen reader**: voice feedback is a targeted pedagogical intervention triggered strictly when $>51\%$ of the class share the exact same conceptual misconception:

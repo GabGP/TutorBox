@@ -60,7 +60,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
-  - **Offline Voice & Lifecycle (`core/tts`, `api/tts`, `api/llm`)**: Pluggable voice synthesis for the >51% spoken intervention — neural Piper VITS baseline with Latin American Spanish and K'iche' models, espeak-ng formant fallback, hardware-contained LRU audio caching, and explicit quiz-agnostic lifecycle endpoints (`/api/v1/tts/load`, `/api/v1/tts/unload`, `/api/v1/tts/status`, `/api/v1/tts/voices`, and `/api/v1/llm/*` proxy).
+  - **Offline Voice & Lifecycle (`core/tts`, `api/tts`, `api/llm`)**: Multi-tier pluggable voice synthesis for the >51% spoken intervention — state-of-the-art **Qwen3-TTS** (1.7B autoregressive transformer on CUDA), ultra-fast **Sherpa-ONNX / Piper VITS** (Latin American Spanish and Mayan K'iche'), high-fidelity **Kokoro-82M**, and **espeak-ng** formant fallback; hardware-contained LRU audio caching, and explicit quiz-agnostic lifecycle endpoints (`/api/v1/tts/load`, `/api/v1/tts/unload`, `/api/v1/tts/status`, `/api/v1/tts/voices`, and `/api/v1/llm/*` proxy).
 
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
@@ -69,7 +69,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 The following items are planned deliverables across upcoming milestone phases:
 
-- **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention ships on offline espeak-ng (`core/tts/`, Latin American Spanish `es-419`, `GET /session/{id}/speech`); a neural voice (Piper-TTS / Sherpa-ONNX) and a K'iche' voice slot into the same endpoint via `TTS_VOICE` / `TTS_VOICE_QUC`.
+- **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
 - **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
@@ -214,10 +214,10 @@ uv run pytest tests/modes/quiz/ -o addopts="--strict-markers"
 Benchmark speech synthesis latency, Real-Time Factor (RTF), and audio levels on the appliance:
 ```bash
 # Run the TTS profiler CLI:
-uv run python benchmark/tts/metrics.py --engine piper
+uv run python benchmark/tts/metrics.py --engine qwen3-tts
 
 # Or run multi-engine comparative A/B sweep:
-uv run python benchmark/tts/ab.py --engines piper,espeak --repeats 3
+uv run python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
 ```
 Run automated latency SLA assertions ($\le 3.0$ seconds):
 ```bash

@@ -76,7 +76,7 @@ gantt
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
 | **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
-| **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Neural Piper VITS ($\le 3$s latency), oral math adaptation, K'iche' routing seam, >51% voice gating, 4B RAM profile | **A** / B |
+| **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, 4B RAM profile | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
@@ -148,7 +148,7 @@ gantt
 ### <a id="week-4"></a>✅ Week 4 — Full Quiz Mode with Offline Spanish & Mayan Voice (Pilot: A · Copilot: B)
 * **Focus**: Complete the end-to-end Classroom Quiz mode with spoken conceptual explanations.
 * **Student A (Pilot - Delivered)**:
-  * Pluggable offline neural voice engine (Piper-TTS VITS via ONNX Runtime) with formant fallback (`espeak-ng`).
+  * Pluggable offline voice engine with Qwen3-TTS as the quality-first Spanish tier, Sherpa-ONNX/Piper VITS fallbacks, and formant fallback (`espeak-ng`).
   * Text adaptation layer converting oral fractions, exponents, and negative numbers for primary-school clarity.
   * Mayan language routing seam for K'iche' (`quc_Latn`) with strict failure isolation.
   * Latency profiler asserting synthesis $\le 3$ seconds (empirically $0.237$s, RTF $0.044$x).

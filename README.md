@@ -21,12 +21,14 @@
 ---
 
 ## Table of Contents
+
 - [1. Project Architecture](#1-project-architecture)
 - [2. Hardware Topology](#2-hardware-topology)
 - [3. Software & AI Stack](#3-software--ai-stack)
 - [4. System Constraints & Guardrails](#4-system-constraints--guardrails)
 - [5. Repository Structure](#5-repository-structure)
-- [6. Technical Documentation](#6-technical-documentation)
+- [6. Quick Start](#6-quick-start)
+- [7. Technical Documentation](#7-technical-documentation)
 - [Next Steps](#next-steps)
 
 ---
@@ -40,11 +42,9 @@ graph TD
     subgraph AP ["Local Access Point"]
         Router["GL.iNet GL-AR300M16 Router<br/>(SSID: TutorBox - Isolated Local AP)"]
     end
-
     subgraph Clients ["Client Layer"]
         Students["Student Devices<br/>(Tablets, Smartphones & ESP32 Clickers)"]
     end
-
     subgraph Core ["Core AI Appliance (NVIDIA Jetson Orin Nano - 8GB Unified RAM)"]
         Nginx["Nginx Web Server & Reverse Proxy"]
         PWA["Compiled React/Vite PWA Static Files"]
@@ -53,15 +53,13 @@ graph TD
         Pedagogy["Socratic State Machine & Session Engine"]
         SQLite[("SQLite Database<br/>bcrypt PIN Hashing")]
         LLM["llama.cpp (Gemma 4 A2B Q4_K_M)<br/>127.0.0.1:8080"]
-        TTS["Offline Voice Output<br/>(Spanish TTS & K'iche' Audio)"]
+        TTS["Offline Voice Output<br/>(Qwen3-TTS -> Sherpa -> Piper -> eSpeak)"]
         HDMI["Classroom Display (HDMI)<br/>Question, Timer, Results & Audio"]
     end
-
     Students <-->|"Wi-Fi (DHCP)"| Router
     Router <-->|"Ethernet"| Nginx
     Nginx --> PWA
     Nginx <-->|"API & WebSockets Proxy"| FastAPI
-
     FastAPI <--> SymPy
     FastAPI <--> Pedagogy
     FastAPI <--> SQLite
@@ -78,29 +76,29 @@ All components operate **100% offline** without WAN connectivity.
 
 | Node | Hardware | Role & Responsibilities |
 | :--- | :--- | :--- |
-| **Core AI Appliance** | NVIDIA Jetson Orin Nano (8GB Unified RAM) | Hosts all software services: Nginx reverse proxy, static PWA hosting, FastAPI backend, `llama.cpp` LLM engine, offline Spanish TTS & K'iche' audio, SymPy validation, SQLite database, and direct HDMI classroom display/audio. |
-| **Wireless AP** | GL.iNet GL-AR300M16 Router | Isolated local Access Point broadcasting SSID `TutorBox`, handling local DHCP IP assignments for student devices. |
+| **Core AI Appliance** | NVIDIA Jetson Orin Nano (8GB Unified RAM) | Hosts Nginx, the PWA, FastAPI, `llama.cpp`, offline Spanish/K'iche' audio, SymPy, SQLite, and classroom HDMI output. |
+| **Wireless AP** | GL.iNet GL-AR300M16 Router | Isolated local Access Point broadcasting SSID `TutorBox` and handling DHCP. |
 
 ---
 
 ## <a id="3-software--ai-stack"></a>3. Software & AI Stack
 
-* **Backend**: Python 3.11+, FastAPI, WebSockets (real-time chat & room management), SQLite (with idempotent SQL migrations).
-* **Frontend**: React / Vite Progressive Web App (PWA), mobile-first, hosted directly on the Jetson appliance via Nginx.
-* **Deterministic Math Engine**: **SymPy** for all mathematical parsing, algebraic verification, and equivalence checking.
-* **LLM Engine**: **Gemma 4 A2B** quantized to `Q4_K_M` running via `llama.cpp` (`llama-server`) bound strictly to `127.0.0.1:8080`.
-* **Voice Output**: Offline **Text-to-Speech (TTS)** for distractor explanations, shipped today as **espeak-ng** in Latin American Spanish (`es-419`, `sudo apt install espeak-ng`) — no model files, negligible RAM, sub-second synthesis. K'iche' (`quc_Latn`) and a neural voice (Piper-TTS / Sherpa-ONNX via ONNX Runtime) remain planned upgrades behind the same endpoint.
-* **Student Input**: Mobile web clicker interface (A–D buttons) and physical ESP32 clickers (strictly zero voice/microphone input).
+* **Backend**: Python 3.11+, FastAPI, WebSockets, and SQLite with idempotent SQL migrations.
+* **Frontend**: React / Vite Progressive Web App (PWA), hosted directly on the Jetson appliance via Nginx.
+* **Deterministic Math Engine**: **SymPy** for mathematical parsing, algebraic verification, and equivalence checking.
+* **LLM Engine**: **Gemma 4 A2B** quantized to `Q4_K_M` through `llama.cpp` (`llama-server`) on `127.0.0.1:8080`.
+* **Voice Output**: Offline **Qwen3-TTS** is the current quality winner for Spanish. Automatic fallback order is **Qwen3-TTS -> Sherpa-ONNX -> Piper VITS -> eSpeak-ng**. eSpeak is robotic, but is retained as the ultimate availability safety net. Production WAV peaks are calibrated to `0.78`.
+* **Student Input**: Mobile web clickers and physical ESP32 clickers (strictly zero voice/microphone input).
 
 ---
 
 ## <a id="4-system-constraints--guardrails"></a>4. System Constraints & Guardrails
 
-1. **No LLM Math**: The LLM is strictly prohibited from evaluating mathematical accuracy. SymPy is the sole authority for verification.
-2. **Containment Guardrail**: Before any LLM response is returned to the user, SymPy solves the mathematical problem. If the generated text contains the final solution or an equivalent symbolic answer, the response is intercepted and regenerated.
-3. **Audio Feedback & >51% Rule**: Offline TTS only speaks explanations when >51% of participating students select a specific diagnostic distractor (remaining silent on correct answers or dispersed votes). The rule is evaluated server-side; the teacher's device merely plays the audio the appliance synthesized.
-4. **Security & Privacy**: Student PINs are hashed using `bcrypt` and must never appear in plain text in the database, memory dumps, or log files.
-5. **Memory Budget**: The 8GB unified memory on the Jetson Orin Nano is strictly budgeted to support **15–20 concurrent student sessions** without triggering Out-Of-Memory (OOM) failures.
+1. **No LLM Math**: The LLM is prohibited from evaluating mathematical accuracy. SymPy is the sole authority.
+2. **Containment Guardrail**: Mathematical answers are checked before any LLM response is returned.
+3. **Audio Feedback & >51% Rule**: TTS speaks only when more than 51% of participating students select one diagnostic distractor; the teacher's device only plays server-synthesized audio.
+4. **Security & Privacy**: Student PINs are hashed with `bcrypt` and never logged in plain text.
+5. **Memory Budget**: Jetson unified memory is budgeted for classroom sessions and lifecycle-separated LLM/TTS workloads.
 
 ---
 
@@ -109,17 +107,17 @@ All components operate **100% offline** without WAN connectivity.
 ```text
 TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
-├── pwa/          # Classroom web clients (Pilas maestro, alumno, pantalla) & static assets
-├── infra/        # Systemd unit, nginx :80 config, captive portal, GL.iNet AP runbook
-├── docs/         # Architecture specs, pedagogical state machine rules, API documentation
-└── run.py        # One-command development & appliance startup runner (uv-powered)
+├── pwa/          # Classroom web clients and static assets
+├── infra/        # Systemd, Nginx, captive portal, and router runbooks
+├── docs/         # Architecture specs, pedagogy, API documentation, and milestones
+└── run.py        # One-command development and appliance startup runner
 ```
 
 ---
 
 ## <a id="6-quick-start"></a>6. Quick Start
 
-TutorBox uses **[uv](https://docs.astral.sh/uv/)** for fast, zero-configuration environment startup:
+TutorBox uses **[uv](https://docs.astral.sh/uv/)** for environment startup:
 
 ```bash
 # 1. Install uv (if not already installed)
@@ -129,13 +127,15 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./run.py
 ```
 
-`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`, `pnpm`), compiles the modern PWA frontend (`pwa/app`), runs database migrations, seeds the question bank, mounts the classroom client pages, and starts Uvicorn:
+`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`, `pnpm`), compiles the PWA, runs database migrations, seeds the question bank, and starts Uvicorn. Qwen3-TTS is discovered from the standard model cache and `llama-tts` locations; set `TTS_QWEN_BINARY` only for a non-standard install.
+
 * **Teacher Host**: `http://localhost:8000/maestro/`
 * **Student Voting**: `http://localhost:8000/alumno/`
 * **Classroom Screen**: `http://localhost:8000/pantalla/`
 * **API Documentation**: `http://localhost:8000/docs`
 
 Or run directly with `uv`:
+
 ```bash
 uv run --directory backend uvicorn main:app --app-dir src --reload
 ```
@@ -144,11 +144,11 @@ uv run --directory backend uvicorn main:app --app-dir src --reload
 
 ## <a id="7-technical-documentation"></a>7. Technical Documentation
 
-* **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications across all subsystems.
-* **[Database Schema & ER Model](docs/database/README.md)**: SQLite schema dictionaries, ER diagrams, indexes, and policies (with the **[Migrations Playbook](docs/database/migrations.md)**).
-* **[REST API Specifications](docs/api/README.md)**: Modular domain contracts, RBAC matrix, auth flows, error formats, and security policies.
-* **[ESP32 Clicker Transport Specification](docs/architecture/esp32-clicker-transport.md)**: Physical hardware, network transport, dual LEDs, and `VoteTransport` interface.
-* **[Backend Developer Guide](backend/README.md)**: Backend installation, local execution, and testing guide.
+* **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications.
+* **[Voice Feedback Architecture](docs/architecture/voice-feedback.md)**: TTS hierarchy, CUDA verification, voices, peaks, and sample rates.
+* **[Database Schema & ER Model](docs/database/README.md)**: SQLite schema, ER diagrams, indexes, and migrations.
+* **[REST API Specifications](docs/api/README.md)**: Domain contracts, RBAC matrix, auth flows, and error formats.
+* **[Backend Developer Guide](backend/README.md)**: Backend installation, local execution, benchmarking, and testing.
 
 ---
 

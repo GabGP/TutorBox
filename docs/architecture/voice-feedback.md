@@ -2,184 +2,114 @@
 
 ## 1. Overview & Pedagogical Purpose
 
-In TutorBox, voice feedback operates under the **Deterministic >51% Rule**:
+TutorBox applies the deterministic **>51% Rule** before any speech is generated:
+
 $$\frac{\text{distractor\_votes}}{\text{total\_votes}} > 0.51$$
 
-When a single diagnostic distractor exceeds 51% of submitted student votes in a classroom quiz round, the edge appliance speaks the conceptual explanation out loud to the classroom. If the class split their votes, selected the correct answer, or reached a tie, the appliance remains strictly silent.
+When one diagnostic distractor exceeds 51% of submitted student votes, the edge appliance speaks the conceptual explanation to the classroom. If the class splits its votes, selects the correct answer, or reaches a tie, the appliance remains silent.
 
-This document details the offline acoustic pipeline, engine trade-offs, model selection criteria, latency benchmarks, hyperparameter calibration, and memory budget on the NVIDIA Jetson Orin Nano (8GB unified memory).
+The Spanish engine order is quality-first, with explicit speed and availability fallbacks:
 
----
+```text
+Qwen3-TTS  ->  Sherpa-ONNX  ->  Piper  ->  eSpeak-ng
+ primary        secondary       tertiary    ultimate fallback
+```
 
-## 2. Acoustic Engine Comparison: Formant vs Neural
+## 2. Acoustic Engine Comparison: Multi-Tier Hierarchy
 
-| Dimension | Formant Synthesis (`espeak-ng`) | Neural Synthesis (`Piper-TTS` VITS) |
-| :--- | :--- | :--- |
-| **Synthesis Technique** | Rule-based formant filter modeling | Variational Inference Text-to-Speech (VITS) on ONNX Runtime |
-| **Acoustic Fidelity** | Robotic, metallic timbre | Natural, human-sounding pedagogical enunciation |
-| **Model Footprint** | 0 MB (procedural algorithms) | ~60–80 MB per language checkpoint |
-| **Runtime Memory (RSS)** | ~10 MB peak (ephemeral process) | ~150–250 MB in RAM (co-resident with `llama.cpp`) |
-| **Synthesis Latency** | ~0.08 s (RTF ~0.015x) | **0.237 s** (RTF **0.044x** in-memory streaming) |
-| **Mayan Language Support** | None (no Mayan phoneme inventory) | Extensible routing slot (`lang=quc`) with fail-safe error isolation |
-| **System Role in TutorBox** | Zero-dependency safety fallback | **Primary classroom voice engine** |
+| Dimension | Primary Neural Winner (`Qwen3-TTS`) | Secondary (`Sherpa-ONNX`) | Tertiary (`Piper`) | Ultimate Fallback (`eSpeak-ng`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Synthesis Technique** | 1.7B autoregressive model + 12 Hz codec/vocoder | VITS on Sherpa-ONNX | VITS on Piper | Rule-based formant synthesis |
+| **Acoustic Fidelity** | Highest naturalness and prosody observed | Clear, natural educational diction | Clear, fast educational diction | Robotic and metallic, but dependable |
+| **Hardware Target** | CUDA GPU via `llama-tts -ngl 99` | ONNX Runtime CPU/CUDA | Python VITS runtime | CPU only |
+| **Synthesis Latency** | **2.090 s** warm p50 | **0.338 s** warm p50 | **0.274 s** warm p50 | **0.215 s** warm p50 |
+| **RTF** | **0.2397x** | **0.0413x** | **0.0334x** | **0.0203x** |
+| **Output Sample Rate** | 24,000 Hz | 22,050 Hz | 22,050 Hz | Commonly 22,050 Hz |
+| **Production Peak** | 0.78 | 0.78 | 0.78 | 0.78 |
+| **Mayan Support** | Not used for K'iche' routing | Spanish candidate only | Dedicated `quc` model slot | Only if an installed voice exists |
+| **System Role** | **Primary winner (`qwen3-tts`)** | **Secondary neural fallback** | **Tertiary neural fallback** | **Ultimate safety net** |
 
----
+Kokoro remains an experimental opt-in candidate. MeloTTS remains a rejected reference spike, with `harness_melo.py` intentionally retained for comparison.
 
-## 3. Spanish Model Selection & Dialect Analysis
+## 3. Qwen3-TTS Model, CUDA, and Voices
 
-During Week 4 development, multiple Spanish ONNX acoustic checkpoints were evaluated for primary-school educational clarity:
+TutorBox uses the **Qwen3-TTS 1.7B Base** model in GGUF format through `llama-tts`. The canonical engine identifier is `qwen3-tts`; `qwen-gguf` and `qwen` remain compatibility aliases only.
 
-1. **`es_MX-ald-medium` & `es_MX-claude-high`**:
-   - *Observation*: Strong Mexican regional cadence, exaggerated pitch contours, and occasional harsh vocal peaking on unvoiced stops.
-   - *Jury Conclusion*: Unsuitable as the primary textbook voice across diverse Central American classrooms.
-2. **`es_ES-davefx-medium`**:
-   - *Observation*: Clear male enunciation, but exhibited clipping and micro-distortion on high-volume classroom audio transducers.
-3. **`es_ES-sharvard-medium` (Spanish Harvard Sentences - SELECTED)**:
-   - *Acoustic Quality*: Trained on balanced phonetically rich Harvard sentences. Neutral, textbook-clean diction without distracting regional slang or exaggerated intonation.
-   - *Multi-Speaker Architecture*:
-     - **Speaker 1 (Default)**: Neutral female classroom educator.
-     - **Speaker 0**: Neutral male classroom educator.
+The local workstation's `llama-tts --list-devices` reports an NVIDIA CUDA device, and verbose synthesis logs report `using device CUDA0`. The CSV's Qwen result is therefore GPU-backed. Qwen is still slower than Sherpa/Piper because it generates codec tokens autoregressively, runs a neural vocoder, and currently uses a one-shot CLI process for each uncached request.
 
----
+The deployed **Base** checkpoint has no fixed named-speaker catalog. TutorBox exposes it as `base-default`; Base is intended for reference-audio voice cloning, but the current backend does not yet wire a reference audio file into the API. Qwen's separate **CustomVoice** checkpoints provide `Vivian`, `Serena`, `Uncle_Fu`, `Dylan`, `Eric`, `Ryan`, `Aiden`, `Ono_Anna`, and `Sohee`. Those speakers are not selectable in the current Base deployment. See the [official Qwen3-TTS speaker documentation](https://github.com/QwenLM/Qwen3-TTS#custom-voice-generate).
 
-## 4. Mayan Language Routing Seam: K'iche' (`quc_Latn`)
+## 4. Spanish Model Selection & Dialect Analysis
 
-Formant synthesizers (`espeak-ng`) lack phonological rules and triphone inventories for Mayan languages. The TutorBox voice subsystem establishes a formal architectural seam for Mayan languages:
+The selected Spanish neural checkpoint is `es_ES-sharvard-medium`, shared by the Sherpa-ONNX and Piper fallback tiers. It provides neutral, textbook-clean diction for Central American classrooms. Qwen3-TTS is preferred for natural prosody and mathematical sentence handling; Sherpa/Piper are preferred when response time or memory pressure dominates.
+
+## 5. Mayan Language Routing Seam: K'iche' (`quc_Latn`)
+
+Formant synthesis does not provide a dependable K'iche' phonological inventory. The voice subsystem therefore keeps a separate routing seam:
 
 * **Language Identifier**: `quc` / `quc_Latn` (Mayan K'iche' in Latin orthography).
-* **Router Isolation**: Requesting `GET /api/v1/session/{id}/speech?lang=quc` dynamically dispatches to the configured Mayan voice model (`TTS_PIPER_MODEL_QUC`, default `quc_Latn-maya-medium.onnx`).
-* **Strict Error Gating**: If the designated K'iche' checkpoint is not present on disk, the system explicitly returns `HTTP 503 Service Unavailable` with a descriptive message rather than silently falling back to Spanish audio.
-* **Roadmap & Acoustic Feasibility**: Piper-TTS uses the VITS architecture, which can be fine-tuned on custom datasets with phonetic alphabets. Research projects like Meta MMS (Massively Multilingual Speech) offer raw acoustic checkpoints and text corpora for K'iche', but converting, pruning, and validating an ONNX model for real-time Piper inference remains a future milestone deliverable rather than a tested Week 4 artifact. All verified neural synthesis in Week 4 utilizes the Spanish Harvard Sentences checkpoint.
+* **Router Isolation**: `lang=quc` dispatches to the configured Piper K'iche' checkpoint (`TTS_PIPER_MODEL_QUC`).
+* **Strict Error Gating**: If the K'iche' checkpoint is absent, the system returns `503 Service Unavailable` rather than silently speaking Spanish.
+* **eSpeak Exception**: eSpeak is used for K'iche' only when `TTS_VOICE_QUC` names an installed compatible voice.
 
----
+Qwen3-TTS is not part of the K'iche' auto path because the deployed voice and validation assets are Spanish-first.
 
-## 5. Hyperparameter Calibration for Classroom Intelligibility
+## 6. Peak Calibration & Sample-Rate Policy
 
-Raw neural speech can sound rushed or prone to pitch wobble. TutorBox fine-tunes three acoustic parameters via `SynthesisConfig`:
+`peak` in `summary.csv` is the largest absolute PCM sample divided by 32,768. It is not perceived loudness. Earlier results mixed native levels: eSpeak and Piper reached `1.00`, Melo measured `0.611`, while Sherpa/Kokoro normalized to `0.78` and Qwen was calibrated to `0.78`. Production Piper, eSpeak, and Qwen now share the same linear peak calibration target (`0.78`), so new CSV comparisons are consistent without clipping.
 
-* **`length_scale = 1.12` (Pedagogical Cadence)**:
-  - Slows speech delivery by ~12% relative to conversational pace.
-  - Ensures primary school students can parse mathematical terms (e.g. fractions and negative numbers).
-* **`noise_scale = 0.35` (Acoustic Generator Stability)**:
-  - Constrains the variance of the stochastic duration generator.
-  - Eliminates robotic warbling, wobbly pitch artifacts, and audio peaking.
-* **`noise_w_scale = 0.45` (Syllable Timing Regularity)**:
-  - Calibrates phoneme duration predictability, maintaining crisp syllable separation.
+Each engine preserves the sample rate declared by its model/runtime:
 
----
+| Engine | Native rate | Reason |
+| :--- | ---: | :--- |
+| Qwen3-TTS | 24,000 Hz | Qwen neural codec/vocoder output |
+| Sherpa-ONNX | 22,050 Hz | Spanish Piper-compatible VITS checkpoint |
+| Piper | 22,050 Hz | Spanish VITS checkpoint |
+| Kokoro | 24,000 Hz | Kokoro model output |
+| Melo reference harness | 44,100 Hz | Melo model/reference implementation |
+| eSpeak-ng | Commonly 22,050 Hz | CLI voice/runtime default |
 
-## 6. Empirical Latency & Real-Time Factor (RTF) Benchmarks
+The Qwen `12 Hz` label is its codec/token frame rate, not its WAV sample rate. Browser playback accepts these PCM rates; resampling belongs at a hardware-output boundary only if a codec requires one fixed rate.
 
-All tests executed with `es_ES-sharvard-medium.onnx` on ARM64 / x86_64 architecture:
+## 7. Empirical Latency & Real-Time Factor Benchmarks
 
-* **Sample Text**: *"Atención: 100 por ciento del grupo respondió un medio. Dividiste sólo el numerador entre 2. La respuesta correcta es tres cuartos."*
-* **Audio Length**: $5.41$ seconds of 22,050 Hz PCM audio.
-* **Wall-Clock Latency**: **0.237 seconds**.
-* **Real-Time Factor (RTF)**: **0.044x** (synthesis runs **22.8 times faster than real-time playback**).
-* **Target SLA**: $\le 3.0$ seconds (empirically achieved with **92.1% safety margin**).
-* **Peak Audio Level**: $0.78$ normalized (preventing clipping on classroom speakers).
+The current first-corpus `summary.csv` reports:
 
-### Profiler Usage & Verification Guide
+| Engine | Provider | Warm p50 | RTF | Peak | Sample rate |
+| :--- | :--- | ---: | ---: | ---: | ---: |
+| Qwen3-TTS | CUDA | 2.090 s | 0.2397x | 0.78 | 24,000 Hz |
+| Sherpa-ONNX | CPU | 0.338 s | 0.0413x | 0.78 | 22,050 Hz |
+| Piper | CPU | 0.274 s | 0.0334x | 0.78 after recalibration | 22,050 Hz |
+| eSpeak-ng | CPU | 0.215 s | 0.0203x | 0.78 after recalibration | 22,050 Hz |
 
-The offline synthesis profiler (`benchmark.tts.metrics`) measures wall-clock latency, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude on the target appliance.
+Use the integrated profiler for new measurements:
 
-#### 1. Running the CLI Benchmark
-To benchmark the active speech synthesis pipeline from the command line:
 ```bash
-# From repository root:
-uv run python benchmark/tts/metrics.py --engine piper
-# or comparative A/B sweep across engines:
-uv run python benchmark/tts/ab.py --engines piper,espeak --repeats 3
+uv run python benchmark/tts/metrics.py --engine qwen3-tts
+uv run python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
 ```
 
-Example terminal output:
-```text
-Benchmarking TutorBox Neural TTS Pipeline [piper]...
-Latency:      0.237 s
-Audio Length: 5.41 s
-RTF:          0.044x
-Sample Rate:  22050 Hz
-Peak Level:   0.78 (normalized)
-WAV Size:     233.2 KB
-```
+## 8. Configuration & Appliance Memory Policy
 
-#### 2. Programmatic Python API
-The profiler can be called programmatically to inspect latency or validate SLA constraints:
-```python
-from benchmark.tts.metrics import ProfileResult, profile_speech_synthesis
+The relevant `.env` settings are `TTS_ENGINE=auto`, `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`, `TTS_SHERPA_PROVIDER`, `TTS_SHERPA_THREADS`, `TTS_PIPER_MODEL_DIR`, and `TTS_ESPEAK_BINARY`.
 
-# Run synthesis benchmark (bypasses cache for accurate timing)
-result: ProfileResult = profile_speech_synthesis(
-    text="Atención: el 60 por ciento respondió un medio.",
-    lang="es",  # or "quc"
-    voice=None,  # custom voice checkpoint name if needed
-    engine="piper",
-)
+`TTS_QWEN_BINARY` is optional. Empty configuration searches next to the selected model, standard Windows/Linux install locations, and `PATH`; TutorBox deliberately does not scan the entire computer recursively. A normal `llama-tts` installation works when it adds the executable to `PATH`; set the variable for a non-standard location.
 
-print(f"Latency:   {result.latency_seconds:.3f} s")
-print(f"Duration:  {result.audio_duration_seconds:.2f} s")
-print(f"RTF:       {result.real_time_factor:.3f}x")
-print(f"Peak Level:{result.peak_amplitude:.2f}")
-
-# Assert SLA compliance (<= 3.0s ceiling)
-assert result.latency_seconds <= 3.0, "TTS latency violated SLA ceiling"
-```
-
-#### 3. Metrics Reference
-* `latency_seconds`: Wall-clock synthesis elapsed time from request to complete WAV bytes.
-* `audio_duration_seconds`: Total playback time of the generated WAV audio.
-* `real_time_factor` (RTF): `latency_seconds / audio_duration_seconds`. Values below $1.0\times$ mean faster than real-time playback (e.g. $0.044\times$ = 22.8x faster).
-* `sample_rate`: PCM sampling frequency in Hz (typically 22,050 Hz for Piper medium models).
-* `peak_amplitude`: Peak absolute sample divided by 32,768 ($0.0 \dots 1.0$). Levels around $0.70 \dots 0.85$ prevent speaker distortion and clipping.
-* `audio_byte_count`: Size of raw RIFF/WAVE stream in bytes.
-
----
-
-## 7. Multi-Voice Catalog Architecture (PWA Selection)
-
-TutorBox provides a hardware-contained multi-voice design:
-1. **Zero Online Downloads**: All authorized voice checkpoints are pre-installed in `.cache/models/tts/` or `/opt/tutorbox/models/tts/`.
-2. **Configurable Environment Variables**:
-   - `TTS_PIPER_MODEL_ES`: Switches between `sharvard-medium`, `davefx-medium`, or custom checkpoints.
-   - `TTS_PIPER_SPEAKER_ES`: Toggles between female (`1`) and male (`0`) educators without reloading weights.
-3. **Pluggable Router (`TTSRouter`)**: In-memory 32-entry LRU cache prevents redundant re-synthesis when multiple clients or replays request the same round audio.
-
----
-
-## 8. Jetson Orin Nano 8GB Unified Memory Budget
-
-The edge appliance runs headless Ubuntu Linux (JetPack 6.0) with unified memory shared between CPU and GPU:
-
-```
-+-------------------------------------------------------------+
-|               8GB Unified Memory (Jetson Orin Nano)         |
-+-------------------------------------------------------------+
-| OS & Kernel Daemons:              1.00 GB (12.5%)           |
-| Local SLM (llama.cpp 4B Q4_K_M):  2.80 GB (35.0%)           |
-| Neural TTS (Piper-TTS VITS):      0.25 GB ( 3.1%)           |
-| SQLite WAL & Buffer Cache:        0.50 GB ( 6.3%)           |
-| FastAPI / Uvicorn Runtime:        0.15 GB ( 1.9%)           |
-+-------------------------------------------------------------+
-| Total Active Working Set:         4.70 GB (58.8%)           |
-| RESERVED SAFETY HEADROOM:         3.30 GB (41.2%)           |
-+-------------------------------------------------------------+
-```
-
-Even during concurrent 4B SLM quiz generation and Piper neural voice synthesis, memory utilization remains safely below 59%, leaving over 3.3 GB of RAM for OS page cache, HDMI display output, and transient loads.
-
----
+Question generation and speech playback are lifecycle-separated. The application can unload the local SLM before loading Qwen3-TTS, avoiding GPU/unified-memory contention. Sherpa/Piper are the preferred low-footprint choices when Qwen cannot be resident.
 
 ## 9. Phased Lifecycle Management Endpoints
 
-To support running larger speech candidates or memory-intensive SLMs without risking out-of-memory errors on edge hardware, the backend exposes explicit, quiz-agnostic lifecycle endpoints:
+The backend exposes quiz-agnostic lifecycle endpoints:
 
 ### TTS Lifecycle (`/api/v1/tts/*`, Teacher/Admin)
-* `POST /api/v1/tts/load`: `{engine?, lang?, voice?}` $\to$ `202 Accepted {engine, loaded, model_id, load_ms}`. Proactively warms the model in memory.
-* `POST /api/v1/tts/unload`: `{engine?}` $\to$ `200 OK {engine, loaded: false}`. Reclaims RAM by clearing model weights and audio cache.
-* `GET /api/v1/tts/status`: `{engine?, lang?}` $\to$ `200 OK {engine, loaded, model_id}`.
-* `GET /api/v1/tts/voices`: `?lang=es|quc` $\to$ `200 OK [{id, lang, engine}]`.
+
+* `POST /api/v1/tts/load`: `{engine?, lang?, voice?}` -> `202 Accepted {engine, loaded, model_id, load_ms}`.
+* `POST /api/v1/tts/unload`: `{engine?}` -> `200 OK {engine, loaded: false}`.
+* `GET /api/v1/tts/status`: `{engine?, lang?}` -> `200 OK {engine, loaded, model_id}`.
+* `GET /api/v1/tts/voices`: `?lang=es|quc` -> configured voice/model identifiers. Qwen currently returns `base-default`.
 
 ### LLM Lifecycle Proxy (`/api/v1/llm/*`, Admin Only)
-* `POST /api/v1/llm/load`: Proxies model load to local `llama-server`.
-* `POST /api/v1/llm/unload`: Proxies model unload to local `llama-server`.
-* `GET /api/v1/llm/status`: Proxies model residency query to `llama-server`.
+
+* `POST /api/v1/llm/load`: Proxies model load to the local `llama-server`.
+* `POST /api/v1/llm/unload`: Proxies model unload to the local `llama-server`.
+* `GET /api/v1/llm/status`: Proxies model residency query to the local `llama-server`.

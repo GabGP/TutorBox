@@ -253,16 +253,17 @@ round that did not trigger it.
 * **Path Parameters**:
   * `session_id` (`string`, required): Unique session identifier.
 * **Query Parameters**:
-  * `lang` (`string`, optional, default `es`): `es` (Latin American Spanish, espeak-ng voice
-    `es-419`) or `quc` (K'iche', only when `TTS_VOICE_QUC` names an installed voice).
+   * `lang` (`string`, optional, default `es`): `es` (Spanish, routed through Qwen3-TTS ->
+     Sherpa-ONNX -> Piper -> eSpeak) or `quc` (K'iche', only when the configured Piper model or
+     `TTS_VOICE_QUC` is available).
 * **Spoken script**: `Atención: {dominant_percentage} por ciento del grupo respondió {option}.` +
   the distractor explanation + `La respuesta correcta es {correct}.` Arithmetic is rewritten into
   words before synthesis (`6/8` → *seis sobre ocho*, `75%` → *setenta y cinco por ciento*).
 * **Responses**:
-  * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by Piper-TTS VITS
-    neural voice (or espeak-ng fallback) on the appliance. Repeated requests return instantly from
-    a bounded in-memory LRU cache (32 entries max) to avoid redundant synthesis during classroom re-plays.
-    Typical size: ~150-350 KB per sentence; synthesis latency ~0.24 s on the appliance.
+  * `200 OK`: `audio/wav` RIFF stream (`Cache-Control: no-store`), synthesized by the selected
+    offline tier on the appliance. Qwen3-TTS is the primary quality tier; Sherpa-ONNX and Piper
+    are faster fallbacks, and eSpeak-ng is the ultimate robotic safety net. Repeated requests
+    return instantly from a bounded in-memory LRU cache (32 entries max).
   * `403 Forbidden`: Student device; only the teacher's client may pull the audio.
   * `404 Not Found`: Session, active round, or its question not found.
   * `409 Conflict`: Round is not `revealed`, or the >51% Rule did not trigger (detail names the
@@ -272,14 +273,14 @@ round that did not trigger it.
   * `503 Service Unavailable`: Voice engine is disabled (`TTS_ENABLED=false`), missing required models,
     or no voice is configured for the requested language.
 
-**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `auto`, `piper`, `espeak`, `sherpa`, `moss-nano`, `kokoro`, `melo`, `qwen-gguf`),
+**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `qwen3-tts` -> `sherpa` -> `piper` -> `espeak`; explicit options also include `kokoro`),
 `TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`), `TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`),
 `TTS_PITCH`, `TTS_AMPLITUDE`, `TTS_TIMEOUT_SECONDS`, `TTS_MAX_CHARS`,
 `TTS_PIPER_BINARY`, `TTS_PIPER_MODEL_DIR` (default `/opt/tutorbox/models/tts`),
 `TTS_PIPER_MODEL_ES` (default `es_ES-sharvard-medium.onnx`), `TTS_PIPER_SPEAKER_ES` (default `1`),
 `TTS_PIPER_MODEL_QUC` (default `quc_Latn-maya-medium.onnx`), `TTS_PIPER_SPEAKER_QUC` (default `0`),
 `TTS_PIPER_LENGTH_SCALE` (default `1.12`), `TTS_PIPER_NOISE_SCALE` (default `0.35`),
-`TTS_PIPER_NOISE_W_SCALE` (default `0.45`).
+`TTS_PIPER_NOISE_W_SCALE` (default `0.45`), `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`.
 
 ---
 
