@@ -27,7 +27,7 @@ This document summarizes the technical deliverables, architectural implementatio
   * **Pluggable Voice Architecture**: Hardware-agnostic `TTSBackend` protocol with in-memory `PiperBackend` (ONNX VITS), `EspeakBackend` (formant fallback), and `TTSRouter` with 32-entry LRU cache.
   * **Primary-School Text Adaptation**: Oral fraction conversions, LaTeX sanitization, exponent reading, and natural sentence pacing (`core/tts/text.py`).
   * **Mayan Language Routing Seam**: Dedicated routing seam for Mayan K'iche' (`quc_Latn`) in `TTSRouter` with fail-safe error isolation (`503 Service Unavailable` when model checkpoint is absent).
-  * **Latency & Acoustic Profiler**: CLI harness (`core/tts/profiler.py`, runnable via `uv run python -m core.tts.profiler`) measuring wall-clock synthesis time and Real-Time Factor ($0.237$s latency, $0.044$x RTF, exceeding $\le 3.0$s SLA by 92%).
+  * **Latency & Acoustic Profiler**: Unified benchmarking harness (`benchmark/tts/metrics.py` and `ab.py`, runnable via `uv run python benchmark/tts/metrics.py`) measuring wall-clock synthesis time and Real-Time Factor ($0.237$s latency, $0.044$x RTF, exceeding $\le 3.0$s SLA by 92%).
   * **8GB Co-Resident Memory Budget**: Profile proving safe co-existence of local SLM (`llama.cpp` 4B Q4_K_M, ~2.80 GB) and neural TTS (~0.25 GB) inside 4.70 GB total working set (41.2% safety headroom).
   * **End-to-End 10-Round Match Suite**: Full match simulation (`test_session_10_round_speech.py`) proving deterministic >51% gating, bilingual dispatch, and first-press locking across 10 rounds.
 
@@ -57,9 +57,9 @@ This document summarizes the technical deliverables, architectural implementatio
    * `espeak.py`: Formant synthesizer implementing `TTSBackend` protocol as ultra-lightweight fallback.
    * `router.py`: Pluggable dispatcher selecting engines (`auto`, `piper`, `espeak`), routing Mayan K'iche' (`quc_Latn`) strictly to Piper, falling back gracefully from Piper to eSpeak for Spanish, and caching generated audio in an in-memory 32-entry LRU cache.
    * `api/session/speech.py`: Refactored to delegate synthesis directly to `core.tts.synthesize_speech()`.
-4. **Latency Profiler & Benchmark Harness (`backend/src/core/tts/profiler.py`)**:
+4. **Latency Profiler & Benchmark Harness (`benchmark/tts/metrics.py` & `ab.py`)**:
    * Diagnostic profiler measuring wall-clock synthesis time, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude levels.
-   * Executable directly from terminal via `uv run python -m core.tts.profiler` or programmatically via `profile_speech_synthesis()`.
+   * Executable directly from terminal via `uv run python benchmark/tts/metrics.py --engine piper` or programmatically via `profile_speech_synthesis()`.
    * Empirical results: **0.237 s latency**, **0.044x RTF** (22.8x faster than real-time playback), meeting the $\le 3.0$s SLA requirement with a 92% margin.
 5. **Jetson Orin Nano 8GB Unified Memory Profile**:
    * Detailed RAM budget co-locating `llama.cpp` (4B model, ~2.80 GB RSS), Piper-TTS VITS (~0.25 GB RSS), FastAPI (~0.15 GB), SQLite WAL (~0.50 GB), and OS (~1.00 GB).

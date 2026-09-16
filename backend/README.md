@@ -60,7 +60,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
-  - **Offline Voice (`core/tts`)**: espeak-ng synthesizer for the >51% spoken intervention — binary auto-detection (espeak-ng, then legacy espeak), Latin American Spanish voice resolution (`es-419` → `es-la` → `es`), classroom text preparation (arithmetic read as words), and WAV streamed from the engine's stdout.
+  - **Offline Voice & Lifecycle (`core/tts`, `api/tts`, `api/llm`)**: Pluggable voice synthesis for the >51% spoken intervention — neural Piper VITS baseline with Latin American Spanish and K'iche' models, espeak-ng formant fallback, hardware-contained LRU audio caching, and explicit quiz-agnostic lifecycle endpoints (`/api/v1/tts/load`, `/api/v1/tts/unload`, `/api/v1/tts/status`, `/api/v1/tts/voices`, and `/api/v1/llm/*` proxy).
 
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
@@ -214,7 +214,10 @@ uv run pytest tests/modes/quiz/ -o addopts="--strict-markers"
 Benchmark speech synthesis latency, Real-Time Factor (RTF), and audio levels on the appliance:
 ```bash
 # Run the TTS profiler CLI:
-uv run python -m core.tts.profiler
+uv run python benchmark/tts/metrics.py --engine piper
+
+# Or run multi-engine comparative A/B sweep:
+uv run python benchmark/tts/ab.py --engines piper,espeak --repeats 3
 ```
 Run automated latency SLA assertions ($\le 3.0$ seconds):
 ```bash
@@ -245,7 +248,7 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, quiz, session, staff, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, health, quiz, session, slm, staff, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
 │   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry), migrations & audit

@@ -272,7 +272,7 @@ round that did not trigger it.
   * `503 Service Unavailable`: Voice engine is disabled (`TTS_ENABLED=false`), missing required models,
     or no voice is configured for the requested language.
 
-**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `auto`, `piper`, `espeak`),
+**Configuration** (`.env`): `TTS_ENABLED`, `TTS_ENGINE` (default `auto`: `auto`, `piper`, `espeak`, `sherpa`, `moss-nano`, `kokoro`, `melo`, `qwen-gguf`),
 `TTS_ESPEAK_BINARY`, `TTS_VOICE` (default `es-419`), `TTS_VOICE_QUC`, `TTS_WORDS_PER_MINUTE` (default `150`),
 `TTS_PITCH`, `TTS_AMPLITUDE`, `TTS_TIMEOUT_SECONDS`, `TTS_MAX_CHARS`,
 `TTS_PIPER_BINARY`, `TTS_PIPER_MODEL_DIR` (default `/opt/tutorbox/models/tts`),

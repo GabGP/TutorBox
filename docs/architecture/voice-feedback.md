@@ -81,20 +81,20 @@ All tests executed with `es_ES-sharvard-medium.onnx` on ARM64 / x86_64 architect
 
 ### Profiler Usage & Verification Guide
 
-The offline synthesis profiler (`core.tts.profiler`) measures wall-clock latency, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude on the target appliance.
+The offline synthesis profiler (`benchmark.tts.metrics`) measures wall-clock latency, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude on the target appliance.
 
 #### 1. Running the CLI Benchmark
 To benchmark the active speech synthesis pipeline from the command line:
 ```bash
-# From the backend directory:
-uv run python -m core.tts.profiler
-# or directly:
-python -m core.tts.profiler
+# From repository root:
+uv run python benchmark/tts/metrics.py --engine piper
+# or comparative A/B sweep across engines:
+uv run python benchmark/tts/ab.py --engines piper,espeak --repeats 3
 ```
 
 Example terminal output:
 ```text
-Benchmarking TutorBox Neural TTS Pipeline...
+Benchmarking TutorBox Neural TTS Pipeline [piper]...
 Latency:      0.237 s
 Audio Length: 5.41 s
 RTF:          0.044x
@@ -106,13 +106,14 @@ WAV Size:     233.2 KB
 #### 2. Programmatic Python API
 The profiler can be called programmatically to inspect latency or validate SLA constraints:
 ```python
-from core.tts.profiler import ProfileResult, profile_speech_synthesis
+from benchmark.tts.metrics import ProfileResult, profile_speech_synthesis
 
 # Run synthesis benchmark (bypasses cache for accurate timing)
 result: ProfileResult = profile_speech_synthesis(
     text="Atención: el 60 por ciento respondió un medio.",
     lang="es",  # or "quc"
     voice=None,  # custom voice checkpoint name if needed
+    engine="piper",
 )
 
 print(f"Latency:   {result.latency_seconds:.3f} s")
@@ -165,3 +166,20 @@ The edge appliance runs headless Ubuntu Linux (JetPack 6.0) with unified memory 
 ```
 
 Even during concurrent 4B SLM quiz generation and Piper neural voice synthesis, memory utilization remains safely below 59%, leaving over 3.3 GB of RAM for OS page cache, HDMI display output, and transient loads.
+
+---
+
+## 9. Phased Lifecycle Management Endpoints
+
+To support running larger speech candidates or memory-intensive SLMs without risking out-of-memory errors on edge hardware, the backend exposes explicit, quiz-agnostic lifecycle endpoints:
+
+### TTS Lifecycle (`/api/v1/tts/*`, Teacher/Admin)
+* `POST /api/v1/tts/load`: `{engine?, lang?, voice?}` $\to$ `202 Accepted {engine, loaded, model_id, load_ms}`. Proactively warms the model in memory.
+* `POST /api/v1/tts/unload`: `{engine?}` $\to$ `200 OK {engine, loaded: false}`. Reclaims RAM by clearing model weights and audio cache.
+* `GET /api/v1/tts/status`: `{engine?, lang?}` $\to$ `200 OK {engine, loaded, model_id}`.
+* `GET /api/v1/tts/voices`: `?lang=es|quc` $\to$ `200 OK [{id, lang, engine}]`.
+
+### LLM Lifecycle Proxy (`/api/v1/llm/*`, Admin Only)
+* `POST /api/v1/llm/load`: Proxies model load to local `llama-server`.
+* `POST /api/v1/llm/unload`: Proxies model unload to local `llama-server`.
+* `GET /api/v1/llm/status`: Proxies model residency query to `llama-server`.
