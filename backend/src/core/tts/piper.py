@@ -1,16 +1,18 @@
 """Neural Piper VITS speech synthesis backend for TutorBox."""
 
+import gc
 import io
-import json
 import logging
 import shutil
 import subprocess
+import time
 import wave
 from pathlib import Path
 from typing import Any
 
-from core.config import PROJECT_ROOT, get_settings
-from core.tts.espeak import TTSSynthesisError, TTSUnavailableError
+from core.config import get_settings
+from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
+from core.tts.piper_models import resolve_model_path, sanitize_model_config
 from core.tts.text import normalize_for_speech
 
 __all__ = ["PiperBackend", "resolve_model_path", "sanitize_model_config"]
@@ -19,38 +21,12 @@ logger = logging.getLogger(__name__)
 _VOICE_CACHE: dict[str, Any] = {}
 
 
-def resolve_model_path(model_name: str, custom_dir: str = "") -> Path:
-    """Finds the ONNX model file across configured and standard search paths."""
-    candidates = [
-        Path(custom_dir) if custom_dir else None,
-        Path(get_settings().tts.piper_model_dir),
-        PROJECT_ROOT / ".cache" / "models" / "tts",
-        Path.cwd() / "models" / "tts",
-    ]
-    for directory in filter(None, candidates):
-        model_file = directory / model_name
-        if model_file.is_file():
-            return model_file.resolve()
-    raise TTSUnavailableError(f"Piper model '{model_name}' was not found.")
-
-
-def sanitize_model_config(config_path: Path) -> None:
-    """Normalizes legacy enum literals in model JSON configurations."""
-    if not config_path.is_file():
-        return
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if data.get("phoneme_type") == "PhonemeType.ESPEAK":
-            data["phoneme_type"] = "espeak"
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-    except (OSError, json.JSONDecodeError) as err:
-        logger.warning("Could not sanitize Piper config %s: %s", config_path, err)
-
-
 class PiperBackend:
     """Synthesizes high-fidelity speech using Piper-TTS VITS models."""
+
+    @property
+    def engine_name(self) -> str:
+        return "piper"
 
     def _resolve_voice_and_speaker(self, voice: str | None) -> tuple[str, int]:
         tts = get_settings().tts
@@ -69,6 +45,34 @@ class PiperBackend:
             return True
         except TTSUnavailableError:
             return False
+
+    def is_loaded(self) -> bool:
+        """Returns True if any Piper voice is currently cached in memory."""
+        return bool(_VOICE_CACHE)
+
+    def preload(self, voice: str | None = None) -> float:
+        """Preloads Piper voice into memory cache, returning load duration in ms."""
+        start_time = time.perf_counter()
+        tts = get_settings().tts
+        if not tts.enabled:
+            raise TTSUnavailableError("Speech synthesis is disabled.")
+        model_name, _ = self._resolve_voice_and_speaker(voice)
+        model_path = resolve_model_path(model_name, tts.piper_model_dir)
+        cache_key = str(model_path)
+        if cache_key not in _VOICE_CACHE:
+            from piper.voice import PiperVoice
+
+            config_path = model_path.with_suffix(".onnx.json")
+            sanitize_model_config(config_path)
+            _VOICE_CACHE[cache_key] = PiperVoice.load(
+                str(model_path), config_path=str(config_path)
+            )
+        return (time.perf_counter() - start_time) * 1000.0
+
+    def unload(self) -> None:
+        """Unloads cached voices from memory."""
+        _VOICE_CACHE.clear()
+        gc.collect()
 
     def _synthesize_in_memory(
         self, model_path: Path, text: str, speaker_id: int

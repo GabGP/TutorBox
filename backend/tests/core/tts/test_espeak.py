@@ -46,7 +46,7 @@ class _FakeCompleted:
 def _install_fake_espeak(
     monkeypatch: pytest.MonkeyPatch,
     calls: list[list[str]],
-    synth_result: _FakeCompleted | Exception = None,
+    synth_result: _FakeCompleted | Exception | None = None,
     available: tuple[str, ...] = ("espeak-ng",),
 ) -> None:
     """Fakes both the binary lookup and the two subprocess calls espeak needs."""

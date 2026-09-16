@@ -248,10 +248,13 @@ def test_get_current_quiz_session_newest_open_only(memory_db):
     assert get_current_quiz_session(conn) is None
     create_quiz_session(conn, "s_old", "Old", "arithmetic")
     create_quiz_session(conn, "s_new", "New", "fractions")
-    assert get_current_quiz_session(conn).id == "s_new"
+    cur1 = get_current_quiz_session(conn)
+    assert cur1 is not None and cur1.id == "s_new"
     update_quiz_session_status(conn, "s_new", "active")
-    assert get_current_quiz_session(conn).id == "s_new"
+    cur2 = get_current_quiz_session(conn)
+    assert cur2 is not None and cur2.id == "s_new"
     update_quiz_session_status(conn, "s_new", "completed")
-    assert get_current_quiz_session(conn).id == "s_old"
+    cur3 = get_current_quiz_session(conn)
+    assert cur3 is not None and cur3.id == "s_old"
     update_quiz_session_status(conn, "s_old", "abandoned")
     assert get_current_quiz_session(conn) is None

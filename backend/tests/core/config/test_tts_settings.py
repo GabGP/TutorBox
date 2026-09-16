@@ -7,7 +7,10 @@ from core.config import (
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
+    DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_MELO_VOICE,
+    DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
@@ -18,6 +21,10 @@ from core.config import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_QWEN_GGUF_PATH,
+    DEFAULT_TTS_QWEN_THREADS,
+    DEFAULT_TTS_SHERPA_MODEL_ES,
+    DEFAULT_TTS_SHERPA_THREADS,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
     DEFAULT_TTS_VOICE_QUC,
@@ -47,6 +54,13 @@ _TTS_ENV_VARS = (
     "TTS_PIPER_LENGTH_SCALE",
     "TTS_PIPER_NOISE_SCALE",
     "TTS_PIPER_NOISE_W_SCALE",
+    "TTS_SHERPA_MODEL_ES",
+    "TTS_SHERPA_THREADS",
+    "TTS_MOSS_MODEL",
+    "TTS_KOKORO_VOICE",
+    "TTS_MELO_VOICE",
+    "TTS_QWEN_GGUF_PATH",
+    "TTS_QWEN_THREADS",
 )
 
 
@@ -85,6 +99,15 @@ def test_build_tts_config_defaults() -> None:
     assert config.piper_noise_scale == DEFAULT_TTS_PIPER_NOISE_SCALE
     assert config.piper_noise_w_scale == DEFAULT_TTS_PIPER_NOISE_W_SCALE
 
+    # Candidate engine defaults
+    assert config.sherpa_model_es == DEFAULT_TTS_SHERPA_MODEL_ES
+    assert config.sherpa_threads == DEFAULT_TTS_SHERPA_THREADS
+    assert config.moss_model == DEFAULT_TTS_MOSS_MODEL
+    assert config.kokoro_voice == DEFAULT_TTS_KOKORO_VOICE
+    assert config.melo_voice == DEFAULT_TTS_MELO_VOICE
+    assert config.qwen_gguf_path == DEFAULT_TTS_QWEN_GGUF_PATH
+    assert config.qwen_threads == DEFAULT_TTS_QWEN_THREADS
+
 
 def test_build_tts_config_env_overrides(monkeypatch) -> None:
     """Verifies all TTS settings are configurable via environment variables."""
@@ -109,6 +132,14 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_PIPER_NOISE_SCALE", "0.45")
     monkeypatch.setenv("TTS_PIPER_NOISE_W_SCALE", "0.55")
 
+    monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "custom_sherpa.onnx")
+    monkeypatch.setenv("TTS_SHERPA_THREADS", "8")
+    monkeypatch.setenv("TTS_MOSS_MODEL", "custom_moss.onnx")
+    monkeypatch.setenv("TTS_KOKORO_VOICE", "custom_kokoro")
+    monkeypatch.setenv("TTS_MELO_VOICE", "custom_melo")
+    monkeypatch.setenv("TTS_QWEN_GGUF_PATH", "/path/to/qwen.gguf")
+    monkeypatch.setenv("TTS_QWEN_THREADS", "6")
+
     config = build_tts_config()
     assert config.enabled is False
     assert config.engine == "piper"
@@ -130,6 +161,14 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.piper_length_scale == 1.25
     assert config.piper_noise_scale == 0.45
     assert config.piper_noise_w_scale == 0.55
+
+    assert config.sherpa_model_es == "custom_sherpa.onnx"
+    assert config.sherpa_threads == 8
+    assert config.moss_model == "custom_moss.onnx"
+    assert config.kokoro_voice == "custom_kokoro"
+    assert config.melo_voice == "custom_melo"
+    assert config.qwen_gguf_path == "/path/to/qwen.gguf"
+    assert config.qwen_threads == 6
 
 
 def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
@@ -161,15 +200,19 @@ def test_build_tts_config_bounds_and_fallbacks(monkeypatch) -> None:
 
 
 def test_build_tts_config_engine_variants(monkeypatch) -> None:
-    """Verifies valid engine case normalization and variants."""
-    monkeypatch.setenv("TTS_ENGINE", " ESPEAK ")
-    assert build_tts_config().engine == "espeak"
-
-    monkeypatch.setenv("TTS_ENGINE", "PIPER")
-    assert build_tts_config().engine == "piper"
-
-    monkeypatch.setenv("TTS_ENGINE", "AUTO")
-    assert build_tts_config().engine == "auto"
+    """Verifies valid engine case normalization and candidate variants."""
+    for eng in (
+        "espeak",
+        "piper",
+        "auto",
+        "sherpa",
+        "moss-nano",
+        "kokoro",
+        "melo",
+        "qwen-gguf",
+    ):
+        monkeypatch.setenv("TTS_ENGINE", f" {eng.upper()} ")
+        assert build_tts_config().engine == eng
 
 
 def test_get_settings_integrates_tts_config(monkeypatch) -> None:

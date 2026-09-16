@@ -25,7 +25,7 @@ class ProbeFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Returns False if log record matches known captive portal probes."""
-        if not record.args or len(record.args) < 3:
+        if not isinstance(record.args, tuple) or len(record.args) < 3:
             return True
         path = str(record.args[2]).split("?", 1)[0].split("#", 1)[0]
         return path not in PROBE_PATHS

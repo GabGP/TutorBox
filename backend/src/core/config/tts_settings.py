@@ -7,7 +7,10 @@ from core.config.constants import (
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
+    DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_MELO_VOICE,
+    DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
@@ -18,6 +21,10 @@ from core.config.constants import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_QWEN_GGUF_PATH,
+    DEFAULT_TTS_QWEN_THREADS,
+    DEFAULT_TTS_SHERPA_MODEL_ES,
+    DEFAULT_TTS_SHERPA_THREADS,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
     DEFAULT_TTS_VOICE_QUC,
@@ -28,7 +35,9 @@ from core.config.parsers import parse_bool, parse_float, parse_int
 
 __all__ = ["build_tts_config"]
 
-_VALID_ENGINES: frozenset[str] = frozenset({"auto", "piper", "espeak"})
+_VALID_ENGINES: frozenset[str] = frozenset(
+    {"auto", "piper", "espeak", "sherpa", "moss-nano", "kokoro", "melo", "qwen-gguf"}
+)
 
 
 def _parse_engine(env_var: str = "TTS_ENGINE") -> str:
@@ -96,5 +105,22 @@ def build_tts_config() -> TTSConfig:
             DEFAULT_TTS_PIPER_NOISE_W_SCALE,
             min_value=0.0,
             max_value=2.0,
+        ),
+        sherpa_model_es=os.environ.get(
+            "TTS_SHERPA_MODEL_ES", DEFAULT_TTS_SHERPA_MODEL_ES
+        ).strip(),
+        sherpa_threads=parse_int(
+            "TTS_SHERPA_THREADS", DEFAULT_TTS_SHERPA_THREADS, min_value=1, max_value=16
+        ),
+        moss_model=os.environ.get("TTS_MOSS_MODEL", DEFAULT_TTS_MOSS_MODEL).strip(),
+        kokoro_voice=os.environ.get(
+            "TTS_KOKORO_VOICE", DEFAULT_TTS_KOKORO_VOICE
+        ).strip(),
+        melo_voice=os.environ.get("TTS_MELO_VOICE", DEFAULT_TTS_MELO_VOICE).strip(),
+        qwen_gguf_path=os.environ.get(
+            "TTS_QWEN_GGUF_PATH", DEFAULT_TTS_QWEN_GGUF_PATH
+        ).strip(),
+        qwen_threads=parse_int(
+            "TTS_QWEN_THREADS", DEFAULT_TTS_QWEN_THREADS, min_value=1, max_value=16
         ),
     )

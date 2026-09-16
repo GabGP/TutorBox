@@ -24,7 +24,10 @@ from core.config.constants import (
     DEFAULT_TTS_BINARY,
     DEFAULT_TTS_ENABLED,
     DEFAULT_TTS_ENGINE,
+    DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
+    DEFAULT_TTS_MELO_VOICE,
+    DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
@@ -35,6 +38,10 @@ from core.config.constants import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
+    DEFAULT_TTS_QWEN_GGUF_PATH,
+    DEFAULT_TTS_QWEN_THREADS,
+    DEFAULT_TTS_SHERPA_MODEL_ES,
+    DEFAULT_TTS_SHERPA_THREADS,
     DEFAULT_TTS_TIMEOUT_SECONDS,
     DEFAULT_TTS_VOICE,
     DEFAULT_TTS_VOICE_QUC,
@@ -98,6 +105,15 @@ class TTSConfig:
     piper_length_scale: float = DEFAULT_TTS_PIPER_LENGTH_SCALE
     piper_noise_scale: float = DEFAULT_TTS_PIPER_NOISE_SCALE
     piper_noise_w_scale: float = DEFAULT_TTS_PIPER_NOISE_W_SCALE
+
+    # Candidate engine configuration for A/B benchmarking
+    sherpa_model_es: str = DEFAULT_TTS_SHERPA_MODEL_ES
+    sherpa_threads: int = DEFAULT_TTS_SHERPA_THREADS
+    moss_model: str = DEFAULT_TTS_MOSS_MODEL
+    kokoro_voice: str = DEFAULT_TTS_KOKORO_VOICE
+    melo_voice: str = DEFAULT_TTS_MELO_VOICE
+    qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
+    qwen_threads: int = DEFAULT_TTS_QWEN_THREADS
 
 
 @dataclass(frozen=True)

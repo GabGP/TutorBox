@@ -246,3 +246,6 @@ pwa/app/dist/
 .vite/
 *.tsbuildinfo
 pnpm-debug.log*
+
+# Benchmark evaluation artifacts
+benchmark/**/results/

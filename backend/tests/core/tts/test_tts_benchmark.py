@@ -1,21 +1,16 @@
-"""Automated latency benchmark and SLA assertions for speech synthesis.
+"""Backend SLA gate for speech synthesis (fast, hermetic).
 
-Validates that speech synthesis meets the <= 3.0 second latency ceiling (Task 4)
-and correctly computes acoustic properties (Real-Time Factor, peak amplitude).
+Full comparative profiling (cold/warm, RSS, multi-engine sweep, WAV dumps)
+moved to benchmark/tts/ (metrics.py + ab.py). This file keeps the CI gate:
+synthesis wall-clock <= 3.0s on a mocked backend plus WAV sanity checks.
 """
 
 import io
 import struct
+import time
 import wave
 
 import pytest
-
-from core.tts.profiler import (
-    ProfileResult,
-    _analyze_wav,
-    main,
-    profile_speech_synthesis,
-)
 
 
 def _generate_test_wav(
@@ -35,33 +30,21 @@ def _generate_test_wav(
     return buf.getvalue()
 
 
-def test_analyze_wav_metrics():
-    """Verifies duration, sample rate, and peak normalization calculation."""
+def _wav_duration(wav_bytes: bytes) -> float:
+    with wave.open(io.BytesIO(wav_bytes), "rb") as f:
+        n, rate = f.getnframes(), f.getframerate()
+        return n / float(rate) if rate > 0 else 0.0
+
+
+def test_wav_fixture_metrics():
+    """Verifies the synthetic fixture has the expected duration and shape."""
     wav_bytes = _generate_test_wav(duration_seconds=2.0, sample_rate=22050, peak=16384)
-    duration, sample_rate, peak = _analyze_wav(wav_bytes)
-
-    assert round(duration, 1) == 2.0
-    assert sample_rate == 22050
-    assert round(peak, 2) == 0.50  # 16384 / 32768 = 0.50
+    assert round(_wav_duration(wav_bytes), 1) == 2.0
+    assert wav_bytes.startswith(b"RIFF")
 
 
-def test_analyze_wav_empty_frames():
-    """Verifies handling of empty or 0-sample WAV files."""
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(22050)
-        wav_file.writeframes(b"")
-    duration, sample_rate, peak = _analyze_wav(buf.getvalue())
-
-    assert duration == 0.0
-    assert sample_rate == 22050
-    assert peak == 0.0
-
-
-def test_profile_speech_synthesis_sla_under_3_seconds(monkeypatch: pytest.MonkeyPatch):
-    """Verifies profile_speech_synthesis asserts latency meets the <= 3.0s SLA."""
+def test_router_synthesis_sla_under_3_seconds(monkeypatch: pytest.MonkeyPatch):
+    """Verifies router synthesis meets the <= 3.0s SLA ceiling (mocked backend)."""
     test_wav = _generate_test_wav(duration_seconds=3.0, sample_rate=22050, peak=20000)
 
     from core.tts.router import get_tts_router
@@ -71,31 +54,10 @@ def test_profile_speech_synthesis_sla_under_3_seconds(monkeypatch: pytest.Monkey
         router, "synthesize", lambda text, lang="es", voice=None: test_wav
     )
 
-    result = profile_speech_synthesis("Texto de prueba para síntesis.", lang="es")
+    start = time.perf_counter()
+    out = router.synthesize("Texto de prueba para síntesis.", lang="es")
+    latency = time.perf_counter() - start
 
-    assert isinstance(result, ProfileResult)
-    assert result.latency_seconds <= 3.0
-    assert result.audio_duration_seconds == 3.0
-    assert result.real_time_factor >= 0.0
-    assert result.sample_rate == 22050
-    assert result.peak_amplitude > 0.0
-    assert result.audio_byte_count == len(test_wav)
-
-
-def test_profiler_main_cli(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
-):
-    """Verifies the CLI entrypoint executes and prints benchmark output."""
-    test_wav = _generate_test_wav(duration_seconds=1.5, sample_rate=22050, peak=15000)
-    from core.tts.router import get_tts_router
-
-    router = get_tts_router()
-    monkeypatch.setattr(
-        router, "synthesize", lambda text, lang="es", voice=None: test_wav
-    )
-
-    main()
-    captured = capsys.readouterr()
-    assert "Benchmarking TutorBox Neural TTS Pipeline" in captured.out
-    assert "Latency:" in captured.out
-    assert "RTF:" in captured.out
+    assert out == test_wav
+    assert latency <= 3.0
+    assert round(_wav_duration(out), 1) == 3.0

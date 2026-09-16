@@ -4,7 +4,7 @@ Tests engine selection, Spanish/K'iche' dispatch, neural-to-formant fallback,
 and cache hit/eviction semantics.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,6 +14,7 @@ from core.tts.router import (
     TTSRouter,
     clear_speech_cache,
     get_tts_router,
+    synthesize_speech,
 )
 
 FAKE_PIPER_WAV = b"RIFF-PIPER-WAV"
@@ -169,5 +170,88 @@ def test_synthesize_speech_and_clear_cache():
     router = get_tts_router()
     assert isinstance(router, TTSRouter)
 
+    with patch.object(router, "synthesize", return_value=b"AUDIO"):
+        audio = synthesize_speech("Test phrase", lang="es")
+        assert audio == b"AUDIO"
+
     clear_speech_cache()
     assert len(router._cache) == 0
+
+
+def test_synthesize_quc_via_espeak(monkeypatch: pytest.MonkeyPatch):
+    """Verifies K'iche' speech synthesizes with configured voice_quc when routed to eSpeak."""
+    router, mock_piper, mock_espeak = _make_mock_router()
+    mock_piper.is_available.return_value = False
+    mock_espeak.is_available.return_value = True
+    monkeypatch.setenv("TTS_VOICE_QUC", "quc-voice")
+    clear_settings_cache()
+
+    audio = router.synthesize("Texto maya", lang="quc")
+    assert audio == FAKE_ESPEAK_WAV
+    mock_espeak.synthesize.assert_called_with("Texto maya", voice="quc-voice")
+
+
+def test_select_backend_explicit_engine_no_fallback():
+    """Verifies that an explicitly requested engine never falls back."""
+    router, mock_piper, mock_espeak = _make_mock_router()
+
+    assert router.select_backend("es", engine="piper") is mock_piper
+    assert router.select_backend("es", engine="espeak") is mock_espeak
+
+    mock_piper.is_available.return_value = False
+    with pytest.raises(TTSUnavailableError, match="unavailable for 'es'"):
+        router.select_backend("es", engine="piper")
+
+    with pytest.raises(TTSUnavailableError, match="not registered or not installed"):
+        router.select_backend("es", engine="unknown_engine")
+
+    mock_sherpa = MagicMock()
+    mock_sherpa.engine_name = "sherpa"
+    mock_sherpa.is_available.return_value = True
+    mock_sherpa.is_loaded.return_value = True
+    r_sherpa = TTSRouter(sherpa=mock_sherpa)
+    assert r_sherpa.get_backend("sherpa") is mock_sherpa
+    assert r_sherpa.status(engine="sherpa")["engine"] == "sherpa"
+
+
+def test_select_backend_configured_engine_no_fallback(monkeypatch: pytest.MonkeyPatch):
+    """Verifies configured TTS_ENGINE never falls back if not auto."""
+    router, mock_piper, mock_espeak = _make_mock_router()
+
+    monkeypatch.setenv("TTS_ENGINE", "moss-nano")
+    clear_settings_cache()
+    with pytest.raises(TTSUnavailableError, match="not registered or not installed"):
+        router.select_backend("es")
+
+    monkeypatch.setenv("TTS_ENGINE", "espeak")
+    clear_settings_cache()
+    mock_espeak.is_available.return_value = False
+    with pytest.raises(TTSUnavailableError, match="unavailable for 'es'"):
+        router.select_backend("es")
+
+    monkeypatch.setenv("TTS_ENGINE", "auto")
+    clear_settings_cache()
+    mock_piper.is_available.return_value = False
+    mock_espeak.is_available.return_value = False
+    with pytest.raises(TTSUnavailableError, match="No TTS engine available"):
+        router.select_backend("es")
+
+
+def test_select_backend_quc_additional_branches(monkeypatch: pytest.MonkeyPatch):
+    """Verifies remaining K'iche' selection branches."""
+    router, mock_piper, _ = _make_mock_router()
+
+    monkeypatch.setenv("TTS_ENGINE", "piper")
+    clear_settings_cache()
+    mock_piper.is_available.side_effect = lambda v: v == "quc"
+    assert router.select_backend("quc") is mock_piper
+
+    mock_piper.is_available.side_effect = None
+    mock_piper.is_available.return_value = False
+    with pytest.raises(
+        TTSUnavailableError, match="Piper K'iche' model is not installed"
+    ):
+        router.select_backend("quc")
+
+    with pytest.raises(TTSUnavailableError, match="not registered or does not support"):
+        router.select_backend("quc", engine="unknown_engine")

@@ -1,11 +1,15 @@
 """Pluggable voice router with fallback and in-memory LRU audio caching."""
 
 import logging
+from typing import Any
 
 from core.config import get_settings
-from core.tts.espeak import EspeakBackend, TTSUnavailableError
+from core.tts.espeak import EspeakBackend
+from core.tts.exceptions import TTSUnavailableError
 from core.tts.piper import PiperBackend
 from core.tts.protocols import TTSBackend
+from core.tts.router_selection import resolve_target_backend
+from core.tts.sherpa import SherpaBackend
 
 __all__ = [
     "TTSRouter",
@@ -19,77 +23,99 @@ _MAX_CACHE_ENTRIES = 32
 
 
 class TTSRouter:
-    """Routes speech synthesis requests to Piper or eSpeak with LRU caching."""
+    """Routes speech synthesis requests across pluggable TTS engines with LRU caching."""
 
     def __init__(
         self,
         piper: TTSBackend | None = None,
         espeak: TTSBackend | None = None,
+        sherpa: TTSBackend | None = None,
+        backends: dict[str, TTSBackend] | None = None,
     ) -> None:
         self.piper = piper or PiperBackend()
         self.espeak = espeak or EspeakBackend()
-        self._cache: dict[tuple[str, str, str], bytes] = {}
+        self.sherpa = sherpa or SherpaBackend()
+        self._backends: dict[str, TTSBackend] = dict(backends or {})
+        self._backends.setdefault("piper", self.piper)
+        self._backends.setdefault("espeak", self.espeak)
+        self._backends.setdefault("sherpa", self.sherpa)
+        self._cache: dict[tuple[str, ...], bytes] = {}
 
     def clear_cache(self) -> None:
         """Clears cached synthesized WAV audio bytes."""
         self._cache.clear()
 
-    def select_backend(self, lang: str = "es") -> TTSBackend:
-        """Selects the active backend based on language and configured TTS_ENGINE."""
-        settings = get_settings().tts
-        engine = settings.engine.lower()
+    def get_backend(self, engine_name: str) -> TTSBackend | None:
+        """Looks up a registered backend by engine name."""
+        return self._backends.get(engine_name.lower())
 
-        if lang == "quc":
-            if engine == "espeak":
-                if settings.voice_quc and self.espeak.is_available(settings.voice_quc):
-                    return self.espeak
-                raise TTSUnavailableError("eSpeak cannot synthesize Mayan K'iche'.")
-            if self.piper.is_available("quc"):
-                return self.piper
-            if settings.voice_quc and self.espeak.is_available(settings.voice_quc):
-                return self.espeak
-            raise TTSUnavailableError(
-                f"No speech voice is configured for language '{lang}'."
-            )
+    def select_backend(self, lang: str = "es", engine: str | None = None) -> TTSBackend:
+        """Selects the active backend based on language, override, or config."""
+        return resolve_target_backend(
+            self._backends, self.piper, self.espeak, lang=lang, engine=engine
+        )
 
-        if engine == "espeak":
-            return self.espeak
-        if engine == "piper":
-            if self.piper.is_available(lang):
-                return self.piper
-            raise TTSUnavailableError("Piper Spanish model is not installed.")
+    def preload(
+        self, engine: str | None = None, lang: str = "es", voice: str | None = None
+    ) -> tuple[str, float]:
+        """Preloads model weights for backend, returning (engine, load_ms)."""
+        backend = self.select_backend(lang=lang, engine=engine)
+        load_ms = backend.preload(voice=voice or lang)
+        return backend.engine_name, load_ms
 
-        # Default 'auto': prefer neural Piper, gracefully fallback to eSpeak
-        if self.piper.is_available(lang):
-            return self.piper
-        logger.info("Piper voice unavailable for '%s'; falling back to eSpeak", lang)
-        return self.espeak
+    def unload(self, engine: str | None = None) -> str:
+        """Unloads weights from memory for the target engine or all backends."""
+        self.clear_cache()
+        if engine and engine.lower() in self._backends:
+            self._backends[engine.lower()].unload()
+            return engine.lower()
+        for backend in self._backends.values():
+            backend.unload()
+        return engine or "all"
+
+    def status(self, engine: str | None = None, lang: str = "es") -> dict[str, Any]:
+        """Returns the readiness and model identifier of the target engine."""
+        backend = self.select_backend(lang=lang, engine=engine)
+        cfg = get_settings().tts
+        mid_map = {"piper": cfg.piper_model_es, "sherpa": cfg.sherpa_model_es}
+        return {
+            "engine": backend.engine_name,
+            "loaded": backend.is_loaded(),
+            "model_id": mid_map.get(backend.engine_name, cfg.voice),
+        }
 
     def synthesize(
-        self, text: str, lang: str = "es", voice: str | None = None
+        self,
+        text: str,
+        lang: str = "es",
+        voice: str | None = None,
+        backend: str | None = None,
     ) -> bytes:
         """Synthesizes text into WAV bytes, leveraging in-memory LRU cache."""
-        cache_key = (text, lang, voice or "")
+        cache_key = (
+            (text, lang, voice or "")
+            if not backend
+            else (text, lang, voice or "", backend)
+        )
         cached = self._cache.get(cache_key)
         if cached is not None:
             return cached
 
-        backend = self.select_backend(lang)
-        voice_to_use = voice
-        if not voice_to_use:
-            settings = get_settings().tts
-            if backend is self.espeak:
-                voice_to_use = settings.voice_quc if lang == "quc" else settings.voice
-            else:
-                voice_to_use = lang
+        target_backend = self.select_backend(lang=lang, engine=backend)
+        settings = get_settings().tts
+        voice_to_use = voice or (
+            settings.voice_quc
+            if lang == "quc" and target_backend is self.espeak
+            else (settings.voice if target_backend is self.espeak else lang)
+        )
 
         try:
-            audio = backend.synthesize(text, voice=voice_to_use)
+            audio = target_backend.synthesize(text, voice=voice_to_use)
         except TTSUnavailableError as err:
-            if lang == "es" and backend is self.piper:
+            can_fallback = lang == "es" and target_backend is self.piper and not backend
+            if can_fallback and settings.engine.lower() == "auto":
                 logger.warning("Piper failed; falling back to eSpeak: %s", err)
-                espeak_voice = voice or get_settings().tts.voice
-                audio = self.espeak.synthesize(text, voice=espeak_voice)
+                audio = self.espeak.synthesize(text, voice=voice or settings.voice)
             else:
                 raise
 
