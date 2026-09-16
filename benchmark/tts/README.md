@@ -9,17 +9,19 @@ This directory contains the benchmarking harness, fixed mathematical interventio
 Run all commands from the repository root:
 
 ```bash
-# 1. Single-run diagnostic profiler (prints latency, RTF, sample rate, peak amplitude):
-python benchmark/tts/metrics.py --engine piper
+# 1. Single-run diagnostic profiler (latency, RTF, sample rate, peak amplitude):
+python benchmark/tts/metrics.py --engine qwen3-tts
 
-# 2. Multi-engine A/B comparative sweep (measures cold start + warm repetitions):
-python benchmark/tts/ab.py --engines piper,espeak --repeats 3 --out benchmark/tts/results/
+# 2. Multi-engine A/B comparative sweep (cold start + warm repetitions):
+python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3 --out benchmark/tts/results/
 
-# 3. Full comparative sweep across all candidates against the complete math corpus:
-python benchmark/tts/ab.py --engines piper,sherpa,moss-nano,kokoro,melo,qwen-gguf --repeats 5 --all-texts --out benchmark/tts/results/
+# 3. Full comparative sweep across the candidate engines and complete math corpus:
+python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,kokoro,melo --repeats 5 --all-texts --out benchmark/tts/results/
 ```
 
-> **Note**: While TutorBox uses `uv` for dependency management (`uv run python ...`), in the active development environment invoking `python` directly is fully supported.
+> **Note**: TutorBox uses `uv` for dependency management (`uv run python ...`); invoking `python` directly is also supported in the active development environment.
+
+The integrated `qwen3-tts` backend is the benchmark entry point. `harness_melo.py` remains as a standalone reference for the rejected MeloTTS spike. There is no separate Qwen harness.
 
 ---
 
@@ -30,58 +32,74 @@ All generated audio files, timing summaries, and profiling data are written to `
 ```text
 benchmark/tts/results/
   out/
-    piper_es_0.wav          # Blind audio output for jury evaluation
-    espeak_es_0.wav
+    qwen3-tts_es_0.wav   # Blind audio output for jury evaluation
     sherpa_es_0.wav
-  summary.csv               # Comprehensive tabular metrics across all evaluated runs
+    piper_es_0.wav
+    espeak_es_0.wav
+  summary.csv            # Comprehensive tabular metrics across evaluated runs
 ```
 
 ### Metrics Schema in `summary.csv`
 
 | Field | Unit | Description |
 | :--- | :--- | :--- |
-| `engine` | string | Identifier of the speech engine (`piper`, `espeak`, `sherpa`, etc.) |
+| `engine` | string | Canonical speech-engine identifier (`qwen3-tts`, `sherpa`, `piper`, `espeak`, etc.) |
+| `provider` | string | Resolved execution class (`cuda` or `cpu`); Qwen is detected from `llama-tts --list-devices` |
 | `cold_first_s` | seconds | Wall-clock latency of the first unprimed synthesis invocation |
-| `warm_p50_s` | seconds | Median latency across subsequent warm repetitions |
-| `warm_p95_s` | seconds | 95th percentile warm latency (worst-case jitter under load) |
-| `rtf_p50` | ratio | Median Real-Time Factor ($\text{latency} / \text{audio\_duration}$) |
-| `peak` | normalized | Peak absolute amplitude ($0.0 \dots 1.0$), targeted at $0.70 \dots 0.85$ |
-| `sr_hz` | Hertz | Output audio sample rate (e.g. 22050 Hz or 48000 Hz) |
+| `warm_p50_s` | seconds | Median latency across subsequent repetitions |
+| `warm_p95_s` | seconds | 95th percentile warm latency |
+| `rtf_p50` | ratio | Median Real-Time Factor (`latency / audio_duration`) |
+| `peak` | normalized | Peak absolute PCM amplitude; production engines target `0.78` |
+| `sr_hz` | Hertz | Native output sample rate from the selected model/runtime |
 | `wav_kb` | KB | Uncompressed RIFF/WAVE file size |
-| `load_ms` | ms | Model weight loading / warm-up duration |
-| `rss_delta_mb`| MB | Resident memory growth after initialization |
+| `load_ms` | ms | Model loading / runtime warm-up duration |
+| `rss_delta_mb` | MB | Resident memory growth after initialization |
+
+### Latest local comparison
+
+The current first-corpus CSV shows Qwen3-TTS on CUDA at `2.090 s` warm p50 and `0.2397x` RTF, while Sherpa is `0.338 s` / `0.0413x` and Piper is `0.274 s` / `0.0334x`. Qwen is the quality winner so far; Sherpa and Piper are the speed-oriented fallbacks. The Qwen result is slower by design: it generates speech tokens autoregressively and then runs a neural vocoder.
 
 ---
 
-## 3. SLA & Quality Gates
+## 3. Peak Level & Sample Rate Interpretation
+
+Peak amplitude is not a loudness or quality score. The earlier CSV mixed native levels (`espeak` and Piper near `1.0`, Melo at `0.611`) with engines that already normalized to `0.78` (Sherpa/Kokoro/Qwen). Production Piper, eSpeak, and Qwen outputs now pass through the same linear PCM peak calibration, so new comparisons are apples-to-apples at `0.78` without digital clipping.
+
+Sample rates differ because each model emits its native PCM rate: Piper/Sherpa use the Spanish VITS checkpoint at `22,050 Hz`, Qwen3-TTS emits `24,000 Hz`, Kokoro emits `24,000 Hz`, Melo's reference harness emits `44,100 Hz`, and eSpeak commonly emits `22,050 Hz`. The `12 Hz` in Qwen3-TTS refers to its codec/token frame rate, not the WAV sample rate. Resampling is unnecessary for normal browser playback; add one explicit output resampler only if a hardware codec requires a single fixed rate.
+
+---
+
+## 4. SLA & Quality Gates
 
 Every candidate engine must pass both the quantitative and qualitative gates:
 
 1. **SLA Response Gate**:
-   - **Warm Latency**: $\le 3.0$ seconds (required for timely classroom intervention).
-   - **Cold Start**: $< 15.0$ seconds (must be absorbable during the 20s student voting period).
-   - **RTF**: $< 0.50\times$ (synthesis completes well before speech finishes playing).
+   - **Warm Latency**: `<= 3.0` seconds (required for timely classroom intervention).
+   - **Cold Start**: `< 15.0` seconds (must be absorbable during the 20s student voting period).
+   - **RTF**: `< 0.50x` (synthesis completes well before speech finishes playing).
 2. **Acoustic Gate**:
-   - **Peak Level**: $0.70 \le \text{peak} \le 0.85$ (no digital clipping, loud enough for 15-student classroom audio).
+   - **Peak Level**: `0.70 <= peak <= 0.85` after production calibration.
    - **Licensing**: Permissive open source (Apache 2.0 or MIT) suitable for offline deployment.
 3. **Pedagogical Gate**:
    - Standard Spanish diction (clear pronunciation of mathematical terms: *denominador, simplificación, tres cuartos, cien por ciento*).
-   - Calm, measured cadence appropriate for primary school students.
+   - Calm, measured cadence appropriate for primary-school students.
 
 ---
 
-## 4. Intervention Corpus (`corpus/es_math.txt`)
+## 5. Intervention Corpus (`corpus/es_math.txt`)
 
-The corpus contains representative pedagogical intervention explanations generated during >51% distractor rounds. It is frozen during comparative evaluation rounds to ensure identical input text across all engines.
+The corpus contains representative pedagogical intervention explanations generated during >51% distractor rounds. It is frozen during comparative evaluation rounds so every engine receives identical input text.
 
 ---
 
-## 5. Candidate Engine Specifications
+## 6. Candidate Engine Specifications
 
 Detailed architectural profiles and spike notes for each engine reside in the `engines/` directory:
-- [Piper (Baseline)](engines/piper.md)
-- [Sherpa-ONNX](engines/sherpa.md)
+
+- [Qwen3-TTS (Primary Winner)](engines/qwen-gguf.md)
+- [Sherpa-ONNX (Secondary)](engines/sherpa.md)
+- [Piper (Tertiary Baseline)](engines/piper.md)
+- [eSpeak (Ultimate Fallback)](engines/espeak.md)
 - [Moss-Nano](engines/moss-nano.md)
 - [Kokoro-ES](engines/kokoro.md)
-- [MeloTTS](engines/melo.md)
-- [Qwen-GGUF](engines/qwen-gguf.md)
+- [MeloTTS reference](engines/melo.md)

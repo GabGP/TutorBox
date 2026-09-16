@@ -354,6 +354,13 @@ def profile_engine(
 
 def _detect_engine_provider(engine: str) -> str:
     """Returns the resolved execution provider ('cpu' or 'cuda') for an engine."""
+    if engine in ("qwen3-tts", "qwen-gguf", "qwen"):
+        try:
+            from core.tts.engines.qwen.models import detect_qwen_provider
+
+            return detect_qwen_provider()
+        except Exception:
+            return "cpu"
     if engine in ("kokoro", "sherpa"):
         try:
             from core.config import get_settings
