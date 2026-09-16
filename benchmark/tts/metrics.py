@@ -31,15 +31,49 @@ import wave
 from dataclasses import dataclass
 from pathlib import Path
 
+from core.tts.constants import (
+    MILLISECONDS_PER_SECOND,
+    PCM_16BIT_MAX_FLOAT,
+    PCM_SAMPLE_WIDTH_BYTES,
+)
 from core.tts.router import TTSRouter, get_tts_router
 
 __all__ = [
+    "BYTES_PER_KB",
+    "BYTES_PER_MB",
+    "COLD_RUN_INDEX",
+    "DECIMAL_PLACES_DURATION",
+    "DECIMAL_PLACES_LATENCY",
+    "DECIMAL_PLACES_METRIC",
+    "DECIMAL_PLACES_PEAK",
+    "DECIMAL_PLACES_RTF",
+    "DECIMAL_PLACES_WAV_KB",
+    "DEFAULT_PROFILE_REPEATS",
     "EngineStats",
+    "KILOBYTES_PER_MB",
+    "PERCENTILE_95",
     "ProfileResult",
+    "WARM_RUN_START_INDEX",
     "main",
     "profile_engine",
     "profile_speech_synthesis",
 ]
+
+PERCENTILE_95: float = 0.95
+DEFAULT_PROFILE_REPEATS: int = 5
+COLD_RUN_INDEX: int = 0
+WARM_RUN_START_INDEX: int = 1
+
+DECIMAL_PLACES_LATENCY: int = 3
+DECIMAL_PLACES_RTF: int = 4
+DECIMAL_PLACES_PEAK: int = 3
+DECIMAL_PLACES_METRIC: int = 2
+DECIMAL_PLACES_DURATION: int = 3
+DECIMAL_PLACES_WAV_KB: int = 1
+
+BYTES_PER_KB: float = 1024.0
+BYTES_PER_MB: float = 1024.0 * 1024.0
+KILOBYTES_PER_MB: float = 1024.0
 
 
 @dataclass(frozen=True)
@@ -70,28 +104,41 @@ class EngineStats:
     @property
     def warm(self) -> tuple[ProfileResult, ...]:
         """Returns only the warm synthesis runs (excluding cold first run)."""
-        return self.runs[1:] if len(self.runs) > 1 else self.runs
+        return self.runs[WARM_RUN_START_INDEX:] if len(self.runs) > 1 else self.runs
 
     def summary(self) -> dict[str, float | str | int]:
         """Calculates percentile latencies, RTF, peak level, and cold load footprint."""
         latencies = sorted(run.latency_seconds for run in self.warm)
         real_time_factors = sorted(run.real_time_factor for run in self.warm)
-        first_run = self.runs[0]
+        first_run = self.runs[COLD_RUN_INDEX]
         last_run = self.runs[-1]
-        p95_index = max(0, min(len(latencies) - 1, int(len(latencies) * 0.95)))
+        p95_index = max(
+            0, min(len(latencies) - 1, int(len(latencies) * PERCENTILE_95))
+        )
 
         return {
             "engine": self.engine,
             "provider": self.provider,
-            "cold_first_s": round(first_run.latency_seconds, 3),
-            "warm_p50_s": round(statistics.median(latencies), 3),
-            "warm_p95_s": round(latencies[p95_index], 3),
-            "rtf_p50": round(statistics.median(real_time_factors), 4),
-            "peak": round(last_run.peak_amplitude, 3),
+            "cold_first_s": round(
+                first_run.latency_seconds, DECIMAL_PLACES_LATENCY
+            ),
+            "warm_p50_s": round(
+                statistics.median(latencies), DECIMAL_PLACES_LATENCY
+            ),
+            "warm_p95_s": round(latencies[p95_index], DECIMAL_PLACES_LATENCY),
+            "rtf_p50": round(
+                statistics.median(real_time_factors), DECIMAL_PLACES_RTF
+            ),
+            "peak": round(last_run.peak_amplitude, DECIMAL_PLACES_PEAK),
             "sr_hz": last_run.sample_rate,
-            "wav_kb": round(last_run.audio_byte_count / 1024, 1),
-            "load_ms": round(first_run.load_ms, 2),
-            "rss_delta_mb": round(first_run.rss_delta_mb, 2),
+            "wav_kb": round(
+                last_run.audio_byte_count / BYTES_PER_KB,
+                DECIMAL_PLACES_WAV_KB,
+            ),
+            "load_ms": round(first_run.load_ms, DECIMAL_PLACES_METRIC),
+            "rss_delta_mb": round(
+                first_run.rss_delta_mb, DECIMAL_PLACES_METRIC
+            ),
         }
 
 
@@ -107,12 +154,17 @@ def _analyze_wav(wav_bytes: bytes) -> tuple[float, int, float]:
     actual_frames = len(raw_frames) // frame_size if frame_size > 0 else 0
     duration = actual_frames / float(sample_rate) if sample_rate > 0 else 0.0
 
-    if actual_frames == 0 or sample_width != 2:
+    if actual_frames == 0 or sample_width != PCM_SAMPLE_WIDTH_BYTES:
         return duration, sample_rate, 0.0
 
-    sample_count = len(raw_frames) // 2
-    samples = struct.unpack(f"<{sample_count}h", raw_frames[: sample_count * 2])
-    peak = max(abs(sample) for sample in samples) / 32768.0
+    sample_count = len(raw_frames) // PCM_SAMPLE_WIDTH_BYTES
+    samples = struct.unpack(
+        f"<{sample_count}h", raw_frames[: sample_count * PCM_SAMPLE_WIDTH_BYTES]
+    )
+    peak = (
+        max((abs(sample) for sample in samples), default=0.0)
+        / PCM_16BIT_MAX_FLOAT
+    )
     return duration, sample_rate, peak
 
 
@@ -122,7 +174,7 @@ def _rss_mb() -> float:
     try:
         import psutil  # pyright: ignore[reportMissingImports,reportMissingModuleSource]
 
-        return float(psutil.Process().memory_info().rss) / (1024.0 * 1024.0)
+        return float(psutil.Process().memory_info().rss) / BYTES_PER_MB
     except (ImportError, AttributeError):
         pass
 
@@ -160,7 +212,7 @@ def _rss_mb() -> float:
             ctypes.byref(counters),
             counters.cb,
         ):
-            return float(counters.WorkingSetSize) / (1024.0 * 1024.0)
+            return float(counters.WorkingSetSize) / BYTES_PER_MB
     except Exception:
         pass
 
@@ -169,7 +221,7 @@ def _rss_mb() -> float:
         with open("/proc/self/status", "r", encoding="utf-8") as f:
             for line in f:
                 if line.startswith("VmRSS:"):
-                    return float(line.split()[1]) / 1024.0
+                    return float(line.split()[1]) / KILOBYTES_PER_MB
     except OSError:
         pass
 
@@ -181,7 +233,7 @@ def _rss_mb() -> float:
             getrusage = getattr(resource, "getrusage", None)
             rusage_self = getattr(resource, "RUSAGE_SELF", None)
             if callable(getrusage) and rusage_self is not None:
-                return float(getrusage(rusage_self).ru_maxrss) / 1024.0
+                return float(getrusage(rusage_self).ru_maxrss) / KILOBYTES_PER_MB
         except (ImportError, AttributeError):
             pass
 
@@ -220,14 +272,16 @@ def _make_profile_result(
 
     return ProfileResult(
         text=text,
-        latency_seconds=round(latency_seconds, 4),
-        audio_duration_seconds=round(duration, 3),
-        real_time_factor=round(real_time_factor, 4) if duration > 0 else 0.0,
+        latency_seconds=round(latency_seconds, DECIMAL_PLACES_RTF),
+        audio_duration_seconds=round(duration, DECIMAL_PLACES_DURATION),
+        real_time_factor=(
+            round(real_time_factor, DECIMAL_PLACES_RTF) if duration > 0 else 0.0
+        ),
         sample_rate=sample_rate,
-        peak_amplitude=round(peak, 3),
+        peak_amplitude=round(peak, DECIMAL_PLACES_PEAK),
         audio_byte_count=len(wav_bytes),
-        load_ms=round(load_ms, 2),
-        rss_delta_mb=round(rss_delta_mb, 2),
+        load_ms=round(load_ms, DECIMAL_PLACES_METRIC),
+        rss_delta_mb=round(rss_delta_mb, DECIMAL_PLACES_METRIC),
         cold=cold,
     )
 
@@ -249,7 +303,7 @@ def profile_engine(
     text: str,
     lang: str = "es",
     voice: str | None = None,
-    repeats: int = 5,
+    repeats: int = DEFAULT_PROFILE_REPEATS,
 ) -> EngineStats:
     """Measures cold-start initialization and warm repeated runs for an engine.
 
@@ -268,7 +322,7 @@ def profile_engine(
         text, lang=lang, voice=voice, engine=engine, router=router
     )
     rss_after = _rss_mb()
-    cold_first_s = (load_ms / 1000.0) + synth_latency
+    cold_first_s = (load_ms / MILLISECONDS_PER_SECOND) + synth_latency
     rss_delta = max(0.0, rss_after - rss_before)
 
     runs = [
@@ -348,7 +402,7 @@ def main() -> None:
     print(f"RTF:          {res.real_time_factor:.3f}x")
     print(f"Sample Rate:  {res.sample_rate} Hz")
     print(f"Peak Level:   {res.peak_amplitude:.2f} (normalized)")
-    print(f"WAV Size:     {res.audio_byte_count / 1024:.1f} KB")
+    print(f"WAV Size:     {res.audio_byte_count / BYTES_PER_KB:.1f} KB")
 
 
 if __name__ == "__main__":

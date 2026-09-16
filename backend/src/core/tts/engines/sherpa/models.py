@@ -1,14 +1,11 @@
 """Model resolution, tokens generation, and WAV encoding for Sherpa-ONNX."""
 
-import array
-import io
 import json
 import logging
-import wave
-from collections.abc import Sequence
 from pathlib import Path
 
 from core.config import PROJECT_ROOT, get_settings
+from core.tts.audio import samples_to_wav
 from core.tts.exceptions import TTSUnavailableError
 
 __all__ = ["resolve_sherpa_paths", "samples_to_wav"]
@@ -105,31 +102,3 @@ def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
         raise TTSUnavailableError("espeak-ng-data directory was not found for Sherpa.")
 
     return resolved_model, tokens_path, data_dir
-
-
-def samples_to_wav(
-    samples: Sequence[float],
-    sample_rate: int,
-    target_peak: float = 0.78,
-) -> bytes:
-    """Converts float audio samples into RIFF/WAV bytes with calibrated peak amplitude."""
-    if not samples:
-        scale = 1.0
-    else:
-        max_amplitude = max(abs(sample) for sample in samples)
-        scale = (
-            (target_peak / max_amplitude)
-            if (max_amplitude > 0.0 and target_peak > 0.0)
-            else 1.0
-        )
-
-    int16_samples = array.array(
-        "h", (int(max(-1.0, min(1.0, s * scale)) * 32767) for s in samples)
-    )
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(sample_rate)
-        wav_file.writeframes(int16_samples.tobytes())
-    return buf.getvalue()

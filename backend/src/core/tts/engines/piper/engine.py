@@ -1,16 +1,20 @@
 """Neural Piper VITS speech synthesis backend for TutorBox."""
 
 import gc
-import io
 import logging
 import shutil
 import subprocess
 import time
-import wave
 from pathlib import Path
 from typing import Any
 
 from core.config import get_settings
+from core.tts.audio import pcm_to_wav
+from core.tts.constants import (
+    DEFAULT_PIPER_SAMPLE_RATE_HZ,
+    MILLISECONDS_PER_SECOND,
+    SUBPROCESS_SUCCESS_EXIT_CODE,
+)
 from core.tts.engines.piper.models import resolve_model_path, sanitize_model_config
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
@@ -67,7 +71,7 @@ class PiperBackend:
             _VOICE_CACHE[cache_key] = PiperVoice.load(
                 str(model_path), config_path=str(config_path)
             )
-        return (time.perf_counter() - start_time) * 1000.0
+        return (time.perf_counter() - start_time) * MILLISECONDS_PER_SECOND
 
     def unload(self) -> None:
         """Unloads cached voices from memory."""
@@ -101,13 +105,7 @@ class PiperBackend:
         for chunk in voice.synthesize(text, syn_config=syn_cfg):
             raw_pcm.extend(chunk.audio_int16_bytes)
 
-        buf = io.BytesIO()
-        with wave.open(buf, "wb") as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(voice.config.sample_rate)
-            wav_file.writeframes(raw_pcm)
-        return buf.getvalue()
+        return pcm_to_wav(raw_pcm, voice.config.sample_rate)
 
     def _synthesize_subprocess(
         self, model_path: Path, text: str, speaker_id: int
@@ -119,15 +117,9 @@ class PiperBackend:
         res = subprocess.run(
             cmd, input=text.encode("utf-8"), capture_output=True, check=False
         )
-        if res.returncode != 0 or not res.stdout:
+        if res.returncode != SUBPROCESS_SUCCESS_EXIT_CODE or not res.stdout:
             raise TTSSynthesisError(f"Piper exited with code {res.returncode}")
-        buf = io.BytesIO()
-        with wave.open(buf, "wb") as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(22050)
-            wav_file.writeframes(res.stdout)
-        return buf.getvalue()
+        return pcm_to_wav(res.stdout, DEFAULT_PIPER_SAMPLE_RATE_HZ)
 
     def synthesize(self, text: str, voice: str | None = None) -> bytes:
         """Synthesizes spoken WAV audio for the given text using Piper VITS."""

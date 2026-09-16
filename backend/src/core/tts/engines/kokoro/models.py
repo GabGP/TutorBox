@@ -1,18 +1,19 @@
 """Model resolution and WAV encoding for Kokoro-82M neural TTS."""
 
-import array
-import io
 import logging
-import wave
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 from core.config import PROJECT_ROOT, get_settings
+from core.tts.audio import samples_to_wav
 from core.tts.exceptions import TTSUnavailableError
 
 __all__ = [
+    "DEFAULT_KOKORO_SPEAKER_ID",
     "KOKORO_SPANISH_SPEAKERS",
+    "KOKORO_SPEAKER_ALEX",
+    "KOKORO_SPEAKER_DORA",
+    "KOKORO_SPEAKER_SANTA",
     "KokoroModelPaths",
     "resolve_kokoro_paths",
     "resolve_speaker_id",
@@ -37,16 +38,13 @@ class KokoroModelPaths:
 def _find_kokoro_dir(target_name: str) -> Path | None:
     """Searches standard paths for the Kokoro model directory."""
     tts = get_settings().tts
-    candidate_dirs = [
+    candidate_dirs = (
         Path(target_name),
         PROJECT_ROOT / ".cache" / "models" / "tts" / target_name,
         Path(tts.piper_model_dir) / target_name,
         Path.cwd() / "models" / "tts" / target_name,
-    ]
-    for directory in candidate_dirs:
-        if directory.is_dir():
-            return directory.resolve()
-    return None
+    )
+    return next((d.resolve() for d in candidate_dirs if d.is_dir()), None)
 
 
 def resolve_kokoro_paths(
@@ -99,38 +97,24 @@ def resolve_kokoro_paths(
     )
 
 
-def samples_to_wav(
-    samples: Sequence[float],
-    sample_rate: int,
-    target_peak: float = 0.78,
-) -> bytes:
-    """Converts float audio samples into RIFF/WAV bytes with calibrated peak amplitude."""
-    max_amp = max((abs(s) for s in samples), default=0.0)
-    scale = (target_peak / max_amp) if (max_amp > 0.0 and target_peak > 0.0) else 1.0
-
-    int16_samples = array.array(
-        "h", (int(max(-1.0, min(1.0, s * scale)) * 32767) for s in samples)
-    )
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(sample_rate)
-        wav_file.writeframes(int16_samples.tobytes())
-    return buf.getvalue()
-
+KOKORO_SPEAKER_DORA: int = 28
+KOKORO_SPEAKER_ALEX: int = 29
+KOKORO_SPEAKER_SANTA: int = 53
+DEFAULT_KOKORO_SPEAKER_ID: int = KOKORO_SPEAKER_SANTA
 
 KOKORO_SPANISH_SPEAKERS: dict[str, int] = {
-    "ef_dora": 28,
-    "dora": 28,
-    "em_alex": 29,
-    "alex": 29,
-    "em_santa": 53,
-    "santa": 53,
+    "ef_dora": KOKORO_SPEAKER_DORA,
+    "dora": KOKORO_SPEAKER_DORA,
+    "em_alex": KOKORO_SPEAKER_ALEX,
+    "alex": KOKORO_SPEAKER_ALEX,
+    "em_santa": KOKORO_SPEAKER_SANTA,
+    "santa": KOKORO_SPEAKER_SANTA,
 }
 
 
-def resolve_speaker_id(voice: str | None, default_id: int = 53) -> int:
+def resolve_speaker_id(
+    voice: str | None, default_id: int = DEFAULT_KOKORO_SPEAKER_ID
+) -> int:
     """Maps voice names or digit strings to Kokoro speaker IDs."""
     if voice:
         cleaned = voice.strip().lower()

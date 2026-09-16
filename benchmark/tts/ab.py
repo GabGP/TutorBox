@@ -17,6 +17,13 @@ HERE = Path(__file__).resolve().parent
 
 from benchmark.tts.metrics import _detect_engine_provider, profile_engine
 
+DEFAULT_SWEEP_REPEATS: int = 3
+MAX_ERROR_SNIPPET_CHARS: int = 160
+MAX_TEXT_SNIPPET_CHARS: int = 80
+FIRST_CORPUS_ENTRY_INDEX: int = 0
+EXIT_SUCCESS: int = 0
+EXIT_EMPTY_CORPUS: int = 2
+
 COLUMNS_ORDER: tuple[str, ...] = (
     "engine",
     "provider",
@@ -47,7 +54,7 @@ def _get_fieldnames(rows: list[dict[str, Any]]) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="TTS engine A/B sweep (Spanish-first)")
     ap.add_argument("--engines", default="piper", help="comma list, e.g. piper,espeak")
-    ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--repeats", type=int, default=DEFAULT_SWEEP_REPEATS)
     ap.add_argument("--corpus", default=str(HERE / "corpus" / "es_math.txt"))
     ap.add_argument("--out", default=str(HERE / "results"))
     ap.add_argument("--lang", default="es")
@@ -65,12 +72,16 @@ def main() -> int:
     ]
     if not texts:
         print("empty corpus", file=sys.stderr)
-        return 2
+        return EXIT_EMPTY_CORPUS
 
     out, wavdir = Path(args.out), Path(args.out) / "out"
     wavdir.mkdir(parents=True, exist_ok=True)
     rows: list[dict] = []
-    eval_texts = list(enumerate(texts)) if args.all_texts else [(0, texts[0])]
+    eval_texts = (
+        list(enumerate(texts))
+        if args.all_texts
+        else [(FIRST_CORPUS_ENTRY_INDEX, texts[FIRST_CORPUS_ENTRY_INDEX])]
+    )
 
     for eng in [e.strip() for e in args.engines.split(",") if e.strip()]:
         for idx, text in eval_texts:
@@ -88,7 +99,7 @@ def main() -> int:
                         "engine": eng,
                         "provider": _detect_engine_provider(eng),
                         "text_idx": idx,
-                        "error": str(err)[:160],
+                        "error": str(err)[:MAX_ERROR_SNIPPET_CHARS],
                     }
                 )
                 continue
@@ -97,7 +108,7 @@ def main() -> int:
             name.write_bytes(stats.wav_bytes)
             row = stats.summary() | {
                 "wav": str(name),
-                "text": text[:80],
+                "text": text[:MAX_TEXT_SNIPPET_CHARS],
                 "text_idx": idx,
             }
             rows.append(row)  # type: ignore[arg-type]
@@ -114,7 +125,7 @@ def main() -> int:
         print(f"wrote {out / 'summary.csv'}")
     else:
         print("no rows generated", file=sys.stderr)
-    return 0
+    return EXIT_SUCCESS
 
 
 if __name__ == "__main__":

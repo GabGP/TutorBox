@@ -7,10 +7,22 @@ import shutil
 import sys
 from pathlib import Path
 
-__all__ = ["is_cuda_available", "resolve_execution_provider"]
+__all__ = [
+    "CUDA_CACHE_MAX_SIZE",
+    "PROVIDER_AUTO",
+    "PROVIDER_CPU",
+    "PROVIDER_CUDA",
+    "is_cuda_available",
+    "resolve_execution_provider",
+]
+
+CUDA_CACHE_MAX_SIZE: int = 1
+PROVIDER_CUDA: str = "cuda"
+PROVIDER_CPU: str = "cpu"
+PROVIDER_AUTO: str = "auto"
 
 
-@functools.lru_cache(maxsize=1)
+@functools.lru_cache(maxsize=CUDA_CACHE_MAX_SIZE)
 def is_cuda_available() -> bool:
     """Returns True if host hardware and installed runtime support CUDA."""
     has_nvidia_hardware = bool(
@@ -50,8 +62,8 @@ def is_cuda_available() -> bool:
 def resolve_execution_provider(configured: str) -> str:
     """Resolves 'auto', 'cuda', or 'cpu' to an actual execution provider."""
     normalized = configured.strip().lower()
-    if normalized == "cuda":
-        return "cuda"
-    if normalized == "cpu":
-        return "cpu"
-    return "cuda" if is_cuda_available() else "cpu"
+    if normalized == PROVIDER_CUDA:
+        return PROVIDER_CUDA
+    if normalized == PROVIDER_CPU:
+        return PROVIDER_CPU
+    return PROVIDER_CUDA if is_cuda_available() else PROVIDER_CPU

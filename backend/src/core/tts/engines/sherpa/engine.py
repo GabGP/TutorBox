@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from core.config import get_settings
+from core.tts.constants import MILLISECONDS_PER_SECOND
 from core.tts.engines.provider import resolve_execution_provider
 from core.tts.engines.sherpa.models import resolve_sherpa_paths, samples_to_wav
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
@@ -105,7 +106,7 @@ class SherpaBackend:
                     f"Failed to initialize Sherpa-ONNX: {err}"
                 ) from err
 
-        return (time.perf_counter() - start_time) * 1000.0
+        return (time.perf_counter() - start_time) * MILLISECONDS_PER_SECOND
 
     def unload(self) -> None:
         """Reclaims memory by releasing the sherpa-onnx engine instance."""
@@ -135,7 +136,7 @@ class SherpaBackend:
         except Exception as err:
             raise TTSSynthesisError(f"Sherpa synthesis failed: {err}") from err
 
-        if not audio or len(audio.samples) == 0:
+        if not audio or not audio.samples:
             raise TTSSynthesisError("Sherpa engine produced zero audio samples.")
 
         return samples_to_wav(audio.samples, audio.sample_rate)

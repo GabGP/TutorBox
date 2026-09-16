@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from core.config import get_settings
+from core.tts.constants import DEFAULT_SPEECH_SPEED, MILLISECONDS_PER_SECOND
 from core.tts.engines.kokoro.models import (
     resolve_kokoro_paths,
     resolve_speaker_id,
@@ -104,7 +105,7 @@ class KokoroBackend:
                     f"Failed to initialize Kokoro: {err}"
                 ) from err
 
-        return (time.perf_counter() - start_time) * 1000.0
+        return (time.perf_counter() - start_time) * MILLISECONDS_PER_SECOND
 
     def unload(self) -> None:
         """Reclaims memory by releasing the Kokoro engine instance."""
@@ -132,11 +133,13 @@ class KokoroBackend:
 
         speaker_id = self._resolve_speaker_id(voice)
         try:
-            audio = self._tts.generate(spoken_text, sid=speaker_id, speed=1.0)
+            audio = self._tts.generate(
+                spoken_text, sid=speaker_id, speed=DEFAULT_SPEECH_SPEED
+            )
         except Exception as err:
             raise TTSSynthesisError(f"Kokoro synthesis failed: {err}") from err
 
-        if not audio or len(audio.samples) == 0:
+        if not audio or not audio.samples:
             raise TTSSynthesisError("Kokoro engine produced zero audio samples.")
 
         return samples_to_wav(audio.samples, audio.sample_rate)
