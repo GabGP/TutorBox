@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from core.config import clear_settings_cache
-from core.tts.espeak import TTSUnavailableError
+from core.tts.exceptions import TTSUnavailableError
 from core.tts.router import (
     TTSRouter,
     clear_speech_cache,

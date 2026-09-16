@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.tts.espeak import EspeakBackend
+from core.tts.engines.espeak import EspeakBackend
+from core.tts.engines.piper import PiperBackend
 from core.tts.exceptions import TTSUnavailableError
-from core.tts.piper import PiperBackend
 from core.tts.router import TTSRouter
 
 
@@ -45,8 +45,10 @@ def test_piper_lifecycle_protocol(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Preload mock success
     with (
-        patch("core.tts.piper.resolve_model_path", return_value=MagicMock()),
-        patch("core.tts.piper.sanitize_model_config"),
+        patch(
+            "core.tts.engines.piper.engine.resolve_model_path", return_value=MagicMock()
+        ),
+        patch("core.tts.engines.piper.engine.sanitize_model_config"),
         patch("piper.voice.PiperVoice.load", return_value=MagicMock()),
     ):
         load_ms = backend.preload("es")

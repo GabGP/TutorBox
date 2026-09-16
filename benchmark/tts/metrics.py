@@ -31,9 +31,7 @@ import wave
 from dataclasses import dataclass
 from pathlib import Path
 
-from core.config import clear_settings_cache
-from core.tts.piper import _VOICE_CACHE
-from core.tts.router import get_tts_router
+from core.tts.router import TTSRouter, get_tts_router
 
 __all__ = [
     "EngineStats",
@@ -188,31 +186,19 @@ def _rss_mb() -> float:
     return 0.0
 
 
-def _set_engine(engine: str) -> None:
-    """Switches the active TTS_ENGINE in-process and clears cached instances."""
-    os.environ["TTS_ENGINE"] = engine
-    clear_settings_cache()
-
-    from core.tts import router as router_mod
-
-    router_mod._ROUTER_INSTANCE = None
-    if _VOICE_CACHE is not None and hasattr(_VOICE_CACHE, "clear"):
-        _VOICE_CACHE.clear()
-
-
 def _synthesize_once(
     text: str,
     lang: str = "es",
     voice: str | None = None,
     engine: str | None = None,
+    router: TTSRouter | None = None,
 ) -> tuple[bytes, float]:
     """Synthesizes text once bypassing the LRU cache and returns (wav_bytes, elapsed_seconds)."""
-    router = get_tts_router()
-    router._cache.pop((text, lang, voice or ""), None)
-    router._cache.pop((text, lang, voice or "", engine or ""), None)
+    active_router = router or get_tts_router()
+    active_router.clear_cache()
 
     start_time = time.perf_counter()
-    wav_bytes = router.synthesize(text, lang=lang, voice=voice, backend=engine)
+    wav_bytes = active_router.synthesize(text, lang=lang, voice=voice, backend=engine)
     latency_seconds = time.perf_counter() - start_time
     return wav_bytes, latency_seconds
 
@@ -252,9 +238,6 @@ def profile_speech_synthesis(
     engine: str | None = None,
 ) -> ProfileResult:
     """Measures synthesis wall-clock latency, RTF, and acoustic properties."""
-    if engine is not None:
-        _set_engine(engine)
-
     wav_bytes, latency = _synthesize_once(text, lang=lang, voice=voice, engine=engine)
     return _make_profile_result(text, wav_bytes, latency)
 
@@ -271,8 +254,8 @@ def profile_engine(
     NO FALLBACK: If the engine backend or model weights are missing, raises
     TTSUnavailableError immediately so callers can distinguish failures.
     """
-    _set_engine(engine)
     router = get_tts_router()
+    router.unload(engine)
 
     rss_before = _rss_mb()
     # Explicit preload measures model loading duration in milliseconds separately from synthesis
@@ -280,7 +263,7 @@ def profile_engine(
     _, load_ms = router.preload(engine=engine, lang=lang, voice=voice)
 
     wav_bytes, synth_latency = _synthesize_once(
-        text, lang=lang, voice=voice, engine=engine
+        text, lang=lang, voice=voice, engine=engine, router=router
     )
     rss_after = _rss_mb()
     cold_first_s = (load_ms / 1000.0) + synth_latency

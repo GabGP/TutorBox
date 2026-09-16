@@ -1,11 +1,15 @@
 """Domain exceptions for TutorBox offline speech synthesis."""
 
-__all__ = ["TTSSynthesisError", "TTSUnavailableError"]
+__all__ = ["TTSError", "TTSSynthesisError", "TTSUnavailableError"]
 
 
-class TTSUnavailableError(RuntimeError):
-    """espeak/piper is disabled, not installed, or has no voice for the language."""
+class TTSError(RuntimeError):
+    """Base exception for TutorBox speech synthesis errors."""
 
 
-class TTSSynthesisError(RuntimeError):
+class TTSUnavailableError(TTSError):
+    """espeak/piper/sherpa is disabled, not installed, or has no voice for the language."""
+
+
+class TTSSynthesisError(TTSError):
     """TTS engine was found and executed, but failed or produced no audio."""

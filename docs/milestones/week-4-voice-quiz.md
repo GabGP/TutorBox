@@ -50,12 +50,13 @@ This document summarizes the technical deliverables, architectural implementatio
      * `length_scale = 1.12`: Slows delivery pace by 12% to facilitate comprehension for elementary students.
      * `noise_scale = 0.35`: Eliminates wobbly pitch artifacts, robotic warble, and acoustic peaking.
      * `noise_w_scale = 0.45`: Enforces steady, intelligible syllable cadence.
-3. **Pluggable Voice Router & Neural Piper Engine (`backend/src/core/tts/`)**:
-   * `protocols.py`: Formal `TTSBackend` protocol defining `synthesize()` and `is_available()`.
-   * `piper.py`: High-fidelity neural synthesis using Piper VITS models on ONNX Runtime. Streams pure RIFF/WAV bytes in memory via `io.BytesIO` without disk I/O or temporary file locks.
+3. **Pluggable Voice Router & Multi-Engine Architecture (`backend/src/core/tts/`)**:
+   * `protocols.py`: Formal `TTSBackend` protocol defining `synthesize()`, `is_available()`, `preload()`, and `unload()`.
+   * `engines/piper/`: High-fidelity neural synthesis using Piper VITS models on ONNX Runtime (`engine.py`, `models.py`). Streams pure RIFF/WAV bytes in memory via `io.BytesIO` without disk I/O or temporary file locks.
    * **Automatic Config Sanitization**: Dynamically fixes legacy `"PhonemeType.ESPEAK"` string literals in `.onnx.json` model descriptors to prevent runtime enum exceptions.
-   * `espeak.py`: Formant synthesizer implementing `TTSBackend` protocol as ultra-lightweight fallback.
-   * `router.py`: Pluggable dispatcher selecting engines (`auto`, `piper`, `espeak`), routing Mayan K'iche' (`quc_Latn`) strictly to Piper, falling back gracefully from Piper to eSpeak for Spanish, and caching generated audio in an in-memory 32-entry LRU cache.
+   * `engines/sherpa/`: Embedded Sherpa-ONNX VITS neural synthesis engine (`engine.py`, `models.py`) with token generation and sample conversion.
+   * `engines/espeak/`: Formant synthesizer implementing `TTSBackend` protocol as ultra-lightweight fallback (`engine.py`, `cli.py`).
+   * `router/`: Pluggable dispatcher (`router.py`, `selection.py`) selecting engines (`auto`, `piper`, `sherpa`, `espeak`), routing Mayan K'iche' (`quc_Latn`), falling back gracefully from neural to eSpeak for Spanish, and caching generated audio in an in-memory 32-entry LRU cache.
    * `api/session/speech.py`: Refactored to delegate synthesis directly to `core.tts.synthesize_speech()`.
 4. **Latency Profiler & Benchmark Harness (`benchmark/tts/metrics.py` & `ab.py`)**:
    * Diagnostic profiler measuring wall-clock synthesis time, audio duration, Real-Time Factor (RTF), sample rate, and peak amplitude levels.

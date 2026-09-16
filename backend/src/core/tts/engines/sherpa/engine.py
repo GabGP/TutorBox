@@ -6,8 +6,8 @@ import time
 from typing import Any
 
 from core.config import get_settings
+from core.tts.engines.sherpa.models import resolve_sherpa_paths, samples_to_wav
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
-from core.tts.sherpa_models import resolve_sherpa_paths, samples_to_wav
 from core.tts.text import normalize_for_speech
 
 __all__ = ["SherpaBackend"]

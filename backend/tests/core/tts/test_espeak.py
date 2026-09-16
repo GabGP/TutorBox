@@ -9,13 +9,12 @@ import subprocess
 import pytest
 
 from core.config import clear_settings_cache
-from core.tts.espeak import (
-    TTSSynthesisError,
-    TTSUnavailableError,
+from core.tts.engines.espeak import (
     resolve_binary,
     resolve_voice,
     synthesize_wav,
 )
+from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 
 FAKE_WAV = b"RIFF\x24\x00\x00\x00WAVEfmt "
 VOICE_LISTING = (
@@ -51,7 +50,7 @@ def _install_fake_espeak(
 ) -> None:
     """Fakes both the binary lookup and the two subprocess calls espeak needs."""
     monkeypatch.setattr(
-        "core.tts.espeak.shutil.which",
+        "core.tts.engines.espeak.cli.shutil.which",
         lambda name: f"/usr/bin/{name}" if name in available else None,
     )
 
@@ -63,13 +62,13 @@ def _install_fake_espeak(
             raise synth_result
         return synth_result or _FakeCompleted(stdout=FAKE_WAV)
 
-    monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.subprocess.run", fake_run)
 
 
 def test_resolve_binary_prefers_espeak_ng(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies espeak-ng wins over the legacy espeak binary."""
     monkeypatch.setattr(
-        "core.tts.espeak.shutil.which",
+        "core.tts.engines.espeak.cli.shutil.which",
         lambda name: f"/usr/bin/{name}" if name in ("espeak-ng", "espeak") else None,
     )
     assert resolve_binary() == "/usr/bin/espeak-ng"
@@ -80,7 +79,7 @@ def test_resolve_binary_falls_back_to_legacy_espeak(
 ) -> None:
     """Verifies an appliance with only the old espeak still speaks."""
     monkeypatch.setattr(
-        "core.tts.espeak.shutil.which",
+        "core.tts.engines.espeak.cli.shutil.which",
         lambda name: "/usr/bin/espeak" if name == "espeak" else None,
     )
     assert resolve_binary() == "/usr/bin/espeak"
@@ -91,7 +90,7 @@ def test_resolve_binary_honours_configured_binary(
 ) -> None:
     """Verifies TTS_ESPEAK_BINARY pins the executable that is used."""
     monkeypatch.setattr(
-        "core.tts.espeak.shutil.which",
+        "core.tts.engines.espeak.cli.shutil.which",
         lambda name: "/opt/espeak-ng" if name == "/opt/espeak-ng" else None,
     )
     assert resolve_binary("/opt/espeak-ng") == "/opt/espeak-ng"
@@ -101,7 +100,7 @@ def test_resolve_binary_missing_explains_how_to_install(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verifies a missing engine names the apt package instead of failing opaquely."""
-    monkeypatch.setattr("core.tts.espeak.shutil.which", lambda name: None)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.shutil.which", lambda name: None)
     with pytest.raises(TTSUnavailableError, match="apt install espeak-ng"):
         resolve_binary()
 
@@ -124,7 +123,7 @@ def test_resolve_voice_falls_back_to_castilian_when_es_419_missing(
             stdout=b"Pty Language Age/Gender VoiceName File\n 5  es  --/M  Spanish  roa/es\n"
         )
 
-    monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.subprocess.run", fake_run)
     assert resolve_voice("/usr/bin/espeak-ng", "es-419") == "es"
 
 
@@ -136,7 +135,7 @@ def test_resolve_voice_trusts_config_when_listing_unreadable(
     def fake_run(command, **kwargs):
         raise OSError("cannot list voices")
 
-    monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.subprocess.run", fake_run)
     assert resolve_voice("/usr/bin/espeak-ng", "es-419") == "es-419"
 
 
@@ -150,7 +149,7 @@ def test_resolve_voice_without_any_spanish_voice_raises(
             stdout=b"Pty Language Age/Gender VoiceName File\n 5  en-us  --/M  English  gmw/en-US\n"
         )
 
-    monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.subprocess.run", fake_run)
     with pytest.raises(TTSUnavailableError, match="en-us"):
         resolve_voice("/usr/bin/espeak-ng", "es-419")
 
@@ -178,7 +177,9 @@ def test_synthesize_sends_normalized_text_on_stdin(
     """Verifies the spoken text is normalized and passed over stdin, not argv."""
     captured: dict[str, bytes] = {}
 
-    monkeypatch.setattr("core.tts.espeak.shutil.which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        "core.tts.engines.espeak.cli.shutil.which", lambda name: f"/usr/bin/{name}"
+    )
 
     def fake_run(command, **kwargs):
         if "--voices" in command:
@@ -186,7 +187,7 @@ def test_synthesize_sends_normalized_text_on_stdin(
         captured["input"] = kwargs["input"]
         return _FakeCompleted(stdout=FAKE_WAV)
 
-    monkeypatch.setattr("core.tts.espeak.subprocess.run", fake_run)
+    monkeypatch.setattr("core.tts.engines.espeak.cli.subprocess.run", fake_run)
     synthesize_wav("6/8 es igual a 3/4")
 
     assert captured["input"].decode("utf-8") == "6 octavos es igual a 3 cuartos"
@@ -259,7 +260,7 @@ def test_espeak_backend_is_available_and_synthesize(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verifies the EspeakBackend class implements TTSBackend protocol."""
-    from core.tts.espeak import EspeakBackend
+    from core.tts.engines.espeak import EspeakBackend
 
     calls: list[list[str]] = []
     _install_fake_espeak(monkeypatch, calls)
@@ -274,7 +275,7 @@ def test_espeak_backend_unavailable_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verifies EspeakBackend reports false when TTS is disabled or missing."""
-    from core.tts.espeak import EspeakBackend
+    from core.tts.engines.espeak import EspeakBackend
 
     monkeypatch.setenv("TTS_ENABLED", "false")
     clear_settings_cache()

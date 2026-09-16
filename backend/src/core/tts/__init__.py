@@ -1,14 +1,21 @@
 """Offline text-to-speech package for the TutorBox appliance."""
 
-from core.tts.espeak import (
+from core.tts.engines import (
     EspeakBackend,
-    TTSSynthesisError,
-    TTSUnavailableError,
+    PiperBackend,
+    SherpaBackend,
+)
+from core.tts.engines.espeak import (
     resolve_binary,
     resolve_voice,
     synthesize_wav,
 )
-from core.tts.piper import PiperBackend, resolve_model_path
+from core.tts.engines.piper import resolve_model_path
+from core.tts.exceptions import (
+    TTSError,
+    TTSSynthesisError,
+    TTSUnavailableError,
+)
 from core.tts.protocols import TTSBackend
 from core.tts.router import (
     TTSRouter,
@@ -16,7 +23,6 @@ from core.tts.router import (
     get_tts_router,
     synthesize_speech,
 )
-from core.tts.sherpa import SherpaBackend
 from core.tts.text import normalize_for_speech
 
 __all__ = [
@@ -24,6 +30,7 @@ __all__ = [
     "PiperBackend",
     "SherpaBackend",
     "TTSBackend",
+    "TTSError",
     "TTSRouter",
     "TTSSynthesisError",
     "TTSUnavailableError",

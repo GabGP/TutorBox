@@ -1,14 +1,29 @@
 """Engine selection strategy and language-specific resolution for TTSRouter."""
 
 import logging
+from typing import Any
 
 from core.config import get_settings
 from core.tts.exceptions import TTSUnavailableError
 from core.tts.protocols import TTSBackend
 
-__all__ = ["resolve_target_backend"]
+__all__ = [
+    "_MAX_CACHE_ENTRIES",
+    "get_engine_status",
+    "get_max_cache_entries",
+    "resolve_target_backend",
+    "resolve_voice_for_backend",
+]
 
 logger = logging.getLogger(__name__)
+_MAX_CACHE_ENTRIES = 32
+
+
+def get_max_cache_entries() -> int:
+    """Returns max cache entries, respecting package-level monkeypatches."""
+    import core.tts.router as r_pkg
+
+    return getattr(r_pkg, "_MAX_CACHE_ENTRIES", _MAX_CACHE_ENTRIES)
 
 
 def _resolve_quc_backend(
@@ -83,3 +98,33 @@ def resolve_target_backend(
     if espeak.is_available(lang):
         return espeak
     raise TTSUnavailableError(f"No TTS engine available for '{lang}'.")
+
+
+def resolve_voice_for_backend(
+    backend: TTSBackend,
+    lang: str = "es",
+    voice: str | None = None,
+    espeak_backend: TTSBackend | None = None,
+) -> str | None:
+    """Selects the specific voice identifier for the target engine and language."""
+    if voice:
+        return voice
+    settings = get_settings().tts
+    is_espeak = (backend is espeak_backend) or (
+        getattr(backend, "engine_name", None) == "espeak"
+    )
+    if is_espeak:
+        return settings.voice_quc if lang == "quc" else settings.voice
+    return lang
+
+
+def get_engine_status(backend: TTSBackend) -> dict[str, Any]:
+    """Returns the readiness status and model identifier for a backend."""
+    cfg = get_settings().tts
+    mid_map = {"piper": cfg.piper_model_es, "sherpa": cfg.sherpa_model_es}
+    model_id = mid_map.get(backend.engine_name, cfg.voice)
+    return {
+        "engine": backend.engine_name,
+        "loaded": backend.is_loaded(),
+        "model_id": model_id,
+    }

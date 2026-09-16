@@ -50,7 +50,6 @@ def _ensure_tokens_file(model_path: Path) -> Path:
         if cand.is_file():
             return cand.resolve()
 
-    # Attempt auto-generation from sidecar .onnx.json
     clean_stem = model_path.name.replace(".sherpa", "").replace(".onnx", "")
     json_path = model_path.parent / f"{clean_stem}.onnx.json"
     if json_path.is_file():
@@ -82,7 +81,6 @@ def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
         Path.cwd() / "models" / "tts",
     ]
 
-    # Check for sherpa-specific model first, then standard onnx
     sherpa_stem = model_name.replace(".onnx", ".sherpa.onnx")
     candidates = [sherpa_stem, model_name]
 

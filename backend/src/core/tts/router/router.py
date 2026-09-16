@@ -4,12 +4,15 @@ import logging
 from typing import Any
 
 from core.config import get_settings
-from core.tts.espeak import EspeakBackend
+from core.tts.engines import EspeakBackend, PiperBackend, SherpaBackend
 from core.tts.exceptions import TTSUnavailableError
-from core.tts.piper import PiperBackend
 from core.tts.protocols import TTSBackend
-from core.tts.router_selection import resolve_target_backend
-from core.tts.sherpa import SherpaBackend
+from core.tts.router.selection import (
+    get_engine_status,
+    get_max_cache_entries,
+    resolve_target_backend,
+    resolve_voice_for_backend,
+)
 
 __all__ = [
     "TTSRouter",
@@ -19,7 +22,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-_MAX_CACHE_ENTRIES = 32
 
 
 class TTSRouter:
@@ -35,10 +37,12 @@ class TTSRouter:
         self.piper = piper or PiperBackend()
         self.espeak = espeak or EspeakBackend()
         self.sherpa = sherpa or SherpaBackend()
-        self._backends: dict[str, TTSBackend] = dict(backends or {})
-        self._backends.setdefault("piper", self.piper)
-        self._backends.setdefault("espeak", self.espeak)
-        self._backends.setdefault("sherpa", self.sherpa)
+        self._backends: dict[str, TTSBackend] = {
+            "piper": self.piper,
+            "espeak": self.espeak,
+            "sherpa": self.sherpa,
+            **(backends or {}),
+        }
         self._cache: dict[tuple[str, ...], bytes] = {}
 
     def clear_cache(self) -> None:
@@ -60,8 +64,7 @@ class TTSRouter:
     ) -> tuple[str, float]:
         """Preloads model weights for backend, returning (engine, load_ms)."""
         backend = self.select_backend(lang=lang, engine=engine)
-        load_ms = backend.preload(voice=voice or lang)
-        return backend.engine_name, load_ms
+        return backend.engine_name, backend.preload(voice=voice or lang)
 
     def unload(self, engine: str | None = None) -> str:
         """Unloads weights from memory for the target engine or all backends."""
@@ -76,13 +79,7 @@ class TTSRouter:
     def status(self, engine: str | None = None, lang: str = "es") -> dict[str, Any]:
         """Returns the readiness and model identifier of the target engine."""
         backend = self.select_backend(lang=lang, engine=engine)
-        cfg = get_settings().tts
-        mid_map = {"piper": cfg.piper_model_es, "sherpa": cfg.sherpa_model_es}
-        return {
-            "engine": backend.engine_name,
-            "loaded": backend.is_loaded(),
-            "model_id": mid_map.get(backend.engine_name, cfg.voice),
-        }
+        return get_engine_status(backend)
 
     def synthesize(
         self,
@@ -102,16 +99,14 @@ class TTSRouter:
             return cached
 
         target_backend = self.select_backend(lang=lang, engine=backend)
-        settings = get_settings().tts
-        voice_to_use = voice or (
-            settings.voice_quc
-            if lang == "quc" and target_backend is self.espeak
-            else (settings.voice if target_backend is self.espeak else lang)
+        voice_to_use = resolve_voice_for_backend(
+            target_backend, lang, voice, espeak_backend=self.espeak
         )
 
         try:
             audio = target_backend.synthesize(text, voice=voice_to_use)
         except TTSUnavailableError as err:
+            settings = get_settings().tts
             can_fallback = lang == "es" and target_backend is self.piper and not backend
             if can_fallback and settings.engine.lower() == "auto":
                 logger.warning("Piper failed; falling back to eSpeak: %s", err)
@@ -119,7 +114,7 @@ class TTSRouter:
             else:
                 raise
 
-        if len(self._cache) >= _MAX_CACHE_ENTRIES:
+        if len(self._cache) >= get_max_cache_entries():
             self._cache.pop(next(iter(self._cache)))
         self._cache[cache_key] = audio
         return audio

@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from core.config import clear_settings_cache
-from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
-from core.tts.sherpa import SherpaBackend
-from core.tts.sherpa_models import (
+from core.tts.engines.sherpa import SherpaBackend
+from core.tts.engines.sherpa.models import (
     _ensure_tokens_file,
     _find_espeak_data,
     resolve_sherpa_paths,
     samples_to_wav,
 )
+from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 
 
 @pytest.fixture(autouse=True)
@@ -245,7 +245,7 @@ def test_resolve_sherpa_paths_missing_data_dir(tmp_path, monkeypatch):
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     clear_settings_cache()
     with (
-        patch("core.tts.sherpa_models._find_espeak_data", return_value=None),
+        patch("core.tts.engines.sherpa.models._find_espeak_data", return_value=None),
         pytest.raises(
             TTSUnavailableError, match="espeak-ng-data directory was not found"
         ),

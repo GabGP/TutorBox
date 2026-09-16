@@ -11,11 +11,11 @@ from pathlib import Path
 from typing import Any
 
 from core.config import get_settings
+from core.tts.engines.piper.models import resolve_model_path, sanitize_model_config
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
-from core.tts.piper_models import resolve_model_path, sanitize_model_config
 from core.tts.text import normalize_for_speech
 
-__all__ = ["PiperBackend", "resolve_model_path", "sanitize_model_config"]
+__all__ = ["_VOICE_CACHE", "PiperBackend"]
 
 logger = logging.getLogger(__name__)
 _VOICE_CACHE: dict[str, Any] = {}

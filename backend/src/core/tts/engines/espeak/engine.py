@@ -10,7 +10,7 @@ import subprocess
 import time
 
 from core.config import get_settings
-from core.tts.espeak_cli import (
+from core.tts.engines.espeak.cli import (
     BINARY_CANDIDATES,
     VOICE_FALLBACKS,
     resolve_binary,

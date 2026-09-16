@@ -13,12 +13,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from core.config import clear_settings_cache
-from core.tts.espeak import TTSSynthesisError, TTSUnavailableError
-from core.tts.piper import (
+from core.tts.engines.piper import (
     PiperBackend,
     resolve_model_path,
     sanitize_model_config,
 )
+from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 
 FAKE_PCM = b"\x00\x00" * 16000
 
