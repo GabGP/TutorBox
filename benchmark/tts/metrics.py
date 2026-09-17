@@ -31,6 +31,11 @@ import wave
 from dataclasses import dataclass
 from pathlib import Path
 
+from benchmark.tts.memory import (
+    MemoryMonitor,
+    get_host_rss_mb,
+    is_jetson_uma,
+)
 from core.tts.constants import (
     MILLISECONDS_PER_SECOND,
     PCM_16BIT_MAX_FLOAT,
@@ -53,6 +58,7 @@ __all__ = [
     "KILOBYTES_PER_MB",
     "PERCENTILE_95",
     "ProfileResult",
+    "RSS_MEASUREMENT_SCOPE",
     "WARM_RUN_START_INDEX",
     "main",
     "profile_engine",
@@ -74,6 +80,7 @@ DECIMAL_PLACES_WAV_KB: int = 1
 BYTES_PER_KB: float = 1024.0
 BYTES_PER_MB: float = 1024.0 * 1024.0
 KILOBYTES_PER_MB: float = 1024.0
+RSS_MEASUREMENT_SCOPE: str = "parent-process-only"
 
 
 @dataclass(frozen=True)
@@ -89,7 +96,9 @@ class ProfileResult:
     audio_byte_count: int
     load_ms: float = 0.0
     rss_delta_mb: float = 0.0
+    vram_delta_mb: float = 0.0
     cold: bool = False
+    rss_scope: str = RSS_MEASUREMENT_SCOPE
 
 
 @dataclass(frozen=True)
@@ -139,6 +148,10 @@ class EngineStats:
             "rss_delta_mb": round(
                 first_run.rss_delta_mb, DECIMAL_PLACES_METRIC
             ),
+            "vram_delta_mb": round(
+                first_run.vram_delta_mb, DECIMAL_PLACES_METRIC
+            ),
+            "rss_scope": first_run.rss_scope,
         }
 
 
@@ -170,74 +183,7 @@ def _analyze_wav(wav_bytes: bytes) -> tuple[float, int, float]:
 
 def _rss_mb() -> float:
     """Returns current process resident set size in megabytes across platforms."""
-    # 1. Preferred cross-platform if psutil is installed
-    try:
-        import psutil  # pyright: ignore[reportMissingImports,reportMissingModuleSource]
-
-        return float(psutil.Process().memory_info().rss) / BYTES_PER_MB
-    except (ImportError, AttributeError):
-        pass
-
-    # 2. Windows native memory query via GetProcessMemoryInfo
-    try:
-        import ctypes
-        from ctypes import wintypes
-
-        class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
-            _fields_ = [
-                ("cb", wintypes.DWORD),
-                ("PageFaultCount", wintypes.DWORD),
-                ("PeakWorkingSetSize", ctypes.c_size_t),
-                ("WorkingSetSize", ctypes.c_size_t),
-                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-                ("QuotaPagedPoolUsage", ctypes.c_size_t),
-                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-                ("PagefileUsage", ctypes.c_size_t),
-                ("PeakPagefileUsage", ctypes.c_size_t),
-                ("PrivateUsage", ctypes.c_size_t),
-            ]
-
-        get_mem_info = ctypes.windll.psapi.GetProcessMemoryInfo
-        get_mem_info.argtypes = [
-            wintypes.HANDLE,
-            ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
-            wintypes.DWORD,
-        ]
-        get_mem_info.restype = wintypes.BOOL
-        counters = PROCESS_MEMORY_COUNTERS_EX()
-        counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS_EX)
-        if get_mem_info(
-            ctypes.windll.kernel32.GetCurrentProcess(),
-            ctypes.byref(counters),
-            counters.cb,
-        ):
-            return float(counters.WorkingSetSize) / BYTES_PER_MB
-    except Exception:
-        pass
-
-    # 3. Linux /proc/self/status query
-    try:
-        with open("/proc/self/status", "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("VmRSS:"):
-                    return float(line.split()[1]) / KILOBYTES_PER_MB
-    except OSError:
-        pass
-
-    # 4. Unix resource fallback
-    if sys.platform != "win32":
-        try:
-            import resource  # pyright: ignore[reportMissingImports]
-
-            getrusage = getattr(resource, "getrusage", None)
-            rusage_self = getattr(resource, "RUSAGE_SELF", None)
-            if callable(getrusage) and rusage_self is not None:
-                return float(getrusage(rusage_self).ru_maxrss) / KILOBYTES_PER_MB
-        except (ImportError, AttributeError):
-            pass
-
-    return 0.0
+    return get_host_rss_mb()
 
 
 def _synthesize_once(
@@ -264,6 +210,8 @@ def _make_profile_result(
     *,
     load_ms: float = 0.0,
     rss_delta_mb: float = 0.0,
+    vram_delta_mb: float = 0.0,
+    rss_scope: str = RSS_MEASUREMENT_SCOPE,
     cold: bool = False,
 ) -> ProfileResult:
     """Constructs a ProfileResult from synthesis artifacts and timing."""
@@ -282,7 +230,9 @@ def _make_profile_result(
         audio_byte_count=len(wav_bytes),
         load_ms=round(load_ms, DECIMAL_PLACES_METRIC),
         rss_delta_mb=round(rss_delta_mb, DECIMAL_PLACES_METRIC),
+        vram_delta_mb=round(vram_delta_mb, DECIMAL_PLACES_METRIC),
         cold=cold,
+        rss_scope=rss_scope,
     )
 
 
@@ -294,8 +244,16 @@ def profile_speech_synthesis(
     engine: str | None = None,
 ) -> ProfileResult:
     """Measures synthesis wall-clock latency, RTF, and acoustic properties."""
-    wav_bytes, latency = _synthesize_once(text, lang=lang, voice=voice, engine=engine)
-    return _make_profile_result(text, wav_bytes, latency)
+    with MemoryMonitor() as tracker:
+        wav_bytes, latency = _synthesize_once(text, lang=lang, voice=voice, engine=engine)
+    return _make_profile_result(
+        text,
+        wav_bytes,
+        latency,
+        rss_delta_mb=tracker.rss_delta_mb,
+        vram_delta_mb=tracker.vram_delta_mb,
+        rss_scope=tracker.scope,
+    )
 
 
 def profile_engine(
@@ -313,17 +271,27 @@ def profile_engine(
     router = get_tts_router()
     router.unload(engine)
 
-    rss_before = _rss_mb()
-    # Explicit preload measures model loading duration in milliseconds separately from synthesis
-    # Does not swallow exceptions: if the engine is missing, it will fail fast here.
-    _, load_ms = router.preload(engine=engine, lang=lang, voice=voice)
+    with MemoryMonitor() as tracker:
+        _, preload_load_ms = router.preload(engine=engine, lang=lang, voice=voice)
+        wav_bytes, synth_latency = _synthesize_once(
+            text, lang=lang, voice=voice, engine=engine, router=router
+        )
 
-    wav_bytes, synth_latency = _synthesize_once(
-        text, lang=lang, voice=voice, engine=engine, router=router
-    )
-    rss_after = _rss_mb()
-    cold_first_s = (load_ms / MILLISECONDS_PER_SECOND) + synth_latency
-    rss_delta = max(0.0, rss_after - rss_before)
+    backend = router.get_backend(engine)
+    last_synth_s = getattr(backend, "last_synthesis_seconds", None)
+
+    # In a preloaded quiz turn scenario, the cold turn absorbs both model load and first synthesis.
+    # For Qwen (one-shot binary), synth_latency contains both model loading and neural synthesis.
+    if last_synth_s is not None and last_synth_s > 0:
+        load_ms = max(0.0, (synth_latency - last_synth_s) * MILLISECONDS_PER_SECOND)
+        cold_first_s = synth_latency
+    else:
+        load_ms = preload_load_ms
+        cold_first_s = (load_ms / MILLISECONDS_PER_SECOND) + synth_latency
+
+    rss_delta = tracker.rss_delta_mb
+    vram_delta = tracker.vram_delta_mb
+    scope = tracker.scope
 
     runs = [
         _make_profile_result(
@@ -332,16 +300,34 @@ def profile_engine(
             cold_first_s,
             load_ms=load_ms,
             rss_delta_mb=rss_delta,
+            vram_delta_mb=vram_delta,
+            rss_scope=scope,
             cold=True,
         )
     ]
 
     for _ in range(max(0, repeats - 1)):
         get_tts_router()  # warm path reuses active router and voice
-        wav_bytes, warm_latency = _synthesize_once(
+        wav_bytes, warm_wall_latency = _synthesize_once(
             text, lang=lang, voice=voice, engine=engine
         )
-        runs.append(_make_profile_result(text, wav_bytes, warm_latency, cold=False))
+        warm_synth = getattr(backend, "last_synthesis_seconds", None)
+        effective_warm = (
+            warm_synth
+            if isinstance(warm_synth, (int, float)) and warm_synth > 0
+            else warm_wall_latency
+        )
+        runs.append(
+            _make_profile_result(
+                text,
+                wav_bytes,
+                effective_warm,
+                rss_delta_mb=rss_delta,
+                vram_delta_mb=vram_delta,
+                rss_scope=scope,
+                cold=False,
+            )
+        )
 
     active_provider = _detect_engine_provider(engine)
     return EngineStats(
@@ -354,7 +340,7 @@ def profile_engine(
 
 def _detect_engine_provider(engine: str) -> str:
     """Returns the resolved execution provider ('cpu' or 'cuda') for an engine."""
-    if engine in ("qwen3-tts", "qwen-gguf", "qwen"):
+    if engine in ("qwen3-tts", "qwen"):
         try:
             from core.tts.engines.qwen.models import detect_qwen_provider
 

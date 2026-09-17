@@ -21,7 +21,7 @@ benchmark/
       moss-nano.md           # Moss-Nano 100M ONNX CPU (native Spanish)
       kokoro.md              # Kokoro 82M (lang=e + espeak-ng G2P)
       melo.md                # MeloTTS Spanish (MIT lightweight VITS)
-      qwen-gguf.md           # Qwen2-Audio/TTS 0.6B GGUF (edge exploration)
+      qwen3-tts.md           # Qwen3-TTS 1.7B Base GGUF (primary neural voice)
     results/                 # GITIGNORED: generated WAVs, CSV logs, tegrastats
   llm/
     quiz_gen/                # Future: LLM prompt evaluation, rejection rates, SymPy passes
@@ -59,7 +59,7 @@ TutorBox runs as a self-contained offline appliance with 8GB unified LPDDR5 memo
 | **Moss-Nano** | 100M ONNX CPU | Apache 2.0 | Torch-free ONNX, 48kHz output, native Spanish | Loss in jury score without latency gain | Spike Candidate 2 |
 | **Kokoro-ES** | 82M StyleTTS2 variant | Apache 2.0 | High naturalness, compact size | Anglicized accent or G2P failures | Spike Candidate 3 |
 | **MeloTTS** | Modular VITS | MIT | Native Spanish accents, fast CPU inference | Robotic cadence or licensing hurdles | Spike Candidate 4 |
-| **Qwen-GGUF** | 0.6B Q8/F16 | Apache 2.0 | Next-gen GGUF edge execution | Warm > 3.0s on Jetson CPU or RAM > 1GB | Timeboxed Spike 5 |
+| **Qwen3-TTS** | 1.7B Base GGUF | Apache 2.0 | Highest observed naturalness and prosody | One-shot CLI startup and unified-memory pressure | **Primary neural voice** |
 
 ---
 

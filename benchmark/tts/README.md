@@ -53,11 +53,13 @@ benchmark/tts/results/
 | `sr_hz` | Hertz | Native output sample rate from the selected model/runtime |
 | `wav_kb` | KB | Uncompressed RIFF/WAVE file size |
 | `load_ms` | ms | Model loading / runtime warm-up duration |
-| `rss_delta_mb` | MB | Resident memory growth after initialization |
+| `rss_delta_mb` | MB | Peak Host RAM resident memory growth across process tree |
+| `vram_delta_mb` | MB | Peak GPU Device VRAM allocation (CUDA) |
+| `rss_scope` | string | Memory topology (`uma-unified` on Jetson, `discrete-vram`, or `host-only`) |
 
 ### Latest local comparison
 
-The current first-corpus CSV shows Qwen3-TTS on CUDA at `2.090 s` warm p50 and `0.2397x` RTF, while Sherpa is `0.338 s` / `0.0413x` and Piper is `0.274 s` / `0.0334x`. Qwen is the quality winner so far; Sherpa and Piper are the speed-oriented fallbacks. The Qwen result is slower by design: it generates speech tokens autoregressively and then runs a neural vocoder.
+The current first-corpus CSV shows Qwen3-TTS on CUDA at `2.290 s` warm p50 and `0.2386x` RTF (4.19x realtime) with `2,976 MB` peak host RAM and `3,272 MB` peak VRAM, passing the `<= 3.0s` classroom SLA. Sherpa-ONNX is `0.388 s` / `0.0474x` (+192 MB host RAM), Piper is `0.405 s` / `0.0495x` (+202 MB host RAM), Kokoro is `2.315 s` / `0.2781x` (+488 MB host RAM), and eSpeak is `0.325 s` / `0.0306x` (+9.6 MB host RAM). Qwen is the quality winner; Sherpa and Piper are the speed-oriented fallbacks.
 
 ---
 
@@ -96,7 +98,7 @@ The corpus contains representative pedagogical intervention explanations generat
 
 Detailed architectural profiles and spike notes for each engine reside in the `engines/` directory:
 
-- [Qwen3-TTS (Primary Winner)](engines/qwen-gguf.md)
+- [Qwen3-TTS (Primary Winner)](engines/qwen3-tts.md)
 - [Sherpa-ONNX (Secondary)](engines/sherpa.md)
 - [Piper (Tertiary Baseline)](engines/piper.md)
 - [eSpeak (Ultimate Fallback)](engines/espeak.md)
