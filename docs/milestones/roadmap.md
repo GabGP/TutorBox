@@ -148,11 +148,11 @@ gantt
 ### <a id="week-4"></a>✅ Week 4 — Full Quiz Mode with Offline Spanish & Mayan Voice (Pilot: A · Copilot: B)
 * **Focus**: Complete the end-to-end Classroom Quiz mode with spoken conceptual explanations.
 * **Student A (Pilot - Delivered)**:
-  * Pluggable offline voice engine with Qwen3-TTS as the quality-first Spanish tier, Sherpa-ONNX/Piper VITS fallbacks, and formant fallback (`espeak-ng`).
+  * Pluggable offline voice engine with Qwen3-TTS as the quality-first Spanish tier, Sherpa-ONNX/Piper VITS fallbacks, Kokoro-82M opt-in, and formant fallback (`espeak-ng`).
   * Text adaptation layer converting oral fractions, exponents, and negative numbers for primary-school clarity.
   * Mayan language routing seam for K'iche' (`quc_Latn`) with strict failure isolation.
-  * Latency profiler asserting synthesis $\le 3$ seconds (empirically $0.237$s, RTF $0.044$x).
-  * Co-resident Jetson Orin Nano 8GB RAM profile co-existing with `llama.cpp` 4B (4.70 GB total working set).
+  * Comprehensive benchmark profiler (`ab.py`) asserting synthesis $\le 3$s SLA (Qwen warm p50 2.290s, Sherpa 0.388s, Piper 0.405s).
+  * Dual memory tracking (`memory.py`) with Host RAM child process recursion, NVML GPU VRAM, and Jetson Orin Nano UMA lifecycle decoupling.
 * **Student B (Copilot)**:
   * Classroom HDMI display interface (presenting question, timer, and aggregate voting charts) decoupled from teacher admin portal.
   * Physical audio output verification and integration of TTS triggers into the match flow.

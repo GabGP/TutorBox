@@ -73,14 +73,13 @@ The Qwen `12 Hz` label is its codec/token frame rate, not its WAV sample rate. B
 
 ## 7. Empirical Latency & Real-Time Factor Benchmarks
 
-The current first-corpus `summary.csv` reports:
-
-| Engine | Provider | Warm p50 | RTF | Peak | Sample rate |
-| :--- | :--- | ---: | ---: | ---: | ---: |
-| Qwen3-TTS | CUDA | 2.090 s | 0.2397x | 0.78 | 24,000 Hz |
-| Sherpa-ONNX | CPU | 0.338 s | 0.0413x | 0.78 | 22,050 Hz |
-| Piper | CPU | 0.274 s | 0.0334x | 0.78 after recalibration | 22,050 Hz |
-| eSpeak-ng | CPU | 0.215 s | 0.0203x | 0.78 after recalibration | 22,050 Hz |
+| Engine | Provider | Warm p50 | RTF | Peak | Sample rate | Memory Footprint |
+| :--- | :--- | ---: | ---: | ---: | ---: | :--- |
+| Qwen3-TTS | CUDA | 2.290 s | 0.2386x | 0.78 | 24,000 Hz | +2,976 MB RAM / +3,272 MB VRAM |
+| Sherpa-ONNX | CPU | 0.388 s | 0.0474x | 0.78 | 22,050 Hz | +192 MB RAM / +2.8 MB VRAM |
+| Piper | CPU | 0.405 s | 0.0495x | 0.78 | 22,050 Hz | +202 MB RAM / +15.8 MB VRAM |
+| Kokoro | CPU | 2.315 s | 0.2781x | 0.78 | 24,000 Hz | +488 MB RAM / +5.7 MB VRAM |
+| eSpeak-ng | CPU | 0.325 s | 0.0306x | 0.78 | 22,050 Hz | +9.6 MB RAM / +0.5 MB VRAM |
 
 Use the integrated profiler for new measurements:
 
@@ -91,11 +90,15 @@ uv run python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repe
 
 ## 8. Configuration & Appliance Memory Policy
 
-The relevant `.env` settings are `TTS_ENGINE=auto`, `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`, `TTS_SHERPA_PROVIDER`, `TTS_SHERPA_THREADS`, `TTS_PIPER_MODEL_DIR`, and `TTS_ESPEAK_BINARY`.
+The relevant `.env` settings are `TTS_ENGINE=auto`, `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_CONTEXT`, `TTS_QWEN_THREADS`, `TTS_SHERPA_PROVIDER`, `TTS_SHERPA_THREADS`, `TTS_PIPER_MODEL_DIR`, and `TTS_ESPEAK_BINARY`.
 
-`TTS_QWEN_BINARY` is optional. Empty configuration searches next to the selected model, standard Windows/Linux install locations, and `PATH`; TutorBox deliberately does not scan the entire computer recursively. A normal `llama-tts` installation works when it adds the executable to `PATH`; set the variable for a non-standard location.
+`TTS_QWEN_CONTEXT=1024` limits prompt and KV context for short classroom utterances, saving ~325 MB of VRAM over 4096.
 
-Question generation and speech playback are lifecycle-separated. The application can unload the local SLM before loading Qwen3-TTS, avoiding GPU/unified-memory contention. Sherpa/Piper are the preferred low-footprint choices when Qwen cannot be resident.
+### Memory Topologies: PC vs Jetson Orin Nano
+- **Discrete GPU PC**: Host RAM (process tree working set) and GPU VRAM (device memory) are tracked independently. Qwen consumes ~2.97 GB of host memory mapping and ~3.27 GB of VRAM.
+- **NVIDIA Jetson Orin Nano (UMA)**: CPU and GPU share an identical 8 GB LPDDR5 physical memory pool. Consuming ~3.3 GB for Qwen requires lifecycle decoupling from the 3B SLM (~4.7 GB). During question voting periods, the SLM is unloaded before the TTS engine is preloaded, ensuring zero OOM contention.
+
+Question generation and speech playback are lifecycle-separated. The application unloads the local SLM before preloading Qwen3-TTS. Sherpa/Piper remain the preferred low-footprint fallbacks for concurrent background operation.
 
 ## 9. Phased Lifecycle Management Endpoints
 
