@@ -5,6 +5,8 @@ import { generatorApi } from '../../features/question-generator/generatorApi';
 import { SessionReport } from '../../features/session-engine/session.types';
 import { sessionApi } from '../../features/session-engine/sessionApi';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
+import { SpeechLanguage } from '../../features/speech/speech.types';
+import { useTTSLifecycle } from '../../features/speech/useTTSLifecycle';
 import { unlockAudio } from '../../shared/lib/sound';
 import { StoredRoundHistory, storage } from '../../shared/lib/storage';
 
@@ -12,12 +14,14 @@ export type TeacherWizardStep = 'topic' | 'count' | 'lobby';
 
 interface UseTeacherCoordinatorOptions {
   enabled?: boolean;
+  voiceLang?: SpeechLanguage;
 }
 
 /**
  * Custom React hook for coordinating the teacher quiz master workflow.
  * Manages wizard progression (topic -> question count -> lobby), initiates LLM generation,
- * orchestrates session transitions (start, close, reveal, next), and aggregates round history.
+ * orchestrates session transitions (start, close, reveal, next), TTS preloading/unloading,
+ * and aggregates round history.
  *
  * @param {string | null} initialSid - Optional cached teacher session ID.
  * @param {UseTeacherCoordinatorOptions} [options={}] - Hook options (e.g. enable gating).
@@ -25,7 +29,7 @@ interface UseTeacherCoordinatorOptions {
  */
 export function useTeacherCoordinator(
   initialSid: string | null,
-  { enabled = true }: UseTeacherCoordinatorOptions = {}
+  { enabled = true, voiceLang = 'es' }: UseTeacherCoordinatorOptions = {}
 ) {
   const [sid, setSid] = useState<string | null>(initialSid);
   const [wizard, setWizard] = useState<TeacherWizardStep>('topic');
@@ -42,6 +46,8 @@ export function useTeacherCoordinator(
 
   const { progress, isGenerating, error: genError, startGeneration, cancelGeneration } =
     useQuestionGenerator();
+
+  const { preloadIfUnloaded, unloadIfLoaded } = useTTSLifecycle();
 
   const closingRef = useRef<string | null>(null);
 
@@ -63,7 +69,7 @@ export function useTeacherCoordinator(
     if (sid) setHistory(storage.getRoundHistory(sid));
   }, [sid]);
 
-  // Handle auto clock-out and history persistence
+  // Handle auto clock-out, history persistence, and TTS unload on completion
   useEffect(() => {
     const round = session?.current_round;
     if (
@@ -82,18 +88,24 @@ export function useTeacherCoordinator(
       setHistory((prev) => {
         if (prev.some((h) => h.round_id === round.round_id)) return prev;
         const item: StoredRoundHistory = {
-          round_id: round.round_id, text: round.question!.question_text,
-          options: round.question!.options, tally: round.result!.tally, explanations: round.result!.explanations,
+          round_id: round.round_id,
+          text: round.question!.question_text,
+          options: round.question!.options,
+          tally: round.result!.tally,
+          explanations: round.result!.explanations,
         };
         const next = [...prev, item];
         storage.setRoundHistory(sid, next);
         return next;
       });
     }
-    if (sid && session?.status === 'completed' && !report) {
-      sessionApi.getSessionReport(sid).then(setReport).catch(() => {});
+    if (sid && session?.status === 'completed') {
+      void unloadIfLoaded();
+      if (!report) {
+        sessionApi.getSessionReport(sid).then(setReport).catch(() => {});
+      }
     }
-  }, [session, sid, report, refresh]);
+  }, [session, sid, report, refresh, unloadIfLoaded]);
 
   const advancePrimary = useCallback(async () => {
     if (!session) {
@@ -107,7 +119,9 @@ export function useTeacherCoordinator(
         }
         const newSession = await sessionApi.createSession({
           title: `Pilas ${new Date().toLocaleDateString('es')}`,
-          topic: topic || 'mixto', question_ids: ids, duration_seconds: 20,
+          topic: topic || 'mixto',
+          question_ids: ids,
+          duration_seconds: 20,
         });
         setSid(newSession.id);
         storage.setTeacherSessionId(newSession.id);
@@ -117,6 +131,7 @@ export function useTeacherCoordinator(
     }
 
     if (session.status === 'lobby') {
+      void preloadIfUnloaded(voiceLang);
       const started = await sessionApi.startSession(session.id);
       setSession(started);
     } else if (session.status === 'active') {
@@ -133,9 +148,20 @@ export function useTeacherCoordinator(
     } else if (session.status === 'completed') {
       resetSession();
     }
-  }, [session, wizard, topic, count, topics, startGeneration, setSession]);
+  }, [
+    session,
+    wizard,
+    topic,
+    count,
+    topics,
+    voiceLang,
+    startGeneration,
+    setSession,
+    preloadIfUnloaded,
+  ]);
 
   const resetSession = useCallback(() => {
+    void unloadIfLoaded();
     cancelGeneration();
     setSid(null);
     setSession(null);
@@ -143,11 +169,24 @@ export function useTeacherCoordinator(
     setHistory([]);
     setWizard('topic');
     storage.clearTeacherSessionId();
-  }, [cancelGeneration, setSession]);
+  }, [cancelGeneration, setSession, unloadIfLoaded]);
 
   return {
-    sid, wizard, setWizard, topic, setTopic, count, setCount,
-    topics, session, progress, isGenerating, genError, history,
-    report, advancePrimary, resetSession,
+    sid,
+    wizard,
+    setWizard,
+    topic,
+    setTopic,
+    count,
+    setCount,
+    topics,
+    session,
+    progress,
+    isGenerating,
+    genError,
+    history,
+    report,
+    advancePrimary,
+    resetSession,
   };
 }

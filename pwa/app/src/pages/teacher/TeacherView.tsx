@@ -31,7 +31,7 @@ export const TeacherView: React.FC = () => {
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
-  const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff });
+  const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
   const { students, error: rosterErr, pinNotice, addStudent, resetStudentPin } = useRosterManager({
     enabled: isStaff,
   });
