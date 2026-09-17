@@ -16,7 +16,13 @@ FAKE_WAV = b"RIFF\x24\x00\x00\x00WAVEfmt fake-audio"
 @pytest.fixture(autouse=True)
 def _clean_tts_settings(monkeypatch: pytest.MonkeyPatch):
     """Runs every test against clean settings and an empty speech cache."""
-    for name in ("TTS_ENABLED", "TTS_VOICE", "TTS_VOICE_QUC", "TTS_ESPEAK_BINARY"):
+    for name in (
+        "TTS_ENABLED",
+        "TTS_ENGINE",
+        "TTS_VOICE",
+        "TTS_VOICE_QUC",
+        "TTS_ESPEAK_BINARY",
+    ):
         monkeypatch.delenv(name, raising=False)
     clear_settings_cache()
     clear_speech_cache()
@@ -91,8 +97,7 @@ def test_speech_returns_wav_when_one_wrong_answer_passes_51_percent(
     spoken: dict[str, str] = {}
 
     def fake_synthesize(text: str, lang: str = "es") -> bytes:
-        spoken["text"] = text
-        spoken["lang"] = lang
+        spoken.update({"text": text, "lang": lang})
         return FAKE_WAV
 
     monkeypatch.setattr("api.session.speech.synthesize_speech", fake_synthesize)

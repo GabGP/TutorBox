@@ -12,6 +12,7 @@ __all__ = [
     "PROVIDER_AUTO",
     "PROVIDER_CPU",
     "PROVIDER_CUDA",
+    "configure_onnxruntime_dll_paths",
     "is_cuda_available",
     "resolve_execution_provider",
 ]
@@ -20,6 +21,25 @@ CUDA_CACHE_MAX_SIZE: int = 1
 PROVIDER_CUDA: str = "cuda"
 PROVIDER_CPU: str = "cpu"
 PROVIDER_AUTO: str = "auto"
+
+
+def configure_onnxruntime_dll_paths() -> None:
+    """Ensures bundled onnxruntime DLLs take precedence over System32 on Windows."""
+    if sys.platform != "win32":
+        return
+    try:
+        import onnxruntime
+
+        file_attr = getattr(onnxruntime, "__file__", None)
+        if file_attr:
+            capi_dir = Path(file_attr).parent / "capi"
+            if capi_dir.is_dir():
+                os.add_dll_directory(str(capi_dir))
+    except (ImportError, OSError, AttributeError):
+        pass
+
+
+configure_onnxruntime_dll_paths()
 
 
 @functools.lru_cache(maxsize=CUDA_CACHE_MAX_SIZE)

@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.tts.engines.provider import is_cuda_available, resolve_execution_provider
+from core.tts.engines.provider import (
+    configure_onnxruntime_dll_paths,
+    is_cuda_available,
+    resolve_execution_provider,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -122,3 +126,47 @@ def test_is_cuda_available_runtime_import_failure():
         patch.dict("sys.modules", {"sherpa_onnx": None}),
     ):
         assert is_cuda_available() is False
+
+
+def test_configure_onnxruntime_dll_paths_non_windows():
+    with (
+        patch("sys.platform", "linux"),
+        patch("os.add_dll_directory") as mock_add_dll,
+    ):
+        configure_onnxruntime_dll_paths()
+        mock_add_dll.assert_not_called()
+
+
+def test_configure_onnxruntime_dll_paths_windows_success(tmp_path):
+    mock_capi = tmp_path / "capi"
+    mock_capi.mkdir(parents=True, exist_ok=True)
+    fake_ort = MagicMock(__file__=str(tmp_path / "__init__.py"))
+
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict("sys.modules", {"onnxruntime": fake_ort}),
+        patch("os.add_dll_directory") as mock_add_dll,
+    ):
+        configure_onnxruntime_dll_paths()
+        mock_add_dll.assert_called_once_with(str(mock_capi))
+
+
+def test_configure_onnxruntime_dll_paths_windows_missing_capi(tmp_path):
+    fake_ort = MagicMock(__file__=str(tmp_path / "__init__.py"))
+
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict("sys.modules", {"onnxruntime": fake_ort}),
+        patch("os.add_dll_directory") as mock_add_dll,
+    ):
+        configure_onnxruntime_dll_paths()
+        mock_add_dll.assert_not_called()
+
+
+def test_configure_onnxruntime_dll_paths_windows_error_handled():
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict("sys.modules", {"onnxruntime": None}),
+    ):
+        # Gracefully handles ImportError without crashing
+        configure_onnxruntime_dll_paths()

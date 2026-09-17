@@ -15,10 +15,12 @@ from core.db.database import get_db_path
 from core.db.migrations import apply_migrations
 from core.db.seed_users import seed_teacher
 from core.logging import setup_logging
+from core.tts.engines.provider import configure_onnxruntime_dll_paths
 from modes.quiz.seed_data import seed_question_bank
 
 load_env_file()
 setup_logging()
+configure_onnxruntime_dll_paths()
 
 logger = logging.getLogger("tutorbox")
 
