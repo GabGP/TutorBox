@@ -250,7 +250,8 @@ def test_sherpa_is_available_success(tmp_path, monkeypatch):
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "test.onnx")
     clear_settings_cache()
     backend = SherpaBackend()
-    assert backend.is_available()
+    with patch.dict("sys.modules", {"sherpa_onnx": MagicMock()}):
+        assert backend.is_available()
 
 
 def test_sherpa_synthesize_disabled(monkeypatch):

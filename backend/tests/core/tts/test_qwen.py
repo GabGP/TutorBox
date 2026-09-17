@@ -1,6 +1,6 @@
 """Unit tests for Qwen3-TTS neural speech synthesis backend."""
 
-import subprocess
+import platform
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -31,9 +31,10 @@ def _setup_mock_qwen_dir(base_dir: Path) -> tuple[Path, Path, Path]:
     mmproj_file = models_dir / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
     mmproj_file.write_bytes(b"dummy-mmproj")
 
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
     bin_dir = base_dir / "bin" / "llama"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    bin_file = bin_dir / "llama-tts.exe"
+    bin_file = bin_dir / bin_name
     bin_file.write_bytes(b"dummy-bin")
 
     return model_file, mmproj_file, bin_file
@@ -238,7 +239,7 @@ def test_resolve_qwen_paths_ancestor_bin(monkeypatch, tmp_path):
     mmproj = model.parent / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
     mmproj.write_bytes(b"mmproj")
 
-    bin_name = "llama-tts.exe" if subprocess.os.name == "nt" else "llama-tts"
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
     bin_file = tmp_path / "bin" / "llama" / bin_name
     bin_file.parent.mkdir(parents=True, exist_ok=True)
     bin_file.write_bytes(b"bin")

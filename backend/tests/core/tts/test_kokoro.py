@@ -248,7 +248,8 @@ def test_kokoro_is_available_success(tmp_path, monkeypatch):
     monkeypatch.setenv("TTS_KOKORO_MODEL_DIR", str(k_dir))
     clear_settings_cache()
     backend = KokoroBackend()
-    assert backend.is_available()
+    with patch.dict("sys.modules", {"sherpa_onnx": MagicMock()}):
+        assert backend.is_available()
 
 
 def test_kokoro_synthesize_disabled(monkeypatch):

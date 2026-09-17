@@ -47,7 +47,11 @@ def is_cuda_available() -> bool:
         if not cuda_libs:
             return False
 
-        loader = ctypes.WinDLL if sys.platform == "win32" else ctypes.CDLL
+        loader = (
+            getattr(ctypes, "WinDLL", ctypes.CDLL)
+            if sys.platform == "win32"
+            else ctypes.CDLL
+        )
         for lib in cuda_libs:
             try:
                 loader(str(lib))

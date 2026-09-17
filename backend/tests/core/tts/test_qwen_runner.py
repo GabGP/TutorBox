@@ -1,19 +1,21 @@
 """Unit tests for Qwen3-TTS command runner and timing parser."""
 
+import platform
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from core.config import get_settings
+from core.config import clear_settings_cache, get_settings
 from core.tts.engines.qwen import QwenBackend
 from core.tts.engines.qwen.models import QwenModelPaths
 from core.tts.engines.qwen.runner import build_qwen_command, parse_qwen_timings
 
 
 def test_build_qwen_command_basic(tmp_path):
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
     paths = QwenModelPaths(
         model_path=tmp_path / "model.gguf",
         mmproj_path=tmp_path / "mmproj.gguf",
-        bin_path=tmp_path / "llama-tts.exe",
+        bin_path=tmp_path / bin_name,
     )
     out_wav = tmp_path / "out.wav"
     cfg = get_settings().tts
@@ -30,10 +32,11 @@ def test_build_qwen_command_basic(tmp_path):
 
 
 def test_build_qwen_command_with_speaker(tmp_path):
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
     paths = QwenModelPaths(
         model_path=tmp_path / "model.gguf",
         mmproj_path=tmp_path / "mmproj.gguf",
-        bin_path=tmp_path / "llama-tts.exe",
+        bin_path=tmp_path / bin_name,
     )
     speaker = tmp_path / "ref.wav"
     speaker.write_bytes(b"wav")
@@ -79,10 +82,12 @@ def test_qwen_backend_records_timings(monkeypatch, tmp_path):
     mmproj.write_bytes(b"dummy")
     bin_dir = tmp_path / "bin" / "llama"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    binary = bin_dir / "llama-tts.exe"
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
+    binary = bin_dir / bin_name
     binary.write_bytes(b"dummy")
 
     monkeypatch.setenv("TTS_QWEN_GGUF_PATH", str(model))
+    clear_settings_cache()
 
     backend = QwenBackend()
     assert backend.last_synthesis_seconds is None

@@ -1,5 +1,6 @@
 """Edge-case coverage for Qwen3-TTS options and host discovery."""
 
+import platform
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -84,7 +85,8 @@ def test_qwen_finds_model_in_default_project_cache(monkeypatch, tmp_path):
     model = model_dir / "Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf"
     model.write_bytes(b"model")
     (model_dir / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf").write_bytes(b"mmproj")
-    binary = tmp_path / "bin" / "llama" / "llama-tts.exe"
+    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
+    binary = tmp_path / "bin" / "llama" / bin_name
     binary.parent.mkdir(parents=True)
     binary.write_bytes(b"binary")
     monkeypatch.setattr("core.tts.engines.qwen.models.PROJECT_ROOT", tmp_path)

@@ -275,8 +275,10 @@ def test_speech_returns_cached_audio_on_subsequent_calls(
     router = get_tts_router()
     router.clear_cache()
     monkeypatch.setattr(router.qwen, "is_available", lambda voice=None: False)
+    monkeypatch.setattr(router.kokoro, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.sherpa, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.piper, "is_available", lambda voice=None: False)
+    monkeypatch.setattr(router.espeak, "is_available", lambda voice=None: True)
     monkeypatch.setattr(
         router.espeak,
         "synthesize",
