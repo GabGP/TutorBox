@@ -47,14 +47,13 @@ def test_sherpa_is_available_model_missing(monkeypatch, tmp_path):
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     clear_settings_cache()
     backend = SherpaBackend()
-    assert not backend.is_available()
+    with patch.dict("sys.modules", {"sherpa_onnx": MagicMock()}):
+        assert not backend.is_available()
 
 
 def test_samples_to_wav():
-    samples = [-1.5, -0.5, 0.0, 0.5, 1.5]
-    wav_bytes = samples_to_wav(samples, 22050, target_peak=0.78)
-    assert wav_bytes.startswith(b"RIFF")
-    assert b"WAVE" in wav_bytes[:16]
+    wav_bytes = samples_to_wav([-1.5, -0.5, 0.0, 0.5, 1.5], 22050, target_peak=0.78)
+    assert wav_bytes.startswith(b"RIFF") and b"WAVE" in wav_bytes[:16]
 
     empty_wav = samples_to_wav([], 22050)
     assert empty_wav.startswith(b"RIFF")

@@ -123,7 +123,8 @@ def test_qwen_uses_configured_binary_path(monkeypatch, tmp_path):
 
 
 def test_qwen_searches_linux_install_locations(monkeypatch, tmp_path):
-    model, _mmproj, _binary = _configure_model(monkeypatch, tmp_path)
+    model, _mmproj, binary = _configure_model(monkeypatch, tmp_path)
+    binary.unlink(missing_ok=True)
     fake_binary = tmp_path / "llama-tts"
     fake_binary.write_bytes(b"binary")
     monkeypatch.setenv("TTS_QWEN_BINARY", "")
@@ -134,6 +135,23 @@ def test_qwen_searches_linux_install_locations(monkeypatch, tmp_path):
         "core.tts.engines.qwen.models.shutil.which", return_value=str(fake_binary)
     ):
         assert resolve_qwen_paths().bin_path == fake_binary
+    assert model.exists()
+
+
+def test_qwen_searches_windows_install_locations(monkeypatch, tmp_path):
+    model, _mmproj, binary = _configure_model(monkeypatch, tmp_path)
+    binary.unlink(missing_ok=True)
+    fake_binary = tmp_path / "appdata" / "llama.cpp" / "llama-tts.exe"
+    fake_binary.parent.mkdir(parents=True, exist_ok=True)
+    fake_binary.write_bytes(b"binary")
+    monkeypatch.setenv("TTS_QWEN_BINARY", "")
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "appdata"))
+    monkeypatch.setattr(
+        "core.tts.engines.qwen.models.platform.system", lambda: "Windows"
+    )
+    clear_settings_cache()
+
+    assert resolve_qwen_paths().bin_path == fake_binary.resolve()
     assert model.exists()
 
 

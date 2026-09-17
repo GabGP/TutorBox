@@ -57,7 +57,8 @@ def test_kokoro_is_available_model_missing(monkeypatch, tmp_path):
     monkeypatch.setenv("TTS_KOKORO_MODEL_DIR", str(tmp_path / "missing"))
     clear_settings_cache()
     backend = KokoroBackend()
-    assert not backend.is_available()
+    with patch.dict("sys.modules", {"sherpa_onnx": MagicMock()}):
+        assert not backend.is_available()
 
 
 def test_samples_to_wav():

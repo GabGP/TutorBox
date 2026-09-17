@@ -16,13 +16,8 @@ FAKE_WAV = b"RIFF\x24\x00\x00\x00WAVEfmt fake-audio"
 @pytest.fixture(autouse=True)
 def _clean_tts_settings(monkeypatch: pytest.MonkeyPatch):
     """Runs every test against clean settings and an empty speech cache."""
-    for name in (
-        "TTS_ENABLED",
-        "TTS_ENGINE",
-        "TTS_VOICE",
-        "TTS_VOICE_QUC",
-        "TTS_ESPEAK_BINARY",
-    ):
+    clean_vars = "TTS_ENABLED TTS_ENGINE TTS_VOICE TTS_VOICE_QUC TTS_ESPEAK_BINARY"
+    for name in clean_vars.split():
         monkeypatch.delenv(name, raising=False)
     clear_settings_cache()
     clear_speech_cache()
@@ -39,10 +34,12 @@ def _seed_question(conn) -> str:
             explanation="Dividiste sólo el numerador entre 2.",
         ),
         "C": DistractorDetail(
-            misconception="wrong_factor", explanation="Usaste el factor equivocado."
+            misconception="wrong_factor",
+            explanation="Usaste el factor equivocado.",
         ),
         "D": DistractorDetail(
-            misconception="kept_denom", explanation="Conservaste el denominador."
+            misconception="kept_denom",
+            explanation="Conservaste el denominador.",
         ),
     }
     q_create = QuizQuestionCreate(
@@ -249,10 +246,8 @@ def test_speech_uses_the_configured_kiche_voice_when_present(
 
 def test_speech_rejects_an_unknown_language(staff_db, client, teacher_headers):
     """Verifies only the classroom languages are accepted."""
-    response = client.get(
-        "/api/v1/session/s_any/speech?lang=fr", headers=teacher_headers
-    )
-    assert response.status_code == 422
+    path = "/api/v1/session/s_any/speech?lang=fr"
+    assert client.get(path, headers=teacher_headers).status_code == 422
 
 
 def test_speech_without_the_round_question_is_404(
@@ -261,7 +256,7 @@ def test_speech_without_the_round_question_is_404(
     """Verifies a round whose question vanished reports 404 instead of speaking nothing."""
     _, conn = staff_db
     monkeypatch.setattr(
-        "api.session.speech.synthesize_speech", lambda text, lang="es": FAKE_WAV
+        "api.session.speech.synthesize_speech", lambda t, lang="es": FAKE_WAV
     )
     sid = _play_b_round(client, conn, teacher_headers)
     monkeypatch.setattr("api.session.speech.get_question_by_id", lambda conn, qid: None)
@@ -279,10 +274,8 @@ def test_speech_returns_cached_audio_on_subsequent_calls(
     calls: list[str] = []
     router = get_tts_router()
     router.clear_cache()
-    monkeypatch.setattr(router.qwen, "is_available", lambda voice=None: False)
-    monkeypatch.setattr(router.kokoro, "is_available", lambda voice=None: False)
-    monkeypatch.setattr(router.sherpa, "is_available", lambda voice=None: False)
-    monkeypatch.setattr(router.piper, "is_available", lambda voice=None: False)
+    for engine in (router.qwen, router.kokoro, router.sherpa, router.piper):
+        monkeypatch.setattr(engine, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.espeak, "is_available", lambda voice=None: True)
     monkeypatch.setattr(
         router.espeak,

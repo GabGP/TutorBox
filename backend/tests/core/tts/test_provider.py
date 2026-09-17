@@ -128,6 +128,20 @@ def test_is_cuda_available_runtime_import_failure():
         assert is_cuda_available() is False
 
 
+def test_is_cuda_available_windows_platform():
+    mock_cuda_lib = MagicMock()
+    mock_cuda_lib.suffix = ".dll"
+    loader_target = "ctypes.WinDLL" if hasattr(ctypes, "WinDLL") else "ctypes.CDLL"
+    with (
+        patch("shutil.which", return_value="/usr/bin/nvidia-smi"),
+        patch.dict("sys.modules", {"sherpa_onnx": _mock_sherpa()}),
+        patch("pathlib.Path.glob", return_value=[mock_cuda_lib]),
+        patch("sys.platform", "win32"),
+        patch(loader_target, return_value=MagicMock()),
+    ):
+        assert is_cuda_available() is True
+
+
 def test_configure_onnxruntime_dll_paths_non_windows():
     with (
         patch("sys.platform", "linux"),
