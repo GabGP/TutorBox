@@ -53,7 +53,11 @@ export function computeStudentStep(
   if (round.status === 'revealed') {
     return 'result';
   }
-  if (hasVotedThisRound || round.status !== 'open' || round.time_remaining === 0) {
+  if (
+    hasVotedThisRound ||
+    round.status !== 'open' ||
+    (round.time_remaining != null && round.time_remaining <= 0)
+  ) {
     return 'sent';
   }
   return 'play';
@@ -64,8 +68,13 @@ export function computeStudentStep(
  * and should trigger an automatic server-side close transition.
  *
  * @param {RoundModel | null} [round] - The current round snapshot.
- * @returns {boolean} True if the round is open and time_remaining has reached 0.
+ * @returns {boolean} True if the round is open and time_remaining has reached 0 or less.
  */
 export function shouldAutoCloseRound(round?: RoundModel | null): boolean {
-  return !!(round && round.status === 'open' && round.time_remaining === 0);
+  return !!(
+    round &&
+    round.status === 'open' &&
+    round.time_remaining != null &&
+    round.time_remaining <= 0
+  );
 }

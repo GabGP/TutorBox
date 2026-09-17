@@ -40,12 +40,6 @@ export function stopAudio(
 ): void {
   if (!player) return;
   player.pause();
-  player.removeAttribute('src');
-  try {
-    player.load();
-  } catch {
-    // Ignore in headless/jsdom testing environments
-  }
   if (blobUrl && blobUrl.startsWith('blob:')) {
     try {
       URL.revokeObjectURL(blobUrl);

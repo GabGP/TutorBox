@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getAudioPlayer, stopAudio } from '../../shared/lib/sound';
+import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
 import { SpeechLanguage, SpeechState } from './speech.types';
 import { speechApi } from './speechApi';
 
 /**
  * Custom React hook for controlling offline speech synthesis playback.
  * Fetches synthesized WAV audio blobs (`/session/{id}/speech`), manages HTMLAudioElement
- * playback state, handles autoplay policies, and handles resource cleanup via URL.revokeObjectURL.
+ * playback state, handles autoplay policies, and caches audio blobs for instantaneous replay.
  *
  * @param {string | null} sessionId - Target session ID for speech synthesis retrieval.
  * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es' Spanish or 'quc' K'iche').
@@ -19,11 +19,11 @@ export function useSpeechPlayback(sessionId: string | null, language: SpeechLang
 
   const clipUrlRef = useRef<string | null>(null);
   const activeRoundRef = useRef<number>(-1);
+  const cachedLangRef = useRef<SpeechLanguage>(language);
 
   const stopPlayback = useCallback(() => {
     const player = getAudioPlayer();
-    stopAudio(player, clipUrlRef.current);
-    clipUrlRef.current = null;
+    stopAudio(player);
     if (state === 'playing' || state === 'loading') {
       setState('idle');
       setMessage('');
@@ -35,13 +35,60 @@ export function useSpeechPlayback(sessionId: string | null, language: SpeechLang
       if (!sessionId) return;
       if (
         state === 'loading' ||
-        (state === 'playing' && activeRoundRef.current === roundIndex)
+        (state === 'playing' && activeRoundRef.current === roundIndex && cachedLangRef.current === language)
       ) {
         return;
       }
 
-      stopPlayback();
+      const player = getAudioPlayer();
+
+      // If audio was already synthesized for this round and language, play immediately (synchronous in click event)
+      if (
+        activeRoundRef.current === roundIndex &&
+        cachedLangRef.current === language &&
+        clipUrlRef.current
+      ) {
+        player.pause();
+        player.src = clipUrlRef.current;
+        player.currentTime = 0;
+
+        player.onended = () => {
+          if (activeRoundRef.current === roundIndex) {
+            setState('done');
+            setMessage('Explicación leída.');
+          }
+        };
+
+        player.onerror = () => {
+          if (activeRoundRef.current === roundIndex) {
+            setState('error');
+            setMessage('No se pudo reproducir el audio.');
+          }
+        };
+
+        setState('playing');
+        setMessage('Leyendo la explicación en voz alta…');
+
+        try {
+          await player.play();
+        } catch {
+          setState('blocked');
+          setMessage('Toque “Escuchar” para reproducir la explicación.');
+        }
+        return;
+      }
+
+      // Purge prior blob if changing round or language
+      if (clipUrlRef.current) {
+        stopAudio(player, clipUrlRef.current);
+        clipUrlRef.current = null;
+      }
+
+      // Unlock audio synchronously inside active gesture
+      unlockAudio(player);
+
       activeRoundRef.current = roundIndex;
+      cachedLangRef.current = language;
       setCurrentRound(roundIndex);
       setState('loading');
       setMessage('Preparando la voz…');
@@ -65,13 +112,12 @@ export function useSpeechPlayback(sessionId: string | null, language: SpeechLang
       }
 
       // If user moved to another round before download finished, discard URL
-      if (activeRoundRef.current !== roundIndex) {
+      if (activeRoundRef.current !== roundIndex || cachedLangRef.current !== language) {
         URL.revokeObjectURL(url);
         return;
       }
 
       clipUrlRef.current = url;
-      const player = getAudioPlayer();
       player.src = url;
 
       player.onended = () => {
@@ -98,7 +144,7 @@ export function useSpeechPlayback(sessionId: string | null, language: SpeechLang
         setMessage('Toque “Escuchar” para reproducir la explicación.');
       }
     },
-    [sessionId, language, state, stopPlayback]
+    [sessionId, language, state]
   );
 
   useEffect(() => {

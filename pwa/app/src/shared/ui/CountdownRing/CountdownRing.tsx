@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './CountdownRing.module.css';
 
 export interface CountdownRingProps {
@@ -13,7 +13,8 @@ export interface CountdownRingProps {
 /**
  * Circular SVG/CSS Countdown Ring Timer.
  * Visualizes remaining seconds with a conical gradient border progress ring,
- * switching to high-urgency orange styling when time remaining is 5 seconds or less.
+ * smoothly ticking down locally between network polls and switching to high-urgency
+ * styling when time remaining is 5 seconds or less.
  *
  * @param {CountdownRingProps} props - Component props controlling duration, remaining seconds, size, and CSS classes.
  * @returns {JSX.Element | null} The rendered countdown ring or null if remaining is nullish.
@@ -30,8 +31,28 @@ export const CountdownRing: React.FC<CountdownRingProps> = ({
     return null;
   }
 
-  const seconds = Math.ceil(remaining);
-  const percentage = duration > 0 ? Math.max(0, Math.min(100, (100 * remaining) / duration)) : 0;
+  const [localRemaining, setLocalRemaining] = useState<number>(remaining);
+
+  useEffect(() => {
+    setLocalRemaining(remaining);
+  }, [remaining]);
+
+  useEffect(() => {
+    if (localRemaining <= 0) return;
+
+    const interval = setInterval(() => {
+      setLocalRemaining((prev) => {
+        const next = prev - 0.1;
+        return next <= 0 ? 0 : next;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [remaining]);
+
+  const seconds = Math.ceil(localRemaining);
+  const percentage =
+    duration > 0 ? Math.max(0, Math.min(100, (100 * localRemaining) / duration)) : 0;
   const isLow = seconds <= 5;
   const themeClass = theme === 'dark' ? styles.dark : '';
 

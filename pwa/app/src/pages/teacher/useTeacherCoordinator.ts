@@ -66,7 +66,13 @@ export function useTeacherCoordinator(
   // Handle auto clock-out and history persistence
   useEffect(() => {
     const round = session?.current_round;
-    if (sid && round && round.status === 'open' && round.time_remaining === 0) {
+    if (
+      sid &&
+      round &&
+      round.status === 'open' &&
+      round.time_remaining != null &&
+      round.time_remaining <= 0
+    ) {
       if (closingRef.current !== round.round_id) {
         closingRef.current = round.round_id;
         sessionApi.closeRound(sid).then(refresh).catch(() => {});
