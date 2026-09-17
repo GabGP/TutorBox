@@ -19,16 +19,16 @@ Evaluated on the standardized classroom math intervention corpus entry (`corpus/
 | Metric | Measured Value | SLA Target | Status |
 | :--- | :---: | :---: | :---: |
 | **Provider** | `cuda` | Hardware CUDA execution | **CONFIRMED** |
-| **Cold First Latency** | 4.851 s | `<= 15.0 s` | **PASS** |
-| **Model Preload / Load** | 2,350.80 ms | Preloadable during voting | **PASS** |
-| **Warm Latency (p50)** | **2.290 s** | `<= 3.0 s` | **PASS** |
-| **Warm Latency (p95)** | **2.340 s** | `<= 3.5 s` | **PASS** |
-| **Real-Time Factor (RTF)** | **0.2386x** | `< 0.50x` (4.19x realtime) | **PASS** |
-| **Audio Duration** | 9.04 s | Natural pedagogical pacing | **PASS** |
+| **Cold First Latency** | 5.333 s | `<= 15.0 s` | **PASS** |
+| **Model Preload / Load** | 2,283.01 ms | Preloadable during voting | **PASS** |
+| **Warm Latency (p50)** | **2.481 s** | `<= 3.0 s` | **PASS** |
+| **Warm Latency (p95)** | **3.104 s** | `<= 3.5 s` | **PASS** |
+| **Real-Time Factor (RTF)** | **0.2647x** | `< 0.50x` (3.78x realtime) | **PASS** |
+| **Audio Duration** | 9.36 s | Natural pedagogical pacing | **PASS** |
 | **Sample Rate** | 24,000 Hz | Native model frequency | **PASS** |
 | **Peak Amplitude** | **0.78** | `0.70 .. 0.85` | **PASS** (Calibrated) |
-| **Peak Host RAM (RSS)** | 2,976.12 MB | Process tree working set | Measured |
-| **Peak Device VRAM** | 3,272.18 MB | CUDA GPU device memory | Measured |
+| **Peak Host RAM (RSS)** | 3,061.05 MB | Process tree working set | Measured |
+| **Peak Device VRAM** | 3,342.10 MB | CUDA GPU device memory | Measured |
 | **Memory Scope** | `discrete-vram` | Discrete VRAM on workstation | Dual-Tracked |
 
 ---

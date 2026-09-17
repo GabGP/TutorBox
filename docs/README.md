@@ -32,6 +32,8 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)**: Physical 4-button student clickers, delegated pairing workflow, dual RGB LED feedback state machine, and the hardware-agnostic `VoteTransport` interface.
 * **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API.
+* **[Offline Voice Feedback & Neural TTS Pipeline](architecture/voice-feedback.md)**: Architectural design, multi-tier Spanish engine hierarchy (`Qwen3-TTS` -> `Sherpa-ONNX` -> `Piper` -> `eSpeak-ng`), >51% Rule audio gating, and K'iche' routing.
+* **[Qwen3-TTS Daemon: Build & Deployment Guide](tts/qwen_build.md)**: Compilation instructions, persistent in-memory daemon patch, CUDA acceleration, and cross-platform reproduction guide.
 * **[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)**: Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance (8GB Unified RAM budget).
 
 ---

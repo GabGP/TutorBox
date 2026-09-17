@@ -281,8 +281,10 @@ def profile_engine(
     last_synth_s = getattr(backend, "last_synthesis_seconds", None)
 
     # In a preloaded quiz turn scenario, the cold turn absorbs both model load and first synthesis.
-    # For Qwen (one-shot binary), synth_latency contains both model loading and neural synthesis.
-    if last_synth_s is not None and last_synth_s > 0:
+    if preload_load_ms > 0:
+        load_ms = preload_load_ms
+        cold_first_s = (load_ms / MILLISECONDS_PER_SECOND) + synth_latency
+    elif last_synth_s is not None and last_synth_s > 0:
         load_ms = max(0.0, (synth_latency - last_synth_s) * MILLISECONDS_PER_SECOND)
         cold_first_s = synth_latency
     else:
