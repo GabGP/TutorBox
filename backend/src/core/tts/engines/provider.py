@@ -33,7 +33,7 @@ def configure_onnxruntime_dll_paths() -> None:
         file_attr = getattr(onnxruntime, "__file__", None)
         if file_attr:
             capi_dir = Path(file_attr).parent / "capi"
-            if capi_dir.is_dir():
+            if capi_dir.is_dir() and hasattr(os, "add_dll_directory"):
                 os.add_dll_directory(str(capi_dir))
     except (ImportError, OSError, AttributeError):
         pass

@@ -128,6 +128,16 @@ def test_is_cuda_available_runtime_import_failure():
         assert is_cuda_available() is False
 
 
+def test_is_cuda_available_missing_file_attr():
+    mock_sherpa = MagicMock()
+    del mock_sherpa.__file__
+    with (
+        patch("shutil.which", return_value="/usr/bin/nvidia-smi"),
+        patch.dict("sys.modules", {"sherpa_onnx": mock_sherpa}),
+    ):
+        assert is_cuda_available() is False
+
+
 def test_is_cuda_available_windows_platform():
     mock_cuda_lib = MagicMock()
     mock_cuda_lib.suffix = ".dll"
@@ -145,7 +155,7 @@ def test_is_cuda_available_windows_platform():
 def test_configure_onnxruntime_dll_paths_non_windows():
     with (
         patch("sys.platform", "linux"),
-        patch("os.add_dll_directory") as mock_add_dll,
+        patch("os.add_dll_directory", create=True) as mock_add_dll,
     ):
         configure_onnxruntime_dll_paths()
         mock_add_dll.assert_not_called()
@@ -159,7 +169,7 @@ def test_configure_onnxruntime_dll_paths_windows_success(tmp_path):
     with (
         patch("sys.platform", "win32"),
         patch.dict("sys.modules", {"onnxruntime": fake_ort}),
-        patch("os.add_dll_directory") as mock_add_dll,
+        patch("os.add_dll_directory", create=True) as mock_add_dll,
     ):
         configure_onnxruntime_dll_paths()
         mock_add_dll.assert_called_once_with(str(mock_capi))
@@ -171,7 +181,20 @@ def test_configure_onnxruntime_dll_paths_windows_missing_capi(tmp_path):
     with (
         patch("sys.platform", "win32"),
         patch.dict("sys.modules", {"onnxruntime": fake_ort}),
-        patch("os.add_dll_directory") as mock_add_dll,
+        patch("os.add_dll_directory", create=True) as mock_add_dll,
+    ):
+        configure_onnxruntime_dll_paths()
+        mock_add_dll.assert_not_called()
+
+
+def test_configure_onnxruntime_dll_paths_windows_no_file_attr():
+    fake_ort = MagicMock()
+    del fake_ort.__file__
+
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict("sys.modules", {"onnxruntime": fake_ort}),
+        patch("os.add_dll_directory", create=True) as mock_add_dll,
     ):
         configure_onnxruntime_dll_paths()
         mock_add_dll.assert_not_called()

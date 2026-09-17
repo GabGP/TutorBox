@@ -20,6 +20,7 @@ jobs:
       # Keep ALL __pycache__ under .cache (repo policy) and share one venv.
       PYTHONPYCACHEPREFIX: ${{ github.workspace }}/.cache/pycache
       UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.cache/venv
+      VIRTUAL_ENV: ${{ github.workspace }}/.cache/venv
     strategy:
       fail-fast: false
       matrix:
