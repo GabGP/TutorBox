@@ -26,7 +26,9 @@ from core.config import (
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_QWEN_BINARY,
+    DEFAULT_TTS_QWEN_CONTEXT,
     DEFAULT_TTS_QWEN_GGUF_PATH,
+    DEFAULT_TTS_QWEN_SEED,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
     DEFAULT_TTS_SHERPA_PROVIDER,
@@ -38,6 +40,7 @@ from core.config import (
     clear_settings_cache,
     get_settings,
 )
+from core.config.constants import DEFAULT_TTS_QWEN_SPEAKER_FILE
 from core.config.tts_settings import build_tts_config
 
 _TTS_ENV_VARS = (
@@ -71,7 +74,10 @@ _TTS_ENV_VARS = (
     "TTS_KOKORO_PROVIDER",
     "TTS_MELO_VOICE",
     "TTS_QWEN_BINARY",
+    "TTS_QWEN_CONTEXT",
     "TTS_QWEN_GGUF_PATH",
+    "TTS_QWEN_SEED",
+    "TTS_QWEN_SPEAKER_FILE",
     "TTS_QWEN_THREADS",
 )
 
@@ -123,7 +129,10 @@ def test_build_tts_config_defaults() -> None:
     assert config.kokoro_provider == DEFAULT_TTS_KOKORO_PROVIDER
     assert config.melo_voice == DEFAULT_TTS_MELO_VOICE
     assert config.qwen_binary == DEFAULT_TTS_QWEN_BINARY
+    assert config.qwen_context == DEFAULT_TTS_QWEN_CONTEXT
     assert config.qwen_gguf_path == DEFAULT_TTS_QWEN_GGUF_PATH
+    assert config.qwen_seed == DEFAULT_TTS_QWEN_SEED
+    assert config.qwen_speaker_file == DEFAULT_TTS_QWEN_SPEAKER_FILE
     assert config.qwen_threads == DEFAULT_TTS_QWEN_THREADS
 
 
@@ -161,7 +170,10 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_KOKORO_PROVIDER", "cuda")
     monkeypatch.setenv("TTS_MELO_VOICE", "custom_melo")
     monkeypatch.setenv("TTS_QWEN_BINARY", "/opt/llama/bin/llama-tts")
+    monkeypatch.setenv("TTS_QWEN_CONTEXT", "2048")
     monkeypatch.setenv("TTS_QWEN_GGUF_PATH", "/path/to/qwen.gguf")
+    monkeypatch.setenv("TTS_QWEN_SEED", "7")
+    monkeypatch.setenv("TTS_QWEN_SPEAKER_FILE", " /path/to/speaker.wav ")
     monkeypatch.setenv("TTS_QWEN_THREADS", "6")
 
     config = build_tts_config()
@@ -197,7 +209,10 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.kokoro_provider == "cuda"
     assert config.melo_voice == "custom_melo"
     assert config.qwen_binary == "/opt/llama/bin/llama-tts"
+    assert config.qwen_context == 2048
     assert config.qwen_gguf_path == "/path/to/qwen.gguf"
+    assert config.qwen_seed == 7
+    assert config.qwen_speaker_file == "/path/to/speaker.wav"
     assert config.qwen_threads == 6
 
 
@@ -245,7 +260,6 @@ def test_build_tts_config_engine_variants(monkeypatch) -> None:
         "moss-nano",
         "kokoro",
         "melo",
-        "qwen-gguf",
         "qwen3-tts",
         "qwen",
     ):

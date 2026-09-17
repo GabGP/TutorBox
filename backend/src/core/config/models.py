@@ -43,7 +43,10 @@ from core.config.constants import (
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_QWEN_BINARY,
+    DEFAULT_TTS_QWEN_CONTEXT,
     DEFAULT_TTS_QWEN_GGUF_PATH,
+    DEFAULT_TTS_QWEN_SEED,
+    DEFAULT_TTS_QWEN_SPEAKER_FILE,
     DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
     DEFAULT_TTS_SHERPA_PROVIDER,
@@ -101,7 +104,6 @@ class TTSConfig:
     timeout_seconds: float = DEFAULT_TTS_TIMEOUT_SECONDS
     max_chars: int = DEFAULT_TTS_MAX_CHARS
 
-    # Neural Piper configuration
     piper_binary: str = DEFAULT_TTS_PIPER_BINARY
     piper_model_dir: str = DEFAULT_TTS_PIPER_MODEL_DIR
     piper_model_es: str = DEFAULT_TTS_PIPER_MODEL_ES
@@ -112,7 +114,6 @@ class TTSConfig:
     piper_noise_scale: float = DEFAULT_TTS_PIPER_NOISE_SCALE
     piper_noise_w_scale: float = DEFAULT_TTS_PIPER_NOISE_W_SCALE
 
-    # Candidate engine configuration for A/B benchmarking
     sherpa_model_es: str = DEFAULT_TTS_SHERPA_MODEL_ES
     sherpa_threads: int = DEFAULT_TTS_SHERPA_THREADS
     sherpa_provider: str = DEFAULT_TTS_SHERPA_PROVIDER
@@ -126,6 +127,9 @@ class TTSConfig:
     qwen_binary: str = DEFAULT_TTS_QWEN_BINARY
     qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
     qwen_threads: int = DEFAULT_TTS_QWEN_THREADS
+    qwen_context: int = DEFAULT_TTS_QWEN_CONTEXT
+    qwen_seed: int = DEFAULT_TTS_QWEN_SEED
+    qwen_speaker_file: str = DEFAULT_TTS_QWEN_SPEAKER_FILE
 
 
 @dataclass(frozen=True)

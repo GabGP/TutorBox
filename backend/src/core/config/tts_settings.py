@@ -23,9 +23,6 @@ from core.config.constants import (
     DEFAULT_TTS_PIPER_SPEAKER_ES,
     DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
-    DEFAULT_TTS_QWEN_BINARY,
-    DEFAULT_TTS_QWEN_GGUF_PATH,
-    DEFAULT_TTS_QWEN_THREADS,
     DEFAULT_TTS_SHERPA_MODEL_ES,
     DEFAULT_TTS_SHERPA_PROVIDER,
     DEFAULT_TTS_SHERPA_THREADS,
@@ -36,6 +33,7 @@ from core.config.constants import (
 )
 from core.config.models import TTSConfig
 from core.config.parsers import parse_bool, parse_float, parse_int
+from core.config.qwen_settings import build_qwen_config
 
 __all__ = ["build_tts_config"]
 
@@ -48,7 +46,6 @@ _VALID_ENGINES: frozenset[str] = frozenset(
         "moss-nano",
         "kokoro",
         "melo",
-        "qwen-gguf",
         "qwen3-tts",
         "qwen",
     }
@@ -142,9 +139,5 @@ def build_tts_config() -> TTSConfig:
             else DEFAULT_TTS_KOKORO_PROVIDER
         ),
         melo_voice=_env("TTS_MELO_VOICE", DEFAULT_TTS_MELO_VOICE).strip(),
-        qwen_binary=_env("TTS_QWEN_BINARY", DEFAULT_TTS_QWEN_BINARY).strip(),
-        qwen_gguf_path=_env("TTS_QWEN_GGUF_PATH", DEFAULT_TTS_QWEN_GGUF_PATH).strip(),
-        qwen_threads=parse_int(
-            "TTS_QWEN_THREADS", DEFAULT_TTS_QWEN_THREADS, min_value=1, max_value=16
-        ),
+        **build_qwen_config(),
     )

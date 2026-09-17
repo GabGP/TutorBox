@@ -65,6 +65,9 @@ DEFAULT_TTS_MELO_VOICE: str = "ES"
 DEFAULT_TTS_QWEN_GGUF_PATH: str = ""
 DEFAULT_TTS_QWEN_BINARY: str = ""  # empty: auto-detect llama-tts in standard paths/PATH
 DEFAULT_TTS_QWEN_THREADS: int = 6
+DEFAULT_TTS_QWEN_CONTEXT: int = 1024
+DEFAULT_TTS_QWEN_SEED: int = 42
+DEFAULT_TTS_QWEN_SPEAKER_FILE: str = ""
 
 # Captive portal: answer phone connectivity probes with a redirect to the student
 # page so the OS sign-in browser opens it automatically when a device joins the AP.
