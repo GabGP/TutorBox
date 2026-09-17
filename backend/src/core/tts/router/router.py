@@ -44,7 +44,6 @@ class TTSRouter:
             "sherpa": self.sherpa,
             "kokoro": self.kokoro,
             "qwen3-tts": self.qwen,
-            "qwen-gguf": self.qwen,
             "qwen": self.qwen,
             **(backends or {}),
         }

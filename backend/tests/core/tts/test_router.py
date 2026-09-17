@@ -114,17 +114,14 @@ def test_select_backend_quc_routing(monkeypatch: pytest.MonkeyPatch):
     """Verifies Mayan K'iche' routes strictly to Piper or configured eSpeak."""
     router, mock_piper, mock_espeak = _make_mock_router()
 
-    # 1. Piper has K'iche' model
     mock_piper.is_available.side_effect = lambda v: v == "quc"
     assert router.select_backend("quc") is mock_piper
 
-    # 2. Piper does not have K'iche', no eSpeak voice configured
     mock_piper.is_available.side_effect = None
     mock_piper.is_available.return_value = False
     with pytest.raises(TTSUnavailableError, match="No speech voice is configured"):
         router.select_backend("quc")
 
-    # 3. Piper absent, but TTS_VOICE_QUC configured on eSpeak
     monkeypatch.setenv("TTS_VOICE_QUC", "quc-voice")
     clear_settings_cache()
     assert router.select_backend("quc") is mock_espeak
