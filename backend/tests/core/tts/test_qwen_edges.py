@@ -25,15 +25,17 @@ def _reset_settings():
     clear_settings_cache()
 
 
-def _configure_model(monkeypatch, tmp_path: Path) -> tuple[Path, Path, Path]:
-    model, mmproj, binary = _setup_mock_qwen_dir(tmp_path)
+def _configure_model(
+    monkeypatch, tmp_path: Path
+) -> tuple[Path, Path, Path, Path | None]:
+    model, mmproj, binary, daemon_bin = _setup_mock_qwen_dir(tmp_path)
     monkeypatch.setenv("TTS_QWEN_GGUF_PATH", str(model))
     clear_settings_cache()
-    return model, mmproj, binary
+    return model, mmproj, binary, daemon_bin
 
 
 def test_qwen_passes_context_seed_and_reference_voice(monkeypatch, tmp_path):
-    model, _mmproj, _binary = _configure_model(monkeypatch, tmp_path)
+    model, _mmproj, _binary, _ = _configure_model(monkeypatch, tmp_path)
     speaker = tmp_path / "teacher.wav"
     speaker.write_bytes(b"speaker")
     monkeypatch.setenv("TTS_QWEN_CONTEXT", "2048")
@@ -47,7 +49,7 @@ def test_qwen_passes_context_seed_and_reference_voice(monkeypatch, tmp_path):
         return MagicMock(returncode=0, stdout="ok")
 
     with patch(
-        "core.tts.engines.qwen.engine.subprocess.run", side_effect=fake_run
+        "core.tts.engines.qwen.runner.subprocess.run", side_effect=fake_run
     ) as run:
         QwenBackend().synthesize("Hola", voice="es")
 
@@ -71,7 +73,7 @@ def test_qwen_converts_timeout_to_domain_error(monkeypatch, tmp_path):
     _configure_model(monkeypatch, tmp_path)
     with (
         patch(
-            "core.tts.engines.qwen.engine.subprocess.run",
+            "core.tts.engines.qwen.runner.subprocess.run",
             side_effect=subprocess.TimeoutExpired("llama-tts", 10),
         ),
         pytest.raises(TTSSynthesisError, match="timed out"),
@@ -86,7 +88,7 @@ def test_qwen_finds_model_in_default_project_cache(monkeypatch, tmp_path):
     model.write_bytes(b"model")
     (model_dir / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf").write_bytes(b"mmproj")
     bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
-    binary = tmp_path / "bin" / "llama" / bin_name
+    binary = tmp_path / "bin" / "llama.cpp" / bin_name
     binary.parent.mkdir(parents=True)
     binary.write_bytes(b"binary")
     monkeypatch.setattr("core.tts.engines.qwen.models.PROJECT_ROOT", tmp_path)
@@ -111,7 +113,7 @@ def test_qwen_returns_none_when_default_model_candidates_are_missing(
 
 
 def test_qwen_uses_configured_binary_path(monkeypatch, tmp_path):
-    model, _mmproj, _binary = _configure_model(monkeypatch, tmp_path)
+    model, _mmproj, _binary, _ = _configure_model(monkeypatch, tmp_path)
     configured = tmp_path / "custom" / "llama-tts.exe"
     configured.parent.mkdir()
     configured.write_bytes(b"binary")
@@ -123,7 +125,7 @@ def test_qwen_uses_configured_binary_path(monkeypatch, tmp_path):
 
 
 def test_qwen_searches_linux_install_locations(monkeypatch, tmp_path):
-    model, _mmproj, binary = _configure_model(monkeypatch, tmp_path)
+    model, _mmproj, binary, _ = _configure_model(monkeypatch, tmp_path)
     binary.unlink(missing_ok=True)
     fake_binary = tmp_path / "llama-tts"
     fake_binary.write_bytes(b"binary")
@@ -139,7 +141,7 @@ def test_qwen_searches_linux_install_locations(monkeypatch, tmp_path):
 
 
 def test_qwen_searches_windows_install_locations(monkeypatch, tmp_path):
-    model, _mmproj, binary = _configure_model(monkeypatch, tmp_path)
+    model, _mmproj, binary, _ = _configure_model(monkeypatch, tmp_path)
     binary.unlink(missing_ok=True)
     fake_binary = tmp_path / "appdata" / "llama.cpp" / "llama-tts.exe"
     fake_binary.parent.mkdir(parents=True, exist_ok=True)

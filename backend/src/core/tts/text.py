@@ -5,6 +5,7 @@ into the conversational Spanish words a primary-school teacher uses in class.
 """
 
 import re
+import unicodedata
 
 __all__ = ["normalize_for_speech"]
 
@@ -84,7 +85,7 @@ def normalize_for_speech(text: str, max_chars: int = 600) -> str:
     """Rewrites arithmetic, fractions, and notation as words for natural oral speech."""
     if not text:
         return ""
-    spoken = str(text)
+    spoken = unicodedata.normalize("NFC", str(text))
     for pattern, replacement in _LATEX_SYMBOLS:
         spoken = pattern.sub(replacement, spoken)
     spoken = _LATEX_FRAC.sub(lambda m: _oral_fraction(m.group(1), m.group(2)), spoken)

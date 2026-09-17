@@ -15,68 +15,66 @@ __all__ = ["QwenModelPaths", "detect_qwen_provider", "resolve_qwen_paths"]
 
 @dataclass(frozen=True)
 class QwenModelPaths:
-    """Resolved paths for Qwen3-TTS GGUF weights and llama-tts binary."""
+    """Resolved paths for Qwen3-TTS GGUF weights and llama-tts binaries."""
 
     model_path: Path
     mmproj_path: Path
     bin_path: Path
+    daemon_bin_path: Path | None = None
 
 
 def _find_qwen_file(configured_path: str, filename: str) -> Path | None:
     configured = Path(configured_path).expanduser() if configured_path else None
-    candidate_paths: list[Path] = []
     if configured:
-        candidate_paths.extend((configured, configured / filename))
-        for candidate in candidate_paths:
-            if candidate.is_file():
-                return candidate.resolve()
+        for cand in (configured, configured / filename):
+            if cand.is_file():
+                return cand.resolve()
         return None
-    candidate_paths.extend(
-        (
-            PROJECT_ROOT / ".cache" / "models" / "tts" / "qwen" / filename,
-            Path.cwd() / ".cache" / "models" / "tts" / "qwen" / filename,
-            Path.cwd() / "models" / "tts" / "qwen" / filename,
-            Path(get_settings().tts.piper_model_dir) / "qwen" / filename,
-        )
-    )
-    for candidate in candidate_paths:
-        if candidate.is_file():
-            return candidate.resolve()
+    for cand in (
+        PROJECT_ROOT / ".cache" / "models" / "tts" / "qwen" / filename,
+        Path.cwd() / ".cache" / "models" / "tts" / "qwen" / filename,
+        Path.cwd() / "models" / "tts" / "qwen" / filename,
+        Path(get_settings().tts.piper_model_dir) / "qwen" / filename,
+    ):
+        if cand.is_file():
+            return cand.resolve()
     return None
 
 
 def _find_llama_bin(
-    model_dir: Path | None = None, configured_path: str = ""
+    model_dir: Path | None = None,
+    configured_path: str = "",
+    binary_name: str = "llama-tts",
 ) -> Path | None:
-    bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
+    ext = ".exe" if platform.system() == "Windows" else ""
+    bin_name = f"{binary_name}{ext}"
     candidate_bins: list[Path] = []
     if configured_path:
         configured = Path(configured_path).expanduser()
         candidate_bins.extend((configured, configured / bin_name))
     if model_dir:
         for ancestor in model_dir.parents:
-            candidate_bins.append(ancestor / "bin" / "llama" / bin_name)
+            candidate_bins.append(ancestor / "bin" / "llama.cpp" / bin_name)
     if platform.system() == "Windows":
-        local_app_data = os.environ.get("LOCALAPPDATA")
-        candidate_roots = [
+        local_app = os.environ.get("LOCALAPPDATA")
+        roots = [
             Path("C:/Program Files/llama.cpp"),
-            Path("C:/Program Files/llama"),
             Path("C:/ProgramData/chocolatey/bin"),
             Path.home() / "AppData/Local/Programs/llama.cpp",
             Path.home() / "scoop/apps/llama.cpp/current",
         ]
-        if local_app_data:
-            candidate_roots.append(Path(local_app_data) / "llama.cpp")
-        for root in candidate_roots:
-            candidate_bins.extend((root / bin_name, root / "bin" / bin_name))
+        if local_app:
+            roots.append(Path(local_app) / "llama.cpp")
+        for r in roots:
+            candidate_bins.extend((r / bin_name, r / "bin" / bin_name))
     else:
-        for root in (
+        for r in (
             Path("/usr/local/bin"),
             Path("/usr/bin"),
             Path.home() / ".local/bin",
             Path("/opt/llama.cpp/bin"),
         ):
-            candidate_bins.append(root / bin_name)
+            candidate_bins.append(r / bin_name)
     for b in candidate_bins:
         if b.is_file():
             return b.resolve()
@@ -85,7 +83,7 @@ def _find_llama_bin(
 
 
 def resolve_qwen_paths(model_path_str: str | None = None) -> QwenModelPaths:
-    """Resolves filesystem paths for Qwen3-TTS weights and llama-tts binary."""
+    """Resolves filesystem paths for Qwen3-TTS weights and llama-tts binaries."""
     tts = get_settings().tts
     path_to_use = model_path_str or tts.qwen_gguf_path
 
@@ -99,15 +97,23 @@ def resolve_qwen_paths(model_path_str: str | None = None) -> QwenModelPaths:
     if not mmproj_file.is_file():
         raise TTSUnavailableError(f"Qwen mmproj not found at '{mmproj_file}'.")
 
-    bin_file = _find_llama_bin(model_file.parent, tts.qwen_binary)
-    if not bin_file:
+    bin_file = _find_llama_bin(model_file.parent, tts.qwen_binary, "llama-tts")
+    daemon_bin_file = _find_llama_bin(
+        model_file.parent, tts.qwen_binary, "llama-tts-daemon"
+    )
+
+    if not bin_file and not daemon_bin_file:
         bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
         raise TTSUnavailableError(f"Binary '{bin_name}' not found on host.")
+
+    effective_bin = bin_file or daemon_bin_file
+    assert effective_bin is not None
 
     return QwenModelPaths(
         model_path=model_file,
         mmproj_path=mmproj_file,
-        bin_path=bin_file,
+        bin_path=effective_bin,
+        daemon_bin_path=daemon_bin_file,
     )
 
 
@@ -115,10 +121,13 @@ def detect_qwen_provider(paths: QwenModelPaths | None = None) -> str:
     """Reports CUDA when llama-tts exposes a CUDA device, otherwise CPU."""
     try:
         active_paths = paths or resolve_qwen_paths()
+        probe_bin = active_paths.daemon_bin_path or active_paths.bin_path
         result = subprocess.run(
-            [str(active_paths.bin_path), "--list-devices"],
+            [str(probe_bin), "--list-devices"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=5.0,
             check=False,
         )

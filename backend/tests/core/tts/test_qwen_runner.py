@@ -7,7 +7,11 @@ from unittest.mock import MagicMock, patch
 from core.config import clear_settings_cache, get_settings
 from core.tts.engines.qwen import QwenBackend
 from core.tts.engines.qwen.models import QwenModelPaths
-from core.tts.engines.qwen.runner import build_qwen_command, parse_qwen_timings
+from core.tts.engines.qwen.runner import (
+    build_qwen_command,
+    build_qwen_daemon_command,
+    parse_qwen_timings,
+)
 
 
 def test_build_qwen_command_basic(tmp_path):
@@ -48,6 +52,56 @@ def test_build_qwen_command_with_speaker(tmp_path):
     assert str(speaker) == cmd[cmd.index("--tts-speaker-file") + 1]
 
 
+def test_build_qwen_daemon_command(tmp_path):
+    bin_name = (
+        "llama-tts-daemon.exe" if platform.system() == "Windows" else "llama-tts-daemon"
+    )
+    paths = QwenModelPaths(
+        model_path=tmp_path / "model.gguf",
+        mmproj_path=tmp_path / "mmproj.gguf",
+        bin_path=tmp_path / "llama-tts.exe",
+        daemon_bin_path=tmp_path / bin_name,
+    )
+    cfg = get_settings().tts
+    cmd = build_qwen_daemon_command(paths, cfg)
+    assert str(paths.daemon_bin_path) in cmd
+    assert "--daemon" in cmd
+    assert "-ngl" in cmd
+    assert "99" == cmd[cmd.index("-ngl") + 1]
+
+
+def test_build_qwen_daemon_command_with_speaker(tmp_path):
+    paths = QwenModelPaths(
+        model_path=tmp_path / "model.gguf",
+        mmproj_path=tmp_path / "mmproj.gguf",
+        bin_path=tmp_path / "llama-tts.exe",
+    )
+    speaker = tmp_path / "spk.wav"
+    cfg = get_settings().tts
+    cmd = build_qwen_daemon_command(paths, cfg, speaker_file=speaker)
+    assert "--tts-speaker-file" in cmd
+    assert str(speaker) == cmd[cmd.index("--tts-speaker-file") + 1]
+
+
+def test_parse_qwen_timings_daemon_format():
+    line = "DONE\ttotal=0.8120\tprompt_eval=0.0810\tgeneration=0.5890\tvocoder=0.1420"
+    res = parse_qwen_timings(line)
+    assert res["total"] == 0.812
+    assert res["prompt_eval"] == 0.081
+    assert res["generation"] == 0.589
+    assert res["vocoder"] == 0.142
+    assert res["synthesis_s"] == 0.812
+
+
+def test_parse_qwen_timings_daemon_without_total():
+    line = "DONE\tprompt_eval=0.0810\tgeneration=0.5890\tvocoder=0.1420"
+    res = parse_qwen_timings(line)
+    assert res["prompt_eval"] == 0.081
+    assert res["generation"] == 0.589
+    assert res["vocoder"] == 0.142
+    assert res["synthesis_s"] == 0.812
+
+
 def test_parse_qwen_timings_complete():
     stdout = (
         "0.04.145.928 I timings: prompt eval 0.05s + generation 2.05s + "
@@ -80,7 +134,7 @@ def test_qwen_backend_records_timings(monkeypatch, tmp_path):
     model.write_bytes(b"dummy")
     mmproj = models_dir / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
     mmproj.write_bytes(b"dummy")
-    bin_dir = tmp_path / "bin" / "llama"
+    bin_dir = tmp_path / "bin" / "llama.cpp"
     bin_dir.mkdir(parents=True, exist_ok=True)
     bin_name = "llama-tts.exe" if platform.system() == "Windows" else "llama-tts"
     binary = bin_dir / bin_name
