@@ -249,3 +249,6 @@ pnpm-debug.log*
 
 # Benchmark evaluation artifacts
 benchmark/**/results/
+
+# Upstream source vendors (patched via patches/)
+vendor/

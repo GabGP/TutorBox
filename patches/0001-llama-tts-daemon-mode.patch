@@ -1,0 +1,196 @@
+diff --git a/tools/tts/tts.cpp b/tools/tts/tts.cpp
+index 6fd1936..7365941 100644
+--- a/tools/tts/tts.cpp
++++ b/tools/tts/tts.cpp
+@@ -9,6 +9,8 @@
+ #include <cstdio>
+ #include <cstring>
+ #include <string>
++#include <iostream>
++#include <sstream>
+
+ /**
+  * Please note that this is NOT a production-ready binary.
+@@ -47,6 +49,18 @@ int main(int argc, char ** argv) {
+
+     common_init();
+
++    bool is_daemon = false;
++    int new_argc = 1;
++    for (int i = 1; i < argc; i++) {
++        if (strcmp(argv[i], "--daemon") == 0) {
++            is_daemon = true;
++        } else {
++            argv[new_argc++] = argv[i];
++        }
++    }
++    argc = new_argc;
++    argv[argc] = nullptr;
++
+     if (!common_params_parse(argc, argv, params, LLAMA_EXAMPLE_TTS, print_usage)) {
+         return 1;
+     }
+@@ -54,8 +68,12 @@ int main(int argc, char ** argv) {
+     mtmd_helper_log_set(common_log_default_callback, nullptr);
+
+     if (params.prompt.empty()) {
+-        LOG_ERR("no prompt provided, use -p \"text\"\n");
+-        return 1;
++        if (is_daemon) {
++            params.prompt = "init";
++        } else {
++            LOG_ERR("no prompt provided, use -p \"text\"\n");
++            return 1;
++        }
+     }
+     if (params.mmproj.path.empty()) {
+         LOG_ERR("no mmproj provided, use --mmproj\n");
+@@ -111,6 +129,148 @@ int main(int argc, char ** argv) {
+         speaker_bitmap.reset(wrapper.bitmap);
+     }
+
++    if (is_daemon) {
++        // Warm up CUDA graph / memory buffers with a fast generation pass
++        {
++            mtmd_helper::gen_audio gen_warmup(lctx, mctx.get());
++            mtmd_helper_gen_audio_inp inp_warmup{};
++            inp_warmup.seq_id      = 0;
++            inp_warmup.prompt      = "inicio";
++            inp_warmup.prompt_len  = 6;
++            inp_warmup.speaker_ref = speaker_bitmap.get();
++            inp_warmup.lang        = params.tts_lang.empty() ? "es" : params.tts_lang.c_str();
++            inp_warmup.top_k       = params.sampling.top_k;
++            inp_warmup.top_p       = params.sampling.top_p;
++            inp_warmup.seed        = params.sampling.seed;
++            inp_warmup.out_type    = MTMD_HELPER_GEN_AUDIO_OUTTYPE_WAV;
++
++            if (gen_warmup.set_input(&inp_warmup) == 0) {
++                while (gen_warmup.step_prompt(params.n_batch) > 0);
++                llama_token sampled_w = common_sampler_sample(smpl, lctx, -1);
++                common_sampler_accept(smpl, sampled_w, true);
++                const float * h_state_w = llama_get_embeddings_ith(lctx, -1);
++                const float * h_next_w = nullptr;
++                bool stop_w = false;
++                gen_warmup.step_gen(sampled_w, h_state_w, &h_next_w, &stop_w);
++                int32_t sr_w = 0;
++                const char * d_w = nullptr;
++                size_t dl_w = 0;
++                int64_t ns_w = 0;
++                gen_warmup.get_output(&sr_w, &d_w, &dl_w, &ns_w);
++            }
++            llama_memory_seq_rm(llama_get_memory(lctx), -1, -1, -1);
++            common_sampler_reset(smpl);
++        }
++
++        fprintf(stdout, "READY\n");
++        fflush(stdout);
++
++        std::string line;
++        while (std::getline(std::cin, line)) {
++            if (line.empty()) continue;
++            if (line == "QUIT" || line == "EXIT") {
++                break;
++            }
++            std::stringstream ss(line);
++            std::string command, lang, out_path, prompt_text;
++            if (!std::getline(ss, command, '\t')) continue;
++            if (command != "SYNTH") continue;
++            if (!std::getline(ss, lang, '\t')) continue;
++            if (!std::getline(ss, out_path, '\t')) continue;
++            if (!std::getline(ss, prompt_text)) continue;
++
++            llama_memory_seq_rm(llama_get_memory(lctx), -1, -1, -1);
++            common_sampler_reset(smpl);
++
++            mtmd_helper::gen_audio gen_d(lctx, mctx.get());
++            mtmd_helper_gen_audio_inp inp_d{};
++            inp_d.seq_id      = 0;
++            inp_d.prompt      = prompt_text.c_str();
++            inp_d.prompt_len  = prompt_text.size();
++            inp_d.speaker_ref = speaker_bitmap.get();
++            inp_d.lang        = lang.c_str();
++            inp_d.top_k       = params.sampling.top_k;
++            inp_d.top_p       = params.sampling.top_p;
++            inp_d.seed        = params.sampling.seed;
++            inp_d.out_type    = MTMD_HELPER_GEN_AUDIO_OUTTYPE_WAV;
++
++            const int64_t t_prompt_start_us = ggml_time_us();
++            if (gen_d.set_input(&inp_d) != 0) {
++                llama_memory_seq_rm(llama_get_memory(lctx), -1, -1, -1);
++                common_sampler_reset(smpl);
++                fprintf(stdout, "ERR\tset_input_failed\n");
++                fflush(stdout);
++                continue;
++            }
++
++            bool prompt_ok = true;
++            for (;;) {
++                int32_t ret = gen_d.step_prompt(params.n_batch);
++                if (ret < 0) {
++                    prompt_ok = false;
++                    break;
++                }
++                if (ret == 0) break;
++            }
++            if (!prompt_ok) {
++                llama_memory_seq_rm(llama_get_memory(lctx), -1, -1, -1);
++                common_sampler_reset(smpl);
++                fprintf(stdout, "ERR\tprompt_step_failed\n");
++                fflush(stdout);
++                continue;
++            }
++
++            auto sample_code_d = [&]() -> llama_token {
++                llama_token t = common_sampler_sample(smpl, lctx, -1);
++                common_sampler_accept(smpl, t, true);
++                return t;
++            };
++
++            const int max_new = params.n_predict > 0 ? params.n_predict : 512;
++            int n_frames = 0;
++            llama_token sampled_d = sample_code_d();
++            const float * h_state_d = llama_get_embeddings_ith(lctx, -1);
++            const int64_t t_gen_start_us = ggml_time_us();
++
++            bool stop_d = false;
++            while (!stop_d && n_frames < max_new) {
++                const float * h_next_d = nullptr;
++                if (gen_d.step_gen(sampled_d, h_state_d, &h_next_d, &stop_d) != 0 || !h_next_d) {
++                    break;
++                }
++                n_frames++;
++                h_state_d = h_next_d;
++                sampled_d = sample_code_d();
++            }
++            const double t_gen_s = (ggml_time_us() - t_gen_start_us) / 1e6;
++
++            int32_t      sample_rate_d = 0;
++            const char * data_d        = nullptr;
++            size_t       data_len_d    = 0;
++            int64_t      n_samples_d   = 0;
++            const int64_t t_wav_start_us = ggml_time_us();
++            gen_d.get_output(&sample_rate_d, &data_d, &data_len_d, &n_samples_d);
++            const double t_wav_s = (ggml_time_us() - t_wav_start_us) / 1e6;
++            const double t_prompt_s = (t_gen_start_us - t_prompt_start_us) / 1e6;
++            const double t_total_s = t_prompt_s + t_gen_s + t_wav_s;
++
++            FILE * f_out = fopen(out_path.c_str(), "wb");
++            if (f_out && data_d && data_len_d > 0) {
++                fwrite(data_d, 1, data_len_d, f_out);
++                fclose(f_out);
++                fprintf(stdout, "DONE\ttotal=%.4f\tprompt_eval=%.4f\tgeneration=%.4f\tvocoder=%.4f\n", t_total_s, t_prompt_s, t_gen_s, t_wav_s);
++            } else {
++                if (f_out) fclose(f_out);
++                fprintf(stdout, "ERR\twrite_failed\n");
++            }
++            llama_memory_seq_rm(llama_get_memory(lctx), -1, -1, -1);
++            common_sampler_reset(smpl);
++            fflush(stdout);
++        }
++        llama_backend_free();
++        return 0;
++    }
++
+     mtmd_helper::gen_audio gen(lctx, mctx.get());
+     mtmd_helper_gen_audio_inp inp{};
+     inp.seq_id      = 0;

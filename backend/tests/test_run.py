@@ -59,19 +59,21 @@ def test_load_env_loads_valid_key_values(tmp_path, monkeypatch):
 
 
 def test_check_prerequisites_all_reachable(capsys):
-    """Verifies prerequisite output when TTS, SLM, and pnpm are all available."""
+    """Verifies prerequisite output when TTS, SLM, Qwen, and pnpm are all available."""
     mock_cm = MagicMock()
     mock_cm.__enter__.return_value = None
 
     with (
         patch("shutil.which", return_value="/usr/bin/espeak-ng"),
         patch("urllib.request.urlopen", return_value=mock_cm),
+        patch("run.resolve_llama_daemon", return_value=Path("/mock/llama-tts-daemon")),
         patch("run.resolve_pnpm", return_value="/usr/bin/pnpm"),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
         assert "Found TTS engine" in captured
         assert "Local SLM engine reachable" in captured
+        assert "Found Qwen3-TTS daemon" in captured
         assert "Found frontend package manager" in captured
 
 
@@ -80,12 +82,14 @@ def test_check_prerequisites_all_missing(capsys):
     with (
         patch("shutil.which", return_value=None),
         patch("urllib.request.urlopen", side_effect=OSError("Unreachable")),
+        patch("run.resolve_llama_daemon", return_value=None),
         patch("run.resolve_pnpm", return_value=None),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
         assert "espeak-ng not found" in captured
         assert "SLM engine not detected" in captured
+        assert "Qwen3-TTS daemon not found" in captured
         assert "pnpm not found" in captured
 
 
@@ -209,3 +213,81 @@ def test_main_omits_log_config_when_missing(monkeypatch):
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
         assert "--log-config" not in cmd
+
+
+def test_resolve_llama_daemon_found_in_cache():
+    """Verifies resolve_llama_daemon finds cached binary under .cache/bin/llama.cpp/."""
+
+    def fake_is_file(self):
+        return "llama-tts-daemon" in self.name or "llama-tts" in self.name
+
+    with patch("pathlib.Path.is_file", fake_is_file):
+        daemon_path = run.resolve_llama_daemon()
+        assert daemon_path is not None
+        assert "llama.cpp" in str(daemon_path)
+
+
+def test_resolve_llama_daemon_found_in_path():
+    """Verifies resolve_llama_daemon finds daemon via shutil.which if not in cache."""
+    with (
+        patch("pathlib.Path.is_file", return_value=False),
+        patch("shutil.which", return_value="/usr/local/bin/llama-tts-daemon"),
+    ):
+        daemon_path = run.resolve_llama_daemon()
+        assert daemon_path == Path("/usr/local/bin/llama-tts-daemon").resolve()
+
+
+def test_resolve_llama_daemon_missing():
+    """Verifies resolve_llama_daemon returns None when daemon is absent everywhere."""
+    with (
+        patch("pathlib.Path.is_file", return_value=False),
+        patch("shutil.which", return_value=None),
+    ):
+        assert run.resolve_llama_daemon() is None
+
+
+def test_build_llama_success_and_force():
+    """Verifies build_llama runs build_llama_tts.py with expected flags."""
+    with (
+        patch("pathlib.Path.is_file", return_value=True),
+        patch(
+            "subprocess.run",
+            return_value=subprocess.CompletedProcess(args=[], returncode=0),
+        ) as mock_run,
+    ):
+        assert run.build_llama(force=True) is True
+        assert mock_run.call_count == 1
+        assert "--force" in mock_run.call_args[0][0]
+
+
+def test_build_llama_missing_script():
+    """Verifies build_llama returns False when build script is missing."""
+    with patch("pathlib.Path.is_file", return_value=False):
+        assert run.build_llama() is False
+
+
+def test_main_build_llama_flag(monkeypatch):
+    """Verifies --build-llama triggers build_llama before check_only/uvicorn."""
+    monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama", "--check-only"])
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.build_llama", return_value=True) as mock_build_llama,
+        patch("subprocess.run") as mock_sub,
+    ):
+        run.main()
+        mock_build_llama.assert_called_once_with(force=False)
+        mock_sub.assert_not_called()
+
+
+def test_main_build_llama_failure_exits(monkeypatch):
+    """Verifies build failure causes main to exit with code 1."""
+    import pytest
+
+    monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama"])
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.build_llama", return_value=False),
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        run.main()
+    assert exc_info.value.code == 1

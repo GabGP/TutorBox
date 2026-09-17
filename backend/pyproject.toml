@@ -30,7 +30,9 @@ dev = [
     "pytest-env>=1.7.1",
     "pytest-xdist>=3.8.0",
     "pre-commit>=4.6.2",
-    "ruff>=0.16.7",
+    "ruff>=0.16.8",
+    "cmake>=3.28.0",
+    "ninja>=1.11.1",
 ]
 
 [tool.uv]

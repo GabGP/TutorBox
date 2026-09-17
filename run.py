@@ -9,6 +9,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -29,13 +30,11 @@ try:
 except OSError:
     pass
 os.environ.setdefault("PYTHONPYCACHEPREFIX", str(_PYCACHE_DIR))
-try:
-    import sys
-
-    if getattr(sys, "pycache_prefix", None) is None:
+if getattr(sys, "pycache_prefix", None) is None:
+    try:
         sys.pycache_prefix = str(_PYCACHE_DIR)
-except Exception:
-    pass
+    except Exception:
+        pass
 
 # Console output tags and shared PWA messages (single source of truth for
 # user-facing runner output; backend tests assert on the message bodies).
@@ -122,8 +121,32 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
     return True
 
 
+def resolve_llama_daemon() -> Path | None:
+    """Finds and returns the path to the llama-tts-daemon binary if available."""
+    ext = ".exe" if os.name == "nt" else ""
+    bin_name = f"llama-tts-daemon{ext}"
+    cached = ROOT_DIR / ".cache" / "bin" / "llama.cpp" / bin_name
+    if cached.is_file():
+        return cached
+    which_daemon = shutil.which(bin_name) or shutil.which(f"llama-tts{ext}")
+    return Path(which_daemon).resolve() if which_daemon else None
+
+
+def build_llama(force: bool = False) -> bool:
+    """Invokes scripts/build_llama_tts.py to compile and install the daemon binary."""
+    script = ROOT_DIR / "scripts" / "build_llama_tts.py"
+    if not script.is_file():
+        print(f"{TAG_FAIL} Build script not found at {script}")
+        return False
+    cmd = [sys.executable, str(script)]
+    if force:
+        cmd.append("--force")
+    res = subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
+    return res.returncode == 0
+
+
 def check_prerequisites() -> None:
-    """Verifies runtime dependencies (espeak-ng, SLM server, and pnpm).
+    """Verifies runtime dependencies (espeak-ng, SLM server, Qwen daemon, and pnpm).
 
     Logs informative warning messages if optional runtime engines are not reachable.
     """
@@ -154,7 +177,16 @@ def check_prerequisites() -> None:
         )
         print("       (Seed question bank will still work seamlessly offline.)")
 
-    # 3. pnpm check
+    # 3. Qwen3-TTS / llama-tts daemon check
+    daemon_bin = resolve_llama_daemon()
+    if daemon_bin:
+        print(f"{TAG_OK} Found Qwen3-TTS daemon: {daemon_bin}")
+    else:
+        print(
+            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python scripts/build_llama_tts.py' or '--build-llama' to compile."
+        )
+
+    # 4. pnpm check
     pnpm_bin = resolve_pnpm()
     if not pnpm_bin:
         print(
@@ -223,6 +255,16 @@ def main() -> None:
         "--no-build", action="store_true", help="Skip frontend PWA compilation"
     )
     parser.add_argument(
+        "--build-llama",
+        action="store_true",
+        help="Compile and install patched llama-tts daemon before launching",
+    )
+    parser.add_argument(
+        "--force-build-llama",
+        action="store_true",
+        help="Force clean re-clone and recompilation of llama-tts daemon",
+    )
+    parser.add_argument(
         "--check-only", action="store_true", help="Check prerequisites and exit"
     )
     args = parser.parse_args()
@@ -232,6 +274,13 @@ def main() -> None:
     print("==================================================")
     check_prerequisites()
     print("--------------------------------------------------")
+
+    if args.build_llama or args.force_build_llama:
+        print(f"{TAG_BUILD} Building Qwen3-TTS daemon binary...")
+        if not build_llama(force=args.force_build_llama):
+            print(f"{TAG_FAIL} Failed to build Qwen3-TTS daemon.")
+            sys.exit(1)
+        print("--------------------------------------------------")
 
     if args.check_only:
         return
