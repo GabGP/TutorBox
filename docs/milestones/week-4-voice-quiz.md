@@ -27,7 +27,7 @@ This document summarizes the technical deliverables, architectural implementatio
   * **Pluggable Voice Architecture**: Hardware-agnostic `TTSBackend` protocol with Qwen3-TTS (GGUF via `llama-tts`) as the primary high-fidelity Spanish backend, Sherpa-ONNX and Piper VITS as lightweight neural fallbacks, Kokoro-82M opt-in, and `EspeakBackend` as the formant safety fallback, backed by a `TTSRouter` with 32-entry LRU cache.
   * **Primary-School Text Adaptation**: Oral fraction conversions, LaTeX sanitization, exponent reading, and natural sentence pacing (`core/tts/text.py`).
   * **Mayan Language Routing Seam**: Dedicated routing seam for Mayan K'iche' (`quc_Latn`) in `TTSRouter` with fail-safe error isolation (`503 Service Unavailable` when model checkpoint is absent).
-  * **Multi-Engine Benchmarking & Accurate Preload Modeling**: Unified profiler (`benchmark/tts/metrics.py`, `ab.py`, and `memory.py`) measuring cold load vs warm inference, Real-Time Factor (RTF), Host RAM, and GPU VRAM. In classroom quiz turns, TTS preloading during student voting yields pure neural generation: **2.290s warm p50** (0.2386x RTF, meeting the $\le 3.0$s SLA).
+  * **Multi-Engine Benchmarking & Accurate Preload Modeling**: Unified profiler (`tools/benchmark/tts/metrics.py`, `ab.py`, and `memory.py`) measuring cold load vs warm inference, Real-Time Factor (RTF), Host RAM, and GPU VRAM. In classroom quiz turns, TTS preloading during student voting yields pure neural generation: **2.290s warm p50** (0.2386x RTF, meeting the $\le 3.0$s SLA).
   * **Dual Memory Tracking (PC VRAM vs Jetson UMA)**: Background sampling (`MemoryMonitor`) capturing recursive child process working sets (`llama-tts.exe`) and GPU VRAM via NVML. Dynamic platform detection (`is_jetson_uma()`) accounts for Jetson Orin Nano's 8GB shared LPDDR5 DRAM architecture.
   * **Context Window Optimization**: Calibrated `TTS_QWEN_CONTEXT=1024` tokens, reclaiming ~325 MB of VRAM compared to 4096 without sacrificing classroom utterance quality.
   * **End-to-End 10-Round Match Suite**: Full match simulation (`test_session_10_round_speech.py`) proving deterministic >51% gating, bilingual dispatch, and first-press locking across 10 rounds.
@@ -60,7 +60,7 @@ This document summarizes the technical deliverables, architectural implementatio
    * `engines/espeak/`: Formant synthesizer implementing `TTSBackend` protocol as ultra-lightweight fallback (`engine.py`, `cli.py`).
    * `router/`: Pluggable dispatcher (`router.py`, `selection.py`) selecting the Spanish tiers (`qwen3-tts`, `sherpa`, `piper`, `espeak`) in quality-first order, routing Mayan K'iche' (`quc_Latn`), falling back gracefully between Spanish tiers, and caching generated audio in an in-memory 32-entry LRU cache.
    * `api/session/speech.py`: Refactored to delegate synthesis directly to `core.tts.synthesize_speech()`.
-4. **Empirical Multi-Engine Benchmark & Memory Profiling (`benchmark/tts/`)**:
+4. **Empirical Multi-Engine Benchmark & Memory Profiling (`tools/benchmark/tts/`)**:
    * Unified benchmarking suite (`metrics.py`, `ab.py`) and memory tracking engine (`memory.py`):
      * Samples Host RAM across the full process tree (`proc.children(recursive=True)`).
      * Measures GPU VRAM using `ctypes` NVML bindings with PyTorch fallback.

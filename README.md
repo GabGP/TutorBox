@@ -109,6 +109,7 @@ TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
 ├── pwa/          # Classroom web clients and static assets
 ├── infra/        # Systemd, Nginx, captive portal, and router runbooks
+├── tools/        # Offline benchmarks and llama.cpp TTS daemon build toolchain
 ├── docs/         # Architecture specs, pedagogy, API documentation, and milestones
 └── run.py        # One-command development and appliance startup runner
 ```

@@ -214,10 +214,10 @@ uv run pytest tests/modes/quiz/ -o addopts="--strict-markers"
 Benchmark speech synthesis latency, Real-Time Factor (RTF), and audio levels on the appliance:
 ```bash
 # Run the TTS profiler CLI:
-uv run python benchmark/tts/metrics.py --engine qwen3-tts
+uv run python tools/benchmark/tts/metrics.py --engine qwen3-tts
 
 # Or run multi-engine comparative A/B sweep:
-uv run python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
+uv run python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
 ```
 Run automated latency SLA assertions ($\le 3.0$ seconds):
 ```bash

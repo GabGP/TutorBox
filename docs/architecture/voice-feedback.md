@@ -84,8 +84,8 @@ The Qwen `12 Hz` label is its codec/token frame rate, not its WAV sample rate. B
 Use the integrated profiler for new measurements:
 
 ```bash
-uv run python benchmark/tts/metrics.py --engine qwen3-tts
-uv run python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
+uv run python tools/benchmark/tts/metrics.py --engine qwen3-tts
+uv run python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
 ```
 
 ## 8. Configuration & Appliance Memory Policy
