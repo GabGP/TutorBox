@@ -10,13 +10,13 @@ Run all commands from the repository root:
 
 ```bash
 # 1. Single-run diagnostic profiler (latency, RTF, sample rate, peak amplitude):
-python benchmark/tts/metrics.py --engine qwen3-tts
+python tools/benchmark/tts/metrics.py --engine qwen3-tts
 
 # 2. Multi-engine A/B comparative sweep (cold start + warm repetitions):
-python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3 --out benchmark/tts/results/
+python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3 --out tools/benchmark/tts/results/
 
 # 3. Full comparative sweep across the candidate engines and complete math corpus:
-python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,kokoro,melo --repeats 5 --all-texts --out benchmark/tts/results/
+python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,kokoro,melo --repeats 5 --all-texts --out tools/benchmark/tts/results/
 ```
 
 > **Note**: TutorBox uses `uv` for dependency management (`uv run python ...`); invoking `python` directly is also supported in the active development environment.
@@ -27,10 +27,10 @@ The integrated `qwen3-tts` backend is the benchmark entry point. `harness_melo.p
 
 ## 2. Benchmark Artifacts & Output Structure
 
-All generated audio files, timing summaries, and profiling data are written to `benchmark/tts/results/` (strictly gitignored via `.gitignore`):
+All generated audio files, timing summaries, and profiling data are written to `tools/benchmark/tts/results/` (strictly gitignored via `.gitignore`):
 
 ```text
-benchmark/tts/results/
+tools/benchmark/tts/results/
   out/
     qwen3-tts_es_0.wav   # Blind audio output for jury evaluation
     sherpa_es_0.wav

@@ -2,7 +2,7 @@
 
 ## Architectural Profile
 - **Architecture**: Multi-lingual VITS variant with speed control and Spanish acoustic checkpoint.
-- **Runtime**: Evaluated via standalone ONNX Runtime harness (`benchmark/tts/harness_melo.py`) using `MiaoMint/MeloTTS-ONNX` Spanish export.
+- **Runtime**: Evaluated via standalone ONNX Runtime harness (`tools/benchmark/tts/harness_melo.py`) using `MiaoMint/MeloTTS-ONNX` Spanish export.
 - **Target Language**: Spanish (`ES`).
 - **License**: MIT
 - **Model Checkpoint**: 170.6 MB ONNX export, 44.1 kHz sampling rate.
@@ -18,7 +18,7 @@
 - **Audio Output**: 44,100 Hz 16-bit mono RIFF/WAV.
 - **Normalized Peak Amplitude**: **0.611** (slightly lower gain than Piper/Sherpa 0.78 target).
 - **Memory Footprint (RSS Delta)**: **+450.15 MB**.
-- **Generated Audio Artifact**: `benchmark/tts/results/out/melo_es_0.wav` (949.0 KB, 11.018s duration).
+- **Generated Audio Artifact**: `tools/benchmark/tts/results/out/melo_es_0.wav` (949.0 KB, 11.018s duration).
 
 ## Findings & Pilot Trade-offs
 1. **Acoustic Fidelity**: The 44.1 kHz output produces high-frequency clarity and expressive prosody, noticeably brighter than 22.05 kHz VITS baselines.

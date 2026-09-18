@@ -2,8 +2,8 @@
 
 Part of TutorBox Phase 3 (Spike Candidate 4).
 Usage:
-    python benchmark/tts/harness_melo.py --text "Hola mundo" --out benchmark/tts/results/out/melo_test.wav
-    python benchmark/tts/harness_melo.py --profile
+    python tools/benchmark/tts/harness_melo.py --text "Hola mundo" --out tools/benchmark/tts/results/out/melo_test.wav
+    python tools/benchmark/tts/harness_melo.py --profile
 """
 
 from __future__ import annotations
@@ -21,14 +21,20 @@ from typing import Any
 import numpy as np
 import onnxruntime as ort
 
-from benchmark.tts.metrics import (
+HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent.parent.parent
+BACKEND_SRC = REPO_ROOT / "backend" / "src"
+if str(BACKEND_SRC) not in sys.path:
+    sys.path.insert(0, str(BACKEND_SRC))
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.benchmark.tts.metrics import (
     BYTES_PER_KB,
     _analyze_wav,
     _rss_mb,
 )
 
-HERE = Path(__file__).resolve().parent
-REPO_ROOT = HERE.parent.parent
 DEFAULT_MODEL_DIR = REPO_ROOT / ".cache" / "models" / "tts" / "melo"
 DEFAULT_SAMPLE_RATE = 44100
 DEFAULT_SPEED = 1.0

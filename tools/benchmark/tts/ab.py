@@ -1,8 +1,8 @@
 """Sweep engines x corpus -> CSV + blind WAVs for jury listening.
 
 Usage (repo root):
-  python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
-  python benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper --repeats 5 --out benchmark/tts/results
+  python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
+  python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper --repeats 5 --out tools/benchmark/tts/results
 """
 
 from __future__ import annotations
@@ -14,8 +14,17 @@ from pathlib import Path
 from typing import Any
 
 HERE = Path(__file__).resolve().parent
+ROOT_DIR = HERE.parent.parent.parent
+BACKEND_SRC = ROOT_DIR / "backend" / "src"
+if str(BACKEND_SRC) not in sys.path:
+    sys.path.insert(0, str(BACKEND_SRC))
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
-from benchmark.tts.metrics import _detect_engine_provider, profile_engine
+from tools.benchmark.tts.metrics import (
+    _detect_engine_provider,
+    profile_engine,
+)
 
 DEFAULT_SWEEP_REPEATS: int = 3
 DEFAULT_SWEEP_ENGINES: str = "qwen3-tts,sherpa,piper,espeak"

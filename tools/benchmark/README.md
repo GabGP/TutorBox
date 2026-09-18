@@ -7,7 +7,7 @@ Comparative evaluations, benchmarks, and acoustic listening tests live here — 
 ## 1. Directory Structure
 
 ```text
-benchmark/
+tools/benchmark/
   README.md                  # Comparative eval guide, hardware constraints & jury scorecard
   tts/
     README.md                # Quick start, SLA gates, and CLI usage
@@ -88,8 +88,8 @@ Benchmarking speech quality is not solely a numbers game; acoustic naturalness a
 
 ```bash
 # Run single-engine baseline check
-python benchmark/tts/metrics.py --engine piper
+python tools/benchmark/tts/metrics.py --engine piper
 
 # Run comparative sweep across engines on the math corpus
-python benchmark/tts/ab.py --engines piper,espeak --repeats 3 --out benchmark/tts/results
+python tools/benchmark/tts/ab.py --engines piper,espeak --repeats 3 --out tools/benchmark/tts/results
 ```

@@ -1,6 +1,6 @@
 """TutorBox TTS comparative benchmark and profiler suite."""
 
-from benchmark.tts.metrics import (
+from tools.benchmark.tts.metrics import (
     EngineStats,
     ProfileResult,
     profile_engine,

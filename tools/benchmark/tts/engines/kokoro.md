@@ -16,7 +16,7 @@
 - **RAM Footprint (RSS Delta)**: +323.42 MB
 - **Sample Rate**: 24,000 Hz
 - **Calibrated Peak Amplitude**: 0.78
-- **Generated Audio Artifact**: `benchmark/tts/results/out/kokoro_es_0.wav`
+- **Generated Audio Artifact**: `tools/benchmark/tts/results/out/kokoro_es_0.wav`
 
 ## Findings & Pilot Trade-offs
 1. **Prosodic Naturalness**: Kokoro-82M delivers rich, conversational Spanish prosody at 24 kHz, with fluid pitch contours compared to VITS.

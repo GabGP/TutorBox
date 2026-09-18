@@ -248,7 +248,5 @@ pwa/app/dist/
 pnpm-debug.log*
 
 # Benchmark evaluation artifacts
+tools/benchmark/**/results/
 benchmark/**/results/
-
-# Upstream source vendors (patched via patches/)
-vendor/

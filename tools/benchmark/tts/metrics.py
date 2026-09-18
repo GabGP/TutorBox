@@ -7,20 +7,21 @@ load duration, and memory footprint).
 
 Usage:
     # Single-run diagnostic CLI:
-    python benchmark/tts/metrics.py --engine piper
+    python tools/benchmark/tts/metrics.py --engine piper
 
     # Programmatic single-run profiler:
-    from benchmark.tts.metrics import profile_speech_synthesis
+    from tools.benchmark.tts.metrics import profile_speech_synthesis
     res = profile_speech_synthesis("Hola mundo", lang="es")
 
     # Multi-engine comparative sweep:
-    from benchmark.tts.metrics import profile_engine
+    from tools.benchmark.tts.metrics import profile_engine
     stats = profile_engine("piper", "Hola mundo", repeats=3)
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib
 import io
 import os
 import statistics
@@ -30,18 +31,20 @@ import time
 import wave
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
-from benchmark.tts.memory import (
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+BACKEND_SRC = ROOT_DIR / "backend" / "src"
+if str(BACKEND_SRC) not in sys.path:
+    sys.path.insert(0, str(BACKEND_SRC))
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from tools.benchmark.tts.memory import (
     MemoryMonitor,
     get_host_rss_mb,
     is_jetson_uma,
 )
-from core.tts.constants import (
-    MILLISECONDS_PER_SECOND,
-    PCM_16BIT_MAX_FLOAT,
-    PCM_SAMPLE_WIDTH_BYTES,
-)
-from core.tts.router import TTSRouter, get_tts_router
 
 __all__ = [
     "BYTES_PER_KB",
@@ -56,6 +59,9 @@ __all__ = [
     "DEFAULT_PROFILE_REPEATS",
     "EngineStats",
     "KILOBYTES_PER_MB",
+    "MILLISECONDS_PER_SECOND",
+    "PCM_16BIT_MAX_FLOAT",
+    "PCM_SAMPLE_WIDTH_BYTES",
     "PERCENTILE_95",
     "ProfileResult",
     "RSS_MEASUREMENT_SCOPE",
@@ -80,6 +86,9 @@ DECIMAL_PLACES_WAV_KB: int = 1
 BYTES_PER_KB: float = 1024.0
 BYTES_PER_MB: float = 1024.0 * 1024.0
 KILOBYTES_PER_MB: float = 1024.0
+MILLISECONDS_PER_SECOND: float = 1000.0
+PCM_SAMPLE_WIDTH_BYTES: int = 2  # 16-bit linear PCM (2 bytes per sample)
+PCM_16BIT_MAX_FLOAT: float = 32768.0
 RSS_MEASUREMENT_SCOPE: str = "parent-process-only"
 
 
@@ -186,15 +195,21 @@ def _rss_mb() -> float:
     return get_host_rss_mb()
 
 
+def _get_tts_router() -> Any:
+    """Lazily loads and returns the active backend TTSRouter singleton."""
+    router_module = importlib.import_module("core.tts.router")
+    return router_module.get_tts_router()
+
+
 def _synthesize_once(
     text: str,
     lang: str = "es",
     voice: str | None = None,
     engine: str | None = None,
-    router: TTSRouter | None = None,
+    router: Any | None = None,
 ) -> tuple[bytes, float]:
     """Synthesizes text once bypassing the LRU cache and returns (wav_bytes, elapsed_seconds)."""
-    active_router = router or get_tts_router()
+    active_router = router or _get_tts_router()
     active_router.clear_cache()
 
     start_time = time.perf_counter()
@@ -268,7 +283,7 @@ def profile_engine(
     NO FALLBACK: If the engine backend or model weights are missing, raises
     TTSUnavailableError immediately so callers can distinguish failures.
     """
-    router = get_tts_router()
+    router = _get_tts_router()
     router.unload(engine)
 
     with MemoryMonitor() as tracker:
@@ -309,7 +324,7 @@ def profile_engine(
     ]
 
     for _ in range(max(0, repeats - 1)):
-        get_tts_router()  # warm path reuses active router and voice
+        _get_tts_router()  # warm path reuses active router and voice
         wav_bytes, warm_wall_latency = _synthesize_once(
             text, lang=lang, voice=voice, engine=engine
         )
@@ -344,23 +359,22 @@ def _detect_engine_provider(engine: str) -> str:
     """Returns the resolved execution provider ('cpu' or 'cuda') for an engine."""
     if engine in ("qwen3-tts", "qwen"):
         try:
-            from core.tts.engines.qwen.models import detect_qwen_provider
-
-            return detect_qwen_provider()
+            qwen_models = importlib.import_module("core.tts.engines.qwen.models")
+            return qwen_models.detect_qwen_provider()
         except Exception:
             return "cpu"
     if engine in ("kokoro", "sherpa"):
         try:
-            from core.config import get_settings
-            from core.tts.engines.provider import resolve_execution_provider
+            config_module = importlib.import_module("core.config")
+            provider_module = importlib.import_module("core.tts.engines.provider")
 
-            tts_cfg = get_settings().tts
+            tts_cfg = config_module.get_settings().tts
             cfg_val = (
                 tts_cfg.kokoro_provider
                 if engine == "kokoro"
                 else tts_cfg.sherpa_provider
             )
-            return resolve_execution_provider(cfg_val)
+            return provider_module.resolve_execution_provider(cfg_val)
         except Exception:
             return "cpu"
     return "cpu"
