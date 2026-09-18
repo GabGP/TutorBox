@@ -9,7 +9,7 @@ This directory contains upstream patches applied to [`llama.cpp`](https://github
 * **Repository**: `https://github.com/ggerganov/llama.cpp.git`
 * **Pinned Release / Tag**: `b11002`
 * **Upstream Git Commit**: `83078fec0`
-* **License**: MIT License (Preserved in [`patches/LICENSE-llama.cpp`](./LICENSE-llama.cpp) and deployed to [`.cache/bin/llama.cpp/LICENSE-llama.cpp`](../.cache/bin/llama.cpp/LICENSE-llama.cpp)).
+* **License**: MIT License (Preserved in [`LICENSE-llama.cpp`](./LICENSE-llama.cpp) and deployed to [`.cache/bin/llama.cpp/LICENSE-llama.cpp`](../../.cache/bin/llama.cpp/LICENSE-llama.cpp)).
 
 ---
 
@@ -39,13 +39,13 @@ To build and install the daemon binary into `.cache/bin/llama.cpp/`, run:
 
 ```bash
 # Standard automated build (detects CUDA or falls back to CPU, multithreaded Ninja build)
-python scripts/build_llama_tts.py
+python tools/llama-tts-daemon/build.py
 
 # Force clean re-clone and re-compilation
-python scripts/build_llama_tts.py --force
+python tools/llama-tts-daemon/build.py --force
 
 # Force CPU-only build (disables -DGGML_CUDA=ON)
-python scripts/build_llama_tts.py --cpu-only
+python tools/llama-tts-daemon/build.py --cpu-only
 ```
 
 Alternatively, `run.py` can automatically invoke compilation:
@@ -71,7 +71,7 @@ If compiling manually from source without the helper script:
 
 2. **Apply TutorBox daemon patch**:
    ```bash
-   git apply ../../../patches/0001-llama-tts-daemon-mode.patch
+   git apply ../../../tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch
    ```
 
 3. **Configure & Build with CMake (Multithreaded)**:
@@ -90,11 +90,11 @@ If compiling manually from source without the helper script:
    mkdir -p ../../bin/llama.cpp/
    cp build/bin/llama-tts ../../bin/llama.cpp/llama-tts-daemon
    cp build/bin/*.dll ../../bin/llama.cpp/
-   cp ../../../patches/LICENSE-llama.cpp ../../bin/llama.cpp/LICENSE-llama.cpp
+   cp ../../../tools/llama-tts-daemon/LICENSE-llama.cpp ../../bin/llama.cpp/LICENSE-llama.cpp
    ```
 
 ---
 
 ## 5. License & Attribution Notice
 
-`llama.cpp` and its tools are licensed under the MIT License by Georgi Gerganov and contributors. All modifications made in `patches/` respect upstream license conditions. The MIT license text is bundled alongside binary distributions in `.cache/bin/llama.cpp/LICENSE-llama.cpp`.
+`llama.cpp` and its tools are licensed under the MIT License by Georgi Gerganov and contributors. All modifications made in this directory respect upstream license conditions. The MIT license text is bundled alongside binary distributions in `.cache/bin/llama.cpp/LICENSE-llama.cpp`.

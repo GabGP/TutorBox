@@ -2,13 +2,13 @@
 """Automated Build & Patch Tool for TutorBox Qwen3-TTS Daemon.
 
 Clones pinned upstream llama.cpp (b11002), applies the persistent daemon patch
-(patches/0001-llama-tts-daemon-mode.patch), compiles the binary with CUDA or CPU,
+(0001-llama-tts-daemon-mode.patch), compiles the binary with CUDA or CPU,
 and installs llama-tts-daemon into .cache/bin/llama/ alongside its MIT license.
 
 Usage:
-    python scripts/build_llama_tts.py
-    python scripts/build_llama_tts.py --force
-    python scripts/build_llama_tts.py --cpu-only
+    python tools/llama-tts-daemon/build.py
+    python tools/llama-tts-daemon/build.py --force
+    python tools/llama-tts-daemon/build.py --cpu-only
 """
 
 from __future__ import annotations
@@ -21,12 +21,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+DAEMON_DIR = Path(__file__).resolve().parent
+ROOT_DIR = DAEMON_DIR.parent.parent
 SOURCE_DIR = ROOT_DIR / ".cache" / "build" / "llama.cpp"
 BUILD_DIR = SOURCE_DIR / "build"
-PATCH_FILE = ROOT_DIR / "patches" / "0001-llama-tts-daemon-mode.patch"
+PATCH_FILE = DAEMON_DIR / "0001-llama-tts-daemon-mode.patch"
 CACHE_BIN_DIR = ROOT_DIR / ".cache" / "bin" / "llama.cpp"
-LICENSE_SRC = ROOT_DIR / "patches" / "LICENSE-llama.cpp"
+LICENSE_SRC = DAEMON_DIR / "LICENSE-llama.cpp"
 
 PINNED_TAG = "b11002"
 UPSTREAM_REPO = "https://github.com/ggerganov/llama.cpp.git"

@@ -133,8 +133,8 @@ def resolve_llama_daemon() -> Path | None:
 
 
 def build_llama(force: bool = False) -> bool:
-    """Invokes scripts/build_llama_tts.py to compile and install the daemon binary."""
-    script = ROOT_DIR / "scripts" / "build_llama_tts.py"
+    """Invokes tools/llama-tts-daemon/build.py to compile and install the daemon binary."""
+    script = ROOT_DIR / "tools" / "llama-tts-daemon" / "build.py"
     if not script.is_file():
         print(f"{TAG_FAIL} Build script not found at {script}")
         return False
@@ -183,7 +183,7 @@ def check_prerequisites() -> None:
         print(f"{TAG_OK} Found Qwen3-TTS daemon: {daemon_bin}")
     else:
         print(
-            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python scripts/build_llama_tts.py' or '--build-llama' to compile."
+            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python tools/llama-tts-daemon/build.py' or '--build-llama' to compile."
         )
 
     # 4. pnpm check
