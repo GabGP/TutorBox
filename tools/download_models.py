@@ -51,9 +51,7 @@ def _safe_extract_tar(tar_path: Path, target_dir: Path) -> None:
         for member in archive.getmembers():
             target_path = (target_dir / member.name).resolve()
             if not str(target_path).startswith(str(target_dir.resolve())):
-                raise RuntimeError(
-                    f"Path traversal detected in archive: {member.name}"
-                )
+                raise RuntimeError(f"Path traversal detected in archive: {member.name}")
         archive.extractall(path=target_dir)
 
 
@@ -140,7 +138,11 @@ def generate_sherpa_model(
     onnx_path: Path, onnx_json_path: Path, output_sherpa_path: Path, force: bool = False
 ) -> bool:
     """Injects VITS metadata into Piper ONNX model for Sherpa-ONNX compatibility."""
-    if output_sherpa_path.is_file() and output_sherpa_path.stat().st_size > 0 and not force:
+    if (
+        output_sherpa_path.is_file()
+        and output_sherpa_path.stat().st_size > 0
+        and not force
+    ):
         return True
     if not onnx_path.is_file() or not onnx_json_path.is_file():
         return False

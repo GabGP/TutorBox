@@ -29,7 +29,9 @@ def test_create_offline_tts_import_error():
     cfg = TTSConfig()
     with (
         patch.dict("sys.modules", {"sherpa_onnx": None}),
-        pytest.raises(TTSUnavailableError, match="sherpa-onnx runtime is not installed"),
+        pytest.raises(
+            TTSUnavailableError, match="sherpa-onnx runtime is not installed"
+        ),
     ):
         runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
 
@@ -44,7 +46,9 @@ def test_create_offline_tts_cuda_fallback_cpu_failure():
     ]
     with (
         patch.dict("sys.modules", {"sherpa_onnx": mock_sherpa}),
-        pytest.raises(TTSUnavailableError, match="Failed to initialize Sherpa-ONNX on CPU"),
+        pytest.raises(
+            TTSUnavailableError, match="Failed to initialize Sherpa-ONNX on CPU"
+        ),
     ):
         runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
 
@@ -55,7 +59,9 @@ def test_create_offline_tts_cpu_direct_failure():
     mock_sherpa.OfflineTts.side_effect = RuntimeError("Broken model file")
     with (
         patch.dict("sys.modules", {"sherpa_onnx": mock_sherpa}),
-        pytest.raises(TTSUnavailableError, match="Failed to initialize Sherpa-ONNX: Broken model"),
+        pytest.raises(
+            TTSUnavailableError, match="Failed to initialize Sherpa-ONNX: Broken model"
+        ),
     ):
         runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
 
@@ -65,4 +71,3 @@ def test_find_espeak_data_import_error(tmp_path):
 
     with patch("importlib.util.find_spec", side_effect=ImportError("No piper")):
         assert _find_espeak_data(tmp_path) is None or True
-

@@ -235,4 +235,3 @@ def test_resolve_python_when_found(tmp_path, monkeypatch):
     py_bin.write_text("")
     monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", str(tmp_path))
     assert run.resolve_python() == str(py_bin)
-

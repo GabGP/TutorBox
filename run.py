@@ -110,9 +110,7 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
         [resolved_pnpm, "run", "build"], cwd=str(PWA_APP_DIR), check=False
     )
     if build_res.returncode != 0:
-        print(
-            f"{TAG_FAIL} PWA frontend build failed. Check compilation errors above."
-        )
+        print(f"{TAG_FAIL} PWA frontend build failed. Check compilation errors above.")
         _print_fail_fast_hint()
         return False
 
@@ -216,9 +214,7 @@ def check_prerequisites() -> None:
     # 5. Neural voice models check
     missing_models = check_voice_models()
     if missing_models:
-        print(
-            f"{TAG_WARN} Missing neural voice models: {', '.join(missing_models)}."
-        )
+        print(f"{TAG_WARN} Missing neural voice models: {', '.join(missing_models)}.")
         print(
             "       Spoken feedback (>51% rule) will fall back to available engines or eSpeak-ng."
         )

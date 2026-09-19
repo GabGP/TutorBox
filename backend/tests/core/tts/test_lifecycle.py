@@ -180,7 +180,9 @@ def test_router_preload_auto_all_engines_fail() -> None:
         sherpa=mock_sherpa,
         qwen=mock_qwen,
     )
-    with pytest.raises(TTSUnavailableError, match="All auto-tier TTS engines failed to preload"):
+    with pytest.raises(
+        TTSUnavailableError, match="All auto-tier TTS engines failed to preload"
+    ):
         router.preload(engine="auto")
 
 
@@ -210,4 +212,3 @@ def test_router_preload_auto_no_backends_available() -> None:
     )
     with pytest.raises(TTSUnavailableError, match="No TTS engine available"):
         router.preload(engine="auto")
-

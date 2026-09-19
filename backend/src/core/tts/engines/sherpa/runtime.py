@@ -54,9 +54,7 @@ def create_offline_tts(
             num_threads=tts_cfg.sherpa_threads,
             provider=provider,
         )
-        return sherpa_onnx.OfflineTts(
-            sherpa_onnx.OfflineTtsConfig(model=model_config)
-        )
+        return sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(model=model_config))
     except Exception as err:
         if provider == "cuda":
             logger.info("Sherpa CUDA init unavailable; falling back to CPU: %s", err)
