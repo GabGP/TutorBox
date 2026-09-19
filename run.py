@@ -251,6 +251,22 @@ def resolve_uv() -> str:
     return "uv"
 
 
+def sync_backend(uv_cmd: str | None = None) -> bool:
+    """Synchronizes backend dependencies with all extras into the target virtualenv."""
+    resolved_uv = uv_cmd or resolve_uv()
+    print(f"{TAG_BUILD} Synchronizing backend dependencies (uv sync --all-extras)...")
+    res = subprocess.run(
+        [resolved_uv, "sync", "--all-extras", "--directory", str(BACKEND_DIR)],
+        cwd=str(ROOT_DIR),
+        check=False,
+    )
+    if res.returncode != 0:
+        print(f"{TAG_FAIL} Failed to synchronize backend dependencies.")
+        return False
+    print(f"{TAG_OK} Backend dependencies successfully synchronized.")
+    return True
+
+
 def load_env(env_path: Path) -> None:
     """Loads key-value pairs from an env file into os.environ if not already defined."""
     if not env_path.is_file():
@@ -291,6 +307,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--no-build", action="store_true", help="Skip frontend PWA compilation"
+    )
+    parser.add_argument(
+        "--no-sync",
+        action="store_true",
+        help="Skip backend dependency synchronization (uv sync --all-extras)",
     )
     parser.add_argument(
         "--build-llama",
@@ -345,11 +366,16 @@ def main() -> None:
     if args.check_only:
         return
 
+    uv_cmd = resolve_uv()
+    if not args.no_sync:
+        if not sync_backend(uv_cmd):
+            sys.exit(1)
+        print("--------------------------------------------------")
+
     if not args.no_build:
         build_pwa()
         print("--------------------------------------------------")
 
-    uv_cmd = resolve_uv()
     cmd = [
         uv_cmd,
         "run",

@@ -196,11 +196,13 @@ def test_main_no_build(monkeypatch):
 
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_pwa") as mock_build,
         patch("subprocess.run") as mock_sub,
         patch("pathlib.Path.is_file", fake_is_file),
     ):
         run.main()
+        mock_sync.assert_called_once()
         mock_build.assert_not_called()
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
@@ -212,11 +214,13 @@ def test_main_omits_log_config_when_missing(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["run.py", "--no-build"])
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_pwa"),
         patch("subprocess.run") as mock_sub,
         patch("pathlib.Path.is_file", return_value=False),
     ):
         run.main()
+        mock_sync.assert_called_once()
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
         assert "--log-config" not in cmd
@@ -294,6 +298,58 @@ def test_main_build_llama_failure_exits(monkeypatch):
     with (
         patch("run.check_prerequisites"),
         patch("run.build_llama", return_value=False),
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        run.main()
+    assert exc_info.value.code == 1
+
+
+def test_sync_backend_success():
+    """Verifies sync_backend executes uv sync --all-extras on backend directory."""
+    with patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(args=[], returncode=0),
+    ) as mock_sub:
+        assert run.sync_backend("/mock/bin/uv") is True
+        assert mock_sub.call_count == 1
+        cmd = mock_sub.call_args[0][0]
+        assert cmd[:3] == ["/mock/bin/uv", "sync", "--all-extras"]
+        assert "--directory" in cmd
+        assert "backend" in str(cmd[cmd.index("--directory") + 1])
+
+
+def test_sync_backend_failure():
+    """Verifies sync_backend returns False when uv sync exits with non-zero code."""
+    with patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(args=[], returncode=1),
+    ):
+        assert run.sync_backend("/mock/bin/uv") is False
+
+
+def test_main_no_sync_flag(monkeypatch):
+    """Verifies --no-sync skips sync_backend execution."""
+    monkeypatch.setattr(sys, "argv", ["run.py", "--no-sync", "--no-build"])
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.sync_backend") as mock_sync,
+        patch("run.build_pwa"),
+        patch("subprocess.run") as mock_sub,
+        patch("pathlib.Path.is_file", return_value=False),
+    ):
+        run.main()
+        mock_sync.assert_not_called()
+        mock_sub.assert_called_once()
+
+
+def test_main_sync_failure_exits(monkeypatch):
+    """Verifies sync failure causes main to exit with code 1."""
+    import pytest
+
+    monkeypatch.setattr(sys, "argv", ["run.py", "--no-build"])
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=False),
         pytest.raises(SystemExit) as exc_info,
     ):
         run.main()
