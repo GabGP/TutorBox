@@ -59,7 +59,7 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
   if (step === 'question' && q) {
     const isClosed = round.status === 'closed';
     const qHelp = isClosed
-      ? 'Tiempo terminado. Nadie más puede responder.'
+      ? 'Votación cerrada. Nadie más puede responder.'
       : round.time_remaining == null
       ? 'Sin cronómetro (el servidor se reinició). Termine la pregunta cuando quiera.'
       : '';

@@ -77,10 +77,10 @@ export const sessionApi = {
    * Closes the active round's voting window via `POST /session/{id}/close`.
    *
    * @param {string} id - Session UUID.
-   * @returns {Promise<void>}
+   * @returns {Promise<SessionModel>} Updated session snapshot with round in closed state.
    */
-  async closeRound(id: string): Promise<void> {
-    await requestApi('POST', `/session/${id}/close`);
+  async closeRound(id: string): Promise<SessionModel> {
+    return requestApi<SessionModel>('POST', `/session/${id}/close`);
   },
 
   /**

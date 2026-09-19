@@ -39,7 +39,7 @@ export function useTeacherCoordinator(
   const [history, setHistory] = useState<StoredRoundHistory[]>([]);
   const [report, setReport] = useState<SessionReport | null>(null);
 
-  const { session, setSession, refresh, error: sessionErr } = useSessionEngine({
+  const { session, setSession, error: sessionErr } = useSessionEngine({
     targetSessionId: sid,
     enabled: enabled && Boolean(sid),
   });
@@ -81,7 +81,7 @@ export function useTeacherCoordinator(
     ) {
       if (closingRef.current !== round.round_id) {
         closingRef.current = round.round_id;
-        sessionApi.closeRound(sid).then(refresh).catch(() => {});
+        sessionApi.closeRound(sid).then(setSession).catch(() => {});
       }
     }
     if (sid && round && round.status === 'revealed' && round.result && round.question) {
@@ -105,7 +105,7 @@ export function useTeacherCoordinator(
         sessionApi.getSessionReport(sid).then(setReport).catch(() => {});
       }
     }
-  }, [session, sid, report, refresh, unloadIfLoaded]);
+  }, [session, sid, report, setSession, unloadIfLoaded]);
 
   const advancePrimary = useCallback(async () => {
     if (!session) {
@@ -136,7 +136,16 @@ export function useTeacherCoordinator(
       setSession(started);
     } else if (session.status === 'active') {
       const r = session.current_round;
-      if (r?.status === 'open' || r?.status === 'closed') {
+      if (r?.status === 'open') {
+        unlockAudio();
+        try {
+          const closed = await sessionApi.closeRound(session.id);
+          setSession(closed);
+        } catch {
+          const updated = await sessionApi.getSessionById(session.id);
+          setSession(updated);
+        }
+      } else if (r?.status === 'closed') {
         unlockAudio();
         await sessionApi.revealRound(session.id);
         const updated = await sessionApi.getSessionById(session.id);

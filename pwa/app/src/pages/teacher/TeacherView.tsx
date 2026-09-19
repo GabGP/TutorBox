@@ -36,10 +36,18 @@ export const TeacherView: React.FC = () => {
     enabled: isStaff,
   });
 
-  const { state: speechState, message: speechMsg, speak, stopPlayback } = useSpeechPlayback(
+  const { state: speechState, message: speechMsg, speak, prefetch, stopPlayback } = useSpeechPlayback(
     coordinator.sid,
     voiceLang
   );
+
+  const curRound = coordinator.session?.current_round;
+
+  useEffect(() => {
+    if (curRound?.status === 'closed') {
+      void prefetch(curRound.round_index);
+    }
+  }, [curRound?.round_id, curRound?.status, curRound?.round_index, prefetch]);
 
   useEffect(() => {
     if (user && !['teacher', 'admin'].includes(user.role)) {
@@ -54,8 +62,6 @@ export const TeacherView: React.FC = () => {
   } else if (coordinator.session?.status === 'completed') {
     step = 'stats';
   }
-
-  const curRound = coordinator.session?.current_round;
 
   const handlePlaySpeech = useCallback(() => {
     if (curRound) speak(curRound.round_index);
@@ -80,22 +86,12 @@ export const TeacherView: React.FC = () => {
   }, [step, stopPlayback, logout, coordinator]);
 
   if (!user || !['teacher', 'admin'].includes(user.role) || mustChangePin) {
-    return (
-      <TeacherAuthView
-        mustChangePin={mustChangePin}
-        pendingPin={pendingPin}
-        roleError={roleError}
-        onLogin={async (u, p) => (setRoleError(null), login(u, p))}
-        onPinChange={handlePinChange}
-      />
-    );
+    return <TeacherAuthView mustChangePin={mustChangePin} pendingPin={pendingPin} roleError={roleError} onLogin={async (u, p) => (setRoleError(null), login(u, p))} onPinChange={handlePinChange} />;
   }
 
   const [subtitle, title] = TEACHER_STEP_TITLES[step] || ['TutorBox', 'Panel'];
   const isLast = (coordinator.session?.current_round_index ?? 0) + 1 >= (coordinator.session?.question_count ?? 0);
-  const isClosed = curRound?.status === 'closed';
-
-  const primaryText = getPrimaryActionLabel(step, coordinator.isGenerating, isClosed, isLast);
+  const primaryText = getPrimaryActionLabel(step, coordinator.isGenerating, curRound?.status === 'closed', isLast);
   const secondaryText = SECONDARY_ACTION_LABELS[step];
   const wizardIdx = ['topic', 'count', 'lobby'].indexOf(step);
 

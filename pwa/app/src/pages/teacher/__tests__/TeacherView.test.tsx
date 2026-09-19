@@ -47,6 +47,7 @@ describe('TeacherView Component', () => {
       message: '',
       currentRound: -1,
       speak: vi.fn(),
+      prefetch: vi.fn(),
       stopPlayback: vi.fn(),
     });
   });
@@ -175,5 +176,70 @@ describe('TeacherView Component', () => {
     const primaryBtn = screen.getByRole('button', { name: /Creando preguntas/ });
     expect(primaryBtn).toBeDisabled();
     expect(primaryBtn.className).not.toContain('ok');
+  });
+
+  it('triggers speech prefetching when round enters closed status', () => {
+    const mockPrefetch = vi.fn();
+    vi.mocked(useSpeechPlayback).mockReturnValue({
+      state: 'idle',
+      message: '',
+      currentRound: -1,
+      speak: vi.fn(),
+      prefetch: mockPrefetch,
+      stopPlayback: vi.fn(),
+    });
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 't1', username: 'profe', role: 'teacher' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useTeacherCoordinator).mockReturnValue({
+      sid: 's1',
+      wizard: 'topic',
+      setWizard: vi.fn(),
+      topic: 'math',
+      setTopic: vi.fn(),
+      count: 10,
+      setCount: vi.fn(),
+      topics: [],
+      session: {
+        id: 's1',
+        title: 'Math',
+        topic: 'math',
+        question_count: 5,
+        current_round_index: 0,
+        status: 'active',
+        created_at: '',
+        current_round: {
+          round_id: 'r1',
+          round_index: 0,
+          status: 'closed',
+          duration_seconds: 20,
+          time_remaining: 0,
+          votes_cast: 5,
+          question: {
+            id: 'q1',
+            question_text: '¿1+1?',
+            options: { A: '2', B: '3' },
+          },
+        },
+      },
+      progress: null,
+      isGenerating: false,
+      genError: null,
+      history: [],
+      report: null,
+      advancePrimary: vi.fn(),
+      resetSession: vi.fn(),
+    });
+
+    render(<TeacherView />);
+    expect(mockPrefetch).toHaveBeenCalledWith(0);
   });
 });
