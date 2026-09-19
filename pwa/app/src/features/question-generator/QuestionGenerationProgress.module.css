@@ -61,6 +61,12 @@
   z-index: 2;
 }
 
+.orbitCoreDone {
+  background: var(--ok-bg, #d7ead9);
+  color: var(--ok, #14532b);
+  font-weight: 700;
+}
+
 .titles {
   display: flex;
   flex-direction: column;

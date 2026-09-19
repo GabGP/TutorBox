@@ -25,41 +25,40 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
 }) => {
   const failed = progress?.failed || 0;
 
-  if (progress && !session) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
-        <QuestionGenerationProgress progress={progress} />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
+      {progress ? (
+        <QuestionGenerationProgress
+          progress={progress}
+          isComplete={Boolean(session)}
+        />
+      ) : (
+        <div className={styles.hero}>
+          <div>
+            <div className={styles.lbl} id="heroLbl">
+              PREGUNTAS LISTAS
+            </div>
+            <div className={styles.big} id="heroBig">
+              {session ? session.question_count : ''}
+            </div>
+          </div>
+          <div>
+            <div className={styles.lbl}>ENTRAN EN</div>
+            <div className={styles.addr} id="addr">
+              {hostAddress}
+            </div>
+          </div>
+        </div>
+      )}
 
+      {progress && (
         <div className={styles.connectionCard}>
           <span className={styles.connectionLabel}>ENTRAN EN</span>
           <span className={styles.connectionAddr} id="addr">
             {hostAddress}
           </span>
         </div>
-
-        <RosterTable {...rosterProps} />
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
-      <div className={styles.hero}>
-        <div>
-          <div className={styles.lbl} id="heroLbl">
-            PREGUNTAS LISTAS
-          </div>
-          <div className={styles.big} id="heroBig">
-            {session ? session.question_count : ''}
-          </div>
-        </div>
-        <div>
-          <div className={styles.lbl}>ENTRAN EN</div>
-          <div className={styles.addr} id="addr">
-            {hostAddress}
-          </div>
-        </div>
-      </div>
+      )}
 
       <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }} id="genHelp">
         Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.

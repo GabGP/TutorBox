@@ -117,4 +117,15 @@ describe('QuestionGenerationProgress Component', () => {
     expect(formatDuration(60, true)).toBe('~1 min');
     expect(formatDuration(153, true)).toBe('~2 min 33s');
   });
+
+  it('renders completed state when all questions are done or isComplete is true', () => {
+    render(<QuestionGenerationProgress progress={{ ...mockProgress, done: 5 }} isComplete />);
+
+    expect(screen.getByText('¡Preguntas listas para jugar!')).toBeInTheDocument();
+    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(screen.getByText('✓ Preguntas y distractores pedagógicos verificados con éxito.')).toBeInTheDocument();
+    const pills = screen.getAllByRole('listitem');
+    expect(pills).toHaveLength(5);
+    pills.forEach((pill) => expect(pill).toHaveTextContent(/✓ P/));
+  });
 });
