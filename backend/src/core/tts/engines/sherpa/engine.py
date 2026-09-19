@@ -60,6 +60,11 @@ class SherpaBackend:
         if not tts_cfg.enabled:
             raise TTSUnavailableError("Speech synthesis is disabled.")
 
+        try:
+            import sherpa_onnx  # noqa: F401
+        except ImportError as err:
+            raise TTSUnavailableError("sherpa-onnx runtime is not installed.") from err
+
         ensure_ort_dll_directory()
         model_name = self._resolve_model(voice)
         model_path, tokens_path, data_dir = resolve_sherpa_paths(model_name)
