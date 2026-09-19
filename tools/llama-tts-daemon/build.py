@@ -27,7 +27,7 @@ SOURCE_DIR = ROOT_DIR / ".cache" / "build" / "llama.cpp"
 BUILD_DIR = SOURCE_DIR / "build"
 PATCH_FILE = DAEMON_DIR / "0001-llama-tts-daemon-mode.patch"
 CACHE_BIN_DIR = ROOT_DIR / ".cache" / "bin" / "llama.cpp"
-LICENSE_SRC = DAEMON_DIR / "LICENSE-llama.cpp"
+LICENSE_SRC = DAEMON_DIR / "LICENSE-llama-cpp"
 
 PINNED_TAG = "b11002"
 UPSTREAM_REPO = "https://github.com/ggerganov/llama.cpp.git"
@@ -273,7 +273,7 @@ def install_artifacts() -> None:
         sys.exit(1)
 
     daemon_dest = CACHE_BIN_DIR / f"llama-tts-daemon{ext}"
-    license_dest = CACHE_BIN_DIR / "LICENSE-llama.cpp"
+    license_dest = CACHE_BIN_DIR / "LICENSE-llama-cpp"
 
     shutil.copy2(found_bin, daemon_dest)
     if not os.access(daemon_dest, os.X_OK) and platform.system() != "Windows":

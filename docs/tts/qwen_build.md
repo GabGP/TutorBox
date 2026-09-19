@@ -46,7 +46,7 @@ TutorBox uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish acou
 | **Upstream Base** | [`ggerganov/llama.cpp`](https://github.com/ggerganov/llama.cpp) |
 | **Pinned Release** | `b11002` (commit `83078fec0`) |
 | **Patch Location** | [`tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch`](../../tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch) |
-| **License** | MIT License ([`tools/llama-tts-daemon/LICENSE-llama.cpp`](../../tools/llama-tts-daemon/LICENSE-llama.cpp)) |
+| **License** | MIT License ([`tools/llama-tts-daemon/LICENSE-llama-cpp`](../../tools/llama-tts-daemon/LICENSE-llama-cpp)) |
 | **Installation Directory** | `.cache/bin/llama.cpp/` |
 
 ---
@@ -105,7 +105,7 @@ After a successful build, the following files are installed into `.cache/bin/lla
 .cache/bin/llama.cpp/
 ├── llama-tts-daemon (.exe)   <- Patched interactive daemon binary
 ├── *.dll / *.so              <- Dynamic runtime libraries (llama.dll, ggml*.dll)
-└── LICENSE-llama.cpp         <- Upstream MIT license notice
+└── LICENSE-llama-cpp         <- Upstream MIT license notice
 ```
 
 The daemon can be verified directly:

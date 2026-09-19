@@ -9,7 +9,7 @@ This directory contains upstream patches applied to [`llama.cpp`](https://github
 * **Repository**: `https://github.com/ggerganov/llama.cpp.git`
 * **Pinned Release / Tag**: `b11002`
 * **Upstream Git Commit**: `83078fec0`
-* **License**: MIT License (Preserved in [`LICENSE-llama.cpp`](./LICENSE-llama.cpp) and deployed to [`.cache/bin/llama.cpp/LICENSE-llama.cpp`](../../.cache/bin/llama.cpp/LICENSE-llama.cpp)).
+* **License**: MIT License (Preserved in [`LICENSE-llama-cpp`](./LICENSE-llama-cpp) and deployed to [`.cache/bin/llama.cpp/LICENSE-llama-cpp`](../../.cache/bin/llama.cpp/LICENSE-llama-cpp)).
 
 ---
 
@@ -90,11 +90,11 @@ If compiling manually from source without the helper script:
    mkdir -p ../../bin/llama.cpp/
    cp build/bin/llama-tts ../../bin/llama.cpp/llama-tts-daemon
    cp build/bin/*.dll ../../bin/llama.cpp/
-   cp ../../../tools/llama-tts-daemon/LICENSE-llama.cpp ../../bin/llama.cpp/LICENSE-llama.cpp
+   cp ../../../tools/llama-tts-daemon/LICENSE-llama-cpp ../../bin/llama.cpp/LICENSE-llama-cpp
    ```
 
 ---
 
 ## 5. License & Attribution Notice
 
-`llama.cpp` and its tools are licensed under the MIT License by Georgi Gerganov and contributors. All modifications made in this directory respect upstream license conditions. The MIT license text is bundled alongside binary distributions in `.cache/bin/llama.cpp/LICENSE-llama.cpp`.
+`llama.cpp` and its tools are licensed under the MIT License by Georgi Gerganov and contributors. All modifications made in this directory respect upstream license conditions. The MIT license text is bundled alongside binary distributions in `.cache/bin/llama.cpp/LICENSE-llama-cpp`.
