@@ -1,0 +1,2 @@
+# Preserve LF endings on patch files to prevent git apply corruption
+*.patch text eol=lf

@@ -8,13 +8,13 @@ index 6fd1936..7365941 100644
  #include <string>
 +#include <iostream>
 +#include <sstream>
-
+ 
  /**
   * Please note that this is NOT a production-ready binary.
 @@ -47,6 +49,18 @@ int main(int argc, char ** argv) {
-
+ 
      common_init();
-
+ 
 +    bool is_daemon = false;
 +    int new_argc = 1;
 +    for (int i = 1; i < argc; i++) {
@@ -32,7 +32,7 @@ index 6fd1936..7365941 100644
      }
 @@ -54,8 +68,12 @@ int main(int argc, char ** argv) {
      mtmd_helper_log_set(common_log_default_callback, nullptr);
-
+ 
      if (params.prompt.empty()) {
 -        LOG_ERR("no prompt provided, use -p \"text\"\n");
 -        return 1;
@@ -48,7 +48,7 @@ index 6fd1936..7365941 100644
 @@ -111,6 +129,148 @@ int main(int argc, char ** argv) {
          speaker_bitmap.reset(wrapper.bitmap);
      }
-
+ 
 +    if (is_daemon) {
 +        // Warm up CUDA graph / memory buffers with a fast generation pass
 +        {

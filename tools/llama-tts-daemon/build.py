@@ -162,6 +162,7 @@ def apply_patch(force: bool = False) -> None:
             "-C",
             str(SOURCE_DIR),
             "apply",
+            "--whitespace=nowarn",
             "--reverse",
             "--check",
             str(PATCH_FILE),
@@ -174,7 +175,7 @@ def apply_patch(force: bool = False) -> None:
         return
 
     print(f"{TAG_INFO} Applying patch: {PATCH_FILE.name}...")
-    run_cmd(["git", "-C", str(SOURCE_DIR), "apply", str(PATCH_FILE)])
+    run_cmd(["git", "-C", str(SOURCE_DIR), "apply", "--whitespace=nowarn", str(PATCH_FILE)])
     print(f"{TAG_OK} Successfully applied daemon mode patch.")
 
 
