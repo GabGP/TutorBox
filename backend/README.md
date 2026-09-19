@@ -146,6 +146,8 @@ You can start the full stack directly using the root runner (which verifies `pnp
 ./run.py --no-build
 # or skip dependency synchronization:
 ./run.py --no-sync
+# or download neural voice models (all, qwen, kokoro, minimal):
+./run.py --download-models all
 # or via uv directly:
 uv run --directory backend uvicorn main:app --app-dir src --reload
 ```

@@ -208,7 +208,7 @@ def check_prerequisites() -> None:
             "       Spoken feedback (>51% rule) will fall back to available engines or eSpeak-ng."
         )
         print(
-            "       To download models: python tools/download_models.py [--target minimal|kokoro|qwen|all]"
+            "       To download models: ./run.py --download-models [all|qwen|kokoro|minimal]"
         )
     else:
         print(
