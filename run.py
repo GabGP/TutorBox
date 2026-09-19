@@ -33,7 +33,7 @@ os.environ.setdefault("PYTHONPYCACHEPREFIX", str(_PYCACHE_DIR))
 if getattr(sys, "pycache_prefix", None) is None:
     try:
         sys.pycache_prefix = str(_PYCACHE_DIR)
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
 # Console output tags and shared PWA messages (single source of truth for
@@ -132,13 +132,28 @@ def resolve_llama_daemon() -> Path | None:
     return Path(which_daemon).resolve() if which_daemon else None
 
 
-def build_llama(force: bool = False) -> bool:
+def resolve_python() -> str:
+    """Returns the virtualenv Python executable if available, else sys.executable."""
+    raw_venv = os.environ.get("UV_PROJECT_ENVIRONMENT")
+    venv_path = Path(raw_venv) if raw_venv else ROOT_DIR / ".cache" / "venv"
+    ext = ".exe" if os.name == "nt" else ""
+    for candidate in [
+        venv_path / "Scripts" / f"python{ext}",
+        venv_path / "bin" / f"python{ext}",
+    ]:
+        if candidate.is_file():
+            return str(candidate)
+    return sys.executable
+
+
+def build_llama(force: bool = False, python_bin: str | None = None) -> bool:
     """Invokes tools/llama-tts-daemon/build.py to compile and install the daemon binary."""
     script = ROOT_DIR / "tools" / "llama-tts-daemon" / "build.py"
     if not script.is_file():
         print(f"{TAG_FAIL} Build script not found at {script}")
         return False
-    cmd = [sys.executable, str(script)]
+    py_exec = python_bin or resolve_python()
+    cmd = [py_exec, str(script)]
     if force:
         cmd.append("--force")
     res = subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
@@ -341,13 +356,26 @@ def main() -> None:
     check_prerequisites()
     print("--------------------------------------------------")
 
+    if args.check_only and not (
+        args.build_llama or args.force_build_llama or args.download_models
+    ):
+        return
+
+    uv_cmd = resolve_uv()
+    if not args.no_sync:
+        if not sync_backend(uv_cmd):
+            sys.exit(1)
+        print("--------------------------------------------------")
+
+    py_bin = resolve_python()
+
     if args.download_models:
         print(
             f"{TAG_BUILD} Downloading voice models (target: {args.download_models})..."
         )
         dl_script = ROOT_DIR / "tools" / "download_models.py"
         dl_res = subprocess.run(
-            [sys.executable, str(dl_script), "--target", args.download_models],
+            [py_bin, str(dl_script), "--target", args.download_models],
             cwd=str(ROOT_DIR),
             check=False,
         )
@@ -358,19 +386,13 @@ def main() -> None:
 
     if args.build_llama or args.force_build_llama:
         print(f"{TAG_BUILD} Building Qwen3-TTS daemon binary...")
-        if not build_llama(force=args.force_build_llama):
+        if not build_llama(force=args.force_build_llama, python_bin=py_bin):
             print(f"{TAG_FAIL} Failed to build Qwen3-TTS daemon.")
             sys.exit(1)
         print("--------------------------------------------------")
 
     if args.check_only:
         return
-
-    uv_cmd = resolve_uv()
-    if not args.no_sync:
-        if not sync_backend(uv_cmd):
-            sys.exit(1)
-        print("--------------------------------------------------")
 
     if not args.no_build:
         build_pwa()

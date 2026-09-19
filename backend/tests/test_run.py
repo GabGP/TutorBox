@@ -278,15 +278,17 @@ def test_build_llama_missing_script():
 
 
 def test_main_build_llama_flag(monkeypatch):
-    """Verifies --build-llama triggers build_llama before check_only/uvicorn."""
+    """Verifies --build-llama triggers sync_backend and build_llama before check_only/uvicorn."""
     monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama", "--check-only"])
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_llama", return_value=True) as mock_build_llama,
         patch("subprocess.run") as mock_sub,
     ):
         run.main()
-        mock_build_llama.assert_called_once_with(force=False)
+        mock_sync.assert_called_once()
+        mock_build_llama.assert_called_once()
         mock_sub.assert_not_called()
 
 
@@ -297,7 +299,68 @@ def test_main_build_llama_failure_exits(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama"])
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_llama", return_value=False),
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        run.main()
+    mock_sync.assert_called_once()
+    assert exc_info.value.code == 1
+
+
+def test_main_build_llama_no_sync_flag(monkeypatch):
+    """Verifies --build-llama with --no-sync skips sync_backend."""
+    monkeypatch.setattr(
+        sys, "argv", ["run.py", "--build-llama", "--no-sync", "--check-only"]
+    )
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.sync_backend") as mock_sync,
+        patch("run.build_llama", return_value=True) as mock_build_llama,
+        patch("subprocess.run") as mock_sub,
+    ):
+        run.main()
+        mock_sync.assert_not_called()
+        mock_build_llama.assert_called_once()
+        mock_sub.assert_not_called()
+
+
+def test_main_download_models_flag(monkeypatch):
+    """Verifies --download-models triggers sync_backend before downloading."""
+    monkeypatch.setattr(
+        sys, "argv", ["run.py", "--download-models", "minimal", "--check-only"]
+    )
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
+        patch(
+            "subprocess.run",
+            return_value=subprocess.CompletedProcess(args=[], returncode=0),
+        ) as mock_sub,
+    ):
+        run.main()
+        mock_sync.assert_called_once()
+        mock_sub.assert_called_once()
+        cmd = mock_sub.call_args[0][0]
+        assert "download_models.py" in str(cmd[1])
+        assert "--target" in cmd
+        assert "minimal" in cmd
+
+
+def test_main_download_models_failure_exits(monkeypatch):
+    """Verifies model download failure causes main to exit with code 1."""
+    import pytest
+
+    monkeypatch.setattr(
+        sys, "argv", ["run.py", "--download-models", "all", "--check-only"]
+    )
+    with (
+        patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True),
+        patch(
+            "subprocess.run",
+            return_value=subprocess.CompletedProcess(args=[], returncode=1),
+        ),
         pytest.raises(SystemExit) as exc_info,
     ):
         run.main()
