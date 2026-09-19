@@ -23,8 +23,6 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
   rosterProps,
   hostAddress,
 }) => {
-  const failed = progress?.failed || 0;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
       {progress ? (
@@ -63,13 +61,6 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
       <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }} id="genHelp">
         Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.
       </p>
-
-      {failed > 0 && (
-        <div className="note" id="genNote">
-          {failed} pregunta(s) no salieron del modelo; el juego tendrá{' '}
-          {progress?.ids.length} preguntas.
-        </div>
-      )}
 
       <RosterTable {...rosterProps} />
     </div>

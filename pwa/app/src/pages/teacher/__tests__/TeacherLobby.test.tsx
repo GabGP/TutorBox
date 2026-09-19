@@ -59,7 +59,7 @@ describe('TeacherLobby Component', () => {
     expect(screen.getByText('192.168.4.1/alumno')).toBeInTheDocument();
   });
 
-  it('renders failure notice in ready lobby when some questions failed to generate', () => {
+  it('surfaces partial failures inside the progress card instead of a separate note', () => {
     render(
       <TeacherLobby
         session={{
@@ -77,14 +77,21 @@ describe('TeacherLobby Component', () => {
           failed: 1,
           ids: ['q1', 'q2'],
           eta: 5,
+          statuses: ['success', 'failed', 'success'],
         }}
         rosterProps={dummyRosterProps}
         hostAddress="192.168.4.1/alumno"
       />
     );
 
+    // Failure state lives in the card (pills + badge + caption)…
     expect(
-      screen.getByText(/1 pregunta\(s\) no salieron del modelo/)
+      screen.getByText(/1 pregunta\(s\) con error/)
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('✓ 2 de 3 preguntas listas. 1 no salieron del modelo.')
+    ).toBeInTheDocument();
+    // …not in the old duplicated note below the card.
+    expect(screen.queryByText(/no salieron del modelo; el juego tendrá/)).toBeNull();
   });
 });

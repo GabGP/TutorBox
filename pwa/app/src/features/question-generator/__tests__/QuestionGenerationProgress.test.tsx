@@ -128,4 +128,31 @@ describe('QuestionGenerationProgress Component', () => {
     expect(pills).toHaveLength(5);
     pills.forEach((pill) => expect(pill).toHaveTextContent(/✓ P/));
   });
+
+  it('preserves failed pills and reports partial counts when done with failures', () => {
+    render(
+      <QuestionGenerationProgress
+        progress={{
+          ...mockProgress,
+          done: 5,
+          total: 5,
+          failed: 1,
+          ids: ['q1', 'q2', 'q3', 'q4'],
+          statuses: ['success', 'failed', 'success', 'success', 'success'],
+        }}
+        isComplete
+      />
+    );
+
+    const pills = screen.getAllByRole('listitem');
+    expect(pills).toHaveLength(5);
+    expect(pills[0]).toHaveTextContent('✓ P1');
+    expect(pills[1]).toHaveTextContent('✕ P2');
+    expect(pills[2]).toHaveTextContent('✓ P3');
+
+    expect(
+      screen.getByText('✓ 4 de 5 preguntas listas. 1 no salieron del modelo.')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/1 pregunta\(s\) con error/)).toBeInTheDocument();
+  });
 });

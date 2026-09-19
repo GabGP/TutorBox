@@ -63,7 +63,13 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
   const topicLabel = progress.currentTopic ? getTopicLabel(progress.currentTopic) : '', subconceptLabel = getSubconceptLabel(progress.currentSubconcept);
   const colsMobile = total <= PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX ? total : PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX;
   const colsDesktop = total <= PROGRESS_ANIMATION.DESKTOP_PILL_COLS_MAX ? total : PROGRESS_ANIMATION.DESKTOP_PILL_COLS_MAX;
-  const captionText = isDone ? '✓ Preguntas y distractores pedagógicos verificados con éxito.' : PEDAGOGICAL_STAGES[stageIndex];
+  const failedCount = progress.failed || 0;
+  const successCount = progress.ids.length;
+  const captionText = isDone
+    ? failedCount > 0
+      ? `✓ ${successCount} de ${total} preguntas listas. ${failedCount} no salieron del modelo.`
+      : '✓ Preguntas y distractores pedagógicos verificados con éxito.'
+    : PEDAGOGICAL_STAGES[stageIndex];
 
   return (
     <section className={styles.card} aria-label="Progreso de creación de preguntas" id="gen-progress">
@@ -105,7 +111,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
       <div className={styles.pillsList} role="list" aria-label="Estado por pregunta" style={{ '--cols-mobile': colsMobile, '--cols-desktop': colsDesktop } as React.CSSProperties}>
         {Array.from({ length: total }, (_, i) => {
           const qNum = i + 1;
-          const status = isDone ? 'success' : (progress.statuses?.[i] ?? (i < progress.done ? 'success' : i === progress.done && progress.done < total ? 'generating' : 'pending'));
+          const status = progress.statuses?.[i] ?? (isDone ? 'success' : (i < progress.done ? 'success' : i === progress.done && progress.done < total ? 'generating' : 'pending'));
           const pillClass = status === 'success' ? styles.pillDone : status === 'failed' ? styles.pillFailed : status === 'generating' ? styles.pillActive : styles.pillPending;
           const label = status === 'success' ? `✓ P${qNum}` : status === 'failed' ? `✕ P${qNum}` : status === 'generating' ? `⚡ P${qNum}` : `○ P${qNum}`;
           return (
