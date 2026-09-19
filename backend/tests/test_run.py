@@ -68,6 +68,7 @@ def test_check_prerequisites_all_reachable(capsys):
         patch("urllib.request.urlopen", return_value=mock_cm),
         patch("run.resolve_llama_daemon", return_value=Path("/mock/llama-tts-daemon")),
         patch("run.resolve_pnpm", return_value="/usr/bin/pnpm"),
+        patch("run.check_voice_models", return_value=[]),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
@@ -75,6 +76,7 @@ def test_check_prerequisites_all_reachable(capsys):
         assert "Local SLM engine reachable" in captured
         assert "Found Qwen3-TTS daemon" in captured
         assert "Found frontend package manager" in captured
+        assert "Found all neural voice models" in captured
 
 
 def test_check_prerequisites_all_missing(capsys):
@@ -84,6 +86,10 @@ def test_check_prerequisites_all_missing(capsys):
         patch("urllib.request.urlopen", side_effect=OSError("Unreachable")),
         patch("run.resolve_llama_daemon", return_value=None),
         patch("run.resolve_pnpm", return_value=None),
+        patch(
+            "run.check_voice_models",
+            return_value=["Piper/Sherpa", "Kokoro-82M", "Qwen3-TTS"],
+        ),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
@@ -91,6 +97,7 @@ def test_check_prerequisites_all_missing(capsys):
         assert "SLM engine not detected" in captured
         assert "Qwen3-TTS daemon not found" in captured
         assert "pnpm not found" in captured
+        assert "Missing neural voice models" in captured
 
 
 def test_build_pwa_no_package_json():

@@ -128,7 +128,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./run.py
 ```
 
-`run.py` checks prerequisites (`uv`, `espeak-ng`, local `llama-server`, `pnpm`), compiles the PWA, runs database migrations, seeds the question bank, and starts Uvicorn. Qwen3-TTS is discovered from the standard model cache and `llama-tts` locations; set `TTS_QWEN_BINARY` only for a non-standard install.
+`run.py` checks prerequisites (`uv`, `espeak-ng`, neural voice models, local `llama-server`, `pnpm`), compiles the PWA, runs database migrations, seeds the question bank, and starts Uvicorn. If voice models are missing in `.cache/models/tts/`, spoken feedback gracefully falls back to eSpeak-ng; download neural weights using `./run.py --download-models` or `python tools/download_models.py`. Qwen3-TTS is discovered from the standard model cache and `llama-tts` locations; set `TTS_QWEN_BINARY` only for a non-standard install.
 
 * **Teacher Host**: `http://localhost:8000/maestro/`
 * **Student Voting**: `http://localhost:8000/alumno/`

@@ -198,6 +198,44 @@ def check_prerequisites() -> None:
     else:
         print(f"{TAG_OK} Found frontend package manager: {pnpm_bin}")
 
+    # 5. Neural voice models check
+    missing_models = check_voice_models()
+    if missing_models:
+        print(
+            f"{TAG_WARN} Missing neural voice models: {', '.join(missing_models)}."
+        )
+        print(
+            "       Spoken feedback (>51% rule) will fall back to available engines or eSpeak-ng."
+        )
+        print(
+            "       To download models: python tools/download_models.py [--target minimal|kokoro|qwen|all]"
+        )
+    else:
+        print(
+            f"{TAG_OK} Found all neural voice models (Piper/Sherpa, Kokoro, Qwen3-TTS)"
+        )
+
+
+def check_voice_models(models_dir: Path | None = None) -> list[str]:
+    """Returns a list of missing neural voice engine names in the models directory."""
+    target_dir = models_dir or (ROOT_DIR / ".cache" / "models" / "tts")
+    piper_ok = (target_dir / "es_ES-sharvard-medium.onnx").is_file()
+    kokoro_ok = (target_dir / "kokoro-int8-multi-lang-v1_0" / "voices.bin").is_file()
+    qwen_ok = (
+        target_dir / "qwen" / "Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf"
+    ).is_file() and (
+        target_dir / "qwen" / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
+    ).is_file()
+
+    missing: list[str] = []
+    if not piper_ok:
+        missing.append("Piper/Sherpa")
+    if not kokoro_ok:
+        missing.append("Kokoro-82M")
+    if not qwen_ok:
+        missing.append("Qwen3-TTS")
+    return missing
+
 
 def resolve_uv() -> str:
     """Finds and returns the executable path for the uv package manager."""
@@ -265,6 +303,13 @@ def main() -> None:
         help="Force clean re-clone and recompilation of llama-tts daemon",
     )
     parser.add_argument(
+        "--download-models",
+        nargs="?",
+        const="minimal",
+        choices=["minimal", "kokoro", "qwen", "all"],
+        help="Download voice models before launching (choices: minimal, kokoro, qwen, all; default: minimal)",
+    )
+    parser.add_argument(
         "--check-only", action="store_true", help="Check prerequisites and exit"
     )
     args = parser.parse_args()
@@ -274,6 +319,21 @@ def main() -> None:
     print("==================================================")
     check_prerequisites()
     print("--------------------------------------------------")
+
+    if args.download_models:
+        print(
+            f"{TAG_BUILD} Downloading voice models (target: {args.download_models})..."
+        )
+        dl_script = ROOT_DIR / "tools" / "download_models.py"
+        dl_res = subprocess.run(
+            [sys.executable, str(dl_script), "--target", args.download_models],
+            cwd=str(ROOT_DIR),
+            check=False,
+        )
+        if dl_res.returncode != 0:
+            print(f"{TAG_FAIL} Failed to download voice models.")
+            sys.exit(1)
+        print("--------------------------------------------------")
 
     if args.build_llama or args.force_build_llama:
         print(f"{TAG_BUILD} Building Qwen3-TTS daemon binary...")
