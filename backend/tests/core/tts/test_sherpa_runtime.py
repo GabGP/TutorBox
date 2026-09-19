@@ -25,6 +25,24 @@ def test_ensure_ort_dll_directory_windows_import_error():
         assert runtime.ensure_ort_dll_directory() is None
 
 
+def test_ensure_ort_dll_directory_windows_success(tmp_path):
+    import os
+
+    mock_ort = MagicMock()
+    capi_dir = tmp_path / "capi"
+    capi_dir.mkdir()
+    mock_ort.__file__ = str(tmp_path / "__init__.py")
+    mock_add_dll = MagicMock()
+
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict("sys.modules", {"onnxruntime": mock_ort}),
+        patch.object(os, "add_dll_directory", mock_add_dll, create=True),
+    ):
+        runtime.ensure_ort_dll_directory()
+        mock_add_dll.assert_called_once_with(str(capi_dir))
+
+
 def test_create_offline_tts_import_error():
     cfg = TTSConfig()
     with (
