@@ -3,7 +3,6 @@
 import io
 import json
 import sys
-import tarfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
