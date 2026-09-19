@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import sys
 import tarfile
 import urllib.error
@@ -38,7 +37,7 @@ PIPER_BASE_URL = (
     "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/sharvard/medium"
 )
 QWEN_BASE_URL = (
-    "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base-GGUF/resolve/main"
+    "https://huggingface.co/ggml-org/Qwen3-TTS-12Hz-1.7B-Base-GGUF/resolve/main"
 )
 KOKORO_TAR_URL = (
     "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/"
@@ -127,8 +126,9 @@ def generate_sherpa_tokens(onnx_json_path: Path, output_tokens_path: Path) -> bo
         if not phoneme_map:
             return False
         with open(output_tokens_path, "w", encoding="utf-8") as file_handle:
-            for token, ids in phoneme_map.items():
-                file_handle.write(f"{token} {ids[0]}\n")
+            file_handle.writelines(
+                f"{token} {ids[0]}\n" for token, ids in phoneme_map.items()
+            )
         print(f"{TAG_OK} Generated Sherpa tokens: {output_tokens_path.name}")
         return True
     except (OSError, json.JSONDecodeError) as err:
@@ -193,7 +193,7 @@ def download_kokoro(models_dir: Path, force: bool = False) -> bool:
         tar_path.unlink(missing_ok=True)
         print(f"{TAG_OK} Extracted Kokoro-82M model to {kokoro_dir.name}")
         return True
-    except Exception as err:
+    except (OSError, tarfile.TarError) as err:
         print(f"{TAG_FAIL} Extraction failed: {err}")
         return False
 
