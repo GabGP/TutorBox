@@ -5,9 +5,7 @@ from uvicorn.logging import AccessFormatter, ColourizedFormatter
 DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 APP_LOG_FORMAT = "%(asctime)s %(levelprefix)s [%(name)s] %(message)s"
 SERVER_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(message)s"
-ACCESS_LOG_FORMAT = (
-    '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
-)
+ACCESS_LOG_FORMAT = '%(asctime)s %(levelprefix)s %(client_addr)-21s - "%(request_line)s" %(status_code)s'
 
 
 class TutorBoxFormatter(ColourizedFormatter):

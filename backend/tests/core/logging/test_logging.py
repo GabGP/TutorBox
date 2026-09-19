@@ -101,7 +101,7 @@ def test_tutorbox_access_formatter_includes_timestamp_and_request_line():
         exc_info=None,
     )
     formatted = formatter.format(record)
-    assert "127.0.0.1:51234" in formatted
+    assert "127.0.0.1:51234       - " in formatted
     assert "GET /api/v1/health HTTP/1.1" in formatted
     assert "200 OK" in formatted
 
