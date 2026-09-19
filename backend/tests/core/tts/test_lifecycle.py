@@ -136,7 +136,16 @@ def test_router_preload_auto_fallback() -> None:
     mock_espeak.is_available.return_value = True
     mock_espeak.preload.return_value = 0.5
 
-    router = TTSRouter(piper=mock_piper, espeak=mock_espeak, sherpa=mock_sherpa)
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = False
+
+    router = TTSRouter(
+        piper=mock_piper,
+        espeak=mock_espeak,
+        sherpa=mock_sherpa,
+        qwen=mock_qwen,
+    )
     engine, load_ms = router.preload(engine="auto")
     assert engine == "piper"
     assert load_ms == 14.2

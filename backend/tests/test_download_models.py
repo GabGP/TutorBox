@@ -166,12 +166,14 @@ def test_run_main_download_models_flag(monkeypatch):
     )
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch(
             "subprocess.run",
             return_value=subprocess.CompletedProcess(args=[], returncode=0),
         ) as mock_sub,
     ):
         run.main()
+        mock_sync.assert_called_once()
         assert mock_sub.call_count == 1
         cmd = mock_sub.call_args[0][0]
         assert "download_models.py" in str(cmd[1])

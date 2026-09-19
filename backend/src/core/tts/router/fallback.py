@@ -65,3 +65,30 @@ def synthesize_with_fallback(
                 last_error = espeak_error
 
         raise last_error
+
+
+def preload_with_fallback(
+    backends: dict[str, TTSBackend],
+    lang: str = "es",
+    voice: str | None = None,
+) -> tuple[str, float]:
+    """Preloads an available auto-tier engine, continuing to fallbacks if one fails."""
+    from core.tts.exceptions import TTSUnavailableError
+
+    candidates = get_auto_backends(backends, lang=lang)
+    last_err: Exception | None = None
+    for candidate in candidates:
+        try:
+            return candidate.engine_name, candidate.preload(voice=voice or lang)
+        except Exception as err:  # noqa: BLE001
+            logger.warning(
+                "Auto-tier TTS engine '%s' failed to preload: %s. Trying fallback.",
+                candidate.engine_name,
+                err,
+            )
+            last_err = err
+    if last_err is not None:
+        raise TTSUnavailableError(
+            f"All auto-tier TTS engines failed to preload for '{lang}': {last_err}"
+        ) from last_err
+    raise TTSUnavailableError(f"No TTS engine available for '{lang}'.")
