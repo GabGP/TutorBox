@@ -12,7 +12,7 @@ import wave
 
 import pytest
 
-from backend.src.core.tts.router import get_tts_router
+from core.tts.router import get_tts_router
 
 
 def _generate_test_wav(
