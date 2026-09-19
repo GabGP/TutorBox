@@ -40,7 +40,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
   useEffect(() => {
     const stageTimer = setInterval(() => {
       setStageIndex((prev) => (prev + 1) % PEDAGOGICAL_STAGES.length);
-    }, PROGRESS_ANIMATION.CYCLE_SPEED_SECONDS * 1000);
+    }, PROGRESS_ANIMATION.STAGE_SPEED_SECONDS * 1000);
     return () => clearInterval(stageTimer);
   }, []);
 
@@ -89,7 +89,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
             text="Creando las preguntas con IA..."
             as="h2"
             className={styles.title}
-            speed={PROGRESS_ANIMATION.CYCLE_SPEED_SECONDS}
+            speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS}
           />
         </div>
       </div>
@@ -104,7 +104,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
           animated={true}
           size="md"
           label="Progreso general"
-          speed={PROGRESS_ANIMATION.CYCLE_SPEED_SECONDS}
+          speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS}
         />
         <div className={styles.stageCaption} aria-live="polite" aria-atomic="true">
           <span key={stageIndex} className={styles.stageText}>{PEDAGOGICAL_STAGES[stageIndex]}</span>

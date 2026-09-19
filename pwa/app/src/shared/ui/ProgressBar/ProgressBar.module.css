@@ -43,18 +43,34 @@
   pointer-events: none;
   border-radius: inherit;
   background: var(--shimmer-track);
-  animation: shimmerBeam var(--speed, var(--speed-shimmer, 5.5s)) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)) infinite;
+  animation: shimmerBeam var(--speed, var(--speed-shimmer, 5s)) var(--ease-shimmer, linear) infinite;
 }
 
 @keyframes shimmerBeam {
   0% {
-    transform: translateX(-100%);
+    transform: translateX(-55%);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  57% {
+    opacity: 1;
   }
   65% {
-    transform: translateX(100%);
+    transform: translateX(55%);
+    opacity: 0;
   }
   100% {
-    transform: translateX(100%);
+    transform: translateX(55%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    display: none;
   }
 }
 

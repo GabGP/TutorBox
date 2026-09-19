@@ -40,7 +40,7 @@
   border: 2px solid transparent;
   border-top-color: var(--p, #0b6e99);
   border-right-color: var(--p-soft, #a9c3cf);
-  animation: spinOrbit var(--speed-orbit, 3.6s) linear infinite;
+  animation: spinOrbit var(--speed-orbit, 4s) linear infinite;
 }
 
 @keyframes spinOrbit {
@@ -119,12 +119,19 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--mute2, #55636a);
-  animation: fadeInCaption 0.6s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+  animation: fadeInCaption var(--speed-fast, 0.4s) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 @keyframes fadeInCaption {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbitRing,
+  .stageText {
+    animation: none;
+  }
 }
 
 .pillsList {

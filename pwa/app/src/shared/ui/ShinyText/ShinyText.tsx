@@ -14,7 +14,7 @@ export interface ShinyTextProps {
  */
 export const ShinyText: React.FC<ShinyTextProps> = ({
   text,
-  speed = 5.5,
+  speed = 5,
   className,
   as: Component = 'span',
   id,

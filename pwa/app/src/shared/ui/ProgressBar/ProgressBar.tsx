@@ -26,7 +26,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   className,
   id,
   label = 'Progreso',
-  speed = 5.5,
+  speed = 5,
   pulseKey,
 }) => {
   const safeMax = max > 0 ? max : 100;

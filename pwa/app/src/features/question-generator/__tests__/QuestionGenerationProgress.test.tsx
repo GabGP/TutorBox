@@ -79,13 +79,13 @@ describe('QuestionGenerationProgress Component', () => {
     expect(screen.getByText(PEDAGOGICAL_STAGES[0])).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(PROGRESS_ANIMATION.CYCLE_SPEED_SECONDS * 1000);
+      vi.advanceTimersByTime(PROGRESS_ANIMATION.STAGE_SPEED_SECONDS * 1000);
     });
 
     expect(screen.getByText(PEDAGOGICAL_STAGES[1])).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(PROGRESS_ANIMATION.CYCLE_SPEED_SECONDS * 1000);
+      vi.advanceTimersByTime(PROGRESS_ANIMATION.STAGE_SPEED_SECONDS * 1000);
     });
 
     expect(screen.getByText(PEDAGOGICAL_STAGES[2])).toBeInTheDocument();
