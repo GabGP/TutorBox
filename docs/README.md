@@ -29,6 +29,7 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 
 * **[The Three Appliance Modes & Transversal Telemetry](architecture/three-modes.md)**: Operational overview of Classroom Quiz Mode, Socratic Tutor Mode, and Offline Primary Games Mode with unified error event telemetry.
 * **[Diagnostic Distractors & Misconception Taxonomy](architecture/diagnostic-distractors.md)**: 4-domain curriculum taxonomy and 32 validated misconception slugs powering Quiz mode feedback, Socratic tutoring, and teacher reporting.
+* **[Question Pool Authoring Brief](quiz/question-pool-brief.md)**: Validator-derived rules, exemplars, batch plan, and ready-to-paste prompt for authoring the pre-verified question pool (`seed_data/pool/*.json`) with a frontier model; checked offline by `tests/modes/quiz/seed_data/test_pool.py`.
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)**: Physical 4-button student clickers, delegated pairing workflow, dual RGB LED feedback state machine, and the hardware-agnostic `VoteTransport` interface.
 * **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API.
