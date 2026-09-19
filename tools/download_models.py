@@ -136,11 +136,55 @@ def generate_sherpa_tokens(onnx_json_path: Path, output_tokens_path: Path) -> bo
         return False
 
 
+def generate_sherpa_model(
+    onnx_path: Path, onnx_json_path: Path, output_sherpa_path: Path, force: bool = False
+) -> bool:
+    """Injects VITS metadata into Piper ONNX model for Sherpa-ONNX compatibility."""
+    if output_sherpa_path.is_file() and output_sherpa_path.stat().st_size > 0 and not force:
+        return True
+    if not onnx_path.is_file() or not onnx_json_path.is_file():
+        return False
+    try:
+        import onnx
+
+        with open(onnx_json_path, "r", encoding="utf-8") as file_handle:
+            cfg = json.load(file_handle)
+
+        sample_rate = str(cfg.get("audio", {}).get("sample_rate", 22050))
+        voice = str(cfg.get("espeak", {}).get("voice", "es"))
+        num_speakers = str(cfg.get("num_speakers", 1))
+
+        model = onnx.load(str(onnx_path))
+        existing_keys = {p.key for p in model.metadata_props}
+        meta = {
+            "sample_rate": sample_rate,
+            "n_speakers": num_speakers,
+            "model_type": "vits",
+            "comment": "piper",
+            "language": voice,
+            "voice": voice,
+            "has_espeak": "1",
+        }
+        for k, v in meta.items():
+            if k not in existing_keys:
+                p = model.metadata_props.add()
+                p.key = k
+                p.value = str(v)
+
+        onnx.save(model, str(output_sherpa_path))
+        print(f"{TAG_OK} Generated Sherpa model: {output_sherpa_path.name}")
+        return True
+    except Exception as err:  # noqa: BLE001
+        print(f"{TAG_WARN} Could not generate Sherpa model metadata: {err}")
+        return False
+
+
 def download_piper(models_dir: Path, force: bool = False) -> bool:
     """Downloads Piper / Sherpa Spanish Harvard ONNX model and config."""
     onnx_file = models_dir / "es_ES-sharvard-medium.onnx"
     json_file = models_dir / "es_ES-sharvard-medium.onnx.json"
     tokens_file = models_dir / "tokens_es_ES-sharvard-medium.txt"
+    sherpa_file = models_dir / "es_ES-sharvard-medium.sherpa.onnx"
 
     onnx_ok = download_file(
         f"{PIPER_BASE_URL}/es_ES-sharvard-medium.onnx",
@@ -155,8 +199,9 @@ def download_piper(models_dir: Path, force: bool = False) -> bool:
         force=force,
     )
 
-    if json_ok:
+    if json_ok and onnx_ok:
         generate_sherpa_tokens(json_file, tokens_file)
+        generate_sherpa_model(onnx_file, json_file, sherpa_file, force=force)
 
     return onnx_ok and json_ok
 

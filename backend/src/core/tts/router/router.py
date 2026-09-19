@@ -1,7 +1,8 @@
 """Pluggable voice router with fallback and in-memory LRU audio caching."""
-
+import logging
 from typing import Any
 
+from core.config import get_settings
 from core.tts.engines import (
     EspeakBackend,
     KokoroBackend,
@@ -9,13 +10,17 @@ from core.tts.engines import (
     QwenBackend,
     SherpaBackend,
 )
+from core.tts.exceptions import TTSUnavailableError
 from core.tts.protocols import TTSBackend
 from core.tts.router.fallback import synthesize_with_fallback
 from core.tts.router.selection import (
+    get_auto_backends,
     get_engine_status,
     get_max_cache_entries,
     resolve_target_backend,
 )
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "TTSRouter",
@@ -68,7 +73,31 @@ class TTSRouter:
     def preload(
         self, engine: str | None = None, lang: str = "es", voice: str | None = None
     ) -> tuple[str, float]:
-        """Preloads model weights for backend, returning (engine, load_ms)."""
+        """Preloads model weights for backend, returning (engine, load_ms).
+
+        In auto mode, attempts backends in quality-first order, silently continuing
+        to the next fallback engine if an engine fails to preload.
+        """
+        target_engine = (engine or get_settings().tts.engine).lower()
+        if target_engine == "auto":
+            candidates = get_auto_backends(self._backends, lang=lang)
+            last_err: Exception | None = None
+            for candidate in candidates:
+                try:
+                    return candidate.engine_name, candidate.preload(voice=voice or lang)
+                except Exception as err:  # noqa: BLE001
+                    logger.warning(
+                        "Auto-tier TTS engine '%s' failed to preload: %s. Trying fallback.",
+                        candidate.engine_name,
+                        err,
+                    )
+                    last_err = err
+            if last_err is not None:
+                raise TTSUnavailableError(
+                    f"All auto-tier TTS engines failed to preload for '{lang}': {last_err}"
+                ) from last_err
+            raise TTSUnavailableError(f"No TTS engine available for '{lang}'.")
+
         backend = self.select_backend(lang=lang, engine=engine)
         return backend.engine_name, backend.preload(voice=voice or lang)
 

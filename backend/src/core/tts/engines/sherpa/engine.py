@@ -2,7 +2,9 @@
 
 import gc
 import logging
+import sys
 import time
+from pathlib import Path
 from typing import Any
 
 from core.config import get_settings
@@ -65,6 +67,18 @@ class SherpaBackend:
         except ImportError as err:
             raise TTSUnavailableError("sherpa-onnx runtime is not installed.") from err
 
+        if sys.platform == "win32":
+            try:
+                import onnxruntime
+
+                ort_capi = Path(onnxruntime.__file__).parent / "capi"
+                if ort_capi.is_dir():
+                    import os
+
+                    os.add_dll_directory(str(ort_capi))
+            except (ImportError, OSError, AttributeError) as err:
+                logger.debug("Could not register onnxruntime DLL directory: %s", err)
+
         model_name = self._resolve_model(voice)
         model_path, tokens_path, data_dir = resolve_sherpa_paths(model_name)
 
@@ -92,15 +106,20 @@ class SherpaBackend:
                 logger.info(
                     "Sherpa CUDA init unavailable; falling back to CPU: %s", err
                 )
-                model_config = sherpa_onnx.OfflineTtsModelConfig(
-                    vits=vits_cfg,
-                    num_threads=tts_cfg.sherpa_threads,
-                    provider="cpu",
-                )
-                self._tts = sherpa_onnx.OfflineTts(
-                    sherpa_onnx.OfflineTtsConfig(model=model_config)
-                )
-                self._current_model = model_name
+                try:
+                    model_config = sherpa_onnx.OfflineTtsModelConfig(
+                        vits=vits_cfg,
+                        num_threads=tts_cfg.sherpa_threads,
+                        provider="cpu",
+                    )
+                    self._tts = sherpa_onnx.OfflineTts(
+                        sherpa_onnx.OfflineTtsConfig(model=model_config)
+                    )
+                    self._current_model = model_name
+                except Exception as cpu_err:
+                    raise TTSUnavailableError(
+                        f"Failed to initialize Sherpa-ONNX on CPU: {cpu_err}"
+                    ) from cpu_err
             else:
                 raise TTSUnavailableError(
                     f"Failed to initialize Sherpa-ONNX: {err}"

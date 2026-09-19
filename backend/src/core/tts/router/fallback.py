@@ -3,7 +3,6 @@
 import logging
 
 from core.config import get_settings
-from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.protocols import TTSBackend
 from core.tts.router.selection import get_auto_backends, resolve_voice_for_backend
 
@@ -26,7 +25,7 @@ def synthesize_with_fallback(
     )
     try:
         return target_backend.synthesize(text, voice=target_voice)
-    except (TTSSynthesisError, TTSUnavailableError) as error:
+    except Exception as error:
         settings = get_settings().tts
         if lang != "es" or explicit_backend or settings.engine.lower() != "auto":
             raise
@@ -40,14 +39,29 @@ def synthesize_with_fallback(
             )
             try:
                 audio = fallback_backend.synthesize(text, voice=fallback_voice)
-            except (TTSSynthesisError, TTSUnavailableError) as fallback_error:
+                logger.warning(
+                    "%s failed; fell back to %s: %s",
+                    target_backend.engine_name,
+                    fallback_backend.engine_name,
+                    error,
+                )
+                return audio
+            except Exception as fallback_error:  # noqa: BLE001
                 last_error = fallback_error
                 continue
-            logger.warning(
-                "%s failed; fell back to %s: %s",
-                target_backend.engine_name,
-                fallback_backend.engine_name,
-                error,
+
+        # Ultimate fallback to espeak safety net
+        if espeak_backend.is_available(lang) and espeak_backend is not target_backend:
+            fallback_voice = resolve_voice_for_backend(
+                espeak_backend, lang, voice, espeak_backend=espeak_backend
             )
-            return audio
+            try:
+                audio = espeak_backend.synthesize(text, voice=fallback_voice)
+                logger.warning(
+                    "All neural backends failed; fell back to espeak: %s", error
+                )
+                return audio
+            except Exception as espeak_error:  # noqa: BLE001
+                last_error = espeak_error
+
         raise last_error
