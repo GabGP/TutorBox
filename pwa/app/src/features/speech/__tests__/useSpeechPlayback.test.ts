@@ -113,6 +113,93 @@ describe('useSpeechPlayback Hook', () => {
     expect(qucResult.current.message).toBe("Todavía no hay voz en k'iche'; lea la explicación en voz alta.");
   });
 
+  it('prefetches speech audio blob in background and plays synchronously on speak', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:prefetched-audio-url');
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    await act(async () => {
+      await result.current.prefetch(0);
+    });
+
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledWith('s1', 'es');
+    expect(result.current.state).toBe('idle');
+
+    await act(async () => {
+      await result.current.speak(0);
+    });
+
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+    expect(mockPlayer.src).toBe('blob:prefetched-audio-url');
+    expect(result.current.state).toBe('playing');
+  });
+
+  it('silently ignores errors during background prefetch', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockRejectedValue({ status: 409 });
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    await act(async () => {
+      await result.current.prefetch(0);
+    });
+
+    expect(result.current.state).toBe('idle');
+    expect(result.current.message).toBe('');
+  });
+
+  it('prefetches across consecutive rounds and plays cached audio without refetching', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl')
+      .mockResolvedValueOnce('blob:round-0-url')
+      .mockResolvedValueOnce('blob:round-1-url');
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    await act(async () => {
+      await result.current.speak(0);
+    });
+    expect(mockPlayer.src).toBe('blob:round-0-url');
+
+    await act(async () => {
+      await result.current.prefetch(1);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      await result.current.speak(1);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(2);
+    expect(mockPlayer.src).toBe('blob:round-1-url');
+  });
+
+  it('shares in-flight prefetch promise when speak is invoked before prefetch completes', async () => {
+    let resolveApi: (url: string) => void = () => {};
+    const delayedPromise = new Promise<string>((resolve) => {
+      resolveApi = resolve;
+    });
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockReturnValue(delayedPromise);
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    await act(async () => {
+      void result.current.prefetch(2);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+
+    let speakPromise!: Promise<void>;
+    act(() => {
+      speakPromise = result.current.speak(2);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveApi('blob:in-flight-url');
+      await speakPromise;
+    });
+
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+    expect(mockPlayer.src).toBe('blob:in-flight-url');
+  });
+
   it('stops playback and resets state on stopPlayback', async () => {
     vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:test-audio-url');
 

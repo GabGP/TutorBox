@@ -3,163 +3,140 @@ import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
 import { SpeechLanguage, SpeechState } from './speech.types';
 import { speechApi } from './speechApi';
 
+export interface UseSpeechPlaybackReturn {
+  state: SpeechState;
+  message: string;
+  currentRound: number;
+  speak: (roundIndex: number) => Promise<void>;
+  prefetch: (roundIndex: number) => Promise<void>;
+  stopPlayback: () => void;
+}
+
+type InFlight = { roundIndex: number; lang: SpeechLanguage; promise: Promise<string> };
+
 /**
- * Custom React hook for controlling offline speech synthesis playback.
- * Fetches synthesized WAV audio blobs (`/session/{id}/speech`), manages HTMLAudioElement
- * playback state, handles autoplay policies, and caches audio blobs for instantaneous replay.
- *
- * @param {string | null} sessionId - Target session ID for speech synthesis retrieval.
- * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es' Spanish or 'quc' K'iche').
- * @returns {object} Speech playback state, user message, speak trigger, and stop method.
+ * Custom React hook for controlling offline speech synthesis playback and speculative prefetching.
+ * Pre-fetches WAV blobs on round close, manages audio playback, and bypasses mobile autoplay blocks.
  */
-export function useSpeechPlayback(sessionId: string | null, language: SpeechLanguage = 'es') {
+export function useSpeechPlayback(
+  sessionId: string | null,
+  language: SpeechLanguage = 'es'
+): UseSpeechPlaybackReturn {
   const [state, setState] = useState<SpeechState>('idle');
   const [message, setMessage] = useState('');
   const [currentRound, setCurrentRound] = useState<number>(-1);
 
   const clipUrlRef = useRef<string | null>(null);
-  const activeRoundRef = useRef<number>(-1);
+  const cachedRoundRef = useRef<number>(-1);
   const cachedLangRef = useRef<SpeechLanguage>(language);
+  const inFlightRef = useRef<InFlight | null>(null);
 
   const stopPlayback = useCallback(() => {
-    const player = getAudioPlayer();
-    stopAudio(player);
+    stopAudio(getAudioPlayer());
     if (state === 'playing' || state === 'loading') {
       setState('idle');
       setMessage('');
     }
   }, [state]);
 
-  const speak = useCallback(
-    async (roundIndex: number) => {
-      if (!sessionId) return;
-      if (
-        state === 'loading' ||
-        (state === 'playing' && activeRoundRef.current === roundIndex && cachedLangRef.current === language)
-      ) {
-        return;
+  const prefetch = useCallback(async (roundIndex: number) => {
+    if (!sessionId) return;
+    if (cachedRoundRef.current === roundIndex && cachedLangRef.current === language && clipUrlRef.current) return;
+    if (inFlightRef.current?.roundIndex === roundIndex && inFlightRef.current?.lang === language) return;
+
+    console.info(`[Speech] Prefetch started for round ${roundIndex} (${language})`);
+    const fetchPromise = speechApi.getSpeechBlobUrl(sessionId, language);
+    inFlightRef.current = { roundIndex, lang: language, promise: fetchPromise };
+    try {
+      const url = await fetchPromise;
+      if (cachedLangRef.current === language) {
+        if (clipUrlRef.current && clipUrlRef.current !== url) URL.revokeObjectURL(clipUrlRef.current);
+        clipUrlRef.current = url;
+        cachedRoundRef.current = roundIndex;
+        console.info(`[Speech] Prefetch ready for round ${roundIndex}`);
+      } else {
+        URL.revokeObjectURL(url);
       }
+    } catch {
+      console.info(`[Speech] Prefetch skipped for round ${roundIndex} (>51% rule not met)`);
+    } finally {
+      if (inFlightRef.current?.roundIndex === roundIndex) inFlightRef.current = null;
+    }
+  }, [sessionId, language]);
 
-      const player = getAudioPlayer();
+  const playCachedUrl = useCallback(async (player: HTMLAudioElement, url: string, roundIndex: number) => {
+    player.pause();
+    player.src = url;
+    player.currentTime = 0;
+    player.onended = () => (console.info(`[Speech] Playback finished for round ${roundIndex}`), setState('done'), setMessage('Explicación leída.'));
+    player.onerror = () => (setState('error'), setMessage('No se pudo reproducir el audio.'));
+    setCurrentRound(roundIndex);
+    setState('playing');
+    setMessage('Leyendo la explicación en voz alta…');
+    console.info(`[Speech] Playback started for round ${roundIndex}`);
+    try {
+      await player.play();
+    } catch {
+      setState('blocked');
+      setMessage('Toque “Escuchar” para reproducir la explicación.');
+    }
+  }, []);
 
-      // If audio was already synthesized for this round and language, play immediately (synchronous in click event)
-      if (
-        activeRoundRef.current === roundIndex &&
-        cachedLangRef.current === language &&
-        clipUrlRef.current
-      ) {
-        player.pause();
-        player.src = clipUrlRef.current;
-        player.currentTime = 0;
+  const speak = useCallback(async (roundIndex: number) => {
+    if (!sessionId || state === 'loading') return;
+    if (state === 'playing' && currentRound === roundIndex && cachedLangRef.current === language) return;
 
-        player.onended = () => {
-          if (activeRoundRef.current === roundIndex) {
-            setState('done');
-            setMessage('Explicación leída.');
-          }
-        };
+    const player = getAudioPlayer();
+    if (cachedRoundRef.current === roundIndex && cachedLangRef.current === language && clipUrlRef.current) {
+      await playCachedUrl(player, clipUrlRef.current, roundIndex);
+      return;
+    }
 
-        player.onerror = () => {
-          if (activeRoundRef.current === roundIndex) {
-            setState('error');
-            setMessage('No se pudo reproducir el audio.');
-          }
-        };
-
-        setState('playing');
-        setMessage('Leyendo la explicación en voz alta…');
-
-        try {
-          await player.play();
-        } catch {
-          setState('blocked');
-          setMessage('Toque “Escuchar” para reproducir la explicación.');
-        }
-        return;
-      }
-
-      // Purge prior blob if changing round or language
-      if (clipUrlRef.current) {
-        stopAudio(player, clipUrlRef.current);
-        clipUrlRef.current = null;
-      }
-
-      // Unlock audio synchronously inside active gesture
-      unlockAudio(player);
-
-      activeRoundRef.current = roundIndex;
-      cachedLangRef.current = language;
-      setCurrentRound(roundIndex);
+    if (inFlightRef.current?.roundIndex === roundIndex && inFlightRef.current?.lang === language) {
       setState('loading');
       setMessage('Preparando la voz…');
-
-      let url: string;
       try {
-        url = await speechApi.getSpeechBlobUrl(sessionId, language);
-      } catch (err: unknown) {
-        const e = err as { status?: number };
-        setState('error');
-        if (e.status === 503) {
-          setMessage(
-            language === 'quc'
-              ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
-              : 'Este aparato no tiene voz instalada (espeak-ng).'
-          );
-        } else {
-          setMessage('No se pudo preparar la voz.');
-        }
+        const inFlightUrl = await inFlightRef.current.promise;
+        await playCachedUrl(player, inFlightUrl, roundIndex);
         return;
-      }
+      } catch { /* Fall through to fresh fetch on error */ }
+    }
 
-      // If user moved to another round before download finished, discard URL
-      if (activeRoundRef.current !== roundIndex || cachedLangRef.current !== language) {
-        URL.revokeObjectURL(url);
-        return;
-      }
+    if (clipUrlRef.current) {
+      stopAudio(player, clipUrlRef.current);
+      clipUrlRef.current = null;
+      cachedRoundRef.current = -1;
+    }
+    unlockAudio(player);
+    cachedLangRef.current = language;
+    setState('loading');
+    setMessage('Preparando la voz…');
 
-      clipUrlRef.current = url;
-      player.src = url;
+    let url: string;
+    try {
+      url = await speechApi.getSpeechBlobUrl(sessionId, language);
+    } catch (err: unknown) {
+      const e = err as { status?: number };
+      setState('error');
+      setMessage(
+        e.status === 503
+          ? language === 'quc' ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta." : 'Este aparato no tiene voz instalada (espeak-ng).'
+          : 'No se pudo preparar la voz.'
+      );
+      return;
+    }
 
-      player.onended = () => {
-        if (activeRoundRef.current === roundIndex) {
-          setState('done');
-          setMessage('Explicación leída.');
-        }
-      };
-
-      player.onerror = () => {
-        if (activeRoundRef.current === roundIndex) {
-          setState('error');
-          setMessage('No se pudo reproducir el audio.');
-        }
-      };
-
-      setState('playing');
-      setMessage('Leyendo la explicación en voz alta…');
-
-      try {
-        await player.play();
-      } catch {
-        setState('blocked');
-        setMessage('Toque “Escuchar” para reproducir la explicación.');
-      }
-    },
-    [sessionId, language, state]
-  );
+    clipUrlRef.current = url;
+    cachedRoundRef.current = roundIndex;
+    await playCachedUrl(player, url, roundIndex);
+  }, [sessionId, language, state, currentRound, playCachedUrl]);
 
   useEffect(() => {
     return () => {
-      const player = getAudioPlayer();
-      stopAudio(player, clipUrlRef.current);
+      stopAudio(getAudioPlayer(), clipUrlRef.current);
       clipUrlRef.current = null;
     };
   }, []);
 
-  return {
-    state,
-    message,
-    currentRound,
-    speak,
-    stopPlayback,
-  };
+  return { state, message, currentRound, speak, prefetch, stopPlayback };
 }
