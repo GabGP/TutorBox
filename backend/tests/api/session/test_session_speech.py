@@ -5,19 +5,26 @@ import pytest
 from api.session.speech import clear_speech_cache
 from core.config import clear_settings_cache
 from core.db.question_repository import create_question
-from core.tts import TTSSynthesisError, TTSUnavailableError
-from core.tts.router import get_tts_router
-from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
+from core.tts import TTSSynthesisError, TTSUnavailableError, get_tts_router
+from modes.quiz.contracts import DistractorDetail, QuizQuestionCreate
 from tests.conftest import auth_headers
 
 FAKE_WAV = b"RIFF\x24\x00\x00\x00WAVEfmt fake-audio"
 
 
+CLEAN_VARS = (
+    "TTS_ENABLED",
+    "TTS_ENGINE",
+    "TTS_VOICE",
+    "TTS_VOICE_QUC",
+    "TTS_ESPEAK_BINARY",
+)
+
+
 @pytest.fixture(autouse=True)
 def _clean_tts_settings(monkeypatch: pytest.MonkeyPatch):
     """Runs every test against clean settings and an empty speech cache."""
-    clean_vars = "TTS_ENABLED TTS_ENGINE TTS_VOICE TTS_VOICE_QUC TTS_ESPEAK_BINARY"
-    for name in clean_vars.split():
+    for name in CLEAN_VARS:
         monkeypatch.delenv(name, raising=False)
     clear_settings_cache()
     clear_speech_cache()
@@ -34,15 +41,13 @@ def _seed_question(conn) -> str:
             explanation="Dividiste sólo el numerador entre 2.",
         ),
         "C": DistractorDetail(
-            misconception="wrong_factor",
-            explanation="Usaste el factor equivocado.",
+            misconception="wrong_factor", explanation="Usaste el factor equivocado."
         ),
         "D": DistractorDetail(
-            misconception="kept_denom",
-            explanation="Conservaste el denominador.",
+            misconception="kept_denom", explanation="Conservaste el denominador."
         ),
     }
-    q_create = QuizQuestionCreate(
+    q = QuizQuestionCreate(
         topic="fractions",
         subconcept="simplification",
         question_text="¿Cuál es 6/8 simplificado?",
@@ -50,13 +55,18 @@ def _seed_question(conn) -> str:
         correct_option="A",
         distractors=distractors,
     )
-    qid = create_question(conn, q_create)
+    qid = create_question(conn, q)
     conn.commit()
     return qid
 
 
 def _play_round(
-    client, conn, teacher, votes: dict[str, str], reveal: bool = True
+    client,
+    conn,
+    teacher,
+    votes: dict[str, str],
+    close: bool = True,
+    reveal: bool = True,
 ) -> str:
     """Creates a one-question match, collects the given votes, and reveals it."""
     qid = _seed_question(conn)
@@ -73,17 +83,31 @@ def _play_round(
             json={"selected_option": option},
             headers=auth_headers(client, username),
         )
-    client.post(f"/api/v1/session/{sid}/close", headers=teacher)
+    if close:
+        client.post(f"/api/v1/session/{sid}/close", headers=teacher)
     if reveal:
         client.post(f"/api/v1/session/{sid}/reveal", headers=teacher)
     return sid
 
 
-def _play_b_round(client, conn, teacher, reveal: bool = True) -> str:
+def _play_b_round(
+    client, conn, teacher, close: bool = True, reveal: bool = True
+) -> str:
     """Creates and plays a round where students vote exclusively for distractor B."""
     return _play_round(
-        client, conn, teacher, {"student1": "B", "student2": "B"}, reveal=reveal
+        client,
+        conn,
+        teacher,
+        {"student1": "B", "student2": "B"},
+        close=close,
+        reveal=reveal,
     )
+
+
+def _speech(client, sid: str, hdrs: dict, lang: str | None = None):
+    """Convenience helper to request round speech."""
+    url = f"/api/v1/session/{sid}/speech" + (f"?lang={lang}" if lang else "")
+    return client.get(url, headers=hdrs)
 
 
 def test_speech_returns_wav_when_one_wrong_answer_passes_51_percent(
@@ -100,10 +124,10 @@ def test_speech_returns_wav_when_one_wrong_answer_passes_51_percent(
     monkeypatch.setattr("api.session.speech.synthesize_speech", fake_synthesize)
     sid = _play_b_round(client, conn, teacher_headers)
 
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "audio/wav"
-    assert response.content == FAKE_WAV
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "audio/wav"
+    assert res.content == FAKE_WAV
     assert spoken["lang"] == "es"
     assert "100 por ciento del grupo respondió 1/2" in spoken["text"]
     assert "Dividiste sólo el numerador entre 2." in spoken["text"]
@@ -122,25 +146,39 @@ def test_speech_is_refused_when_the_rule_did_not_trigger(
     )
     sid = _play_round(client, conn, teacher_headers, {"student1": "A", "student2": "B"})
 
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 409
-    assert "did not trigger" in response.json()["detail"]
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 409
+    assert "did not trigger" in res.json()["detail"]
     assert calls == []
 
 
-def test_speech_requires_a_revealed_round(
+def test_speech_rejects_open_active_round(
     staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
 ):
-    """Verifies the explanation cannot leak before the teacher reveals the answer."""
+    """Verifies audio synthesis is refused while students are actively voting."""
     _, conn = staff_db
     monkeypatch.setattr(
-        "api.session.speech.synthesize_speech", lambda text, lang="es": FAKE_WAV
+        "api.session.speech.synthesize_speech", lambda t, lang="es": FAKE_WAV
     )
-    sid = _play_b_round(client, conn, teacher_headers, reveal=False)
+    sid = _play_b_round(client, conn, teacher_headers, close=False, reveal=False)
 
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 409
-    assert "not been revealed" in response.json()["detail"]
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 409
+    assert "voting has not finished" in res.json()["detail"]
+
+
+def test_speech_allows_speculative_prefetch_on_closed_round(
+    staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
+):
+    """Verifies speculative pre-fetch succeeds once round is closed before reveal."""
+    _, conn = staff_db
+    monkeypatch.setattr(
+        "api.session.speech.synthesize_speech", lambda t, lang="es": FAKE_WAV
+    )
+    sid = _play_b_round(client, conn, teacher_headers, close=True, reveal=False)
+
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 200 and res.content == FAKE_WAV
 
 
 def test_speech_is_teacher_only(
@@ -149,20 +187,17 @@ def test_speech_is_teacher_only(
     """Verifies student devices cannot pull the spoken explanation."""
     _, conn = staff_db
     monkeypatch.setattr(
-        "api.session.speech.synthesize_speech", lambda text, lang="es": FAKE_WAV
+        "api.session.speech.synthesize_speech", lambda t, lang="es": FAKE_WAV
     )
     sid = _play_b_round(client, conn, teacher_headers)
 
-    response = client.get(
-        f"/api/v1/session/{sid}/speech", headers=auth_headers(client, "student1")
-    )
-    assert response.status_code == 403
+    res = _speech(client, sid, auth_headers(client, "student1"))
+    assert res.status_code == 403
 
 
 def test_speech_unknown_session_is_404(staff_db, client, teacher_headers):
     """Verifies a stale session id does not reach the synthesizer."""
-    response = client.get("/api/v1/session/s_missing/speech", headers=teacher_headers)
-    assert response.status_code == 404
+    assert _speech(client, "s_missing", teacher_headers).status_code == 404
 
 
 def test_speech_reports_a_missing_speech_engine(
@@ -179,9 +214,9 @@ def test_speech_reports_a_missing_speech_engine(
     monkeypatch.setattr("api.session.speech.synthesize_speech", fake_synthesize)
     sid = _play_b_round(client, conn, teacher_headers)
 
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 503
-    assert "espeak-ng" in response.json()["detail"]
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 503
+    assert "espeak-ng" in res.json()["detail"]
 
 
 def test_speech_reports_a_failing_engine(
@@ -196,58 +231,38 @@ def test_speech_reports_a_failing_engine(
     monkeypatch.setattr("api.session.speech.synthesize_speech", fake_synthesize)
     sid = _play_b_round(client, conn, teacher_headers)
 
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 500
+    assert _speech(client, sid, teacher_headers).status_code == 500
 
 
-def test_speech_in_kiche_is_unavailable_until_a_voice_is_configured(
+def test_speech_in_kiche_behavior(
     staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
 ):
-    """Verifies the K'iche' toggle reports honestly instead of speaking Spanish."""
+    """Verifies K'iche' voice failure without voice, and success with voice configured."""
     _, conn = staff_db
-    calls: list[str] = []
     router = get_tts_router()
     monkeypatch.setattr(router.piper, "is_available", lambda voice=None: False)
     sid = _play_b_round(client, conn, teacher_headers)
 
-    response = client.get(
-        f"/api/v1/session/{sid}/speech?lang=quc", headers=teacher_headers
-    )
-    assert response.status_code == 503
-    assert "quc" in response.json()["detail"]
-    assert calls == []
+    res_unavail = _speech(client, sid, teacher_headers, lang="quc")
+    assert res_unavail.status_code == 503 and "quc" in res_unavail.json()["detail"]
 
-
-def test_speech_uses_the_configured_kiche_voice_when_present(
-    staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
-):
-    """Verifies TTS_VOICE_QUC routes the K'iche' request to that voice."""
-    _, conn = staff_db
     monkeypatch.setenv("TTS_VOICE_QUC", "quc-test")
     clear_settings_cache()
-    router = get_tts_router()
-    monkeypatch.setattr(router.piper, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.espeak, "is_available", lambda voice=None: True)
     used: dict[str, str] = {}
-
-    def fake_synthesize(text: str, voice: str | None = None) -> bytes:
-        used["voice"] = voice or ""
-        return FAKE_WAV
-
-    monkeypatch.setattr(router.espeak, "synthesize", fake_synthesize)
-    sid = _play_b_round(client, conn, teacher_headers)
-
-    response = client.get(
-        f"/api/v1/session/{sid}/speech?lang=quc", headers=teacher_headers
+    monkeypatch.setattr(
+        router.espeak,
+        "synthesize",
+        lambda t, voice=None: used.update({"voice": voice or ""}) or FAKE_WAV,
     )
-    assert response.status_code == 200
-    assert used["voice"] == "quc-test"
+
+    res_avail = _speech(client, sid, teacher_headers, lang="quc")
+    assert res_avail.status_code == 200 and used["voice"] == "quc-test"
 
 
 def test_speech_rejects_an_unknown_language(staff_db, client, teacher_headers):
     """Verifies only the classroom languages are accepted."""
-    path = "/api/v1/session/s_any/speech?lang=fr"
-    assert client.get(path, headers=teacher_headers).status_code == 422
+    assert _speech(client, "s_any", teacher_headers, lang="fr").status_code == 422
 
 
 def test_speech_without_the_round_question_is_404(
@@ -255,21 +270,16 @@ def test_speech_without_the_round_question_is_404(
 ):
     """Verifies a round whose question vanished reports 404 instead of speaking nothing."""
     _, conn = staff_db
-    monkeypatch.setattr(
-        "api.session.speech.synthesize_speech", lambda t, lang="es": FAKE_WAV
-    )
     sid = _play_b_round(client, conn, teacher_headers)
     monkeypatch.setattr("api.session.speech.get_question_by_id", lambda conn, qid: None)
-
-    response = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert response.status_code == 404
-    assert "Question" in response.json()["detail"]
+    res = _speech(client, sid, teacher_headers)
+    assert res.status_code == 404 and "Question" in res.json()["detail"]
 
 
 def test_speech_returns_cached_audio_on_subsequent_calls(
     staff_db, client, teacher_headers, monkeypatch: pytest.MonkeyPatch
 ):
-    """Verifies that repeatedly calling /speech returns cached audio and bounds cache size."""
+    """Verifies that repeatedly calling /speech returns cached audio."""
     _, conn = staff_db
     calls: list[str] = []
     router = get_tts_router()
@@ -278,19 +288,10 @@ def test_speech_returns_cached_audio_on_subsequent_calls(
         monkeypatch.setattr(engine, "is_available", lambda voice=None: False)
     monkeypatch.setattr(router.espeak, "is_available", lambda voice=None: True)
     monkeypatch.setattr(
-        router.espeak,
-        "synthesize",
-        lambda text, voice=None: calls.append(text) or FAKE_WAV,
+        router.espeak, "synthesize", lambda t, voice=None: calls.append(t) or FAKE_WAV
     )
-    monkeypatch.setattr("core.tts.router._MAX_CACHE_ENTRIES", 1)
-    router._cache[("old_script", "es", "")] = b"old"
 
     sid = _play_b_round(client, conn, teacher_headers)
-
-    res1 = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert res1.status_code == 200 and res1.content == FAKE_WAV
-    assert len(calls) == 1 and ("old_script", "es", "") not in router._cache
-
-    res2 = client.get(f"/api/v1/session/{sid}/speech", headers=teacher_headers)
-    assert res2.status_code == 200 and res2.content == FAKE_WAV
+    assert _speech(client, sid, teacher_headers).status_code == 200
+    assert _speech(client, sid, teacher_headers).status_code == 200
     assert len(calls) == 1

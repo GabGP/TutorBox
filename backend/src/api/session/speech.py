@@ -46,10 +46,13 @@ def round_speech(
     """Synthesizes the misconception explanation for the current revealed round."""
     with get_db() as conn:
         _, current_round = get_session_and_current_round(conn, session_id)
-        if current_round.status != RoundStatus.REVEALED.value:
+        if current_round.status not in (
+            RoundStatus.CLOSED.value,
+            RoundStatus.REVEALED.value,
+        ):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Round has not been revealed yet.",
+                detail="Round voting has not finished yet.",
             )
         question = (
             get_question_by_id(conn, current_round.question_id)
@@ -67,11 +70,24 @@ def round_speech(
         votes, question.correct_option, question.distractors
     )
     if not decision.should_speak:
+        logger.info(
+            "Speech skipped for round %s (status=%s, reason=%s)",
+            current_round.id,
+            current_round.status,
+            decision.reason,
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"The >51% rule did not trigger for this round ({decision.reason}).",
         )
 
+    logger.info(
+        "Starting speech synthesis for round %s (dominant=%s, pct=%.1f%%, lang=%s)",
+        current_round.id,
+        decision.dominant_distractor,
+        decision.dominant_percentage,
+        lang,
+    )
     script = build_intervention_script(question.options, tally, decision)
     try:
         audio = synthesize_speech(script, lang=lang)
@@ -87,10 +103,9 @@ def round_speech(
         ) from err
 
     logger.info(
-        "Spoke >51%% intervention for round %s (%s%% chose %s)",
+        "Synthesized >51%% audio ready for round %s (%d bytes WAV)",
         current_round.id,
-        decision.dominant_percentage,
-        decision.dominant_distractor,
+        len(audio),
     )
     return Response(
         content=audio,

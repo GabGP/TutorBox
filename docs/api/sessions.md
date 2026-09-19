@@ -244,10 +244,10 @@ Advances the session to the next question round, or marks the match as `complete
 
 ### <a id="get-session-speech"></a>`GET /api/v1/session/{session_id}/speech`
 
-Synthesizes the misconception explanation of the **current revealed round** as offline speech, so
+Synthesizes the misconception explanation of the **current closed or revealed round** as offline speech, so
 the teacher's device reads out loud *why* the answer the class shared is wrong. The rule is
 re-evaluated server-side from the persisted votes: a client cannot make the appliance speak for a
-round that did not trigger it.
+round that did not trigger it. Allows speculative pre-fetching during the `closed` status before `reveal`.
 
 * **Authorization**: Teacher, Admin
 * **Path Parameters**:
@@ -266,7 +266,7 @@ round that did not trigger it.
     return instantly from a bounded in-memory LRU cache (32 entries max).
   * `403 Forbidden`: Student device; only the teacher's client may pull the audio.
   * `404 Not Found`: Session, active round, or its question not found.
-  * `409 Conflict`: Round is not `revealed`, or the >51% Rule did not trigger (detail names the
+  * `409 Conflict`: Round is still active (`open` / `pending`), or the >51% Rule did not trigger (detail names the
     evaluator `reason`, e.g. `majority_correct`, `tie_between_distractors`).
   * `422 Unprocessable Entity`: `lang` outside `es` / `quc`.
   * `500 Internal Server Error`: Synthesizer ran but crashed or produced no audio.
