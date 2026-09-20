@@ -35,6 +35,7 @@
 
 .studentName {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -102,6 +103,12 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.recoverRow > input {
+  min-width: 0;
 }
 
 /* Bottom-sheet edit card: phone-first sheet, centered dialog on desktop */
@@ -240,6 +247,17 @@
     max-height: calc(100dvh - 48px);
     box-shadow: 0 24px 64px -16px rgba(6, 45, 63, 0.45);
     animation: dialogIn 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.1);
+  }
+}
+
+/* Phone: let roster rows wrap so the recover form drops below the
+   account name instead of squeezing it out of view. */
+@media (max-width: 560px) {
+  .rosterItem {
+    flex-wrap: wrap;
+  }
+  .recoverRow {
+    flex: 1 1 100%;
   }
 }
 
