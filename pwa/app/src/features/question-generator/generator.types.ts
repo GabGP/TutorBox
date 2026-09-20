@@ -16,6 +16,29 @@ export interface GenerationMetrics {
   avg_duration_ms: number;
 }
 
+export interface FullGenerationMetrics {
+  total_generations: number;
+  successful_generations: number;
+  failed_generations: number;
+  success_rate: number;
+  avg_attempts: number;
+  avg_duration_ms: number;
+}
+
+export interface GenerationLogItem {
+  id: number;
+  question_id?: string | null;
+  user_id: number;
+  topic: string;
+  subconcept?: string | null;
+  model_name: string;
+  attempts: number;
+  duration_ms: number;
+  success: boolean;
+  rejection_history: string[];
+  created_at?: string | null;
+}
+
 export interface GeneratedQuestion {
   id: string;
   question_text: string;
