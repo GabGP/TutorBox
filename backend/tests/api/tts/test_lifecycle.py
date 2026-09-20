@@ -43,7 +43,7 @@ def test_tts_load_unavailable_returns_503(
             headers=teacher_headers,
         )
     assert res.status_code == 503
-    assert "Model missing" in res.json()["detail"]
+    assert "nonexistent" in res.json()["detail"]
 
 
 def test_tts_load_forbidden_for_student(
@@ -154,3 +154,69 @@ def test_tts_voices_listing(
         v["engine"] == "espeak" and v["id"] == "quc-voice"
         for v in res_quc_with_espeak.json()
     )
+
+
+def test_tts_load_evicts_other_resident_engines(
+    client: TestClient, teacher_headers: dict[str, str]
+) -> None:
+    """Loading kokoro unloads a resident piper (single-resident policy)."""
+
+    class FakeBackend:
+        engine_name = "kokoro"
+
+    with (
+        patch(
+            "core.tts.router.TTSRouter.select_backend",
+            return_value=FakeBackend(),
+        ),
+        patch(
+            "core.tts.router.TTSRouter.loaded_engines",
+            return_value=["kokoro", "piper"],
+        ),
+        patch("core.tts.router.TTSRouter.unload", return_value="piper") as unload,
+        patch("core.tts.router.TTSRouter.preload", return_value=("kokoro", 3.0)),
+        patch(
+            "core.tts.router.TTSRouter.status",
+            return_value={"engine": "kokoro", "loaded": True, "model_id": "k"},
+        ),
+    ):
+        res = client.post(
+            "/api/v1/tts/load",
+            json={"engine": "kokoro", "lang": "es"},
+            headers=teacher_headers,
+        )
+    assert res.status_code == 202
+    unload.assert_called_once_with(engine="piper")
+
+
+def test_tts_load_keeps_already_resident_target(
+    client: TestClient, teacher_headers: dict[str, str]
+) -> None:
+    """Reloading the resident engine evicts nothing."""
+
+    class FakeBackend:
+        engine_name = "kokoro"
+
+    with (
+        patch(
+            "core.tts.router.TTSRouter.select_backend",
+            return_value=FakeBackend(),
+        ),
+        patch(
+            "core.tts.router.TTSRouter.loaded_engines",
+            return_value=["kokoro"],
+        ),
+        patch("core.tts.router.TTSRouter.unload") as unload,
+        patch("core.tts.router.TTSRouter.preload", return_value=("kokoro", 1.0)),
+        patch(
+            "core.tts.router.TTSRouter.status",
+            return_value={"engine": "kokoro", "loaded": True, "model_id": "k"},
+        ),
+    ):
+        res = client.post(
+            "/api/v1/tts/load",
+            json={"engine": "kokoro", "lang": "es"},
+            headers=teacher_headers,
+        )
+    assert res.status_code == 202
+    unload.assert_not_called()
