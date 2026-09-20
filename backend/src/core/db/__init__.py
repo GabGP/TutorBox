@@ -16,6 +16,7 @@ from . import (
 from .audit import VALID_ACTIONS, record_audit
 from .telemetry_mapper import row_to_telemetry_dict
 from .telemetry_repository import (
+    count_generation_logs,
     get_generation_log_by_id,
     get_generation_summary_metrics,
     list_generation_logs,
@@ -30,6 +31,7 @@ quiz_telemetry = telemetry_repository
 __all__ = [
     "VALID_ACTIONS",
     "audit",
+    "count_generation_logs",
     "database",
     "get_generation_log_by_id",
     "get_generation_summary_metrics",
