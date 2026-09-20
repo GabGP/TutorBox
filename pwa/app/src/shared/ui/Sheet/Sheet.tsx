@@ -31,11 +31,24 @@ export const Sheet: React.FC<SheetProps> = ({ label, onClose, children }) => {
   }, [onClose]);
 
   // Lock background scroll while open; backdrop taps still dismiss.
+  // body-only `overflow` is ignored by touch momentum scrolling, so also
+  // lock the root element and swallow backdrop touchmoves (non-passive).
+  // Touches inside the sheet panel keep their native scroll.
+  const overlayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    const overlay = overlayRef.current;
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.target === overlay) e.preventDefault();
+    };
+    overlay?.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+      overlay?.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 
@@ -71,6 +84,7 @@ export const Sheet: React.FC<SheetProps> = ({ label, onClose, children }) => {
 
   return createPortal(
     <div
+      ref={overlayRef}
       className={rosterStyles.sheetOverlay}
       onClick={onClose}
       role="presentation"

@@ -114,6 +114,7 @@
   align-items: flex-end;
   justify-content: center;
   animation: fadeIn 0.18s ease;
+  overscroll-behavior: contain;
 }
 
 .sheet {
@@ -121,6 +122,7 @@
   max-width: 560px;
   max-height: 85dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--panel);
   border-radius: 28px 28px 0 0;
   padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
