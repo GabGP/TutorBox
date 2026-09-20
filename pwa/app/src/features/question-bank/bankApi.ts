@@ -44,7 +44,7 @@ export const bankApi = {
     const query = new URLSearchParams();
     if (params?.topic) query.set('topic', params.topic);
     if (params?.subconcept) query.set('subconcept', params.subconcept);
-    query.set('limit', String(params?.limit ?? 20));
+    query.set('limit', String(params?.limit ?? 5));
     query.set('offset', String(params?.offset ?? 0));
     return requestApi('GET', `/quiz/questions?${query.toString()}`);
   },

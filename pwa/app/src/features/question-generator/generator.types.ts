@@ -1,6 +1,8 @@
 export interface SubconceptModel {
   name: string;
   description?: string;
+  /** Diagnosed misconception slugs for this subconcept (from /quiz/topics). */
+  misconceptions?: string[];
 }
 
 export interface TopicModel {

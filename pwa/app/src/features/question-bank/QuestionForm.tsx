@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
+import { getSubconceptLabel } from '../question-generator/TopicSelector';
 import rosterStyles from '../roster/roster.module.css';
 import { BankQuestion, BankQuestionCreate, bankApi } from './bankApi';
 
@@ -61,6 +62,21 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
   }, []);
 
   const distractorKeys = OPTION_KEYS.filter((k) => k !== fCorrect);
+
+  // Taxonomy-driven options: subconcepts of the chosen topic, and the
+  // diagnosed misconception slugs of the chosen subconcept.
+  const subconceptOptions =
+    topics.find((t) => t.name === fTopic)?.subconcepts ?? [];
+  const misconceptionOptions =
+    subconceptOptions.find((s) => s.name === fSubconcept)?.misconceptions ??
+    [];
+
+  const handleTopicChange = (name: string) => {
+    setFTopic(name);
+    const subs =
+      topics.find((t) => t.name === name)?.subconcepts ?? [];
+    if (!subs.some((s) => s.name === fSubconcept)) setFSubconcept('');
+  };
 
   const buildDraft = (): BankQuestion => {
     const distractors: Record<string, DraftDistractor> = {};
@@ -129,24 +145,39 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
           className={rosterStyles.addInput}
           style={{ flex: 1 }}
           value={fTopic}
-          onChange={(e) => setFTopic(e.target.value)}
+          onChange={(e) => handleTopicChange(e.target.value)}
           aria-label="Tema"
         >
           <option value="">Tema…</option>
+          {fTopic && !topics.some((t) => t.name === fTopic) && (
+            <option value={fTopic}>{fTopic}</option>
+          )}
           {topics.map((t) => (
             <option key={t.name} value={t.name}>
               {t.label || t.name}
             </option>
           ))}
         </select>
-        <input
+        <select
           className={rosterStyles.addInput}
           style={{ flex: 1 }}
-          maxLength={64}
-          placeholder="Subconcepto"
           value={fSubconcept}
           onChange={(e) => setFSubconcept(e.target.value)}
-        />
+          aria-label="Subconcepto"
+        >
+          <option value="">Subconcepto…</option>
+          {fSubconcept &&
+            !subconceptOptions.some((s) => s.name === fSubconcept) && (
+              <option value={fSubconcept}>
+                {getSubconceptLabel(fSubconcept)}
+              </option>
+            )}
+          {subconceptOptions.map((s) => (
+            <option key={s.name} value={s.name}>
+              {getSubconceptLabel(s.name)}
+            </option>
+          ))}
+        </select>
       </div>
       <textarea
         className={rosterStyles.addInput}
@@ -180,24 +211,47 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
           />
         </div>
       ))}
-      {distractorKeys.map((k) => (
+      {distractorKeys.map((k) => {
+        const currentMisc = fDistractors[k]?.misconception || '';
+        const setMisc = (misconception: string) =>
+          setFDistractors((prev) => ({
+            ...prev,
+            [k]: {
+              misconception,
+              explanation: prev[k]?.explanation || '',
+            },
+          }));
+        return (
         <div className={rosterStyles.addForm} key={`d-${k}`}>
-          <input
-            className={rosterStyles.addInput}
-            style={{ flex: '0 0 130px' }}
-            maxLength={100}
-            placeholder={`Error ${k}`}
-            value={fDistractors[k]?.misconception || ''}
-            onChange={(e) =>
-              setFDistractors((prev) => ({
-                ...prev,
-                [k]: {
-                  misconception: e.target.value,
-                  explanation: prev[k]?.explanation || '',
-                },
-              }))
-            }
-          />
+          {misconceptionOptions.length > 0 ? (
+            <select
+              className={rosterStyles.addInput}
+              style={{ flex: '0 0 130px' }}
+              value={currentMisc}
+              onChange={(e) => setMisc(e.target.value)}
+              aria-label={`Error ${k}`}
+            >
+              <option value="">Error {k}…</option>
+              {currentMisc && !misconceptionOptions.includes(currentMisc) && (
+                <option value={currentMisc}>{currentMisc}</option>
+              )}
+              {misconceptionOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={rosterStyles.addInput}
+              style={{ flex: '0 0 130px' }}
+              maxLength={100}
+              placeholder={`Error ${k}`}
+              aria-label={`Error ${k}`}
+              value={currentMisc}
+              onChange={(e) => setMisc(e.target.value)}
+            />
+          )}
           <input
             className={rosterStyles.addInput}
             style={{ flex: 1 }}
@@ -215,7 +269,8 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
             }
           />
         </div>
-      ))}
+        );
+      })}
       {validation && (
         <div className={rosterStyles.alert} id="bankValidation">
           {validation.map((v, i) => (

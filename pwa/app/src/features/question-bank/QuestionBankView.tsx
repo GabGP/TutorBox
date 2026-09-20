@@ -1,20 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { DataList } from '../../shared/ui/DataList/DataList';
+import { Pagination } from '../../shared/ui/Pagination/Pagination';
+import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
+import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
 import rosterStyles from '../roster/roster.module.css';
 import { BankQuestion, bankApi } from './bankApi';
+import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
 
-const PAGE_SIZE = 20;
-const OPTION_KEYS = ['A', 'B', 'C', 'D'] as const;
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 /**
- * Question-bank browser: topic filter, tappable rows with inline detail
- * (refreshed from the server on expand), two-tap delete, and an edit
- * affordance opening the floating edit sheet. Optional select mode
- * (checkboxes) lets the quiz-prep flow build a match from hand-picked
- * questions. Creation lives in the Crear tab; the JSON contract viewer
- * is admin-only.
+ * Question-bank browser: topic filter, swipe rows with Info/Edit/Delete
+ * actions, detail in a floating sheet (refreshed from the server on open),
+ * two-tap delete, and an edit affordance opening the floating edit sheet.
+ * Optional select mode (checkboxes + tap-to-toggle) lets the quiz-prep
+ * flow build a match from hand-picked questions. Creation lives in the
+ * Crear tab; the JSON contract viewer is admin-only.
  */
 export interface QuestionBankViewProps {
   selectable?: boolean;
@@ -38,12 +44,14 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editing, setEditing] = useState<BankQuestion | null>(null);
+  const [detail, setDetail] = useState<BankQuestion | null>(null);
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [schema, setSchema] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,13 +61,13 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       .catch(() => {});
   }, []);
 
-  const load = useCallback(async (t: string, off: number) => {
+  const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);
     setError(null);
     try {
       const res = await bankApi.listQuestions({
         topic: t || undefined,
-        limit: PAGE_SIZE,
+        limit: size,
         offset: off,
       });
       setQuestions(res.questions || []);
@@ -73,23 +81,44 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   }, []);
 
   useEffect(() => {
-    load(topic, offset);
+    load(topic, offset, pageSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, offset, load, reloadKey]);
+  }, [topic, offset, pageSize, load, reloadKey]);
 
-  const handleExpand = async (q: BankQuestion) => {
-    if (expanded === q.id) {
-      setExpanded(null);
-      return;
-    }
-    setExpanded(q.id);
-    // Refresh the row from GET /quiz/questions/{id} so edits made
+  const handleOpenDetail = async (q: BankQuestion) => {
+    setDetail(q);
+    // Refresh the detail from GET /quiz/questions/{id} so edits made
     // elsewhere (or generated content) never show stale.
     try {
       const fresh = await bankApi.getQuestion(q.id);
       setQuestions((prev) => prev.map((x) => (x.id === q.id ? fresh : x)));
+      setDetail(fresh);
     } catch {
       // Keep list data on network errors
+    }
+  };
+
+  const handleFaceTap = (q: BankQuestion) => {
+    if (selectable) {
+      onToggleSelect?.(q.id);
+      return;
+    }
+    void handleOpenDetail(q);
+  };
+
+  const handleDeleteCommit = async (id: string) => {
+    setConfirmDelete(null);
+    setOpenSwipeId(null);
+    try {
+      await bankApi.deleteQuestion(id);
+      setNotice('Pregunta eliminada.');
+      if (detail?.id === id) setDetail(null);
+      // A deleted question must not stay counted as selected.
+      if (selectable && selectedIds.includes(id)) onToggleSelect?.(id);
+      load(topic, offset, pageSize);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Error al eliminar');
     }
   };
 
@@ -98,22 +127,14 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       setConfirmDelete(id);
       return;
     }
-    setConfirmDelete(null);
-    try {
-      await bankApi.deleteQuestion(id);
-      setNotice('Pregunta eliminada.');
-      if (expanded === id) setExpanded(null);
-      load(topic, offset);
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al eliminar');
-    }
+    await handleDeleteCommit(id);
   };
 
   const handleSavedEdit = (id: string) => {
     setEditing(null);
+    setOpenSwipeId(null);
     setNotice(`Pregunta actualizada (${id}).`);
-    load(topic, offset);
+    load(topic, offset, pageSize);
   };
 
   const toggleSchema = async () => {
@@ -130,8 +151,8 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     }
   };
 
-  const page = Math.floor(offset / PAGE_SIZE) + 1;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.floor(offset / pageSize) + 1;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className={rosterStyles.container} id="bank">
@@ -174,96 +195,113 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         </div>
       )}
 
-      <div className={rosterStyles.rosterList} id="bankList">
-        {loading ? (
-          <div style={{ color: 'var(--mute)' }}>Cargando…</div>
-        ) : questions.length === 0 ? (
-          <div style={{ color: 'var(--mute)' }}>
-            No hay preguntas para este filtro.
-          </div>
-        ) : (
-          questions.map((q) => (
-            <div key={q.id} className={rosterStyles.rosterItem}>
-              {selectable && (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(q.id)}
-                  onChange={() => onToggleSelect?.(q.id)}
-                  aria-label={`Elegir pregunta ${q.id}`}
-                />
-              )}
-              <span
-                className={rosterStyles.studentName}
-                onClick={() => handleExpand(q)}
-                style={{ cursor: 'pointer' }}
-              >
-                {q.question_text}
-              </span>
-              <span className={rosterStyles.roleTag}>{q.topic}</span>
-              <button
-                type="button"
-                className={rosterStyles.resetBtn}
-                aria-label={`Editar pregunta ${q.id}`}
-                onClick={() => setEditing(q)}
-              >
-                ✏️
-              </button>
-              <button
-                type="button"
-                className={rosterStyles.deleteBtn}
-                onClick={() => handleDelete(q.id)}
-              >
-                {confirmDelete === q.id ? '¿Confirmar?' : 'Eliminar'}
-              </button>
-              {expanded === q.id && (
-                <div style={{ flexBasis: '100%', fontSize: '14px' }}>
-                  {OPTION_KEYS.map((k) => (
-                    <div key={k}>
-                      <b>
-                        {k}
-                        {k === q.correct_option ? ' ✔' : ''}:
-                      </b>{' '}
-                      {q.options[k]}
-                      {k !== q.correct_option && q.distractors[k] && (
-                        <span style={{ color: 'var(--mute2)' }}>
-                          {' '}
-                          — {q.distractors[k].explanation}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  <div style={{ color: 'var(--mute2)', marginTop: '4px' }}>
-                    {q.subconcept} · {q.source || ''}{' '}
-                    {q.sympy_verified ? '· verificada' : ''}
-                  </div>
-                </div>
-              )}
+      {loading ? (
+        <DataList
+          id="bankList"
+          ariaLabel="Banco de preguntas"
+          busy
+          isEmpty={false}
+        >
+          {Array.from({ length: pageSize }, (_, i) => (
+            <div
+              key={`sk-${i}`}
+              role="listitem"
+              data-testid="bank-skeleton"
+              style={{
+                padding: '10px 12px',
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'center',
+              }}
+            >
+              <Skeleton style={{ flex: 1, height: '18px' }} />
+              <Skeleton
+                style={{ width: '64px', height: '22px', borderRadius: '12px' }}
+              />
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </DataList>
+      ) : (
+        <DataList
+          id="bankList"
+          ariaLabel="Banco de preguntas"
+          isEmpty={questions.length === 0}
+          emptyText="No hay preguntas para este filtro."
+        >
+          {questions.map((q) => (
+            <div key={q.id} role="listitem">
+              <SwipeRow
+                ariaLabel={`Pregunta ${q.id}`}
+                open={openSwipeId === q.id}
+                onOpenChange={(next) => {
+                  setOpenSwipeId(next ? q.id : null);
+                  if (!next && confirmDelete === q.id) setConfirmDelete(null);
+                }}
+                actions={[
+                  {
+                    key: 'info',
+                    label: 'Info',
+                    ariaLabel: `Ver detalle pregunta ${q.id}`,
+                    icon: <Eye aria-hidden />,
+                    onActivate: () => {
+                      void handleOpenDetail(q);
+                    },
+                  },
+                  {
+                    key: 'edit',
+                    label: 'Editar',
+                    ariaLabel: `Editar pregunta ${q.id}`,
+                    icon: <Pencil aria-hidden />,
+                    onActivate: () => setEditing(q),
+                  },
+                  {
+                    key: 'delete',
+                    label: confirmDelete === q.id ? '¿Confirmar?' : 'Eliminar',
+                    icon: <Trash2 aria-hidden />,
+                    tone: 'danger',
+                    onActivate: () => void handleDelete(q.id),
+                  },
+                ]}
+              >
+                {selectable && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(q.id)}
+                    onChange={() => onToggleSelect?.(q.id)}
+                    aria-label={`Elegir pregunta ${q.id}`}
+                  />
+                )}
+                <button
+                  type="button"
+                  className={rosterStyles.studentName}
+                  onClick={() => handleFaceTap(q)}
+                  style={{ cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {q.question_text}
+                </button>
+                <span className={rosterStyles.roleTag}>{q.topic}</span>
+              </SwipeRow>
+            </div>
+          ))}
+        </DataList>
+      )}
 
-      <div className={rosterStyles.pagerRow}>
-        <button
-          type="button"
-          className={rosterStyles.submitAdd}
-          disabled={offset === 0}
-          onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
-        >
-          ← Anterior
-        </button>
-        <span className={rosterStyles.pagerLabel}>
-          {page}/{pages}
-        </span>
-        <button
-          type="button"
-          className={rosterStyles.submitAdd}
-          disabled={offset + PAGE_SIZE >= total}
-          onClick={() => setOffset((o) => o + PAGE_SIZE)}
-        >
-          Siguiente →
-        </button>
-      </div>
+      <Pagination
+        id="bankPager"
+        page={page}
+        pages={pages}
+        pageSize={pageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        onPrev={() => setOffset((o) => Math.max(0, o - pageSize))}
+        onNext={() => setOffset((o) => o + pageSize)}
+        onFirst={() => setOffset(0)}
+        onLast={() => setOffset((pages - 1) * pageSize)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setOffset(0);
+        }}
+        disabled={loading}
+      />
 
       {isAdmin && (
         <details>
@@ -299,6 +337,10 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         question={editing}
         onClose={() => setEditing(null)}
         onSaved={handleSavedEdit}
+      />
+      <QuestionDetailSheet
+        question={detail}
+        onClose={() => setDetail(null)}
       />
     </div>
   );
