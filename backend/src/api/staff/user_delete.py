@@ -5,6 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from api.staff.guards import ensure_managers_remain
 from api.staff.schemas import DeleteUserResponse
 from core.db.audit import record_audit
 from core.db.database import get_db
@@ -34,6 +35,20 @@ def _soft_delete_user(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Cannot delete the last remaining admin account.",
             )
+
+    # Last-teacher guard: the classroom must keep someone able to teach.
+    if target_role == "teacher":
+        cursor.execute(
+            "SELECT COUNT(*) AS n FROM users WHERE role = 'teacher' AND deleted_at IS NULL"
+        )
+        if cursor.fetchone()["n"] <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete the last remaining teacher account.",
+            )
+
+    # Manager floor: never lock everyone out of staff management.
+    ensure_managers_remain(conn, target_role, verb="delete")
 
     anon_username = f"deleted_user_{target_id}_{secrets.token_hex(4)}"
     unusable_hash = hash_pin(secrets.token_hex(16))

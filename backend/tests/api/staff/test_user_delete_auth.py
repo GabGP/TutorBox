@@ -123,8 +123,21 @@ def test_admin_deletes_anyone_success(
         == 200
     )
 
-    # Admin deletes teacher
+    # Deleting the last remaining teacher is rejected (classroom lockout).
     teacher_id = get_user_id(conn, "teacher1")
+    assert (
+        client.delete(
+            f"/api/v1/staff/users/{teacher_id}", headers=admin_headers
+        ).status_code
+        == 409
+    )
+
+    # With a backup teacher in place, the delete succeeds.
+    client.post(
+        "/api/v1/staff/users",
+        headers=admin_headers,
+        json={"username": "teacher2", "pin": "1234", "role": "teacher"},
+    )
     assert (
         client.delete(
             f"/api/v1/staff/users/{teacher_id}", headers=admin_headers

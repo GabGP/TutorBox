@@ -27,6 +27,9 @@ from .schemas import (
     ResetPinResponse,
     UserListResponse,
 )
+from .user_change_role import (
+    router as user_change_role_router,
+)
 from .user_delete import (
     router as user_delete_router,
 )
@@ -43,6 +46,7 @@ from .users import (
 router = APIRouter()
 router.include_router(users_router)
 router.include_router(user_reset_pin_router)
+router.include_router(user_change_role_router)
 router.include_router(user_delete_router)
 router.include_router(user_recover_router)
 router.include_router(audit_router)
@@ -68,6 +72,7 @@ __all__ = [
     "device_pairing_router",
     "devices_router",
     "router",
+    "user_change_role_router",
     "user_delete_router",
     "user_recover_router",
     "user_reset_pin_router",
