@@ -5,12 +5,14 @@ import { generatorApi } from '../../features/question-generator/generatorApi';
 import { SessionReport } from '../../features/session-engine/session.types';
 import { sessionApi } from '../../features/session-engine/sessionApi';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
+import { ttsApi } from '../../features/speech/speechApi';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { useTTSLifecycle } from '../../features/speech/useTTSLifecycle';
 import { unlockAudio } from '../../shared/lib/sound';
 import { StoredRoundHistory, storage } from '../../shared/lib/storage';
 
 export type TeacherWizardStep = 'topic' | 'count' | 'lobby';
+export type QuestionSource = 'generate' | 'bank';
 
 interface UseTeacherCoordinatorOptions {
   enabled?: boolean;
@@ -38,6 +40,8 @@ export function useTeacherCoordinator(
   const [topics, setTopics] = useState<TopicModel[]>([]);
   const [history, setHistory] = useState<StoredRoundHistory[]>([]);
   const [report, setReport] = useState<SessionReport | null>(null);
+  const [source, setSource] = useState<QuestionSource>('generate');
+  const [bankIds, setBankIds] = useState<string[]>([]);
 
   const { session, setSession, error: sessionErr } = useSessionEngine({
     targetSessionId: sid,
@@ -107,10 +111,41 @@ export function useTeacherCoordinator(
     }
   }, [session, sid, report, setSession, unloadIfLoaded]);
 
+  const toggleBankId = useCallback((id: string) => {
+    setBankIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const ensureBankIds = useCallback((ids: string[]) => {
+    setBankIds((prev) => [...new Set([...prev, ...ids])]);
+  }, []);
+
+  const pregenerate = useCallback(async () => {
+    const ids = await startGeneration(topic, count, topics);
+    if (ids) {
+      setBankIds((prev) => [...new Set([...prev, ...ids])]);
+    }
+    return ids;
+  }, [topic, count, topics, startGeneration]);
+
   const advancePrimary = useCallback(async () => {
     if (!session) {
       if (wizard === 'topic') return setWizard('count');
       if (wizard === 'count') {
+        if (source === 'bank') {
+          if (bankIds.length === 0) return;
+          const picked = await sessionApi.createSession({
+            title: `Pilas ${new Date().toLocaleDateString('es')}`,
+            topic: topic || 'mixto',
+            question_ids: bankIds,
+            duration_seconds: 20,
+          });
+          setSid(picked.id);
+          storage.setTeacherSessionId(picked.id);
+          setSession(picked);
+          return;
+        }
         setWizard('lobby');
         const ids = await startGeneration(topic, count, topics);
         if (!ids) {
@@ -131,7 +166,27 @@ export function useTeacherCoordinator(
     }
 
     if (session.status === 'lobby') {
-      void preloadIfUnloaded(voiceLang);
+      // Single-resident-engine policy: when the teacher saved a voice
+      // preference for this language, make sure THAT engine is the one
+      // loaded (evicting others); otherwise fall back to engine defaults.
+      // Never blocks game start on TTS failures.
+      try {
+        const pref = storage.getVoicePreference();
+        const usePref = pref?.lang === voiceLang ? pref : undefined;
+        if (usePref?.engine) {
+          const st = await ttsApi
+            .getStatus(usePref.engine, voiceLang)
+            .catch(() => null);
+          if (!st?.loaded) {
+            await ttsApi.unload({}).catch(() => undefined);
+            await preloadIfUnloaded(voiceLang, usePref.engine, usePref.voice);
+          }
+        } else {
+          void preloadIfUnloaded(voiceLang);
+        }
+      } catch {
+        // Game starts even if voice setup fails.
+      }
       const started = await sessionApi.startSession(session.id);
       setSession(started);
     } else if (session.status === 'active') {
@@ -164,6 +219,8 @@ export function useTeacherCoordinator(
     count,
     topics,
     voiceLang,
+    source,
+    bankIds,
     startGeneration,
     setSession,
     preloadIfUnloaded,
@@ -177,6 +234,8 @@ export function useTeacherCoordinator(
     setReport(null);
     setHistory([]);
     setWizard('topic');
+    setSource('generate');
+    setBankIds([]);
     storage.clearTeacherSessionId();
   }, [cancelGeneration, setSession, unloadIfLoaded]);
 
@@ -195,6 +254,12 @@ export function useTeacherCoordinator(
     genError,
     history,
     report,
+    source,
+    setSource,
+    bankIds,
+    toggleBankId,
+    ensureBankIds,
+    pregenerate,
     advancePrimary,
     resetSession,
   };

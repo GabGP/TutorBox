@@ -2,7 +2,9 @@ import React from 'react';
 import { MatchReportView } from '../../features/match-report/MatchReportView';
 import { QuestionCountPicker } from '../../features/question-generator/QuestionCountPicker';
 import { getTopicLabel, TopicSelector } from '../../features/question-generator/TopicSelector';
+import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import { RosterTableProps } from '../../features/roster/RosterTable';
+import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel, SessionReport } from '../../features/session-engine/session.types';
 import { GenerationProgress, TopicModel } from '../../features/question-generator/generator.types';
@@ -22,6 +24,7 @@ export interface TeacherMainContentProps {
   progress: GenerationProgress | null;
   rosterProps: RosterTableProps;
   voiceDone: number;
+  voicePlayed: boolean;
   voiceLang: SpeechLanguage;
   speechState: SpeechState;
   speechMessage: string;
@@ -31,6 +34,9 @@ export interface TeacherMainContentProps {
   onChangeCount: (count: number) => void;
   onPlaySpeech: () => void;
   onSkipSpeech: () => void;
+  source: 'generate' | 'bank';
+  onSourceChange: (s: 'generate' | 'bank') => void;
+  bankStep: React.ReactNode;
 }
 
 /**
@@ -52,6 +58,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   progress,
   rosterProps,
   voiceDone,
+  voicePlayed,
   voiceLang,
   speechState,
   speechMessage,
@@ -61,11 +68,20 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   onChangeCount,
   onPlaySpeech,
   onSkipSpeech,
+  source,
+  onSourceChange,
+  bankStep,
 }) => {
   return (
     <main className={styles.mainContent}>
       {step === 'topic' && (
-        <section id="s-topic">
+        <section id="s-topic" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <SourceSwitch
+            value={source}
+            onChange={onSourceChange}
+            options={QUESTION_SOURCE_OPTIONS}
+            ariaLabel="Origen de preguntas"
+          />
           <TopicSelector
             topics={topics}
             selectedTopic={selectedTopic}
@@ -73,15 +89,28 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           />
         </section>
       )}
-      {step === 'count' && (
-        <section id="s-count">
+      {step === 'count' && source === 'generate' && (
+        <section id="s-count" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <QuestionCountPicker
             count={count}
             topicLabel={getTopicLabel(selectedTopic)}
             onChangeCount={onChangeCount}
             errorNote={genError}
           />
+          <details>
+            <summary
+              style={{ color: 'var(--p)', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Actividad de generación
+            </summary>
+            <div style={{ marginTop: '12px' }}>
+              <TelemetryView />
+            </div>
+          </details>
         </section>
+      )}
+      {step === 'count' && source === 'bank' && (
+        <section id="s-count">{bankStep}</section>
       )}
       {step === 'lobby' && (
         <TeacherLobby
@@ -97,6 +126,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           session={session}
           round={currentRound}
           voiceDone={voiceDone}
+          voicePlayed={voicePlayed}
           voiceLang={voiceLang}
           speechState={speechState}
           speechMessage={speechMessage}

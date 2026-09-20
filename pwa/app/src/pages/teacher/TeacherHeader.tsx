@@ -9,6 +9,7 @@ export interface TeacherHeaderProps {
   voiceLang: SpeechLanguage;
   onBack: () => void;
   onToggleVoice: () => void;
+  onOpenSettings?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   voiceLang,
   onBack,
   onToggleVoice,
+  onOpenSettings,
 }) => {
   return (
     <header className={styles.header}>
@@ -52,6 +54,16 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       >
         {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
       </button>
+      {onOpenSettings && (
+        <button
+          id="settings"
+          className={styles.voiceBtn}
+          onClick={onOpenSettings}
+          aria-label="Ajustes"
+        >
+          ⚙
+        </button>
+      )}
     </header>
   );
 };

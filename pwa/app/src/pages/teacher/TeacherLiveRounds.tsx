@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { RemediationAlert } from '../../features/match-report/RemediationAlert';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel } from '../../features/session-engine/session.types';
@@ -10,6 +10,8 @@ export interface TeacherLiveRoundsProps {
   session: SessionModel;
   round: RoundModel;
   voiceDone: number;
+  /** True once this round's speech played (auto or manual). Survives remounts. */
+  voicePlayed: boolean;
   voiceLang: SpeechLanguage;
   speechState: SpeechState;
   speechMessage: string;
@@ -30,6 +32,7 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
   session,
   round,
   voiceDone,
+  voicePlayed,
   voiceLang,
   speechState,
   speechMessage,
@@ -40,21 +43,19 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
   const result = round.result;
   const tally = result?.tally;
   const decision = result?.decision;
-  const autoPlayedRef = useRef<number>(-1);
 
   useEffect(() => {
     if (
       step === 'reveal' &&
       decision?.should_speak &&
       voiceDone !== round.round_index &&
-      autoPlayedRef.current !== round.round_index &&
+      !voicePlayed &&
       speechState !== 'loading' &&
       speechState !== 'playing'
     ) {
-      autoPlayedRef.current = round.round_index;
       onPlaySpeech();
     }
-  }, [step, decision?.should_speak, voiceDone, round.round_index, speechState, onPlaySpeech]);
+  }, [step, decision?.should_speak, voiceDone, voicePlayed, round.round_index, speechState, onPlaySpeech]);
 
   if (step === 'question' && q) {
     const isClosed = round.status === 'closed';

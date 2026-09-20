@@ -17,11 +17,32 @@ vi.mock('../../../features/session-engine/sessionApi', () => ({
   },
 }));
 
+const { mockPreloadIfUnloaded, mockUnloadIfLoaded, mockTtsStatus, mockTtsUnload } =
+  vi.hoisted(() => ({
+    mockPreloadIfUnloaded: vi.fn(),
+    mockUnloadIfLoaded: vi.fn(),
+    mockTtsStatus: vi.fn(),
+    mockTtsUnload: vi.fn(),
+  }));
+
 vi.mock('../../../features/speech/useTTSLifecycle', () => ({
   useTTSLifecycle: () => ({
-    preloadIfUnloaded: vi.fn().mockResolvedValue(undefined),
-    unloadIfLoaded: vi.fn().mockResolvedValue(undefined),
+    preloadIfUnloaded: mockPreloadIfUnloaded,
+    unloadIfLoaded: mockUnloadIfLoaded,
   }),
+}));
+
+vi.mock('../../../features/speech/speechApi', () => ({
+  ttsApi: {
+    getStatus: (...args: unknown[]) => mockTtsStatus(...args),
+    unload: (...args: unknown[]) => mockTtsUnload(...args),
+    load: vi.fn(),
+    getVoices: vi.fn(),
+  },
+  speechApi: {
+    getSpeechBlobUrl: vi.fn(),
+    getPreviewBlobUrl: vi.fn(),
+  },
 }));
 
 vi.mock('../../../shared/lib/sound', () => ({
@@ -186,8 +207,7 @@ describe('useTeacherCoordinator Hook', () => {
     expect(result.current.session?.current_round?.status).toBe('open');
   });
 
-  it('automatically closes open round when time_remaining reaches 0', async () => {
-    const expiredSession: SessionModel = {
+  it('automatically closes open round when time_remaining reaches 0', async () => {    const expiredSession: SessionModel = {
       ...baseSession,
       current_round: {
         ...baseSession.current_round!,
@@ -212,5 +232,88 @@ describe('useTeacherCoordinator Hook', () => {
     });
 
     expect(sessionApi.closeRound).toHaveBeenCalledWith('s_test1');
+  });
+
+  it('creates a session from hand-picked bank ids without generating', async () => {
+    const picked: SessionModel = { ...baseSession, id: 's_bank', status: 'lobby' };
+    vi.mocked(sessionApi.createSession).mockResolvedValue(picked);
+    vi.mocked(sessionApi.getSessionById).mockResolvedValue(picked);
+
+    const { result } = renderHook(() => useTeacherCoordinator(null));
+
+    await act(async () => {
+      await result.current.advancePrimary(); // topic -> count
+    });
+    expect(result.current.wizard).toBe('count');
+
+    act(() => {
+      result.current.setSource('bank');
+      result.current.toggleBankId('q_a');
+      result.current.toggleBankId('q_b');
+    });
+
+    await act(async () => {
+      await result.current.advancePrimary();
+    });
+
+    expect(sessionApi.createSession).toHaveBeenCalledWith(
+      expect.objectContaining({ question_ids: ['q_a', 'q_b'] })
+    );
+    expect(result.current.session?.id).toBe('s_bank');
+  });
+
+  it('does not create a session from an empty bank selection', async () => {
+    const { result } = renderHook(() => useTeacherCoordinator(null));
+
+    await act(async () => {
+      await result.current.advancePrimary(); // topic -> count
+    });
+    act(() => {
+      result.current.setSource('bank');
+    });
+
+    await act(async () => {
+      await result.current.advancePrimary();
+    });
+
+    expect(sessionApi.createSession).not.toHaveBeenCalled();
+    expect(result.current.session).toBeNull();
+  });
+
+  it('loads the saved voice engine exclusively when starting from lobby', async () => {
+    const lobbySession: SessionModel = {
+      ...baseSession,
+      id: 's_lobby',
+      status: 'lobby',
+      current_round: {
+        ...baseSession.current_round!,
+        status: 'open',
+      },
+    };
+    const activeSession: SessionModel = { ...lobbySession, status: 'active' };
+    vi.mocked(sessionApi.getSessionById).mockResolvedValue(lobbySession);
+    vi.mocked(sessionApi.startSession).mockResolvedValue(activeSession);
+    mockTtsStatus.mockResolvedValue({ engine: 'piper', loaded: false });
+    mockTtsUnload.mockResolvedValue({ engine: 'all', loaded: false });
+    mockPreloadIfUnloaded.mockResolvedValue(true);
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'es', engine: 'piper', voice: 'voz-x' })
+    );
+
+    const { result } = renderHook(() => useTeacherCoordinator('s_lobby'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.session?.status).toBe('lobby');
+
+    await act(async () => {
+      await result.current.advancePrimary();
+    });
+
+    expect(mockTtsStatus).toHaveBeenCalledWith('piper', 'es');
+    expect(mockTtsUnload).toHaveBeenCalled();
+    expect(mockPreloadIfUnloaded).toHaveBeenCalledWith('es', 'piper', 'voz-x');
+    expect(sessionApi.startSession).toHaveBeenCalledWith('s_lobby');
   });
 });

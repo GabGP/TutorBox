@@ -33,12 +33,21 @@ describe('TeacherView Component', () => {
     );
     vi.mocked(useRosterManager).mockReturnValue({
       students: [],
+      users: [],
+      deleted: [],
+      showDeleted: false,
       loading: false,
       error: null,
       pinNotice: null,
       loadStudents: vi.fn(),
+      loadUsers: vi.fn(),
+      loadDeleted: vi.fn(),
       addStudent: vi.fn(),
       resetStudentPin: vi.fn(),
+      deleteStudent: vi.fn(),
+      changeUserRole: vi.fn(),
+      recoverStudent: vi.fn(),
+      toggleDeleted: vi.fn(),
       clearError: vi.fn(),
       clearPinNotice: vi.fn(),
     });
@@ -79,6 +88,12 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
+      source: 'generate',
+      setSource: vi.fn(),
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
@@ -114,6 +129,12 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
+      source: 'generate',
+      setSource: vi.fn(),
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
@@ -125,6 +146,53 @@ describe('TeacherView Component', () => {
     const voiceBtn = screen.getByRole('button', { name: 'Voz ES' });
     fireEvent.click(voiceBtn);
     expect(screen.getByRole('button', { name: "Voz K'iche'" })).toBeInTheDocument();
+  });
+
+  it('shows bank picker and pick-count CTA on the count step', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 't1', username: 'profe', role: 'teacher' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useTeacherCoordinator).mockReturnValue({
+      sid: null,
+      wizard: 'count',
+      setWizard: vi.fn(),
+      topic: 'arithmetic',
+      setTopic: vi.fn(),
+      count: 10,
+      setCount: vi.fn(),
+      topics: [{ name: 'arithmetic', subconcepts: [] }],
+      session: null,
+      progress: null,
+      isGenerating: false,
+      genError: null,
+      history: [],
+      report: null,
+      source: 'bank',
+      setSource: vi.fn(),
+      bankIds: ['q1', 'q2'],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
+      advancePrimary: vi.fn(),
+      resetSession: vi.fn(),
+    });
+
+    render(<TeacherView />);
+    fireEvent.click(screen.getByRole('tab', { name: /Pre-generar/ }));
+    expect(
+      screen.getByRole('button', { name: /Pre-generar en banco/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Jugar con 2' })
+    ).toBeInTheDocument();
   });
 
   it('renders QuestionGenerationProgress when generating in lobby', () => {
@@ -163,6 +231,12 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
+      source: 'generate',
+      setSource: vi.fn(),
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
@@ -235,11 +309,64 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
+      source: 'generate',
+      setSource: vi.fn(),
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
 
     render(<TeacherView />);
     expect(mockPrefetch).toHaveBeenCalledWith(0);
+  });
+
+  it('shows the squishy source switch on the topic step', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 't1', username: 'profe', role: 'teacher' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    const setSource = vi.fn();
+    vi.mocked(useTeacherCoordinator).mockReturnValue({
+      sid: null,
+      wizard: 'topic',
+      setWizard: vi.fn(),
+      topic: '',
+      setTopic: vi.fn(),
+      count: 10,
+      setCount: vi.fn(),
+      topics: [],
+      session: null,
+      progress: null,
+      isGenerating: false,
+      genError: null,
+      history: [],
+      report: null,
+      source: 'generate',
+      setSource,
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
+      advancePrimary: vi.fn(),
+      resetSession: vi.fn(),
+    });
+
+    render(<TeacherView />);
+    const bankTab = screen.getByRole('tab', { name: /Banco/ });
+    expect(
+      screen.getByRole('tab', { name: /Generar/ })
+    ).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(bankTab);
+    expect(setSource).toHaveBeenCalledWith('bank');
   });
 });
