@@ -1,4 +1,5 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
+import { createElement, useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as soundModule from '../../../shared/lib/sound';
 import { speechApi } from '../speechApi';
@@ -15,6 +16,7 @@ describe('useSpeechPlayback Hook', () => {
   };
 
   beforeEach(() => {
+    localStorage.clear();
     mockPlayer = {
       src: '',
       currentTime: 0,
@@ -28,6 +30,51 @@ describe('useSpeechPlayback Hook', () => {
     vi.spyOn(soundModule, 'stopAudio').mockImplementation(() => {});
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test-audio-url');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  });
+
+  it('shows preparation before autoplay after returning with a changed voice', async () => {
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'es', engine: 'sherpa', voice: 'old-voice' })
+    );
+    let resolveSpeech!: (url: string) => void;
+    const speechPromise = new Promise<string>((resolve) => {
+      resolveSpeech = resolve;
+    });
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockReturnValue(speechPromise);
+    const observedStates: string[] = [];
+
+    const AutoPlayOnReturn = ({ autoplay }: { autoplay: boolean }) => {
+      const playback = useSpeechPlayback('s1', 'es');
+
+      useEffect(() => {
+        observedStates.push(playback.state);
+        if (autoplay && playback.state !== 'loading' && playback.state !== 'playing') {
+          void playback.speak(0);
+        }
+      }, [autoplay, playback.state, playback.speak]);
+
+      return null;
+    };
+
+    const { rerender } = render(createElement(AutoPlayOnReturn, { autoplay: false }));
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'es', engine: 'qwen3-tts', voice: 'base-default' })
+    );
+
+    await act(async () => {
+      rerender(createElement(AutoPlayOnReturn, { autoplay: true }));
+      await Promise.resolve();
+    });
+
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledWith('s1', 'es');
+    expect(observedStates).toContain('loading');
+
+    await act(async () => {
+      resolveSpeech('blob:new-voice');
+      await speechPromise;
+    });
   });
 
   it('initializes in idle state', () => {

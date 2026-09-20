@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
 import { SpeechLanguage, SpeechState } from './speech.types';
 import { getSpeechVoiceKey, speechApi } from './speechApi';
@@ -12,7 +12,14 @@ export interface UseSpeechPlaybackReturn {
   stopPlayback: () => void;
 }
 
-type InFlight = { roundIndex: number; key: string; promise: Promise<string> };
+type InFlight = { roundIndex: number; key: string; promise: Promise<string>; generation: number };
+
+function waitForNextPaint(): Promise<void> {
+  if (typeof requestAnimationFrame === 'function') {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 /**
  * Custom React hook for controlling offline speech synthesis playback and speculative prefetching.
@@ -33,21 +40,34 @@ export function useSpeechPlayback(
   const cachedRoundRef = useRef<number>(-1);
   const cachedKeyRef = useRef<string>(activeVoiceKey);
   const inFlightRef = useRef<InFlight | null>(null);
+  const voiceGenerationRef = useRef(0);
+  const activeRunRef = useRef(0);
+  const playbackTokenRef = useRef(0);
   // Tracks an in-progress run independently of rendered state, so a tap
   // can never be swallowed by a stale `loading` closure nor start a
   // duplicate fetch. Always released in `finally`.
   const busyRef = useRef(false);
 
   // Reset cached clip and preparation state when the saved voice changes.
-  // Runs as an effect (not during render) so blob revocation and audio
-  // stopping never race with an in-flight `speak` render.
-  useEffect(() => {
+  // This must run before child reveal effects can autoplay after Settings
+  // closes; a passive effect lets autoplay race the old clip and skip the
+  // preparation state.
+  useLayoutEffect(() => {
     if (prevVoiceKey !== activeVoiceKey) {
+      voiceGenerationRef.current += 1;
+      activeRunRef.current += 1;
+      playbackTokenRef.current += 1;
+      busyRef.current = false;
       setPrevVoiceKey(activeVoiceKey);
       setState('idle');
       setMessage('');
+      const player = getAudioPlayer();
+      if (player) {
+        player.onended = null;
+        player.onerror = null;
+        stopAudio(player, clipUrlRef.current);
+      }
       if (clipUrlRef.current) {
-        stopAudio(getAudioPlayer(), clipUrlRef.current);
         clipUrlRef.current = null;
       }
       cachedRoundRef.current = -1;
@@ -57,7 +77,15 @@ export function useSpeechPlayback(
   }, [activeVoiceKey, prevVoiceKey]);
 
   const stopPlayback = useCallback(() => {
-    stopAudio(getAudioPlayer());
+    activeRunRef.current += 1;
+    playbackTokenRef.current += 1;
+    busyRef.current = false;
+    const player = getAudioPlayer();
+    if (player) {
+      player.onended = null;
+      player.onerror = null;
+      stopAudio(player);
+    }
     if (state === 'playing' || state === 'loading') {
       setState('idle');
       setMessage('');
@@ -67,15 +95,16 @@ export function useSpeechPlayback(
   const prefetch = useCallback(async (roundIndex: number) => {
     if (!sessionId) return;
     const key = getSpeechVoiceKey(language);
+    const generation = voiceGenerationRef.current;
     if (cachedRoundRef.current === roundIndex && cachedKeyRef.current === key && clipUrlRef.current) return;
     if (inFlightRef.current?.roundIndex === roundIndex && inFlightRef.current?.key === key) return;
 
     console.info(`[Speech] Prefetch started for round ${roundIndex} (${language})`);
     const fetchPromise = speechApi.getSpeechBlobUrl(sessionId, language);
-    inFlightRef.current = { roundIndex, key, promise: fetchPromise };
+    inFlightRef.current = { roundIndex, key, promise: fetchPromise, generation };
     try {
       const url = await fetchPromise;
-      if (cachedKeyRef.current === key) {
+      if (voiceGenerationRef.current === generation && cachedKeyRef.current === key) {
         if (clipUrlRef.current && clipUrlRef.current !== url) URL.revokeObjectURL(clipUrlRef.current);
         clipUrlRef.current = url;
         cachedRoundRef.current = roundIndex;
@@ -86,16 +115,35 @@ export function useSpeechPlayback(
     } catch {
       console.info(`[Speech] Prefetch skipped for round ${roundIndex} (>51% rule not met)`);
     } finally {
-      if (inFlightRef.current?.roundIndex === roundIndex) inFlightRef.current = null;
+      if (inFlightRef.current?.promise === fetchPromise) inFlightRef.current = null;
     }
   }, [sessionId, language]);
 
-  const playCachedUrl = useCallback(async (player: HTMLAudioElement, url: string, roundIndex: number) => {
+  const playCachedUrl = useCallback(async (
+    player: HTMLAudioElement,
+    url: string,
+    roundIndex: number,
+    generation: number,
+  ) => {
+    const playbackToken = ++playbackTokenRef.current;
+    const isCurrent = () =>
+      voiceGenerationRef.current === generation && playbackTokenRef.current === playbackToken;
+    if (!isCurrent()) return;
+
     player.pause();
     player.src = url;
     player.currentTime = 0;
-    player.onended = () => (console.info(`[Speech] Playback finished for round ${roundIndex}`), setState('done'), setMessage('Explicación leída.'));
-    player.onerror = () => (setState('error'), setMessage('No se pudo reproducir el audio.'));
+    player.onended = () => {
+      if (!isCurrent()) return;
+      console.info(`[Speech] Playback finished for round ${roundIndex}`);
+      setState('done');
+      setMessage('Explicación leída.');
+    };
+    player.onerror = () => {
+      if (!isCurrent()) return;
+      setState('error');
+      setMessage('No se pudo reproducir el audio.');
+    };
     setCurrentRound(roundIndex);
     setState('playing');
     setMessage('Leyendo la explicación en voz alta…');
@@ -103,8 +151,10 @@ export function useSpeechPlayback(
     try {
       await player.play();
     } catch {
-      setState('blocked');
-      setMessage('Toque “Escuchar” para reproducir la explicación.');
+      if (isCurrent()) {
+        setState('blocked');
+        setMessage('Toque “Escuchar” para reproducir la explicación.');
+      }
     }
   }, []);
 
@@ -114,19 +164,35 @@ export function useSpeechPlayback(
     if (busyRef.current) return;
     if (state === 'playing' && currentRound === roundIndex && cachedKeyRef.current === key) return;
     busyRef.current = true;
+    const generation = voiceGenerationRef.current;
+    const runId = ++activeRunRef.current;
+    const isCurrent = () =>
+      voiceGenerationRef.current === generation && activeRunRef.current === runId;
     try {
       const player = getAudioPlayer();
+      if (!player) return;
       if (cachedRoundRef.current === roundIndex && cachedKeyRef.current === key && clipUrlRef.current) {
-        await playCachedUrl(player, clipUrlRef.current, roundIndex);
+        await playCachedUrl(player, clipUrlRef.current, roundIndex, generation);
         return;
       }
 
-      if (inFlightRef.current?.roundIndex === roundIndex && inFlightRef.current?.key === key) {
+      const inFlight = inFlightRef.current;
+      if (
+        inFlight?.roundIndex === roundIndex &&
+        inFlight.key === key &&
+        inFlight.generation === generation
+      ) {
         setState('loading');
         setMessage('Preparando la voz…');
+        await waitForNextPaint();
+        if (!isCurrent()) return;
         try {
-          const inFlightUrl = await inFlightRef.current.promise;
-          await playCachedUrl(player, inFlightUrl, roundIndex);
+          const inFlightUrl = await inFlight.promise;
+          if (!isCurrent()) {
+            URL.revokeObjectURL(inFlightUrl);
+            return;
+          }
+          await playCachedUrl(player, inFlightUrl, roundIndex, generation);
           return;
         } catch { /* Fall through to fresh fetch on error */ }
       }
@@ -140,11 +206,14 @@ export function useSpeechPlayback(
       cachedKeyRef.current = key;
       setState('loading');
       setMessage('Preparando la voz…');
+      await waitForNextPaint();
+      if (!isCurrent()) return;
 
       let url: string;
       try {
         url = await speechApi.getSpeechBlobUrl(sessionId, language);
       } catch (err: unknown) {
+        if (!isCurrent()) return;
         const e = err as { status?: number };
         setState('error');
         setMessage(
@@ -155,17 +224,29 @@ export function useSpeechPlayback(
         return;
       }
 
+      if (!isCurrent()) {
+        URL.revokeObjectURL(url);
+        return;
+      }
       clipUrlRef.current = url;
       cachedRoundRef.current = roundIndex;
-      await playCachedUrl(player, url, roundIndex);
+      await playCachedUrl(player, url, roundIndex, generation);
     } finally {
-      busyRef.current = false;
+      if (activeRunRef.current === runId) busyRef.current = false;
     }
   }, [sessionId, language, state, currentRound, playCachedUrl]);
 
   useEffect(() => {
     return () => {
-      stopAudio(getAudioPlayer(), clipUrlRef.current);
+      activeRunRef.current += 1;
+      playbackTokenRef.current += 1;
+      busyRef.current = false;
+      const player = getAudioPlayer();
+      if (player) {
+        player.onended = null;
+        player.onerror = null;
+        stopAudio(player, clipUrlRef.current);
+      }
       clipUrlRef.current = null;
     };
   }, []);
