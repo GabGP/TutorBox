@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AccountCard } from '../../features/auth/AccountCard';
+import { EntryForm, resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { ForcedPinModal } from '../../features/auth/ForcedPinModal';
-import { LoginForm } from '../../features/auth/LoginForm';
 import { useAuth } from '../../features/auth/useAuth';
 import { computeStudentStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
@@ -17,8 +18,9 @@ import styles from './StudentView.module.css';
  * Manages authentication, PIN updates, session synchronization, and turn progression.
  */
 export const StudentView: React.FC = () => {
-  const { user, pendingPin, mustChangePin, login, signupAndLogin, handlePinChange, logout } =
+  const { user, pendingPin, mustChangePin, login, signupAndLogin, handlePinChange, logout, restoreSession } =
     useAuth();
+  const [showAccount, setShowAccount] = useState(false);
   const lastSessionId = storage.getLastStudentSessionId();
   const targetSessionId = useMemo(
     () =>
@@ -68,9 +70,13 @@ export const StudentView: React.FC = () => {
   useOptionKeyboard(castVote, step === 'play');
 
   useEffect(() => {
-    if (user && ['teacher', 'admin'].includes(user.role)) {
-      if (typeof window !== 'undefined') window.location.href = '/maestro/';
-    }
+    if (!user) setShowAccount(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !user) return;
+    const target = resolvePostLoginRedirect(user.role, window.location.pathname);
+    if (target) window.location.href = target;
   }, [user]);
 
   const q = currentRound?.question;
@@ -86,11 +92,34 @@ export const StudentView: React.FC = () => {
       return <ForcedPinModal currentPin={pendingPin} onPinChange={handlePinChange} />;
     }
 
+    if (showAccount && user) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <button
+            type="button"
+            className={styles.logoutBtn}
+            style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px' }}
+            onClick={() => setShowAccount(false)}
+          >
+            ← Volver al juego
+          </button>
+          <AccountCard
+            user={user}
+            onProfileChanged={restoreSession}
+            onSessionInvalidated={async () => {
+              setShowAccount(false);
+              await logout();
+            }}
+          />
+        </div>
+      );
+    }
+
     if (!user || ['teacher', 'admin'].includes(user.role)) {
       return (
-        <LoginForm
+        <EntryForm
           title="Entra al juego"
-          subtitle="Escribe tu usuario y tu PIN."
+          subtitle="Escribe tu usuario y tu PIN. Docentes: usen /maestro/."
           allowSignup
           onLogin={login}
           onSignup={signupAndLogin}
@@ -124,7 +153,18 @@ export const StudentView: React.FC = () => {
         <span>TutorBox</span>
         <span>
           <i className={styles.statusDot} />
-          <span id="who">{user ? user.username : 'Sin conexión'}</span>
+          {user ? (
+            <button
+              id="who"
+              className={styles.logoutBtn}
+              onClick={() => setShowAccount((v) => !v)}
+              title="Mi cuenta"
+            >
+              {user.username}
+            </button>
+          ) : (
+            <span id="who">Sin conexión</span>
+          )}
           {user && (
             <button id="out" className={styles.logoutBtn} onClick={logout}>
               Salir

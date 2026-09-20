@@ -67,6 +67,49 @@
   line-height: 1.4;
 }
 
+.successBanner {
+  border-radius: 20px;
+  background: var(--ok-bg);
+  border: 1px solid var(--ok);
+  padding: 12px 16px;
+  color: var(--ok);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.profileRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 18px;
+  background: var(--tint2);
+  color: var(--tint-ink);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profileName {
+  font-size: 19px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileRole {
+  font-size: 13px;
+  color: var(--mute2);
+  font-weight: 500;
+}
+
 .submitBtn {
   height: 64px;
   padding: 0 18px;
