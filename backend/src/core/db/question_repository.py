@@ -85,7 +85,8 @@ def list_questions(
     )
     full_query = (
         f"SELECT * FROM quiz_questions{where_sql} "
-        f"ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        # rowid breaks created_at ties so batch generations order newest-first.
+        f"ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?"
     )
     params.extend([limit, offset])
 

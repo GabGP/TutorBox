@@ -1,4 +1,4 @@
-"""FastAPI router for quiz question bank create and delete operations."""
+"""FastAPI router for quiz question bank write operations."""
 
 import logging
 import sqlite3
