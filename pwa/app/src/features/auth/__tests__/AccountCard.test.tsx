@@ -42,7 +42,7 @@ describe('AccountCard', () => {
     fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
       target: { value: 'carlos2' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar nombre' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
     expect(
       screen.getByText('Escribe tu PIN actual y el nombre nuevo')
     ).toBeInTheDocument();
@@ -111,11 +111,49 @@ describe('AccountCard', () => {
     fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
       target: { value: 'carlos2' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar nombre' }));
+    // Renaming edits your own account and ends the session: first tap
+    // only arms the confirm, second tap submits.
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
+    expect(spy).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
+    );
     await waitFor(() =>
       expect(spy).toHaveBeenCalledWith('1111', 'carlos2')
     );
     expect(onSessionInvalidated).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('disarms the rename confirm when inputs change', () => {
+    const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
+    render(
+      <AccountCard
+        user={user}
+        onProfileChanged={vi.fn()}
+        onSessionInvalidated={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar nombre)'), {
+      target: { value: '1111' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
+      target: { value: 'carlos2' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
+    expect(
+      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
+      target: { value: 'carlos3' },
+    });
+    expect(
+      screen.getByRole('button', { name: 'Cambiar mi nombre' })
+    ).toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 

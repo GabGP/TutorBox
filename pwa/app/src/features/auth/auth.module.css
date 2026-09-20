@@ -77,6 +77,18 @@
   line-height: 1.4;
 }
 
+.hint {
+  font-size: 13px;
+  color: var(--mute2);
+  line-height: 1.4;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mute2);
+}
+
 .profileRow {
   display: flex;
   align-items: center;

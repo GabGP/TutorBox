@@ -30,6 +30,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   const [nameError, setNameError] = useState('');
   const [pinError, setPinError] = useState('');
   const [notice, setNotice] = useState('');
+  const [confirmName, setConfirmName] = useState(false);
   const [submitting, setSubmitting] = useState<'username' | 'pin' | null>(null);
 
   const handleUsernameChange = async () => {
@@ -40,6 +41,13 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       setNameError('Escribe tu PIN actual y el nombre nuevo');
       return;
     }
+    // Renaming edits YOUR OWN account and ends the session: arm a
+    // two-tap confirm so it never happens by accident.
+    if (!confirmName) {
+      setConfirmName(true);
+      return;
+    }
+    setConfirmName(false);
     setSubmitting('username');
     setNameError('');
     setNotice('');
@@ -57,7 +65,6 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       setSubmitting(null);
     }
   };
-
   const handlePinChange = async () => {
     if (submitting) return;
     const cleanCurrent = pinCurrent.trim();
@@ -122,6 +129,12 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         </div>
       ) : (
         <>
+          <div className={styles.sectionLabel}>Tu nombre de usuario</div>
+          <div className={styles.hint}>
+            Cambia el nombre de TU cuenta (no crea una cuenta nueva) y
+            deberás iniciar sesión de nuevo. Para crear una cuenta para
+            otra persona usa Usuarios → Usuario nuevo.
+          </div>
           <input
             id="accNamePin"
             type="password"
@@ -131,7 +144,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             placeholder="PIN actual (para cambiar nombre)"
             className={styles.inputField}
             value={namePin}
-            onChange={(e) => setNamePin(e.target.value)}
+            onChange={(e) => {
+              setNamePin(e.target.value);
+              setConfirmName(false);
+            }}
             disabled={busyName || busyPin}
           />
           <input
@@ -141,7 +157,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             autoComplete="username"
             placeholder="Nombre nuevo"
             value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
+            onChange={(e) => {
+              setNewUsername(e.target.value);
+              setConfirmName(false);
+            }}
             disabled={busyName || busyPin}
           />
           <button
@@ -151,7 +170,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             onClick={handleUsernameChange}
             disabled={busyName || busyPin}
           >
-            Cambiar nombre
+            {confirmName ? 'Toca de nuevo para confirmar' : 'Cambiar mi nombre'}
           </button>
           {nameError && (
             <div className={styles.errorBanner} id="accNameErr">

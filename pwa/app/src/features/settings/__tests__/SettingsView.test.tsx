@@ -25,23 +25,23 @@ describe('SettingsView accordion', () => {
 
   it('starts with all sections collapsed', () => {
     renderView();
-    expect(screen.queryByText('Cambiar nombre')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cambiar mi nombre')).not.toBeInTheDocument();
   });
 
   it('keeps content mounted through the close animation', () => {
     renderView();
     const header = screen.getByRole('button', { name: /Mi cuenta/ });
     fireEvent.click(header);
-    expect(screen.getByText('Cambiar nombre')).toBeInTheDocument();
+    expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
 
     fireEvent.click(header);
     // Still rendered while collapsing…
-    expect(screen.getByText('Cambiar nombre')).toBeInTheDocument();
+    expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(400);
     });
     // …then unmounted.
-    expect(screen.queryByText('Cambiar nombre')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cambiar mi nombre')).not.toBeInTheDocument();
   });
 });
