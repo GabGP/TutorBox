@@ -9,7 +9,19 @@ from core.tts.exceptions import TTSUnavailableError
 
 def test_tts_load_success(client: TestClient, teacher_headers: dict[str, str]) -> None:
     """Verifies POST /api/v1/tts/load returns 202 Accepted and preload metrics."""
+
+    class FakeBackend:
+        engine_name = "piper"
+
     with (
+        patch(
+            "core.tts.router.TTSRouter.select_backend",
+            return_value=FakeBackend(),
+        ),
+        patch(
+            "core.tts.router.TTSRouter.loaded_engines",
+            return_value=["piper"],
+        ),
         patch("core.tts.router.TTSRouter.preload", return_value=("piper", 15.4)),
         patch(
             "core.tts.router.TTSRouter.status",
