@@ -21,3 +21,25 @@ def row_to_telemetry_dict(row: sqlite3.Row) -> dict[str, Any]:
         "rejection_history": json.loads(rejection_json) if rejection_json else [],
         "created_at": row["created_at"],
     }
+
+
+def build_telemetry_filter_clauses(
+    *,
+    user_id: int | None = None,
+    topic: str | None = None,
+    success: bool | None = None,
+) -> tuple[str, list[object]]:
+    """Builds WHERE SQL and params for user/topic/success log filters."""
+    clauses: list[str] = []
+    params: list[object] = []
+    if user_id is not None:
+        clauses.append("user_id = ?")
+        params.append(user_id)
+    if topic is not None:
+        clauses.append("topic = ?")
+        params.append(topic)
+    if success is not None:
+        clauses.append("success = ?")
+        params.append(1 if success else 0)
+    where_sql = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+    return where_sql, params

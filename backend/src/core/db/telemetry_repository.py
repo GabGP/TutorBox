@@ -4,7 +4,10 @@ import json
 import sqlite3
 from typing import Any
 
-from core.db.telemetry_mapper import row_to_telemetry_dict
+from core.db.telemetry_mapper import (
+    build_telemetry_filter_clauses,
+    row_to_telemetry_dict,
+)
 
 DEFAULT_TELEMETRY_LOG_LIMIT: int = 50
 
@@ -60,27 +63,6 @@ def get_generation_log_by_id(
     return row_to_telemetry_dict(row) if row is not None else None
 
 
-def _telemetry_filter_clauses(
-    user_id: int | None = None,
-    topic: str | None = None,
-    success: bool | None = None,
-) -> tuple[str, list[object]]:
-    """Builds WHERE SQL and params for user/topic/success log filters."""
-    clauses: list[str] = []
-    params: list[object] = []
-    if user_id is not None:
-        clauses.append("user_id = ?")
-        params.append(user_id)
-    if topic is not None:
-        clauses.append("topic = ?")
-        params.append(topic)
-    if success is not None:
-        clauses.append("success = ?")
-        params.append(1 if success else 0)
-    where_sql = f" WHERE {' AND '.join(clauses)}" if clauses else ""
-    return where_sql, params
-
-
 def list_generation_logs(
     conn: sqlite3.Connection,
     *,
@@ -91,7 +73,7 @@ def list_generation_logs(
     offset: int = 0,
 ) -> list[dict[str, Any]]:
     """Lists generation telemetry logs with optional filtering and pagination."""
-    where_sql, params = _telemetry_filter_clauses(
+    where_sql, params = build_telemetry_filter_clauses(
         user_id=user_id, topic=topic, success=success
     )
     query = (
@@ -111,7 +93,7 @@ def count_generation_logs(
     success: bool | None = None,
 ) -> int:
     """Returns the total count of generation logs matching the filters."""
-    where_sql, params = _telemetry_filter_clauses(
+    where_sql, params = build_telemetry_filter_clauses(
         user_id=user_id, topic=topic, success=success
     )
     cursor = conn.execute(
