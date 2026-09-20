@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import styles from './SwipeRow.module.css';
 
 export interface SwipeRowAction {
@@ -63,6 +69,23 @@ export const SwipeRow: React.FC<SwipeRowProps> = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; baseOpen: boolean } | null>(null);
+  // Measured strip width (post-layout) so arming delete ("Eliminar" →
+  // "¿Confirmar?") never uses a stale render-time width that jumps the face.
+  const [actionsW, setActionsW] = useState(0);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      setActionsW(actionsRef.current?.offsetWidth ?? 0);
+    };
+    measure();
+    const el = actionsRef.current;
+    if (typeof ResizeObserver !== 'undefined' && el) {
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+    return undefined;
+  }, [actions, open]);
 
   // Close on Escape for keyboard users.
   useEffect(() => {
@@ -74,7 +97,7 @@ export const SwipeRow: React.FC<SwipeRowProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, setOpen]);
 
-  const actionsWidth = () => actionsRef.current?.offsetWidth ?? 0;
+  const actionsWidth = () => actionsW || actionsRef.current?.offsetWidth || 0;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (disabled || actions.length === 0) return;
