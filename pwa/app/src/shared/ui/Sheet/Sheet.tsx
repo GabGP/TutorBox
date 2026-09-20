@@ -1,0 +1,103 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import rosterStyles from '../../../features/roster/roster.module.css';
+
+export interface SheetProps {
+  /** Accessible dialog label. */
+  label: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+/**
+ * Shared floating sheet (IG-style bottom sheet on phone, centered dialog
+ * on desktop). Portaled to document.body so ancestor transforms (e.g.
+ * accordion expand animations) never trap it. Drag the grip downward,
+ * tap the backdrop, or press Esc to collapse.
+ */
+export const Sheet: React.FC<SheetProps> = ({ label, onClose, children }) => {
+  const [dragDy, setDragDy] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragLastY = useRef(0);
+  const dragLastT = useRef(0);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  // Lock background scroll while open; backdrop taps still dismiss.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const onGripDown = (e: React.PointerEvent) => {
+    dragStartY.current = e.clientY;
+    dragLastY.current = e.clientY;
+    dragLastT.current = performance.now();
+    setDragging(true);
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+
+  const onGripMove = (e: React.PointerEvent) => {
+    if (!dragging) return;
+    const dy = Math.max(0, e.clientY - dragStartY.current);
+    dragLastY.current = e.clientY;
+    dragLastT.current = performance.now();
+    setDragDy(dy);
+  };
+
+  const onGripUp = (e: React.PointerEvent) => {
+    if (!dragging) return;
+    setDragging(false);
+    const dt = Math.max(1, performance.now() - dragLastT.current);
+    const velocity = (e.clientY - dragLastY.current) / dt;
+    // Collapse on a long pull or a fast downward flick.
+    if (dragDy > 120 || velocity > 0.6) {
+      setDragDy(0);
+      onClose();
+    } else {
+      setDragDy(0);
+    }
+  };
+
+  return createPortal(
+    <div
+      className={rosterStyles.sheetOverlay}
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className={`${rosterStyles.sheet} ${dragging ? rosterStyles.sheetDragging : ''}`}
+        role="dialog"
+        aria-label={label}
+        onClick={(e) => e.stopPropagation()}
+        style={dragDy > 0 ? { transform: `translateY(${dragDy}px)` } : undefined}
+      >
+        <div
+          className={rosterStyles.sheetGrip}
+          aria-hidden
+          onPointerDown={onGripDown}
+          onPointerMove={onGripMove}
+          onPointerUp={onGripUp}
+          onPointerCancel={() => {
+            setDragging(false);
+            setDragDy(0);
+          }}
+        >
+          <div className={rosterStyles.sheetHandle} />
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+};

@@ -1,22 +1,38 @@
 import React, { useState } from 'react';
 import styles from './roster.module.css';
-import { RosterStudent } from './roster.types';
+import { DeletedUser, RosterStudent } from './roster.types';
+import { UserEditSheet } from './UserEditSheet';
 
 export interface RosterTableProps {
   students: RosterStudent[];
   error?: string | null;
   pinNotice?: string | null;
-  onAddStudent: (username: string, pin: string) => Promise<unknown>;
+  onAddStudent: (username: string, pin: string, role?: string) => Promise<unknown>;
   onResetPin: (id: string, username: string) => Promise<unknown>;
+  /** Roles the caller may create (e.g. ['student','teacher'] or + 'admin'). */
+  creatableRoles?: string[];
+  deleted?: DeletedUser[];
+  showDeleted?: boolean;
+  onDeleteUser?: (id: string, username: string) => Promise<unknown>;
+  onRecoverUser?: (id: string, username: string) => Promise<unknown>;
+  onToggleDeleted?: () => void;
+  /** Roles assignable in the edit sheet; hidden when absent (e.g. lobby). */
+  editableRoles?: string[];
+  onRoleChange?: (id: string, role: string) => Promise<unknown>;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  student: 'Alumno',
+  teacher: 'Docente',
+  admin: 'Admin',
+};
+
 /**
- * Classroom Student Roster Management Table.
- * Renders the roster count, inline student addition form, error/notice banners,
- * and individual student PIN reset action buttons.
- *
- * @param {RosterTableProps} props - Component props containing students list, error/notice messages, and mutation handlers.
- * @returns {JSX.Element} The rendered student roster management interface.
+ * Classroom User Roster Management Table.
+ * Renders the roster count, inline user addition form (with role picker),
+ * error/notice banners, compact rows with a single Editar affordance that
+ * opens the floating edit card, and an optional soft-deleted accounts view
+ * with recovery.
  */
 export const RosterTable: React.FC<RosterTableProps> = ({
   students,
@@ -24,10 +40,21 @@ export const RosterTable: React.FC<RosterTableProps> = ({
   pinNotice,
   onAddStudent,
   onResetPin,
+  creatableRoles = ['student'],
+  deleted = [],
+  showDeleted = false,
+  onDeleteUser,
+  onRecoverUser,
+  onToggleDeleted,
+  editableRoles,
+  onRoleChange,
 }) => {
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
+  const [role, setRole] = useState('student');
   const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState<RosterStudent | null>(null);
+  const [recoverName, setRecoverName] = useState<Record<string, string>>({});
 
   const handleAdd = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -35,7 +62,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
 
     setSubmitting(true);
     try {
-      await onAddStudent(username.trim(), pin.trim());
+      await onAddStudent(username.trim(), pin.trim(), role);
       setUsername('');
       setPin('');
     } catch {
@@ -45,10 +72,21 @@ export const RosterTable: React.FC<RosterTableProps> = ({
     }
   };
 
+  const handleRecover = async (id: string) => {
+    const name = (recoverName[id] || '').trim();
+    if (!name || !onRecoverUser) return;
+    try {
+      await onRecoverUser(id, name);
+      setRecoverName((prev) => ({ ...prev, [id]: '' }));
+    } catch {
+      // Error handled by parent hook
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.rowb}>
-        <b>Alumnos registrados</b>
+        <b>Usuarios registrados</b>
         <span id="rosterCount">{students.length}</span>
       </div>
 
@@ -75,6 +113,23 @@ export const RosterTable: React.FC<RosterTableProps> = ({
           onChange={(e) => setPin(e.target.value)}
           disabled={submitting}
         />
+        {creatableRoles.length > 1 && (
+          <select
+            id="newRole"
+            className={styles.addInput}
+            style={{ flex: '0 0 120px' }}
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            disabled={submitting}
+            aria-label="Rol"
+          >
+            {creatableRoles.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABELS[r] || r}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           id="addStudent"
@@ -107,19 +162,78 @@ export const RosterTable: React.FC<RosterTableProps> = ({
           students.map((u) => (
             <div key={u.id} className={styles.rosterItem}>
               <span className={styles.studentName}>{u.username}</span>
+              <span className={styles.roleTag}>{ROLE_LABELS[u.role] || u.role}</span>
               <button
                 type="button"
                 className={styles.resetBtn}
                 data-id={u.id}
                 data-name={u.username}
-                onClick={() => onResetPin(u.id, u.username)}
+                onClick={() => setEditing(u)}
               >
-                Reiniciar PIN
+                Editar
               </button>
             </div>
           ))
         )}
       </div>
+
+      <UserEditSheet
+        user={editing}
+        onClose={() => setEditing(null)}
+        onResetPin={onResetPin}
+        onDeleteUser={onDeleteUser}
+        editableRoles={editableRoles}
+        onRoleChange={onRoleChange}
+      />
+
+      {onToggleDeleted && (
+        <button
+          type="button"
+          className={styles.toggleLink}
+          onClick={onToggleDeleted}
+        >
+          {showDeleted ? 'Ocultar eliminados' : 'Ver eliminados'}
+        </button>
+      )}
+
+      {showDeleted && (
+        <div className={styles.rosterList} id="rosterDeleted">
+          {deleted.length === 0 ? (
+            <div style={{ color: 'var(--mute)' }}>No hay cuentas eliminadas.</div>
+          ) : (
+            deleted.map((u) => (
+              <div key={u.id} className={styles.rosterItem}>
+                <span className={styles.studentName}>{u.former_username}</span>
+                <span className={styles.roleTag}>{ROLE_LABELS[u.role] || u.role}</span>
+                {onRecoverUser && (
+                  <span className={styles.recoverRow}>
+                    <input
+                      className={styles.addInput}
+                      style={{ flex: 1, height: '40px', fontSize: '15px' }}
+                      maxLength={32}
+                      placeholder="Nombre nuevo"
+                      value={recoverName[String(u.id)] || ''}
+                      onChange={(e) =>
+                        setRecoverName((prev) => ({
+                          ...prev,
+                          [String(u.id)]: e.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className={styles.resetBtn}
+                      onClick={() => handleRecover(String(u.id))}
+                    >
+                      Recuperar
+                    </button>
+                  </span>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

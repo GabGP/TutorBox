@@ -33,7 +33,7 @@ describe('TeacherLobby Component', () => {
       screen.getByText('Creando las preguntas con IA...')
     ).toBeInTheDocument();
     expect(screen.getByText('192.168.4.1/alumno')).toBeInTheDocument();
-    expect(screen.getByText('Alumnos registrados')).toBeInTheDocument();
+    expect(screen.getByText('Usuarios registrados')).toBeInTheDocument();
   });
 
   it('renders ready hero when session exists', () => {
