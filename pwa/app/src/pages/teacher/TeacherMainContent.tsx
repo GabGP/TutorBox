@@ -4,6 +4,7 @@ import { QuestionCountPicker } from '../../features/question-generator/QuestionC
 import { getTopicLabel, TopicSelector } from '../../features/question-generator/TopicSelector';
 import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import { RosterTableProps } from '../../features/roster/RosterTable';
+import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel, SessionReport } from '../../features/session-engine/session.types';
@@ -97,16 +98,9 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
             onChangeCount={onChangeCount}
             errorNote={genError}
           />
-          <details>
-            <summary
-              style={{ color: 'var(--p)', fontWeight: 600, cursor: 'pointer' }}
-            >
-              Actividad de generación
-            </summary>
-            <div style={{ marginTop: '12px' }}>
-              <TelemetryView />
-            </div>
-          </details>
+          <Collapsible title="Actividad de generación">
+            <TelemetryView />
+          </Collapsible>
         </section>
       )}
       {step === 'count' && source === 'bank' && (

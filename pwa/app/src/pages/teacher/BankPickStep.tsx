@@ -10,6 +10,7 @@ import {
 import generatorStyles from '../../features/question-generator/generator.module.css';
 import rosterStyles from '../../features/roster/roster.module.css';
 import { SourceSwitch } from './SourceSwitch';
+import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 
 export type BankTab = 'elegir' | 'crear' | 'pregrow';
 
@@ -155,16 +156,9 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
         </>
       )}
 
-      <details>
-        <summary
-          style={{ color: 'var(--p)', fontWeight: 600, cursor: 'pointer' }}
-        >
-          Actividad de generación
-        </summary>
-        <div style={{ marginTop: '12px' }}>
-          <TelemetryView />
-        </div>
-      </details>
+      <Collapsible title="Actividad de generación">
+        <TelemetryView />
+      </Collapsible>
     </div>
   );
 };
