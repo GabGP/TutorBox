@@ -1,0 +1,32 @@
+.list {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute2);
+  background: var(--chip);
+  border-bottom: 1px solid var(--line);
+}
+
+.empty {
+  padding: 16px 12px;
+  font-size: 14px;
+  color: var(--mute);
+  text-align: center;
+}
+
+.list > *:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}

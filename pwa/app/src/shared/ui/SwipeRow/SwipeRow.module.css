@@ -1,0 +1,91 @@
+.swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.actionBtn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-left: 1px solid var(--line);
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    opacity 0.18s ease,
+    flex 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    min-width 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    padding 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.actionBtn:focus-visible {
+  outline: 3px solid var(--p);
+  outline-offset: -3px;
+}
+
+.plain {
+  color: var(--p);
+  background: var(--tint);
+}
+
+.danger {
+  color: var(--bad-ink);
+  background: var(--bad-bg);
+}
+
+.actionIcon {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.actionIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.actionLabel {
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.face {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel);
+  /* Springy snap (matches the reference ease), frozen while dragging. */
+  transition: transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+  touch-action: pan-y;
+}
+
+.isOpen .face {
+  /* transform is set inline to match measured action width */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face,
+  .actionBtn {
+    transition: none;
+  }
+}

@@ -1,0 +1,24 @@
+.skeleton {
+  display: block;
+  border-radius: 8px;
+  background: var(--chip);
+  border: 1px solid var(--line);
+  min-height: 14px;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
