@@ -206,12 +206,24 @@ export function useSpeechPlayback(
       cachedKeyRef.current = key;
       setState('loading');
       setMessage('Preparando la voz…');
+      // Start the fetch synchronously so concurrent speak() calls dedupe
+      // onto it (via busyRef) and autoplay observes it in the same tick;
+      // the paint wait below only lets the 'loading' state flush first.
+      const pendingFetch = speechApi.getSpeechBlobUrl(sessionId, language);
       await waitForNextPaint();
-      if (!isCurrent()) return;
+      if (!isCurrent()) {
+        // Voice switched (or a newer run started) while preparing: drop
+        // the take and release its blob so stale audio never plays.
+        void pendingFetch.then(
+          (staleUrl) => URL.revokeObjectURL(staleUrl),
+          () => {}
+        );
+        return;
+      }
 
       let url: string;
       try {
-        url = await speechApi.getSpeechBlobUrl(sessionId, language);
+        url = await pendingFetch;
       } catch (err: unknown) {
         if (!isCurrent()) return;
         const e = err as { status?: number };
