@@ -60,6 +60,67 @@ describe('useSpeechPlayback Hook', () => {
     expect(result.current.message).toBe('Explicación leída.');
   });
 
+  it('re-fetches the same round after the saved voice changes', async () => {
+    localStorage.removeItem('tb_voice');
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:test-audio-url');
+
+    const { result, rerender } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    await act(async () => {
+      await result.current.speak(0);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+    expect(result.current.state).toBe('playing');
+
+    // Simulate audio finishing -> state becomes done
+    act(() => {
+      mockPlayer.onended?.();
+    });
+    expect(result.current.state).toBe('done');
+
+    // Change voice in storage and rerender
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'es', engine: 'piper', voice: 'voz-x' })
+    );
+    act(() => {
+      rerender();
+    });
+    expect(result.current.state).toBe('idle');
+    expect(result.current.message).toBe('');
+
+    await act(async () => {
+      await result.current.speak(0);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(2);
+    localStorage.removeItem('tb_voice');
+  });
+
+  it('dedupes concurrent speak calls into a single fetch', async () => {
+    let resolveFetch!: (url: string) => void;
+    const gate = new Promise<string>((resolve) => {
+      resolveFetch = resolve;
+    });
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockReturnValue(gate);
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es'));
+
+    let p1!: Promise<void>;
+    let p2!: Promise<void>;
+    act(() => {
+      p1 = result.current.speak(0);
+      p2 = result.current.speak(0);
+    });
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFetch('blob:test-audio-url');
+      await p1;
+      await p2;
+    });
+    expect(result.current.state).toBe('playing');
+  });
+
   it('replays cached audio blob synchronously on subsequent call without re-fetching', async () => {
     vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:test-audio-url');
 

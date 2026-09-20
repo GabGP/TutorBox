@@ -17,6 +17,12 @@ export interface StoredRoundHistory {
   explanations: Record<string, string>;
 }
 
+export interface StoredVoicePreference {
+  engine?: string;
+  voice?: string;
+  lang?: string;
+}
+
 /**
  * Centralized browser localStorage adapter for session tokens, session IDs, and vote histories.
  */
@@ -95,5 +101,20 @@ export const storage = {
    */
   setRoundHistory: (sessionId: string, history: StoredRoundHistory[]): void => {
     localStorage.setItem(`tb_hist_${sessionId}`, JSON.stringify(history));
+  },
+
+  /** Retrieves the teacher's preferred TTS voice selection. */
+  getVoicePreference: (): StoredVoicePreference | null => {
+    try {
+      const raw = localStorage.getItem('tb_voice');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /** Persists the teacher's preferred TTS voice selection. */
+  setVoicePreference: (pref: StoredVoicePreference): void => {
+    localStorage.setItem('tb_voice', JSON.stringify(pref));
   },
 };

@@ -69,18 +69,31 @@ export async function requestApi<T = unknown>(
  * Fetches binary media (e.g. offline synthesized WAV audio) and creates a local Object URL.
  *
  * @param {string} path - Relative endpoint path under `/api/v1`.
+ * @param {string} [method] - HTTP method (defaults to 'GET').
+ * @param {unknown} [body] - Optional JSON payload (for POST previews).
  * @returns {Promise<string>} Local blob URL suitable for HTMLAudioElement playback.
  */
-export async function requestBlobUrl(path: string): Promise<string> {
+export async function requestBlobUrl(
+  path: string,
+  method = 'GET',
+  body?: unknown
+): Promise<string> {
   const token = localStorage.getItem('tb_token');
   const headers: Record<string, string> = {};
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   let response: Response;
   try {
-    response = await fetch(API_BASE + path, { headers });
+    response = await fetch(API_BASE + path, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   } catch {
     throw new ApiError(getErrorMessage(0), 0);
   }
