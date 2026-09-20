@@ -6,6 +6,7 @@ import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
+import { getTopicLabel } from '../question-generator/TopicSelector';
 import rosterStyles from '../roster/roster.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
@@ -178,7 +179,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
           <option value="">Todos los temas</option>
           {topics.map((t) => (
             <option key={t.name} value={t.name}>
-              {t.label || t.name}
+              {t.label || getTopicLabel(t.name)}
             </option>
           ))}
         </select>
@@ -229,13 +230,42 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
           emptyText="No hay preguntas para este filtro."
         >
           {questions.map((q) => (
-            <div key={q.id} role="listitem">
+            <div
+              key={q.id}
+              role="listitem"
+              style={
+                selectable
+                  ? {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      paddingLeft: '12px',
+                    }
+                  : undefined
+              }
+            >
+              {selectable && (
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(q.id)}
+                  onChange={() => onToggleSelect?.(q.id)}
+                  aria-label={`Elegir pregunta ${q.id}`}
+                  style={{ flex: '0 0 auto' }}
+                />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
               <SwipeRow
                 ariaLabel={`Pregunta ${q.id}`}
                 open={openSwipeId === q.id}
                 onOpenChange={(next) => {
                   setOpenSwipeId(next ? q.id : null);
-                  if (!next && confirmDelete === q.id) setConfirmDelete(null);
+                  // Disarm this row on close; disarm any other armed row
+                  // when opening a different one so confirm never leaks.
+                  if (!next) {
+                    if (confirmDelete === q.id) setConfirmDelete(null);
+                  } else if (confirmDelete && confirmDelete !== q.id) {
+                    setConfirmDelete(null);
+                  }
                 }}
                 actions={[
                   {
@@ -263,24 +293,26 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
                   },
                 ]}
               >
-                {selectable && (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(q.id)}
-                    onChange={() => onToggleSelect?.(q.id)}
-                    aria-label={`Elegir pregunta ${q.id}`}
-                  />
-                )}
                 <button
                   type="button"
                   className={rosterStyles.studentName}
                   onClick={() => handleFaceTap(q)}
-                  style={{ cursor: 'pointer', textAlign: 'left' }}
+                  style={{
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    minWidth: 0,
+                  }}
                 >
                   {q.question_text}
                 </button>
-                <span className={rosterStyles.roleTag}>{q.topic}</span>
+                <span
+                  className={rosterStyles.roleTag}
+                  style={{ minWidth: '84px', textAlign: 'center' }}
+                >
+                  {getTopicLabel(q.topic)}
+                </span>
               </SwipeRow>
+              </div>
             </div>
           ))}
         </DataList>

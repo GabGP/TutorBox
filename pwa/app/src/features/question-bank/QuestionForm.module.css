@@ -1,0 +1,100 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.input {
+  height: 44px;
+  border-radius: 14px;
+  font-size: 15px;
+  padding: 0 12px;
+  border: 2px solid var(--line3);
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.input:focus {
+  border-color: var(--p);
+}
+
+select.input {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 60px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+.grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.small {
+  flex: 0 0 60px;
+  min-width: 0;
+}
+
+.misc {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.explain {
+  flex: 2 1 180px;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.button {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border-radius: 22px;
+  padding: 0 16px;
+  background: var(--tint);
+  color: var(--p);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.16s ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--tint2);
+}
+
+/* Narrow sheet / phone: stack the misc + explanation pairs so the
+   long Spanish misconception labels never force a horizontal scroll. */
+@media (max-width: 560px) {
+  .row {
+    flex-wrap: wrap;
+  }
+  .misc,
+  .explain,
+  .grow {
+    flex: 1 1 100%;
+  }
+}
