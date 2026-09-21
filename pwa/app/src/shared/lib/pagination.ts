@@ -5,7 +5,7 @@ import { useState } from 'react';
  */
 export function usePagination(initialPageSize = 20) {
   const [offset, setOffset] = useState(0);
-  const [pageSize] = useState(initialPageSize);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const page = Math.floor(offset / pageSize);
 
   const clamp = (total: number, nextOffset: number) => {
@@ -16,7 +16,7 @@ export function usePagination(initialPageSize = 20) {
     return safe;
   };
 
-  return { offset, setOffset, pageSize, page, clamp };
+  return { offset, setOffset, pageSize, setPageSize, page, clamp };
 }
 
 /**
