@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronDown, Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
+import { AccordionRow } from '../../shared/ui/Accordion/Accordion';
 import { AccountCard } from '../auth/AccountCard';
 import { User } from '../auth/auth.types';
 import { RosterTable } from '../roster/RosterTable';
@@ -34,82 +35,6 @@ export interface SettingsViewProps {
 
 type SectionId = 'cuenta' | 'usuarios' | 'voz' | 'auditoria';
 
-/** Matches the .collapse grid-rows transition in settings.module.css. */
-const COLLAPSE_MS = 320;
-
-interface SettingsRowProps {
-  id: SectionId;
-  icon: LucideIcon;
-  label: string;
-  content: React.ReactNode;
-  title?: string;
-  open: boolean;
-  onToggle: (id: SectionId) => void;
-}
-
-/**
- * Accordion row that animates both ways: content mounts instantly on open
- * and stays mounted through the collapse transition on close.
- */
-const SettingsRow: React.FC<SettingsRowProps> = ({
-  id,
-  icon,
-  label,
-  content,
-  title,
-  open,
-  onToggle,
-}) => {
-  const [rendered, setRendered] = useState(open);
-  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      if (timer.current) clearTimeout(timer.current);
-      setRendered(true);
-      return;
-    }
-    // Keep content for the collapse animation, then unmount.
-    timer.current = setTimeout(() => setRendered(false), COLLAPSE_MS);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [open ]);
-
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    []
-  );
-
-  const Icon = icon;
-  return (
-    <div className={styles.row}>
-      <button
-        type="button"
-        className={styles.rowBtn}
-        onClick={() => onToggle(id)}
-        aria-expanded={open}
-        title={title}
-      >
-        <span aria-hidden style={{ display: 'inline-flex' }}><Icon size={18} aria-hidden /></span> {label}
-        <span
-          className={`${styles.chev} ${open ? styles.chevOpen : ''}`}
-          aria-hidden
-        >
-          <ChevronDown size={18} aria-hidden />
-        </span>
-      </button>
-      <div
-        className={`${styles.collapse} ${open ? styles.collapseOpen : ''}`}
-      >
-        <div className={styles.body}>{rendered ? content : null}</div>
-      </div>
-    </div>
-  );
-};
-
 /**
  * Teacher Settings list (FB Settings style accordion).
  * Sections mount incrementally: Cuenta first; Usuarios / Preguntas /
@@ -135,7 +60,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     content: React.ReactNode,
     title?: string
   ) => (
-    <SettingsRow
+    <AccordionRow
       key={id}
       id={id}
       icon={icon}
@@ -149,7 +74,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className={styles.list} id="s-settings">
-      <button type="button" className={styles.backBtn} onClick={onClose} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <button type="button" className={styles.backBtn} onClick={onClose}>
         <ArrowLeft size={18} aria-hidden /> Volver
       </button>
 
