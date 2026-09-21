@@ -1,5 +1,6 @@
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { QUESTION_COUNT_MAX, QUESTION_COUNT_MIN } from './generator.constants';
 import styles from './generator.module.css';
 
 export interface QuestionCountPickerProps {
@@ -11,8 +12,9 @@ export interface QuestionCountPickerProps {
 
 /**
  * Question Count Picker component.
- * Allows teachers to increment/decrement the targeted question count (range 3–20)
- * with estimated duration calculations and selected topic confirmation.
+ * Allows teachers to increment/decrement the targeted question count
+ * (shared QUESTION_COUNT_MIN–MAX range) with estimated duration
+ * calculations and selected topic confirmation.
  *
  * @param {QuestionCountPickerProps} props - Component props controlling count, topic label, and callbacks.
  * @returns {JSX.Element} The rendered counter control panel.
@@ -26,11 +28,11 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
   const estimatedMinutes = Math.max(2, Math.round(count * 0.6));
 
   const handleDecrement = () => {
-    onChangeCount(Math.max(3, count - 1));
+    onChangeCount(Math.max(QUESTION_COUNT_MIN, count - 1));
   };
 
   const handleIncrement = () => {
-    onChangeCount(Math.min(20, count + 1));
+    onChangeCount(Math.min(QUESTION_COUNT_MAX, count + 1));
   };
 
   return (

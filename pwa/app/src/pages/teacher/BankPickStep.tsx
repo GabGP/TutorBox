@@ -8,6 +8,10 @@ import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import {
   GenerationProgress,
 } from '../../features/question-generator/generator.types';
+import {
+  QUESTION_COUNT_MAX,
+  QUESTION_COUNT_MIN,
+} from '../../features/question-generator/generator.constants';
 import generatorStyles from '../../features/question-generator/generator.module.css';
 import formStyles from '../../shared/styles/forms.module.css';
 import utils from '../../shared/styles/utils.module.css';
@@ -122,7 +126,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
               <button
                 type="button"
                 aria-label="Pre-generar una menos"
-                onClick={() => onChangeCount(Math.max(1, count - 1))}
+                onClick={() => onChangeCount(Math.max(QUESTION_COUNT_MIN, count - 1))}
               >
                 <Minus size={28} aria-hidden />
               </button>
@@ -130,7 +134,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
                 type="button"
                 className={generatorStyles.p}
                 aria-label="Pre-generar una más"
-                onClick={() => onChangeCount(Math.min(20, count + 1))}
+                onClick={() => onChangeCount(Math.min(QUESTION_COUNT_MAX, count + 1))}
               >
                 <Plus size={28} aria-hidden />
               </button>

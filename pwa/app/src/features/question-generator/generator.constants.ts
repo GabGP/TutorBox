@@ -19,3 +19,11 @@ export const PEDAGOGICAL_STAGES = [
   'Comprobando la exactitud de los cálculos...',
   'Guardando en el banco del dispositivo...',
 ] as const;
+
+/**
+ * Shared question-count stepper bounds (generate flow and bank pregrow).
+ * The backend accepts `question_ids` with min_length=1, so the union range
+ * 1–20 keeps every previously possible choice available in both steppers.
+ */
+export const QUESTION_COUNT_MIN = 1;
+export const QUESTION_COUNT_MAX = 20;
