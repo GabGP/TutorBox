@@ -6,6 +6,7 @@ import { getTopicLabel } from '../../shared/taxonomy/labels';
 import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import { RosterTableProps } from '../../features/roster/RosterTable';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
+import { useHostAddress } from '../../shared/routing/session';
 import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel, SessionReport } from '../../features/session-engine/session.types';
@@ -74,10 +75,12 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   onSourceChange,
   bankStep,
 }) => {
+  const host = useHostAddress();
+  const hostAddress = host ? `${host}/alumno` : '';
   return (
     <main className={styles.mainContent}>
       {step === 'topic' && (
-        <section id="s-topic" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <section id="s-topic" className={styles.stack}>
           <SourceSwitch
             value={source}
             onChange={onSourceChange}
@@ -92,7 +95,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
         </section>
       )}
       {step === 'count' && source === 'generate' && (
-        <section id="s-count" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <section id="s-count" className={styles.stack}>
           <QuestionCountPicker
             count={count}
             topicLabel={getTopicLabel(selectedTopic)}
@@ -111,7 +114,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
         <TeacherLobby
           session={session}
           progress={progress}
-          hostAddress={typeof window !== 'undefined' ? `${window.location.host}/alumno` : ''}
+          hostAddress={hostAddress}
           rosterProps={rosterProps}
         />
       )}

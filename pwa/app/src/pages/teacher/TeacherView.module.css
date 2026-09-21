@@ -113,6 +113,12 @@
   gap: 20px;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .footer {
   position: sticky;
   bottom: 0;
