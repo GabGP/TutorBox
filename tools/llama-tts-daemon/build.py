@@ -68,6 +68,54 @@ def _find_vcvars64() -> str | None:
     return None
 
 
+def _venv_bin_dirs() -> list[str]:
+    """Returns existing venv Scripts/bin dirs so pip-shimmed tools stay on PATH."""
+    candidates = [
+        Path(sys.prefix) / ("Scripts" if platform.system() == "Windows" else "bin"),
+        ROOT_DIR / ".cache" / "venv" / "Scripts",
+        ROOT_DIR / ".cache" / "venv" / "bin",
+    ]
+    seen: set[str] = set()
+    dirs: list[str] = []
+    for d in candidates:
+        # Resolve the dir itself (not a tool path) so cmake/ninja shims are found.
+        if d.is_dir():
+            resolved = str(d.resolve())
+            if resolved not in seen:
+                seen.add(resolved)
+                dirs.append(resolved)
+    return dirs
+
+
+def _env_with_venv_bins(env: dict[str, str] | None = None) -> dict[str, str]:
+    """Merges os.environ with venv bin dirs prepended to PATH.
+
+    pip packages like cmake/ninja install shims into .cache/venv/Scripts,
+    which is usually NOT on PATH in a plain shell. Without this, CMake's
+    find_program(ninja) fails even though resolve_tool() found the binary.
+    """
+    merged = dict(os.environ)
+    if env:
+        merged.update(env)
+    path_sep = ";" if platform.system() == "Windows" else ":"
+    current = merged.get("PATH", "")
+    existing = [p for p in current.split(path_sep) if p]
+    existing_lower = (
+        {p.lower() for p in existing}
+        if platform.system() == "Windows"
+        else set(existing)
+    )
+    prepend: list[str] = []
+    for d in _venv_bin_dirs():
+        key = d.lower() if platform.system() == "Windows" else d
+        if key not in existing_lower:
+            prepend.append(d)
+            existing_lower.add(key)
+    if prepend:
+        merged["PATH"] = path_sep.join([*prepend, *existing])
+    return merged
+
+
 def run_cmd(
     cmd: list[str] | str,
     cwd: Path | None = None,
@@ -76,15 +124,17 @@ def run_cmd(
     """Executes a subprocess command, wrapping in vcvars64.bat on Windows when needed."""
     is_windows = platform.system() == "Windows"
     vcvars = _find_vcvars64() if is_windows else None
+    merged_env = _env_with_venv_bins(env)
 
     if is_windows and vcvars:
-        cmd_str = " ".join(cmd) if isinstance(cmd, list) else cmd
+        # list2cmdline quotes args containing spaces (e.g. under Program Files).
+        cmd_str = subprocess.list2cmdline(cmd) if isinstance(cmd, list) else cmd
         full_cmd = f'cmd /c "call "{vcvars}" && {cmd_str}"'
         res = subprocess.run(
-            full_cmd, cwd=str(cwd or ROOT_DIR), env=env, shell=True, check=False
+            full_cmd, cwd=str(cwd or ROOT_DIR), env=merged_env, shell=True, check=False
         )
     else:
-        res = subprocess.run(cmd, cwd=str(cwd or ROOT_DIR), env=env, check=False)
+        res = subprocess.run(cmd, cwd=str(cwd or ROOT_DIR), env=merged_env, check=False)
 
     if res.returncode != 0:
         print(f"{TAG_FAIL} Command failed with exit code {res.returncode}: {cmd}")
@@ -115,9 +165,7 @@ def check_prerequisites() -> bool:
         print(f"{TAG_FAIL} 'git' is not installed or not found in PATH.")
         return False
     if not resolve_tool("cmake"):
-        print(
-            f"{TAG_FAIL} 'cmake' is not installed or not found in PATH / virtualenv."
-        )
+        print(f"{TAG_FAIL} 'cmake' is not installed or not found in PATH / virtualenv.")
         return False
     return True
 
@@ -175,7 +223,9 @@ def apply_patch(force: bool = False) -> None:
         return
 
     print(f"{TAG_INFO} Applying patch: {PATCH_FILE.name}...")
-    run_cmd(["git", "-C", str(SOURCE_DIR), "apply", "--whitespace=nowarn", str(PATCH_FILE)])
+    run_cmd(
+        ["git", "-C", str(SOURCE_DIR), "apply", "--whitespace=nowarn", str(PATCH_FILE)]
+    )
     print(f"{TAG_OK} Successfully applied daemon mode patch.")
 
 
@@ -197,10 +247,16 @@ def build_binary(use_cuda: bool = True, force: bool = False) -> None:
             "Ninja" if "CMAKE_GENERATOR:INTERNAL=Ninja" in cache_content else "Other"
         )
         desired_generator = "Ninja" if has_ninja else "Other"
-        if existing_generator != desired_generator:
-            print(
-                f"{TAG_INFO} Generator changed from {existing_generator} to {desired_generator}. Cleaning build cache..."
+        stale_ninja = (
+            "CMAKE_MAKE_PROGRAM:FILEPATH=CMAKE_MAKE_PROGRAM-NOTFOUND" in cache_content
+        )
+        if existing_generator != desired_generator or (stale_ninja and has_ninja):
+            reason = (
+                "stale CMAKE_MAKE_PROGRAM-NOTFOUND with ninja now resolvable"
+                if stale_ninja and has_ninja and existing_generator == desired_generator
+                else f"Generator changed from {existing_generator} to {desired_generator}"
             )
+            print(f"{TAG_INFO} {reason}. Cleaning build cache...")
             shutil.rmtree(BUILD_DIR, ignore_errors=True)
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -233,6 +289,8 @@ def build_binary(use_cuda: bool = True, force: bool = False) -> None:
     ]
     if has_ninja:
         cmake_config.extend(["-G", "Ninja"])
+        # Belt and suspenders: explicit path so CMake never depends on PATH search.
+        cmake_config.append(f"-DCMAKE_MAKE_PROGRAM={ninja_bin}")
 
     print(
         f"{TAG_INFO} Configuring CMake (jobs: {num_jobs}, generator: {'Ninja' if has_ninja else 'default'})..."
@@ -300,9 +358,15 @@ def install_artifacts() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build and install TutorBox llama-tts daemon.")
-    parser.add_argument("--force", action="store_true", help="Force clean re-clone and re-compilation")
-    parser.add_argument("--cpu-only", action="store_true", help="Disable CUDA GPU offloading")
+    parser = argparse.ArgumentParser(
+        description="Build and install TutorBox llama-tts daemon."
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force clean re-clone and re-compilation"
+    )
+    parser.add_argument(
+        "--cpu-only", action="store_true", help="Disable CUDA GPU offloading"
+    )
     args = parser.parse_args()
 
     print("==================================================")
@@ -318,7 +382,9 @@ def main() -> None:
     install_artifacts()
 
     print("--------------------------------------------------")
-    print(f"{TAG_OK} Build complete! Qwen3-TTS daemon is ready for appliance deployment.")
+    print(
+        f"{TAG_OK} Build complete! Qwen3-TTS daemon is ready for appliance deployment."
+    )
     print("==================================================")
 
 
