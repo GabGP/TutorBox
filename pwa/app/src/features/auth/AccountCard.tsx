@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { getRoleLabel } from '../../shared/constants/roles';
+import { toErrorMessage } from '../../shared/lib/errors';
+import { validatePinPair } from './pinValidation';
 import { authApi } from './authApi';
 import { User } from './auth.types';
 import styles from './auth.module.css';
@@ -60,8 +62,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       setNotice('Nombre actualizado. Inicia sesión de nuevo.');
       await onSessionInvalidated();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
-      setNameError(e.message || 'Error al cambiar el nombre');
+      setNameError(toErrorMessage(err, 'Error al cambiar el nombre'));
     } finally {
       setSubmitting(null);
     }
@@ -71,15 +72,16 @@ export const AccountCard: React.FC<AccountCardProps> = ({
     const cleanCurrent = pinCurrent.trim();
     const a = newPin.trim();
     const b = confirmPin.trim();
-    if (!cleanCurrent || !a || !b) {
+    const pairError = validatePinPair(a, b, cleanCurrent);
+    if (!cleanCurrent || pairError === 'empty') {
       setPinError('Escribe tu PIN actual y el nuevo dos veces');
       return;
     }
-    if (a !== b) {
+    if (pairError === 'mismatch') {
       setPinError('Los dos PIN no coinciden');
       return;
     }
-    if (a === cleanCurrent) {
+    if (pairError === 'same') {
       setPinError('El PIN nuevo debe ser diferente al actual');
       return;
     }
@@ -96,8 +98,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       setNotice('PIN actualizado.');
       await onProfileChanged();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
-      setPinError(e.message || 'Error al cambiar el PIN');
+      setPinError(toErrorMessage(err, 'Error al cambiar el PIN'));
     } finally {
       setSubmitting(null);
     }

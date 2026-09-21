@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { toErrorMessage } from '../../shared/lib/errors';
 import styles from './auth.module.css';
+import { validatePinPair } from './pinValidation';
 
 export interface ForcedPinModalProps {
   onPinChange: (newPin: string) => Promise<unknown>;
@@ -32,18 +34,15 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
     const a = newPin.trim();
     const b = confirmPin.trim();
 
-    if (!a || !b) {
-      setError('Escribe y confirma tu nuevo PIN');
-      return;
-    }
-
-    if (a !== b) {
-      setError('Los dos PIN no coinciden');
-      return;
-    }
-
-    if (currentPin && a === currentPin) {
-      setError('El PIN nuevo debe ser diferente al temporal');
+    const pairError = validatePinPair(a, b, currentPin);
+    if (pairError) {
+      setError(
+        pairError === 'empty'
+          ? 'Escribe y confirma tu nuevo PIN'
+          : pairError === 'mismatch'
+            ? 'Los dos PIN no coinciden'
+            : 'El PIN nuevo debe ser diferente al temporal'
+      );
       return;
     }
 
@@ -53,8 +52,7 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
     try {
       await onPinChange(a);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al cambiar PIN');
+      setError(toErrorMessage(err, 'Error al cambiar PIN'));
     } finally {
       setSubmitting(false);
     }
