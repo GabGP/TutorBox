@@ -6,7 +6,7 @@ import type { TopicModel } from '../../features/question-generator/generator.typ
  * Shared topic fetcher. Replaces the 4x `getTopics().then(setTopics)` copies
  * in QuestionBankView, QuestionForm, TelemetryView and useTeacherCoordinator.
  */
-export function useTopics() {
+export function useTopics({ enabled = true }: { enabled?: boolean } = {}) {
   const [topics, setTopics] = useState<TopicModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export function useTopics() {
     setLoading(true);
     try {
       const data = await generatorApi.getTopics();
-      setTopics(data);
+      setTopics(Array.isArray(data) ? data : []);
       setError(null);
     } catch {
       // Quiet: topic selectors degrade to empty lists, forms keep typed values.
@@ -25,8 +25,8 @@ export function useTopics() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (enabled) void refresh();
+  }, [enabled, refresh]);
 
   return { topics, loading, error, refresh };
 }

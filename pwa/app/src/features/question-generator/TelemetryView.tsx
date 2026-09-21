@@ -6,12 +6,12 @@ import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { getRoleLabel } from '../../shared/constants/roles';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
+import { useTopics } from '../../shared/taxonomy/useTopics';
 import { generatorApi } from './generatorApi';
 import { rosterApi } from '../roster/rosterApi';
 import {
   FullGenerationMetrics,
   GenerationLogItem,
-  TopicModel,
 } from './generator.types';
 import { TelemetryDetailSheet } from './TelemetryDetailSheet';
 import { formatLatency, formatPercent, formatShortDate } from './telemetryFormat';
@@ -85,7 +85,7 @@ export const TelemetryView: React.FC = () => {
   const [metrics, setMetrics] = useState<FullGenerationMetrics | null>(null);
   const [logs, setLogs] = useState<GenerationLogItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [topics, setTopics] = useState<TopicModel[]>([]);
+  const { topics } = useTopics();
   const [topic, setTopic] = useState('');
   const [userId, setUserId] = useState('');
   const [userOptions, setUserOptions] = useState<
@@ -99,10 +99,6 @@ export const TelemetryView: React.FC = () => {
   const [detail, setDetail] = useState<GenerationLogItem | null>(null);
 
   useEffect(() => {
-    generatorApi
-      .getTopics()
-      .then((t) => setTopics(Array.isArray(t) ? t : []))
-      .catch(() => {});
     rosterApi
       .getAll()
       .then((res) => {

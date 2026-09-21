@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
-import { generatorApi } from '../question-generator/generatorApi';
-import { TopicModel } from '../question-generator/generator.types';
+import { useTopics } from '../../shared/taxonomy/useTopics';
 import {
   getMisconceptionLabel,
   getSubconceptLabel,
@@ -36,7 +35,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
   onSaved,
   onCancel,
 }) => {
-  const [topics, setTopics] = useState<TopicModel[]>([]);
+  const { topics } = useTopics();
   const [fTopic, setFTopic] = useState(initial?.topic || '');
   const [fSubconcept, setFSubconcept] = useState(initial?.subconcept || '');
   const [fText, setFText] = useState(initial?.question_text || '');
@@ -60,13 +59,6 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
   const [saving, setSaving] = useState(false);
 
   const editingId = initial?.id || null;
-
-  useEffect(() => {
-    generatorApi
-      .getTopics()
-      .then((t) => setTopics(Array.isArray(t) ? t : []))
-      .catch(() => {});
-  }, []);
 
   // Keep create and edit in sync: when the edited question changes
   // (or we switch between Crear/null and Editar/question), reset all

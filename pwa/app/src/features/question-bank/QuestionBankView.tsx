@@ -4,8 +4,7 @@ import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
-import { generatorApi } from '../question-generator/generatorApi';
-import { TopicModel } from '../question-generator/generator.types';
+import { useTopics } from '../../shared/taxonomy/useTopics';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
@@ -41,7 +40,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   initialTopic = '',
   isAdmin = false,
 }) => {
-  const [topics, setTopics] = useState<TopicModel[]>([]);
+  const { topics } = useTopics();
   const [topic, setTopic] = useState(initialTopic);
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [total, setTotal] = useState(0);
@@ -55,13 +54,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [detail, setDetail] = useState<BankQuestion | null>(null);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [schema, setSchema] = useState<string | null>(null);
-
-  useEffect(() => {
-    generatorApi
-      .getTopics()
-      .then((t) => setTopics(Array.isArray(t) ? t : []))
-      .catch(() => {});
-  }, []);
 
   const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);

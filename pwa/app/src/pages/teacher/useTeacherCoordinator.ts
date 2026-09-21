@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuestionGenerator } from '../../features/question-generator/useQuestionGenerator';
-import { TopicModel } from '../../features/question-generator/generator.types';
-import { generatorApi } from '../../features/question-generator/generatorApi';
+import { useTopics } from '../../shared/taxonomy/useTopics';
 import { SessionReport } from '../../features/session-engine/session.types';
 import { sessionApi } from '../../features/session-engine/sessionApi';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
@@ -37,7 +36,7 @@ export function useTeacherCoordinator(
   const [wizard, setWizard] = useState<TeacherWizardStep>('topic');
   const [topic, setTopic] = useState('');
   const [count, setCount] = useState(10);
-  const [topics, setTopics] = useState<TopicModel[]>([]);
+  const { topics } = useTopics({ enabled });
   const [history, setHistory] = useState<StoredRoundHistory[]>([]);
   const [report, setReport] = useState<SessionReport | null>(null);
   const [source, setSource] = useState<QuestionSource>('generate');
@@ -62,12 +61,6 @@ export function useTeacherCoordinator(
       setSession(null);
     }
   }, [sid, sessionErr, setSession]);
-
-  useEffect(() => {
-    if (enabled) {
-      generatorApi.getTopics().then(setTopics).catch(() => {});
-    }
-  }, [enabled]);
 
   useEffect(() => {
     if (sid) setHistory(storage.getRoundHistory(sid));
