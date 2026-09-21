@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Check, Circle, Hourglass, Palette, PenLine, Ruler, Save, Sparkles, Timer, TriangleAlert, X, Zap } from 'lucide-react';
 import { ProgressBar } from '../../shared/ui/ProgressBar/ProgressBar';
 import { ShinyText } from '../../shared/ui/ShinyText/ShinyText';
 import { GenerationProgress } from './generator.types';
 import { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';
+import { useGenerationClock } from './useGenerationClock';
 import styles from './QuestionGenerationProgress.module.css';
 import { formatDuration } from '../../shared/lib/format';
 import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
@@ -21,41 +22,15 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
   progress,
   isComplete: forceComplete,
 }) => {
-  const [stageIndex, setStageIndex] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const startTimeRef = useRef(Date.now());
   const total = progress.total || 1;
   const isDone = Boolean(forceComplete || (progress.done >= total && total > 0));
-  const currentIdx = isDone ? total : (progress.currentIndex ?? Math.min(progress.done + 1, total));
-  const prevIdxRef = useRef(currentIdx), qStartRef = useRef(0);
-
-  useEffect(() => {
-    if (isDone) return;
-    const stageTimer = setInterval(() => {
-      setStageIndex((prev) => (prev + 1) % PEDAGOGICAL_STAGES.length);
-    }, PROGRESS_ANIMATION.STAGE_SPEED_SECONDS * 1000);
-    return () => clearInterval(stageTimer);
-  }, [isDone]);
-
-  useEffect(() => {
-    if (prevIdxRef.current !== currentIdx) {
-      prevIdxRef.current = currentIdx;
-      qStartRef.current = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    }
-  }, [currentIdx]);
-
-  useEffect(() => {
-    if (isDone) return;
-    const clock = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
-    return () => clearInterval(clock);
-  }, [isDone]);
+  const { stageIndex, elapsedSeconds, currentIdx, questionStartSecond } =
+    useGenerationClock(progress, isDone);
 
   const percent = isDone ? 100 : Math.min(100, Math.round((progress.done / total) * 100));
   const remaining = isDone ? 0 : Math.max(0, total - progress.done);
   const effectiveEta = progress.eta ?? PROGRESS_ANIMATION.DEFAULT_QUESTION_ETA_SECONDS;
-  const currentQElapsed = Math.max(0, elapsedSeconds - qStartRef.current);
+  const currentQElapsed = Math.max(0, elapsedSeconds - questionStartSecond);
   const currentQRemaining = remaining > 0 ? Math.max(1, effectiveEta - currentQElapsed) : 0;
   const liveRemaining = !isDone && remaining > 0 ? currentQRemaining + Math.max(0, remaining - 1) * effectiveEta : null;
   const formattedElapsed = formatDuration(elapsedSeconds, false) || '0s', formattedEta = formatDuration(liveRemaining, true);
