@@ -13,12 +13,9 @@ import { TeacherFooter } from './TeacherFooter';
 import { TeacherHeader } from './TeacherHeader';
 import { TeacherMainContent } from './TeacherMainContent';
 import styles from './TeacherView.module.css';
-import {
-  getPrimaryActionLabel,
-  SECONDARY_ACTION_LABELS,
-  TEACHER_STEP_TITLES,
-} from './teacherViewConfig';
 import { useTeacherCoordinator } from './useTeacherCoordinator';
+import { usePlayedRounds } from './usePlayedRounds';
+import { getTeacherViewModel } from './teacherViewModel';
 
 /**
  * Teacher Console Master View.
@@ -33,30 +30,14 @@ export const TeacherView: React.FC = () => {
     const pref = storage.getVoicePreference();
     return pref?.lang === 'quc' ? 'quc' : 'es';
   });
-  const [voiceDone, setVoiceDone] = useState(-1);
-  // Rounds whose speech already played (auto or manual). Survives remounts
-  // (e.g. opening/closing settings) so returning never replays audio.
-  const [playedRounds, setPlayedRounds] = useState<number[]>([]);
   const [roleError, setRoleError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-
-  const activeVoiceKey = getSpeechVoiceKey(voiceLang);
-  const [prevVoiceKey, setPrevVoiceKey] = useState(activeVoiceKey);
-
-  // When the saved voice changes, allow this round to speak again with the
-  // new voice: clear the played guard so autoplay re-runs through the
-  // preparation (loading) stage instead of jumping straight to replay.
-  useEffect(() => {
-    if (prevVoiceKey !== activeVoiceKey) {
-      setPrevVoiceKey(activeVoiceKey);
-      setPlayedRounds([]);
-      setVoiceDone(-1);
-    }
-  }, [activeVoiceKey, prevVoiceKey]);
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
   const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
+  const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
+    usePlayedRounds(coordinator.sid, voiceLang);
   const { students, users, deleted, showDeleted, error: rosterErr, pinNotice, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
@@ -81,10 +62,6 @@ export const TeacherView: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    setPlayedRounds([]);
-  }, [coordinator.sid]);
-
-  useEffect(() => {
     if (!user) return;
     const target =
       typeof window !== 'undefined'
@@ -99,21 +76,25 @@ export const TeacherView: React.FC = () => {
     }
   }, [user, logout]);
 
-  let step: string = coordinator.session ? 'lobby' : coordinator.wizard;
-  if (coordinator.session?.status === 'active') {
-    step = coordinator.session.current_round?.status === 'revealed' ? 'reveal' : 'question';
-  } else if (coordinator.session?.status === 'completed') {
-    step = 'stats';
-  }
+  const isLast = (coordinator.session?.current_round_index ?? 0) + 1 >= (coordinator.session?.question_count ?? 0);
+  const vm = getTeacherViewModel({
+    session: coordinator.session,
+    wizard: coordinator.wizard,
+    source: coordinator.source,
+    bankIds: coordinator.bankIds,
+    isGenerating: coordinator.isGenerating,
+    roundClosed: curRound?.status === 'closed',
+    isLast,
+    hasSessionForLobby: Boolean(coordinator.session),
+  });
+  const step = vm.step;
 
   const handlePlaySpeech = useCallback(() => {
     if (curRound) {
-      setPlayedRounds((prev) =>
-        prev.includes(curRound.round_index) ? prev : [...prev, curRound.round_index]
-      );
+      markPlayed(curRound.round_index);
       speak(curRound.round_index);
     }
-  }, [curRound, speak]);
+  }, [curRound, markPlayed, speak]);
 
   const handleSkipSpeech = useCallback(() => {
     stopPlayback();
@@ -139,29 +120,15 @@ export const TeacherView: React.FC = () => {
       setVoiceLang(pref.lang as SpeechLanguage);
     }
     const currentKey = getSpeechVoiceKey((pref?.lang as SpeechLanguage) || voiceLang);
-    if (prevVoiceKey !== currentKey) {
-      setPrevVoiceKey(currentKey);
-      setPlayedRounds([]);
-      setVoiceDone(-1);
-    }
+    reconcileVoiceKey(currentKey);
     setShowSettings(false);
-  }, [voiceLang, prevVoiceKey]);
+  }, [voiceLang, reconcileVoiceKey]);
 
   if (!user || !['teacher', 'admin'].includes(user.role) || mustChangePin) {
     return <TeacherAuthView mustChangePin={mustChangePin} pendingPin={pendingPin} roleError={roleError} onLogin={async (u, p) => (setRoleError(null), login(u, p))} onPinChange={handlePinChange} />;
   }
 
-  const [subtitle, title] = TEACHER_STEP_TITLES[step] || ['TutorBox', 'Panel'];
-  const isLast = (coordinator.session?.current_round_index ?? 0) + 1 >= (coordinator.session?.question_count ?? 0);
-  const isBankSource = step === 'count' && coordinator.source === 'bank';
-  const isBankEmpty = isBankSource && coordinator.bankIds.length === 0;
-  const primaryText = isBankSource
-    ? coordinator.bankIds.length > 0
-      ? `Jugar con ${coordinator.bankIds.length}`
-      : 'Elige preguntas del banco'
-    : getPrimaryActionLabel(step, coordinator.isGenerating, curRound?.status === 'closed', isLast);
-  const secondaryText = SECONDARY_ACTION_LABELS[step];
-  const wizardIdx = ['topic', 'count', 'lobby'].indexOf(step);
+  const { title, subtitle, primaryText, secondaryText, wizardIdx } = vm;
 
   return (
     <div className={styles.shell} id="shell">
@@ -206,7 +173,7 @@ export const TeacherView: React.FC = () => {
         }}
         voiceDone={voiceDone}
         voicePlayed={
-          curRound ? playedRounds.includes(curRound.round_index) : false
+          curRound ? hasPlayed(curRound.round_index) : false
         }
         voiceLang={voiceLang}
         speechState={speechState}
@@ -238,8 +205,8 @@ export const TeacherView: React.FC = () => {
       <TeacherFooter
         primaryText={primaryText}
         secondaryText={secondaryText}
-        isPrimaryDisabled={coordinator.isGenerating || isBankEmpty || (step === 'lobby' && !coordinator.session)}
-        isLobbySuccess={step === 'lobby' && Boolean(coordinator.session)}
+        isPrimaryDisabled={vm.isPrimaryDisabled}
+        isLobbySuccess={vm.isLobbySuccess}
         wizardIndex={wizardIdx}
         onPrimary={handlePrimary}
         onSecondary={handleSecondary}

@@ -2,7 +2,17 @@
  * UI title and action button label configurations for the teacher console view.
  */
 
-export const TEACHER_STEP_TITLES: Record<string, [string, string]> = {
+export type TeacherStep =
+  | 'login'
+  | 'pin'
+  | 'topic'
+  | 'count'
+  | 'lobby'
+  | 'question'
+  | 'reveal'
+  | 'stats';
+
+export const TEACHER_STEP_TITLES: Record<TeacherStep, [string, string]> = {
   login: ['TutorBox', 'Iniciar sesión'],
   pin: ['TutorBox', 'PIN nuevo'],
   topic: ['Paso 1 de 3', 'Elegir tema'],
@@ -13,7 +23,7 @@ export const TEACHER_STEP_TITLES: Record<string, [string, string]> = {
   stats: ['Juego terminado', 'Resumen del grupo'],
 };
 
-export const SECONDARY_ACTION_LABELS: Record<string, string> = {
+export const SECONDARY_ACTION_LABELS: Partial<Record<TeacherStep, string>> = {
   topic: 'Salir',
   lobby: 'Cancelar',
   stats: 'Inicio',
