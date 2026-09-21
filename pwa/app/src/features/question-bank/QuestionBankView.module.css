@@ -1,0 +1,39 @@
+.skeletonRow {
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.skeletonText {
+  flex: 1;
+  height: 18px;
+}
+
+.skeletonTag {
+  width: 64px;
+  height: 22px;
+  border-radius: 12px;
+}
+
+.selectRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+}
+
+.selectCheck {
+  flex: 0 0 auto;
+}
+
+.faceButton {
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.topicTag {
+  min-width: 84px;
+  text-align: center;
+}

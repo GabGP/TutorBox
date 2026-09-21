@@ -135,6 +135,15 @@ export const TelemetryView: React.FC = () => {
       ? userNameById.get(String(l.user_id)) || `#${l.user_id}`
       : '—';
 
+  const tableHead = (
+    <div className={`${teleStyles.headRow} ${teleStyles.headGrow}`}>
+      <span />
+      <span>Tema</span>
+      <span>Usuario</span>
+      <span className={teleStyles.headRight}>Datos</span>
+    </div>
+  );
+
   return (
     <div className={listStyles.container} id="telemetry">
       <div className={listStyles.rowb}>
@@ -173,14 +182,7 @@ export const TelemetryView: React.FC = () => {
           ariaLabel="Actividad de generación"
           busy
           isEmpty={false}
-          header={
-            <div className={teleStyles.headRow} style={{ flex: 1 }}>
-              <span />
-              <span>Tema</span>
-              <span>Usuario</span>
-              <span style={{ textAlign: 'right' }}>Datos</span>
-            </div>
-          }
+          header={tableHead}
         >
           {Array.from({ length: pageSize }, (_, i) => (
             <div
@@ -190,19 +192,19 @@ export const TelemetryView: React.FC = () => {
               className={teleStyles.row}
             >
               <div className={`${teleStyles.cell} ${teleStyles.status}`}>
-                <Skeleton style={{ width: '18px', height: '18px' }} />
+                <Skeleton className={teleStyles.skIcon} />
               </div>
               <div className={teleStyles.cell}>
-                <Skeleton style={{ height: '16px', marginBottom: '4px' }} />
-                <Skeleton style={{ height: '12px', width: '70%' }} />
+                <Skeleton className={teleStyles.skLine} />
+                <Skeleton className={teleStyles.skSub70} />
               </div>
               <div className={teleStyles.cell}>
-                <Skeleton style={{ height: '16px', marginBottom: '4px' }} />
-                <Skeleton style={{ height: '12px', width: '60%' }} />
+                <Skeleton className={teleStyles.skLine} />
+                <Skeleton className={teleStyles.skSub60} />
               </div>
               <div className={teleStyles.cell}>
-                <Skeleton style={{ height: '16px', marginBottom: '4px' }} />
-                <Skeleton style={{ height: '12px', width: '80%' }} />
+                <Skeleton className={teleStyles.skLine} />
+                <Skeleton className={teleStyles.skSub80} />
               </div>
             </div>
           ))}
@@ -213,16 +215,7 @@ export const TelemetryView: React.FC = () => {
           ariaLabel="Actividad de generación"
           isEmpty={sortedLogs.length === 0}
           emptyText="Sin registros."
-          header={
-            sortedLogs.length > 0 ? (
-              <div className={teleStyles.headRow} style={{ flex: 1 }}>
-                <span />
-                <span>Tema</span>
-                <span>Usuario</span>
-                <span style={{ textAlign: 'right' }}>Datos</span>
-              </div>
-            ) : undefined
-          }
+          header={sortedLogs.length > 0 ? tableHead : undefined}
         >
           {sortedLogs.map((l) => (
             <div key={l.id} role="listitem">

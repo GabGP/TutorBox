@@ -5,11 +5,13 @@ import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { usePagination } from '../../shared/lib/pagination';
+import { toErrorMessage } from '../../shared/lib/errors';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
+import styles from './QuestionBankView.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
@@ -68,8 +70,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       setQuestions(res.questions || []);
       setTotal(res.total ?? 0);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al cargar preguntas');
+      setError(toErrorMessage(err, 'Error al cargar preguntas'));
     } finally {
       setLoading(false);
     }
@@ -88,8 +89,8 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       const fresh = await bankApi.getQuestion(q.id);
       setQuestions((prev) => prev.map((x) => (x.id === q.id ? fresh : x)));
       setDetail(fresh);
-    } catch {
-      // Keep list data on network errors
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Error al actualizar el detalle'));
     }
   };
 
@@ -112,8 +113,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       if (selectable && selectedIds.includes(id)) onToggleSelect?.(id);
       load(topic, offset, pageSize);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al eliminar');
+      setError(toErrorMessage(err, 'Error al eliminar'));
     }
   };
 
@@ -144,8 +144,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       <div className={formStyles.addForm}>
         <select
           id="bankTopic"
-          className={formStyles.addInput}
-          style={{ flex: 1 }}
+          className={`${formStyles.addInput} ${formStyles.fill}`}
           value={topic}
           onChange={(e) => {
             setTopic(e.target.value);
@@ -185,17 +184,10 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               key={`sk-${i}`}
               role="listitem"
               data-testid="bank-skeleton"
-              style={{
-                padding: '10px 12px',
-                display: 'flex',
-                gap: '10px',
-                alignItems: 'center',
-              }}
+              className={styles.skeletonRow}
             >
-              <Skeleton style={{ flex: 1, height: '18px' }} />
-              <Skeleton
-                style={{ width: '64px', height: '22px', borderRadius: '12px' }}
-              />
+              <Skeleton className={styles.skeletonText} />
+              <Skeleton className={styles.skeletonTag} />
             </div>
           ))}
         </DataList>
@@ -210,16 +202,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
             <div
               key={q.id}
               role="listitem"
-              style={
-                selectable
-                  ? {
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      paddingLeft: '12px',
-                    }
-                  : undefined
-              }
+              className={selectable ? styles.selectRow : undefined}
             >
               {selectable && (
                 <input
@@ -227,7 +210,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
                   checked={selectedIds.includes(q.id)}
                   onChange={() => onToggleSelect?.(q.id)}
                   aria-label={`Elegir pregunta ${q.id}`}
-                  style={{ flex: '0 0 auto' }}
+                  className={styles.selectCheck}
                 />
               )}
               <div className={utils.grow}>
@@ -272,19 +255,13 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               >
                 <button
                   type="button"
-                  className={listStyles.studentName}
+                  className={`${listStyles.studentName} ${styles.faceButton}`}
                   onClick={() => handleFaceTap(q)}
-                  style={{
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    minWidth: 0,
-                  }}
                 >
                   {q.question_text}
                 </button>
                 <span
-                  className={listStyles.roleTag}
-                  style={{ minWidth: '84px', textAlign: 'center' }}
+                  className={`${listStyles.roleTag} ${styles.topicTag}`}
                 >
                   {getTopicLabel(q.topic)}
                 </span>

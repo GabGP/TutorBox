@@ -36,8 +36,7 @@ export const TelemetryFilters: React.FC<TelemetryFiltersProps> = ({
 }) => (
   <div className={formStyles.addForm}>
     <select
-      className={formStyles.addInput}
-      style={{ flex: 1 }}
+      className={`${formStyles.addInput} ${formStyles.fill}`}
       value={topic}
       onChange={(e) => onTopicChange(e.target.value)}
       aria-label="Tema"
@@ -50,8 +49,7 @@ export const TelemetryFilters: React.FC<TelemetryFiltersProps> = ({
       ))}
     </select>
     <select
-      className={formStyles.addInput}
-      style={{ flex: '0 0 130px' }}
+      className={`${formStyles.addInput} ${formStyles.pin130}`}
       value={successFilter}
       onChange={(e) => onSuccessFilterChange(e.target.value)}
       aria-label="Resultado"
@@ -61,8 +59,7 @@ export const TelemetryFilters: React.FC<TelemetryFiltersProps> = ({
       <option value="false">Fallos</option>
     </select>
     <select
-      className={formStyles.addInput}
-      style={{ flex: '0 0 150px' }}
+      className={`${formStyles.addInput} ${formStyles.pin150}`}
       value={userId}
       onChange={(e) => onUserIdChange(e.target.value)}
       aria-label="ID de usuario"

@@ -8,6 +8,47 @@
   width: 100%;
 }
 
+.headGrow {
+  flex: 1;
+}
+
+.headRight {
+  text-align: right;
+}
+
+.metricsRow {
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Skeleton sizing for the loading rows. */
+.skIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.skLine {
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.skSub70 {
+  height: 12px;
+  width: 70%;
+}
+
+.skSub60 {
+  height: 12px;
+  width: 60%;
+}
+
+.skSub80 {
+  height: 12px;
+  width: 80%;
+}
+
 .row {
   padding: 10px 12px;
   min-height: 52px;

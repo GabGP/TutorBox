@@ -36,7 +36,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
   };
 
   return (
-    <div style={{ display: 'grid', gap: '16px' }}>
+    <div className={styles.stack}>
       <div className={styles.counter}>
         <div className={styles.num} id="count">
           {count}
@@ -72,7 +72,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
         </div>
       </div>
 
-      <p style={{ fontSize: '15px', color: 'var(--mute2)', lineHeight: 1.5, margin: 0 }}>
+      <p className={styles.description}>
         El modelo local escribe cada pregunta y la revisa con matemáticas antes de usarla. Cada pregunta dura 20 segundos.
       </p>
 

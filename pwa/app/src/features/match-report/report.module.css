@@ -57,6 +57,16 @@
   gap: 14px;
 }
 
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.emptyMuted {
+  color: var(--mute);
+}
+
 .hardItem {
   display: flex;
   flex-direction: column;
@@ -86,7 +96,13 @@
 .trackFill {
   height: 100%;
   border-radius: 5px;
+  width: var(--progress);
+  background: var(--tone);
   transition: width 0.3s ease;
+}
+
+.toneText {
+  color: var(--tone);
 }
 
 .errs {
