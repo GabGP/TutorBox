@@ -6,6 +6,11 @@
   gap: 6px;
 }
 
+.rowInline {
+  display: inline-flex;
+  align-items: center;
+}
+
 .rowInline4 {
   display: inline-flex;
   align-items: center;
@@ -20,4 +25,14 @@
 .muted {
   color: var(--mute2);
   font-size: 14px;
+}
+
+.stretch {
+  width: 100%;
+}
+
+.help {
+  font-size: 15px;
+  color: var(--mute2);
+  margin: 0;
 }

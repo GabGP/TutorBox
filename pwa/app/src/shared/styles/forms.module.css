@@ -22,6 +22,27 @@
   border-color: var(--p);
 }
 
+/* Flex sizing for inputs/selects inside add-form rows. */
+.fill {
+  flex: 1;
+}
+
+.pin96 {
+  flex: 0 0 96px;
+}
+
+.pin120 {
+  flex: 0 0 120px;
+}
+
+.pin130 {
+  flex: 0 0 130px;
+}
+
+.pin150 {
+  flex: 0 0 150px;
+}
+
 .submitAdd {
   flex: 0 0 auto;
   height: 52px;
