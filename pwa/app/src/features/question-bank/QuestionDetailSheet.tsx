@@ -1,14 +1,13 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
+import { OPTION_LETTERS } from '../../shared/constants/options';
 import {
   getMisconceptionLabel,
   getSubconceptLabel,
   getTopicLabel,
-} from '../question-generator/TopicSelector';
+} from '../../shared/taxonomy/labels';
 import { BankQuestion } from './bankApi';
-
-const OPTION_KEYS = ['A', 'B', 'C', 'D'] as const;
 
 export interface QuestionDetailSheetProps {
   /** Null = closed. */
@@ -31,7 +30,7 @@ export const QuestionDetailSheet: React.FC<QuestionDetailSheetProps> = ({
     <Sheet label={`Detalle pregunta ${question.id}`} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <b style={{ fontSize: '16px' }}>{question.question_text}</b>
-        {OPTION_KEYS.map((k) => {
+        {OPTION_LETTERS.map((k) => {
           const distractor = question.distractors[k];
           const miscLabel = distractor
             ? getMisconceptionLabel(distractor.misconception)

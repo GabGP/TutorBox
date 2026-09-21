@@ -1,5 +1,8 @@
+import type { OptionLetter } from '../constants/options';
+import type { RoundTally } from '../../features/session-engine/session.types';
+
 export interface StoredStudentVotes {
-  votes: Record<string, 'A' | 'B' | 'C' | 'D'>;
+  votes: Record<string, OptionLetter>;
   hits: Record<string, boolean>;
 }
 
@@ -7,13 +10,7 @@ export interface StoredRoundHistory {
   round_id: string;
   text: string;
   options: Record<string, string>;
-  tally: {
-    counts: Record<string, number>;
-    total_votes: number;
-    correct_option: string;
-    correct_count: number;
-    correct_percentage: number;
-  };
+  tally: RoundTally;
   explanations: Record<string, string>;
 }
 

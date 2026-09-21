@@ -13,7 +13,7 @@ import {
 } from './generator.types';
 import { TelemetryDetailSheet } from './TelemetryDetailSheet';
 import { formatLatency, formatPercent, formatShortDate } from './telemetryFormat';
-import { getSubconceptLabel, getTopicLabel } from './TopicSelector';
+import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
 import teleStyles from './TelemetryView.module.css';
 
 const DEFAULT_PAGE_SIZE = 5;

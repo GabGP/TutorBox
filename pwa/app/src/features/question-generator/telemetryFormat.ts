@@ -3,6 +3,9 @@
  * Latency speaks min/sec (`29s`, `1 min 15s`), matching the language of
  * the generation progress clock.
  */
+import { formatDuration, formatFullDate } from '../../shared/lib/format';
+
+export { formatDuration, formatFullDate };
 
 /** Latency in ms rendered as min/sec. */
 export function formatLatency(ms: number): string {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { OPTION_LETTERS } from '../../constants/options';
 import styles from './TallyBars.module.css';
 
 export interface TallyBarsProps {
@@ -11,16 +12,6 @@ export interface TallyBarsProps {
   id?: string;
 }
 
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
-
-/**
- * Classroom Vote Distribution Horizontal Bar Chart.
- * Visualizes the relative breakdown of student responses across options A, B, C, D
- * with smooth CSS growth transitions and individual vote tallies.
- *
- * @param {TallyBarsProps} props - Component props containing options map, tally counts, total votes, and animation toggle.
- * @returns {JSX.Element} The rendered tally distribution bar chart.
- */
 export const TallyBars: React.FC<TallyBarsProps> = ({
   options,
   counts,
@@ -37,7 +28,7 @@ export const TallyBars: React.FC<TallyBarsProps> = ({
       id={id}
       className={`${styles.bars} ${animate ? styles.grow : ''} ${themeClass} ${className}`}
     >
-      {LETTERS.map((letter) => {
+      {OPTION_LETTERS.map((letter) => {
         const text = options[letter] || '';
         const count = counts ? counts[letter] ?? 0 : null;
         const percentage =

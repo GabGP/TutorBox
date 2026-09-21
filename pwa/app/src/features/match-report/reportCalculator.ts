@@ -1,3 +1,4 @@
+import { OPTION_LETTERS } from '../../shared/constants/options';
 import { QuestionErrorSummary, StoredRoundHistory, TopWrongAnswer } from './report.types';
 
 /**
@@ -8,7 +9,7 @@ import { QuestionErrorSummary, StoredRoundHistory, TopWrongAnswer } from './repo
  * @returns {TopWrongAnswer | null} The top wrong choice and vote count, or null if insignificant.
  */
 export function findTopWrong(item: StoredRoundHistory): TopWrongAnswer | null {
-  const wrongEntries = (['A', 'B', 'C', 'D'] as const)
+  const wrongEntries = OPTION_LETTERS
     .filter((k) => k !== item.tally.correct_option)
     .map((k) => [k, item.tally.counts[k] || 0] as const)
     .sort((a, b) => b[1] - a[1]);
@@ -59,6 +60,6 @@ export function getTopRepeatedErrors(
  */
 export function getToneColor(percentage: number): string {
   if (percentage < 40) return 'var(--bad)';
-  if (percentage < 70) return 'var(--C)';
-  return 'var(--D)';
+  if (percentage < 70) return 'var(--warn)';
+  return 'var(--ok)';
 }

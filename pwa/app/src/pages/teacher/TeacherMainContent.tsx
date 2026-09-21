@@ -1,7 +1,8 @@
 import React from 'react';
 import { MatchReportView } from '../../features/match-report/MatchReportView';
 import { QuestionCountPicker } from '../../features/question-generator/QuestionCountPicker';
-import { getTopicLabel, TopicSelector } from '../../features/question-generator/TopicSelector';
+import { TopicSelector } from '../../features/question-generator/TopicSelector';
+import { getTopicLabel } from '../../shared/taxonomy/labels';
 import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import { RosterTableProps } from '../../features/roster/RosterTable';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';

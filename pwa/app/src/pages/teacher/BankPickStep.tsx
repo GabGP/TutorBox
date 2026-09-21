@@ -3,7 +3,7 @@ import { Minus, Plus, SquareCheck, Zap } from 'lucide-react';
 import { QuestionBankView } from '../../features/question-bank/QuestionBankView';
 import { QuestionForm } from '../../features/question-bank/QuestionForm';
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
-import { getTopicLabel } from '../../features/question-generator/TopicSelector';
+import { getTopicLabel } from '../../shared/taxonomy/labels';
 import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import {
   GenerationProgress,

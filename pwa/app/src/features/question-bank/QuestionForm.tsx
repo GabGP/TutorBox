@@ -6,12 +6,12 @@ import {
   getMisconceptionLabel,
   getSubconceptLabel,
   getTopicLabel,
-} from '../question-generator/TopicSelector';
+} from '../../shared/taxonomy/labels';
+import { OPTION_LETTERS } from '../../shared/constants/options';
+import { toErrorMessage } from '../../shared/lib/errors';
 import rosterStyles from '../roster/roster.module.css';
 import formStyles from './QuestionForm.module.css';
 import { BankQuestion, BankQuestionCreate, bankApi } from './bankApi';
-
-const OPTION_KEYS = ['A', 'B', 'C', 'D'] as const;
 
 interface DraftDistractor {
   misconception: string;
@@ -88,7 +88,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial?.id]);
 
-  const distractorKeys = OPTION_KEYS.filter((k) => k !== fCorrect);
+  const distractorKeys = OPTION_LETTERS.filter((k) => k !== fCorrect);
 
   // Taxonomy-driven options: subconcepts of the chosen topic, and the
   // diagnosed misconception slugs of the chosen subconcept.
@@ -130,8 +130,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
         res.is_valid ? ['Válida: cálculo y distractores correctos'] : res.errors
       );
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al validar');
+      setError(toErrorMessage(err, 'Error al validar'));
     }
   };
 
@@ -145,8 +144,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
         : await bankApi.createQuestion(payload);
       onSaved(saved.id, Boolean(editingId));
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al guardar');
+      setError(toErrorMessage(err, 'Error al guardar'));
     } finally {
       setSaving(false);
     }
@@ -215,7 +213,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
         <legend className={formStyles.legend}>
           Opciones <span className={formStyles.hint}>— marca la correcta</span>
         </legend>
-        {OPTION_KEYS.map((k) => {
+        {OPTION_LETTERS.map((k) => {
           const isCorrect = fCorrect === k;
           return (
             <div

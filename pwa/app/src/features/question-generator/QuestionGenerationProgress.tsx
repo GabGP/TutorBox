@@ -4,19 +4,14 @@ import { ProgressBar } from '../../shared/ui/ProgressBar/ProgressBar';
 import { ShinyText } from '../../shared/ui/ShinyText/ShinyText';
 import { GenerationProgress, PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.types';
 import styles from './QuestionGenerationProgress.module.css';
-import { getSubconceptLabel, getTopicLabel } from './TopicSelector';
+import { formatDuration } from '../../shared/lib/format';
+import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
+
+export { formatDuration } from '../../shared/lib/format';
 
 export interface QuestionGenerationProgressProps {
   progress: GenerationProgress;
   isComplete?: boolean;
-}
-
-export function formatDuration(seconds: number | null, isEstimate = false): string {
-  if (seconds == null || seconds < 0) return '';
-  const prefix = isEstimate ? '~' : '';
-  if (seconds < 60) return `${prefix}${seconds}s`;
-  const mins = Math.floor(seconds / 60), rem = seconds % 60;
-  return rem > 0 ? `${prefix}${mins} min ${rem}s` : `${prefix}${mins} min`;
 }
 
 export const STAGE_ICONS = [PenLine, Palette, Ruler, Save] as const;

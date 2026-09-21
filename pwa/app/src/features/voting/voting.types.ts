@@ -1,4 +1,5 @@
-export type OptionLetter = 'A' | 'B' | 'C' | 'D';
+export type { OptionLetter } from '../../shared/constants/options';
+import type { OptionLetter } from '../../shared/constants/options';
 
 export interface VotePayload {
   selected_option: OptionLetter;

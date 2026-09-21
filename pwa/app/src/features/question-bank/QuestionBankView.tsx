@@ -6,7 +6,7 @@ import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
-import { getTopicLabel } from '../question-generator/TopicSelector';
+import { getTopicLabel } from '../../shared/taxonomy/labels';
 import rosterStyles from '../roster/roster.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';

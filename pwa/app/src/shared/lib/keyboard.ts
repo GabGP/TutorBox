@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
+import type { OptionLetter } from '../constants/options';
 
-export type OptionLetter = 'A' | 'B' | 'C' | 'D';
+export type { OptionLetter } from '../constants/options';
 
 const KEY_MAP: Record<string, OptionLetter> = {
   a: 'A',

@@ -4,25 +4,13 @@ import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import rosterStyles from '../roster/roster.module.css';
 import { GenerationLogItem } from './generator.types';
 import { formatLatency } from './telemetryFormat';
-import { getSubconceptLabel, getTopicLabel } from './TopicSelector';export interface TelemetryDetailSheetProps {
+import { formatFullDate } from '../../shared/lib/format';
+import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';export interface TelemetryDetailSheetProps {
   /** Null = closed. */
   log: GenerationLogItem | null;
   /** Resolves a staff user id to its display name. */
   userNameById: Map<string, string>;
   onClose: () => void;
-}
-
-function formatFullDate(value?: string | null): string {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString('es', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 /**

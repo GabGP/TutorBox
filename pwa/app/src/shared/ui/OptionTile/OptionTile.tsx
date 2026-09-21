@@ -1,13 +1,14 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import type { OptionLetter } from '../../constants/options';
 import styles from './OptionTile.module.css';
 
 export interface OptionTileProps {
-  letter: 'A' | 'B' | 'C' | 'D';
+  letter: OptionLetter;
   text: string;
   isPicked?: boolean;
   isLocked?: boolean;
-  onSelect?: (letter: 'A' | 'B' | 'C' | 'D') => void;
+  onSelect?: (letter: OptionLetter) => void;
   disabled?: boolean;
   className?: string;
 }

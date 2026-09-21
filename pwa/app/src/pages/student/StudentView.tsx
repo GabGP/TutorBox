@@ -7,7 +7,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { computeStudentStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
 import { useStudentVoting } from '../../features/voting/useStudentVoting';
-import { OptionLetter } from '../../features/voting/voting.types';
+import type { OptionLetter } from '../../shared/constants/options';
 import { useOptionKeyboard } from '../../shared/lib/keyboard';
 import { storage } from '../../shared/lib/storage';
 import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
