@@ -13,6 +13,7 @@ import utils from '../../shared/styles/utils.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
+import { SchemaViewer } from './SchemaViewer';
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
@@ -54,7 +55,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [detail, setDetail] = useState<BankQuestion | null>(null);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
-  const [schema, setSchema] = useState<string | null>(null);
 
   const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);
@@ -130,20 +130,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     setOpenSwipeId(null);
     setNotice(`Pregunta actualizada (${id}).`);
     load(topic, offset, pageSize);
-  };
-
-  const toggleSchema = async () => {
-    if (schema !== null) {
-      setSchema(null);
-      return;
-    }
-    try {
-      const s = await bankApi.getSchema();
-      setSchema(JSON.stringify(s, null, 2));
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al cargar esquema');
-    }
   };
 
   return (
@@ -320,35 +306,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         disabled={loading}
       />
 
-      {isAdmin && (
-        <details>
-          <summary
-            style={{ color: 'var(--p)', fontWeight: 600, cursor: 'pointer' }}
-            onClick={toggleSchema}
-          >
-            Contrato JSON de preguntas
-          </summary>
-          {schema && (
-            <>
-              <p style={{ fontSize: '13px', color: 'var(--mute2)', margin: '8px 0' }}>
-                Esquema oficial que debe cumplir cada pregunta del banco (el generador
-                y la validación lo usan para aceptar o rechazar preguntas).
-              </p>
-              <pre
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  fontSize: '12px',
-                  background: 'var(--chip)',
-                  borderRadius: '16px',
-                  padding: '12px',
-                }}
-              >
-                {schema}
-              </pre>
-            </>
-          )}
-        </details>
-      )}
+      {isAdmin && <SchemaViewer onError={setError} />}
 
       <QuestionEditSheet
         question={editing}
