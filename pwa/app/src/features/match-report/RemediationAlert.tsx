@@ -1,5 +1,6 @@
 import React from 'react';
 import { TriangleAlert } from 'lucide-react';
+import { PlayButton } from '../../shared/ui/PlayButton/PlayButton';
 import { SpeechLanguage, SpeechState } from '../speech/speech.types';
 import styles from './report.module.css';
 
@@ -49,6 +50,11 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
     }
   };
 
+  const speechPhase =
+    speechState === 'loading' || speechState === 'playing' || speechState === 'done'
+      ? speechState
+      : ('idle' as const);
+
   return (
     <div className={styles.alertLg} id="ralert">
       <div className={styles.remediationTagRow}>
@@ -64,39 +70,20 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
       </div>
 
       <div className={styles.btns}>
-        <button
-          type="button"
-          id="play"
-          className={`${styles.playBtn} ${speechState === 'playing' ? styles.playBtnActive : ''}`}
+        <PlayButton
+          phase={speechPhase}
           onClick={handlePrimaryClick}
-          aria-label={
+          id="play"
+          ariaLabel={
             speechState === 'loading'
               ? 'Preparando la voz, clic para cancelar'
               : speechState === 'playing'
               ? 'Leyendo explicación, clic para detener'
               : defaultVoiceLabel
           }
-        >
-          {speechState === 'loading' && (
-            <span className={styles.btnSpinner} aria-hidden="true" />
-          )}
-          {speechState === 'playing' && (
-            <span className={styles.btnWave} aria-hidden="true">
-              <span className={styles.btnBar} />
-              <span className={styles.btnBar} />
-              <span className={styles.btnBar} />
-            </span>
-          )}
-          <span>
-            {speechState === 'loading'
-              ? 'Preparando la voz…'
-              : speechState === 'playing'
-              ? 'Leyendo…'
-              : speechState === 'done'
-              ? 'Escuchar otra vez'
-              : defaultVoiceLabel}
-          </span>
-        </button>
+          idleLabel={defaultVoiceLabel}
+          doneLabel="Escuchar otra vez"
+        />
         <button
           type="button"
           id="skip"

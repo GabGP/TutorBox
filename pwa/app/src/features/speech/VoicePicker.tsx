@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Volume2 } from 'lucide-react';
 import { storage } from '../../shared/lib/storage';
-import reportStyles from '../match-report/report.module.css';
+import { BtnSpinner, PlayButton } from '../../shared/ui/PlayButton/PlayButton';
 import rosterStyles from '../roster/roster.module.css';
 import { speechApi, ttsApi } from './speechApi';
 import { SpeechLanguage, TTSStatusResponse, TTSVoiceItem } from './speech.types';
@@ -275,41 +275,21 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
       </div>
 
       <div className={rosterStyles.addForm}>
-        <button
-          type="button"
-          className={`${reportStyles.playBtn} ${previewPhase === 'playing' ? reportStyles.playBtnActive : ''}`}
+        <PlayButton
+          phase={previewPhase}
           onClick={handlePreview}
           disabled={previewPhase === 'loading' || busy || !voice}
-          aria-label={
+          ariaLabel={
             previewPhase === 'loading'
               ? 'Generando muestra, espera'
               : previewPhase === 'playing'
                 ? 'Sonando muestra, clic para detener'
                 : 'Escuchar muestra de voz'
           }
-        >
-          {previewPhase === 'loading' && (
-            <span className={reportStyles.btnSpinner} aria-hidden="true" />
-          )}
-          {previewPhase === 'playing' && (
-            <span className={reportStyles.btnWave} aria-hidden="true">
-              <span className={reportStyles.btnBar} />
-              <span className={reportStyles.btnBar} />
-              <span className={reportStyles.btnBar} />
-            </span>
-          )}
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            {previewPhase === 'loading'
-              ? 'Generando…'
-              : previewPhase === 'playing'
-                ? 'Sonando…'
-                : (
-                  <>
-                    <Volume2 size={18} aria-hidden /> Escuchar
-                  </>
-                )}
-          </span>
-        </button>
+          idleLabel={<><Volume2 size={18} aria-hidden /> Escuchar</>}
+          loadingLabel="Generando…"
+          playingLabel="Sonando…"
+        />
       </div>
 
       {isAdmin && (
@@ -320,7 +300,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
             onClick={handleLoad}
             disabled={busy || previewPhase !== 'idle' || !voice}
           >
-            {busy && <span className={reportStyles.btnSpinner} aria-hidden="true" />}
+            {busy && <BtnSpinner />}
             <span>{busy ? 'Cargando…' : 'Cargar voz'}</span>
           </button>
           <button
