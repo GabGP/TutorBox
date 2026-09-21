@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import rosterStyles from '../../../features/roster/roster.module.css';
+import styles from './Sheet.module.css';
 
 export interface SheetProps {
   /** Accessible dialog label. */
@@ -85,19 +85,19 @@ export const Sheet: React.FC<SheetProps> = ({ label, onClose, children }) => {
   return createPortal(
     <div
       ref={overlayRef}
-      className={rosterStyles.sheetOverlay}
+      className={styles.sheetOverlay}
       onClick={onClose}
       role="presentation"
     >
       <div
-        className={`${rosterStyles.sheet} ${dragging ? rosterStyles.sheetDragging : ''}`}
+        className={`${styles.sheet} ${dragging ? styles.sheetDragging : ''}`}
         role="dialog"
         aria-label={label}
         onClick={(e) => e.stopPropagation()}
         style={dragDy > 0 ? { transform: `translateY(${dragDy}px)` } : undefined}
       >
         <div
-          className={rosterStyles.sheetGrip}
+          className={styles.sheetGrip}
           aria-hidden
           onPointerDown={onGripDown}
           onPointerMove={onGripMove}
@@ -107,7 +107,7 @@ export const Sheet: React.FC<SheetProps> = ({ label, onClose, children }) => {
             setDragDy(0);
           }}
         >
-          <div className={rosterStyles.sheetHandle} />
+          <div className={styles.sheetHandle} />
         </div>
         {children}
       </div>
