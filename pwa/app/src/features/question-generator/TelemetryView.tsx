@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Check, Gauge, X } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
-import { getRoleLabel } from '../../shared/constants/roles';
+import { toErrorMessage } from '../../shared/lib/errors';
 import { usePagination } from '../../shared/lib/pagination';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
-import utils from '../../shared/styles/utils.module.css';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { generatorApi } from './generatorApi';
 import { rosterApi } from '../roster/rosterApi';
@@ -16,66 +14,13 @@ import {
   GenerationLogItem,
 } from './generator.types';
 import { TelemetryDetailSheet } from './TelemetryDetailSheet';
-import { formatLatency, formatPercent, formatShortDate } from './telemetryFormat';
-import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
+import { TelemetryFilters, type TelemetryFilterUser } from './TelemetryFilters';
+import { TelemetryLogRow } from './TelemetryLogRow';
+import { TelemetryMetricsCard } from './TelemetryMetricsCard';
 import teleStyles from './TelemetryView.module.css';
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
-
-interface TelemetryLogRowProps {
-  log: GenerationLogItem;
-  userLabel: string;
-  onOpen: () => void;
-}
-
-/** One attempt row: a full-row tap target opening the detail sheet. */
-const TelemetryLogRow: React.FC<TelemetryLogRowProps> = ({
-  log,
-  userLabel,
-  onOpen,
-}) => {
-  const topicLabel = getTopicLabel(log.topic);
-  const subLabel = getSubconceptLabel(log.subconcept);
-  const shortDate = formatShortDate(log.created_at);
-  return (
-    <button
-      type="button"
-      className={teleStyles.rowBtn}
-      onClick={onOpen}
-      aria-label={`Ver detalle generación ${log.id}`}
-    >
-      <span
-        className={`${teleStyles.cell} ${teleStyles.status} ${
-          log.success ? teleStyles.ok : teleStyles.fail
-        }`}
-      >
-        {log.success ? <Check size={16} aria-hidden /> : <X size={16} aria-hidden />}
-      </span>
-      <span className={teleStyles.cell}>
-        <span className={teleStyles.primary}>{topicLabel}</span>
-        {subLabel && (
-          <span className={teleStyles.secondary}>{subLabel}</span>
-        )}
-      </span>
-      <span className={teleStyles.cell}>
-        <span className={teleStyles.primary}>{userLabel}</span>
-        <span className={teleStyles.secondary}>{log.model_name}</span>
-      </span>
-        <span className={`${teleStyles.cell} ${teleStyles.numeric}`}>
-          <span className={teleStyles.primary}>
-            {log.attempts} {log.attempts === 1 ? 'intento' : 'intentos'}
-          </span>
-          <span className={teleStyles.secondary}>
-            {formatLatency(log.duration_ms)}
-          </span>
-          {shortDate && (
-            <span className={teleStyles.tertiary}>{shortDate}</span>
-          )}
-        </span>
-    </button>
-  );
-};
 
 /**
  * Generation telemetry viewer: aggregate reliability/latency metrics plus
@@ -90,9 +35,7 @@ export const TelemetryView: React.FC = () => {
   const { topics } = useTopics();
   const [topic, setTopic] = useState('');
   const [userId, setUserId] = useState('');
-  const [userOptions, setUserOptions] = useState<
-    Array<{ id: string; username: string; role: string }>
-  >([]);
+  const [userOptions, setUserOptions] = useState<TelemetryFilterUser[]>([]);
   const [successFilter, setSuccessFilter] = useState<string>('');
   const { offset, setOffset, pageSize, setPageSize } = usePagination(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
@@ -148,8 +91,7 @@ export const TelemetryView: React.FC = () => {
         setLogs(l.logs || []);
         setTotal(l.total ?? (l.logs || []).length);
       } catch (err: unknown) {
-        const e = err as { message?: string };
-        setError(e.message || 'Error al cargar actividad');
+        setError(toErrorMessage(err, 'Error al cargar actividad'));
       } finally {
         setLoading(false);
       }
@@ -200,96 +142,30 @@ export const TelemetryView: React.FC = () => {
         <span id="telemetryCount">{total}</span>
       </div>
 
-      <div className={formStyles.addForm}>
-        <select
-          className={formStyles.addInput}
-          style={{ flex: 1 }}
-          value={topic}
-          onChange={(e) => {
-            setTopic(e.target.value);
-            setOffset(0);
-          }}
-          aria-label="Tema"
-        >
-          <option value="">Todos los temas</option>
-          {topics.map((t) => (
-            <option key={t.name} value={t.name}>
-              {t.label || getTopicLabel(t.name)}
-            </option>
-          ))}
-        </select>
-        <select
-          className={formStyles.addInput}
-          style={{ flex: '0 0 130px' }}
-          value={successFilter}
-          onChange={(e) => {
-            setSuccessFilter(e.target.value);
-            setOffset(0);
-          }}
-          aria-label="Resultado"
-        >
-          <option value="">Todos</option>
-          <option value="true">Éxitos</option>
-          <option value="false">Fallos</option>
-        </select>
-        <select
-          className={formStyles.addInput}
-          style={{ flex: '0 0 150px' }}
-          value={userId}
-          onChange={(e) => {
-            setUserId(e.target.value);
-            setOffset(0);
-          }}
-          aria-label="ID de usuario"
-        >
-          <option value="">Todos los usuarios</option>
-          {userOptions.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.username} · {getRoleLabel(u.role)}
-            </option>
-          ))}
-          {extraUserIds.map((id) => (
-            <option key={id} value={id}>
-              #{id}
-            </option>
-          ))}
-        </select>
-      </div>
+      <TelemetryFilters
+        topics={topics}
+        topic={topic}
+        successFilter={successFilter}
+        userId={userId}
+        userOptions={userOptions}
+        extraUserIds={extraUserIds}
+        onTopicChange={(v) => {
+          setTopic(v);
+          setOffset(0);
+        }}
+        onSuccessFilterChange={(v) => {
+          setSuccessFilter(v);
+          setOffset(0);
+        }}
+        onUserIdChange={(v) => {
+          setUserId(v);
+          setOffset(0);
+        }}
+      />
 
       {error && <div className={formStyles.errorBanner}>{error}</div>}
 
-      {metrics && (
-        <DataList
-          id="telemetryMetrics"
-          ariaLabel="Resumen de generación"
-          isEmpty={false}
-        >
-          <div
-            role="listitem"
-            style={{
-              padding: '10px 12px',
-              display: 'flex',
-              gap: '10px',
-              alignItems: 'center',
-            }}
-          >
-            <span className={listStyles.studentName}>
-              {metrics.total_generations} intentos ·{' '}
-              {formatPercent(metrics.success_rate)} éxito
-            </span>
-            <span className={`${listStyles.roleTag} ${utils.rowInline4}`}>
-              <Gauge size={13} aria-hidden /> {formatLatency(metrics.avg_duration_ms)}
-            </span>
-          </div>
-          <div role="listitem" style={{ padding: '10px 12px' }}>
-            <span className={`${listStyles.studentName} ${utils.rowInline4}`}>
-              <Check size={14} aria-hidden /> {metrics.successful_generations} · <X size={14} aria-hidden />{' '}
-              {metrics.failed_generations} · {metrics.avg_attempts}{' '}
-              intentos/pregunta
-            </span>
-          </div>
-        </DataList>
-      )}
+      {metrics && <TelemetryMetricsCard metrics={metrics} />}
 
       {loading ? (
         <DataList
