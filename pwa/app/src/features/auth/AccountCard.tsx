@@ -1,5 +1,6 @@
 import React from 'react';
 import { getRoleLabel } from '../../shared/constants/roles';
+import utils from '../../shared/styles/utils.module.css';
 import { User } from './auth.types';
 import styles from './auth.module.css';
 import { PinForm } from './PinForm';
@@ -35,7 +36,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         <div className={styles.avatar} aria-hidden>
           {(user.username.charAt(0) || '?').toUpperCase()}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className={utils.grow}>
           <div className={styles.profileName}>{user.username}</div>
           <div className={styles.profileRole}>
             {getRoleLabel(user.role)}

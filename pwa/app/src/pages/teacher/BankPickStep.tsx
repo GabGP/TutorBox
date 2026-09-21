@@ -10,6 +10,7 @@ import {
 } from '../../features/question-generator/generator.types';
 import generatorStyles from '../../features/question-generator/generator.module.css';
 import formStyles from '../../shared/styles/forms.module.css';
+import utils from '../../shared/styles/utils.module.css';
 import { SourceSwitch } from './SourceSwitch';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 
@@ -142,7 +143,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
               onClick={handlePregenerate}
               disabled={pregenerating}
             >
-              {pregenerating ? 'Generando…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Plus size={18} aria-hidden /> Pre-generar en banco</span>}
+              {pregenerating ? 'Generando…' : <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Pre-generar en banco</span>}
             </button>
           </div>
           {progress && (

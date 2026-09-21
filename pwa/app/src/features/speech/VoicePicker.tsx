@@ -4,6 +4,7 @@ import { storage } from '../../shared/lib/storage';
 import { BtnSpinner, PlayButton } from '../../shared/ui/PlayButton/PlayButton';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
+import utils from '../../shared/styles/utils.module.css';
 import { speechApi, ttsApi } from './speechApi';
 import { SpeechLanguage, TTSStatusResponse, TTSVoiceItem } from './speech.types';
 
@@ -241,16 +242,16 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
       </div>
 
       {isAdmin && status && !busy && (
-        <div style={{ color: 'var(--mute2)', fontSize: '14px' }}>
+        <div className={utils.muted}>
           Motor: {status.engine} · Modelo: {status.model_id || '—'}
         </div>
       )}
       {isAdmin && busy && (
-        <div style={{ color: 'var(--mute2)', fontSize: '14px' }}>
+        <div className={utils.muted}>
           Actualizando memoria…
         </div>
       )}
-      <div style={{ color: 'var(--mute2)', fontSize: '14px' }}>
+      <div className={utils.muted}>
         La voz elegida es la que se escucha en el juego.
         {engineOf && engineOf.toLowerCase().startsWith('qwen') && (
           <> Esta voz varía en cada generación.</>
@@ -268,7 +269,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
           disabled={busy || !voice || isSavedSelection}
         >
           {isSavedSelection ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Check size={16} aria-hidden /> Predeterminada</span>
+            <span className={utils.rowInline6}><Check size={16} aria-hidden /> Predeterminada</span>
           ) : (
             'Guardar como predeterminada'
           )}

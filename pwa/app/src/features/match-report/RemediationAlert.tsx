@@ -58,7 +58,7 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
   return (
     <div className={styles.alertLg} id="ralert">
       <div className={styles.remediationTagRow}>
-        <span className={styles.remediationTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><TriangleAlert size={13} aria-hidden /> Error conceptual mayoritario (&gt;51%)</span>
+        <span className={styles.remediationTag}><TriangleAlert size={13} aria-hidden /> Error conceptual mayoritario (&gt;51%)</span>
       </div>
 
       <b id="ralertTitle">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { SpeechLanguage } from '../../features/speech/speech.types';
+import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
 
 export interface TeacherHeaderProps {
@@ -40,7 +41,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       >
         <ArrowLeft size={24} aria-hidden />
       </button>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className={utils.grow}>
         <div style={{ fontSize: '19px', fontWeight: 600 }} id="title">
           {title}
         </div>

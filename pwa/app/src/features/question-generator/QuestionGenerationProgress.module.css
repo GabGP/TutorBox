@@ -122,6 +122,9 @@
 }
 
 .stageText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 500;
   color: var(--mute2, #55636a);
@@ -189,12 +192,18 @@
 
 .timerBadge,
 .etaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--chip, #f1f6f9);
   padding: 4px 8px;
   border-radius: 6px;
 }
 
 .failedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--bad-bg, #ffe9e7);
   color: var(--bad, #b3261e);
   padding: 4px 8px;

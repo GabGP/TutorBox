@@ -1,0 +1,23 @@
+/* Cross-cutting layout/text idioms previously inlined as style={{}} objects. */
+
+.rowInline6 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rowInline4 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--mute2);
+  font-size: 14px;
+}

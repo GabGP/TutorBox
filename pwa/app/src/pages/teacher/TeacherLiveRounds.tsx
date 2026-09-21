@@ -4,6 +4,7 @@ import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types'
 import { RoundModel, SessionModel } from '../../features/session-engine/session.types';
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
 import { TallyBars } from '../../shared/ui/TallyBars/TallyBars';
+import utils from '../../shared/styles/utils.module.css';
 
 export interface TeacherLiveRoundsProps {
   step: 'question' | 'reveal';
@@ -74,7 +75,7 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
             remaining={round.status === 'open' ? round.time_remaining : 0}
             duration={round.duration_seconds}
           />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className={utils.grow}>
             <div style={{ fontSize: '14px', color: 'var(--mute2)', fontWeight: 500 }} id="qcounter">
               Pregunta {round.round_index + 1} de {session.question_count}
             </div>

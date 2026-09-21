@@ -3,6 +3,7 @@ import { Check, CircleHelp, Divide, LayoutGrid, Percent, Plus, Variable, type Lu
 import styles from './generator.module.css';
 import { TopicModel } from './generator.types';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
+import utils from '../../shared/styles/utils.module.css';
 
 export { getMisconceptionLabel, getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
 
@@ -57,7 +58,7 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
             data-id={id}
           >
             <span className={styles.glyph}><GlyphIcon size={24} aria-hidden /></span>
-            <span style={{ flex: 1, minWidth: 0 }}>
+            <span className={utils.grow}>
               <div className={styles.l}>{label}</div>
               <div className={styles.m}>{description}</div>
             </span>

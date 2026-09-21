@@ -80,7 +80,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
         </div>
         <ProgressBar value={percent} animated={!isDone} size="md" label="Progreso general" speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS} />
         <div className={styles.stageCaption} aria-live="polite" aria-atomic="true">
-          <span key={captionText} className={styles.stageText} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><StageIcon size={14} aria-hidden />{captionText}</span>
+          <span key={captionText} className={styles.stageText}><StageIcon size={14} aria-hidden />{captionText}</span>
         </div>
       </div>
       <div className={styles.pillsList} role="list" aria-label="Estado por pregunta" style={{ '--cols-mobile': colsMobile, '--cols-desktop': colsDesktop } as React.CSSProperties}>
@@ -97,9 +97,9 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
         })}
       </div>
       <div className={styles.footer}>
-        <span className={styles.timerBadge} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Timer size={13} aria-hidden /> {isDone ? 'Tiempo total' : 'Tiempo transcurrido'}: <strong>{formattedElapsed}</strong></span>
-        {progress.failed > 0 && <span className={styles.failedBadge} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><TriangleAlert size={13} aria-hidden /> {progress.failed} pregunta(s) con error</span>}
-        {formattedEta && <span className={styles.etaBadge} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Hourglass size={13} aria-hidden /> Restante estimado: <strong>{formattedEta}</strong></span>}
+        <span className={styles.timerBadge}><Timer size={13} aria-hidden /> {isDone ? 'Tiempo total' : 'Tiempo transcurrido'}: <strong>{formattedElapsed}</strong></span>
+        {progress.failed > 0 && <span className={styles.failedBadge}><TriangleAlert size={13} aria-hidden /> {progress.failed} pregunta(s) con error</span>}
+        {formattedEta && <span className={styles.etaBadge}><Hourglass size={13} aria-hidden /> Restante estimado: <strong>{formattedEta}</strong></span>}
       </div>
     </section>
   );

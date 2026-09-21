@@ -11,6 +11,7 @@ import type { OptionLetter } from '../../shared/constants/options';
 import { useOptionKeyboard } from '../../shared/lib/keyboard';
 import { storage } from '../../shared/lib/storage';
 import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
+import utils from '../../shared/styles/utils.module.css';
 import { StudentScreens } from './StudentScreens';
 import styles from './StudentView.module.css';
 
@@ -98,8 +99,8 @@ export const StudentView: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <button
               type="button"
-              className={styles.logoutBtn}
-              style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className={`${styles.logoutBtn} ${utils.rowInline6}`}
+              style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px' }}
               onClick={() => setShowAccount(false)}
             >
               <ArrowLeft size={16} aria-hidden /> Volver al juego
