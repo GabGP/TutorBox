@@ -3,9 +3,9 @@ import {
   SegmentedSwitch,
   type SwitchOption,
 } from '../../shared/ui/SegmentedSwitch/SegmentedSwitch';
+import type { QuestionSource } from './useWizardSelection';
 
-export type QuestionSource = 'generate' | 'bank';
-
+export type { QuestionSource } from './useWizardSelection';
 export type { SwitchOption };
 export { SegmentedSwitch as SourceSwitch };
 export type { SegmentedSwitchProps as SourceSwitchProps } from '../../shared/ui/SegmentedSwitch/SegmentedSwitch';
