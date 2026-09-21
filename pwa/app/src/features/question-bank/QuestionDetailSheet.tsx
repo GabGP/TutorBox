@@ -7,6 +7,7 @@ import {
   getSubconceptLabel,
   getTopicLabel,
 } from '../../shared/taxonomy/labels';
+import styles from './QuestionDetailSheet.module.css';
 import { BankQuestion } from './bankApi';
 
 export interface QuestionDetailSheetProps {
@@ -28,21 +29,21 @@ export const QuestionDetailSheet: React.FC<QuestionDetailSheetProps> = ({
   const subconceptLabel = getSubconceptLabel(question.subconcept) || question.subconcept;
   return (
     <Sheet label={`Detalle pregunta ${question.id}`} onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <b style={{ fontSize: '16px' }}>{question.question_text}</b>
+      <div className={styles.detail}>
+        <b className={styles.title}>{question.question_text}</b>
         {OPTION_LETTERS.map((k) => {
           const distractor = question.distractors[k];
           const miscLabel = distractor
             ? getMisconceptionLabel(distractor.misconception)
             : '';
           return (
-            <div key={k} style={{ fontSize: '14px' }}>
+            <div key={k} className={styles.option}>
               <b>{k}:</b> {question.options[k]}
               {k === question.correct_option ? (
-                <Check size={14} aria-hidden style={{ display: 'inline', verticalAlign: '-2px', marginLeft: '4px' }} />
+                <Check size={14} aria-hidden className={styles.check} />
               ) : null}
               {k !== question.correct_option && distractor && (
-                <span style={{ color: 'var(--mute2)' }}>
+                <span className={styles.distractor}>
                   {' '}
                   — {miscLabel ? `${miscLabel}: ` : ''}
                   {distractor.explanation}
@@ -51,7 +52,7 @@ export const QuestionDetailSheet: React.FC<QuestionDetailSheetProps> = ({
             </div>
           );
         })}
-        <div style={{ color: 'var(--mute2)', fontSize: '13px', marginTop: '4px' }}>
+        <div className={styles.meta}>
           {topicLabel}
           {subconceptLabel ? ` · ${subconceptLabel}` : ''}
           {question.source ? ` · ${question.source}` : ''}{' '}

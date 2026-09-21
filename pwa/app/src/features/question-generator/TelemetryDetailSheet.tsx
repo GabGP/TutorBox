@@ -1,11 +1,14 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
-import rosterStyles from '../roster/roster.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import { GenerationLogItem } from './generator.types';
 import { formatLatency } from './telemetryFormat';
 import { formatFullDate } from '../../shared/lib/format';
-import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';export interface TelemetryDetailSheetProps {
+import { getSubconceptLabel, getTopicLabel } from '../../shared/taxonomy/labels';
+import styles from './TelemetryDetailSheet.module.css';
+
+export interface TelemetryDetailSheetProps {
   /** Null = closed. */
   log: GenerationLogItem | null;
   /** Resolves a staff user id to its display name. */
@@ -30,62 +33,54 @@ export const TelemetryDetailSheet: React.FC<TelemetryDetailSheetProps> = ({
       : '—';
   return (
     <Sheet label={`Detalle de generación #${log.id}`} onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <b style={{ fontSize: '16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <div className={styles.detail}>
+        <b className={styles.title}>
           {log.success ? <><Check size={16} aria-hidden /> Generación exitosa</> : <><X size={16} aria-hidden /> Generación fallida</>}
         </b>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Tema:</b> {getTopicLabel(log.topic)}
           {getSubconceptLabel(log.subconcept)
             ? ` · ${getSubconceptLabel(log.subconcept)}`
             : ''}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Usuario:</b> {userLabel}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Modelo:</b> {log.model_name}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Intentos:</b> {log.attempts} · <b>Tiempo:</b>{' '}
           {formatLatency(log.duration_ms)}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Fecha:</b> {formatFullDate(log.created_at)}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Pregunta:</b>{' '}
           {log.question_id ? (
-            <code style={{ overflowWrap: 'anywhere' }}>{log.question_id}</code>
+            <code className={styles.code}>{log.question_id}</code>
           ) : (
             '—'
           )}
         </div>
-        <div style={{ fontSize: '14px' }}>
+        <div className={styles.row}>
           <b>Rechazos ({log.rejection_history?.length ?? 0}):</b>
         </div>
         {(log.rejection_history?.length ?? 0) > 0 ? (
-          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
+          <ul className={styles.rejections}>
             {log.rejection_history.map((r, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <li key={i}>{r}</li>
             ))}
           </ul>
         ) : (
-          <div
-            style={{ fontSize: '13px', color: 'var(--mute2)' }}
-          >
+          <div className={styles.muted}>
             Sin rechazos registrados.
           </div>
         )}
-        <div
-          style={{
-            color: 'var(--mute2)',
-            fontSize: '13px',
-            marginTop: '4px',
-          }}
-        >
-          <span className={rosterStyles.roleTag}>#{log.id}</span>
+        <div className={styles.footer}>
+          <span className={listStyles.roleTag}>#{log.id}</span>
         </div>
       </div>
     </Sheet>

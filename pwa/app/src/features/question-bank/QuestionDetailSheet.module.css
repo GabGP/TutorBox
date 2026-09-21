@@ -1,0 +1,29 @@
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 16px;
+}
+
+.option {
+  font-size: 14px;
+}
+
+.check {
+  display: inline;
+  vertical-align: -2px;
+  margin-left: 4px;
+}
+
+.distractor {
+  color: var(--mute2);
+}
+
+.meta {
+  color: var(--mute2);
+  font-size: 13px;
+  margin-top: 4px;
+}
