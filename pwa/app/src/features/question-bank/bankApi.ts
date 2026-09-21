@@ -6,6 +6,14 @@ export interface DistractorDetail {
   explanation: string;
 }
 
+/**
+ * Question shape lineage (deliberately separate DTOs, same core):
+ * - `BankQuestion` (here): persisted bank rows with distractors + sympy flags.
+ * - `GeneratedQuestion` (generator.types): fresh LLM output before persistence.
+ * - `QuestionModel` (session.types): slim round payload (text + options only).
+ * All three share the `id/text/options/topic` core; each layer extends only
+ * what it needs so wire payloads stay small.
+ */
 export interface BankQuestion {
   id: string;
   topic: string;
