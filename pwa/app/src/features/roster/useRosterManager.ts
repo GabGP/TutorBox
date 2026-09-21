@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { toErrorMessage } from '../../shared/lib/errors';
 import { DeletedUser, RosterStudent } from './roster.types';
 import { rosterApi } from './rosterApi';
 
@@ -69,13 +70,13 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
       await loadStudents();
       await loadUsers();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
+      const e = err as { status?: number };
       const msg =
         e.status === 409
           ? 'Ese usuario ya existe'
           : e.status === 403
             ? 'No tienes permiso para crear ese rol'
-            : e.message || 'Error al agregar alumno';
+            : toErrorMessage(err, 'Error al agregar alumno');
       setError(msg);
       throw new Error(msg);
     }
@@ -89,12 +90,12 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
         `PIN temporal de ${studentName}: ${res.temporary_pin}. Al entrar deberá elegir un PIN nuevo.`
       );
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Error al reiniciar PIN');
+      setError(toErrorMessage(err, 'Error al reiniciar PIN'));
     }
   };
 
-  const deleteStudent = async (studentId: string, studentName: string) => {    setError(null);
+  const deleteStudent = async (studentId: string, studentName: string) => {
+    setError(null);
     try {
       await rosterApi.deleteUser(studentId);
       setPinNotice(`Cuenta de ${studentName} eliminada.`);
@@ -102,13 +103,13 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
       await loadUsers();
       if (showDeleted) await loadDeleted();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
+      const e = err as { status?: number };
       const msg =
         e.status === 409
           ? 'No se puede eliminar la última cuenta de docente o admin'
           : e.status === 403
             ? 'No tienes permiso para eliminar esa cuenta'
-            : e.message || 'Error al eliminar cuenta';
+            : toErrorMessage(err, 'Error al eliminar cuenta');
       setError(msg);
       throw new Error(msg);
     }
@@ -122,13 +123,13 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
       await loadStudents();
       await loadUsers();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
+      const e = err as { status?: number };
       const msg =
         e.status === 409
           ? 'No se puede quitar al último docente o admin'
           : e.status === 403
             ? 'No tienes permiso para ese rol'
-            : e.message || 'Error al cambiar rol';
+            : toErrorMessage(err, 'Error al cambiar rol');
       setError(msg);
       throw new Error(msg);
     }
@@ -145,11 +146,11 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
       await loadStudents();
       await loadUsers();
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
+      const e = err as { status?: number };
       const msg =
         e.status === 409
           ? 'Ese nombre ya está en uso, elige otro'
-          : e.message || 'Error al recuperar cuenta';
+          : toErrorMessage(err, 'Error al recuperar cuenta');
       setError(msg);
       throw new Error(msg);
     }

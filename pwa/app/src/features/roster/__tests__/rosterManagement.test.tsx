@@ -3,9 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import * as httpClient from '../../../shared/api/httpClient';
 import { RosterTable } from '../RosterTable';
 import { rosterApi } from '../rosterApi';
+import type { RosterStudent } from '../roster.types';
 import { UserEditSheet } from '../UserEditSheet';
 
-const students = [
+const students: RosterStudent[] = [
   { id: '1', username: 'ana', role: 'student' },
   { id: '2', username: 'profe', role: 'teacher' },
 ];

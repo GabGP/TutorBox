@@ -1,13 +1,15 @@
+import type { UserRole } from '../auth/auth.types';
+
 export interface RosterStudent {
   id: string;
   username: string;
-  role: string;
+  role: UserRole;
   must_change_pin?: boolean;
 }
 
 export interface DeletedUser {
   id: string;
-  role: string;
+  role: UserRole;
   former_username: string;
   deleted_at: string;
 }

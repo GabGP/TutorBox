@@ -15,7 +15,7 @@ export interface LoginResponse {
 export interface SignupResponse {
   id: string;
   username: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface PinChangePayload {
