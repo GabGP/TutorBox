@@ -7,7 +7,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { computeStudentStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
 import { useStudentVoting } from '../../features/voting/useStudentVoting';
-import type { OptionLetter } from '../../shared/constants/options';
+import { getSessionQueryParamId } from '../../features/session-engine/sessionApi';
 import { useOptionKeyboard } from '../../shared/lib/keyboard';
 import { storage } from '../../shared/lib/storage';
 import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
@@ -23,14 +23,12 @@ export const StudentView: React.FC = () => {
   const { user, pendingPin, mustChangePin, login, signupAndLogin, handlePinChange, logout, restoreSession } =
     useAuth();
   const [showAccount, setShowAccount] = useState(false);
-  const lastSessionId = storage.getLastStudentSessionId();
-  const targetSessionId = useMemo(
-    () =>
-      typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('s')
-        : null,
-    []
-  );
+  const [lastSessionId, setLastSessionId] = useState<string | null>(null);
+  const targetSessionId = useMemo(() => getSessionQueryParamId(), []);
+
+  useEffect(() => {
+    setLastSessionId(storage.getLastStudentSessionId());
+  }, []);
 
   const { session } = useSessionEngine({
     targetSessionId: targetSessionId || undefined,
@@ -138,7 +136,7 @@ export const StudentView: React.FC = () => {
         timeRemaining={currentRound?.time_remaining}
         durationSeconds={currentRound?.duration_seconds}
         question={q}
-        selectedOption={currentVote as OptionLetter}
+        selectedOption={currentVote}
         myVote={myVote}
         isHit={isHit}
         answer={answer}

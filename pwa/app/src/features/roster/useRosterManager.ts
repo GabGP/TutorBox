@@ -54,6 +54,11 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     }
   }, [enabled, loadStudents, loadUsers]);
 
+  /** Refreshes both lists in one round after any mutation. */
+  const refresh = useCallback(async () => {
+    await Promise.all([loadStudents(), loadUsers()]);
+  }, [loadStudents, loadUsers]);
+
   const loadDeleted = useCallback(async () => {
     try {
       const data = await rosterApi.getDeleted();
@@ -67,8 +72,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     setError(null);
     try {
       await rosterApi.createStudent(username, pin, role);
-      await loadStudents();
-      await loadUsers();
+      await refresh();
     } catch (err: unknown) {
       const e = err as { status?: number };
       const msg =
@@ -99,8 +103,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     try {
       await rosterApi.deleteUser(studentId);
       setPinNotice(`Cuenta de ${studentName} eliminada.`);
-      await loadStudents();
-      await loadUsers();
+      await refresh();
       if (showDeleted) await loadDeleted();
     } catch (err: unknown) {
       const e = err as { status?: number };
@@ -120,8 +123,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     try {
       await rosterApi.changeRole(userId, role);
       setPinNotice(null);
-      await loadStudents();
-      await loadUsers();
+      await refresh();
     } catch (err: unknown) {
       const e = err as { status?: number };
       const msg =
@@ -143,8 +145,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
         `Cuenta ${res.username} recuperada. PIN temporal: ${res.temporary_pin}. Al entrar deberá elegir un PIN nuevo.`
       );
       await loadDeleted();
-      await loadStudents();
-      await loadUsers();
+      await refresh();
     } catch (err: unknown) {
       const e = err as { status?: number };
       const msg =
@@ -173,6 +174,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     loadStudents,
     loadUsers,
     loadDeleted,
+    refresh,
     addStudent,
     resetStudentPin,
     deleteStudent,

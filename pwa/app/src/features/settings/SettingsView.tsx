@@ -3,25 +3,20 @@ import { ArrowLeft, Receipt, User as UserIcon, Users, Volume2, type LucideIcon }
 import { AccordionRow } from '../../shared/ui/Accordion/Accordion';
 import { AccountCard } from '../auth/AccountCard';
 import { User } from '../auth/auth.types';
-import { RosterTable } from '../roster/RosterTable';
-import { DeletedUser, RosterStudent } from '../roster/roster.types';
+import { RosterTable, type RosterTableProps } from '../roster/RosterTable';
+import { RosterStudent } from '../roster/roster.types';
 import { VoicePicker } from '../speech/VoicePicker';
 import { AuditView } from '../staff/AuditView';
 import styles from './settings.module.css';
 
-export interface SettingsRosterBundle {
+/**
+ * Roster data forwarded to the users section. Reuses the roster table's own
+ * props (minus the student list, which arrives as `users`, and the editable
+ * roles, which mirror the creatable roles) so the two can never drift apart.
+ */
+export interface SettingsRosterBundle
+  extends Omit<RosterTableProps, 'students' | 'editableRoles'> {
   users: RosterStudent[];
-  error: string | null;
-  pinNotice: string | null;
-  onAddStudent: (username: string, pin: string, role?: string) => Promise<unknown>;
-  onResetPin: (id: string, username: string) => Promise<unknown>;
-  creatableRoles: string[];
-  deleted: DeletedUser[];
-  showDeleted: boolean;
-  onDeleteUser: (id: string, username: string) => Promise<unknown>;
-  onRecoverUser: (id: string, username: string) => Promise<unknown>;
-  onToggleDeleted: () => void;
-  onRoleChange: (id: string, role: string) => Promise<unknown>;
 }
 
 export interface SettingsViewProps {
@@ -30,7 +25,8 @@ export interface SettingsViewProps {
   onSessionInvalidated: () => Promise<unknown> | void;
   onClose: () => void;
   roster?: SettingsRosterBundle;
-  bankEnabled?: boolean;
+  /** Gates the Voz / Auditoría sections (both need staff backends). */
+  staffEnabled?: boolean;
 }
 
 type SectionId = 'cuenta' | 'usuarios' | 'voz' | 'auditoria';
@@ -46,7 +42,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSessionInvalidated,
   onClose,
   roster,
-  bankEnabled = false,
+  staffEnabled = false,
 }) => {
   const [open, setOpen] = useState<SectionId | null>(null);
 
@@ -111,7 +107,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           />
         )}
 
-      {bankEnabled &&
+      {staffEnabled &&
         row(
           'voz',
           Volume2,
@@ -119,7 +115,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <VoicePicker isAdmin={user.role === 'admin'} />
         )}
 
-      {bankEnabled &&
+      {staffEnabled &&
         user.role === 'admin' &&
         row('auditoria', Receipt, 'Auditoría', <AuditView />, 'Solo admins')}
     </div>

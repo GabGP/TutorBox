@@ -148,7 +148,7 @@ export const TeacherView: React.FC = () => {
             onProfileChanged={restoreSession}
             onSessionInvalidated={logout}
             onClose={handleCloseSettings}
-            bankEnabled={isStaff}
+            staffEnabled={isStaff}
             roster={{
               users, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
               creatableRoles, deleted, showDeleted, onDeleteUser: deleteStudent,

@@ -42,6 +42,7 @@ describe('TeacherView Component', () => {
       loadStudents: vi.fn(),
       loadUsers: vi.fn(),
       loadDeleted: vi.fn(),
+      refresh: vi.fn(),
       addStudent: vi.fn(),
       resetStudentPin: vi.fn(),
       deleteStudent: vi.fn(),

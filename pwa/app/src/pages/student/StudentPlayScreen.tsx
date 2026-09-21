@@ -1,6 +1,6 @@
 import React from 'react';
 import { StudentVoteGrid } from '../../features/voting/StudentVoteGrid';
-import { OptionLetter } from '../../features/voting/voting.types';
+import type { OptionLetter } from '../../shared/constants/options';
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
 import styles from './StudentView.module.css';
 

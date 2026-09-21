@@ -1,5 +1,7 @@
 import React from 'react';
-import { OptionLetter } from '../../features/voting/voting.types';
+import type { OptionLetter } from '../../shared/constants/options';
+import type { QuestionModel } from '../../features/session-engine/session.types';
+import type { StudentStep } from '../../features/session-engine/sessionStateMachine';
 import { StudentFinalScreen } from './StudentFinalScreen';
 import { StudentPlayScreen } from './StudentPlayScreen';
 import { StudentResultScreen } from './StudentResultScreen';
@@ -7,16 +9,13 @@ import { StudentSentScreen } from './StudentSentScreen';
 import { StudentWaitScreen } from './StudentWaitScreen';
 
 export interface StudentScreensProps {
-  step: string;
+  step: StudentStep;
   username: string;
   roundIndex: number;
   questionCount?: number;
   timeRemaining?: number | null;
   durationSeconds?: number;
-  question?: {
-    question_text: string;
-    options: Record<string, string>;
-  };
+  question?: Pick<QuestionModel, 'question_text' | 'options'>;
   selectedOption: OptionLetter | null;
   myVote: OptionLetter | null;
   isHit: boolean;
