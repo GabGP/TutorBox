@@ -252,13 +252,15 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, quiz, session, slm, staff, tts, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
 │   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry), migrations & audit
 │   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
+│   │   ├── logging/   # Unified application & access log formatting with captive probe filtering
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
-│   │   └── security/  # bcrypt PIN hashing, session tokens, and rate limiters
+│   │   ├── security/  # bcrypt PIN hashing, session tokens, and rate limiters
+│   │   └── tts/       # Multi-tier pluggable voice synthesis (Qwen3-TTS, Sherpa, Piper, Kokoro, eSpeak)
 │   └── modes/         # TutorBox bounded appliance operating modes
 │       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
 │       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor

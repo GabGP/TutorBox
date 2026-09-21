@@ -52,7 +52,7 @@ gantt
     Week 1 - Baseline, Auth & Devices (A & B) :done, w1, 2026-08-23, 2026-08-30
 
     section Classroom Quiz Subsystem
-    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :w2, 2026-08-30, 2026-09-06
+    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :done, w2, 2026-08-30, 2026-09-06
     Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :done, w3, 2026-09-06, 2026-09-13
     Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):done, w4, 2026-09-13, 2026-09-20
 
@@ -74,7 +74,7 @@ gantt
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
 | :---: | :--- | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
-| **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
+| **2** ✅ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, 4B RAM profile | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
