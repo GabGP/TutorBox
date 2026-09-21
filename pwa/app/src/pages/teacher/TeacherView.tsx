@@ -163,44 +163,48 @@ export const TeacherView: React.FC = () => {
         step={step}
         session={coordinator.session}
         currentRound={curRound}
-        topics={coordinator.topics}
-        selectedTopic={coordinator.topic}
-        count={coordinator.count}
-        genError={coordinator.genError}
-        progress={coordinator.progress}
-        rosterProps={{
+        quiz={{
+          topics: coordinator.topics,
+          selectedTopic: coordinator.topic,
+          count: coordinator.count,
+          genError: coordinator.genError,
+          progress: coordinator.progress,
+          source: coordinator.source,
+          bankStep: (
+            <BankPickStep
+              selectedTopic={coordinator.topic}
+              count={coordinator.count}
+              onChangeCount={coordinator.setCount}
+              genError={coordinator.genError}
+              progress={coordinator.progress}
+              pregenerating={coordinator.isGenerating}
+              bankIds={coordinator.bankIds}
+              onToggleBankId={coordinator.toggleBankId}
+              onEnsureBankIds={coordinator.ensureBankIds}
+              onPregenerate={coordinator.pregenerate}
+              isAdmin={user?.role === 'admin'}
+            />
+          ),
+          onSelectTopic: coordinator.setTopic,
+          onChangeCount: coordinator.setCount,
+          onSourceChange: coordinator.setSource,
+        }}
+        roster={{
           students, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
         }}
-        voiceDone={voiceDone}
-        voicePlayed={
-          curRound ? hasPlayed(curRound.round_index) : false
-        }
-        voiceLang={voiceLang}
-        speechState={speechState}
-        speechMessage={speechMsg}
-        report={coordinator.report}
-        history={coordinator.history}
-        onSelectTopic={coordinator.setTopic}
-        onChangeCount={coordinator.setCount}
-        onPlaySpeech={handlePlaySpeech}
-        onSkipSpeech={handleSkipSpeech}
-        source={coordinator.source}
-        onSourceChange={coordinator.setSource}
-        bankStep={
-          <BankPickStep
-            selectedTopic={coordinator.topic}
-            count={coordinator.count}
-            onChangeCount={coordinator.setCount}
-            genError={coordinator.genError}
-            progress={coordinator.progress}
-            pregenerating={coordinator.isGenerating}
-            bankIds={coordinator.bankIds}
-            onToggleBankId={coordinator.toggleBankId}
-            onEnsureBankIds={coordinator.ensureBankIds}
-            onPregenerate={coordinator.pregenerate}
-            isAdmin={user?.role === 'admin'}
-          />
-        }
+        voice={{
+          done: voiceDone,
+          played: curRound ? hasPlayed(curRound.round_index) : false,
+          lang: voiceLang,
+          state: speechState,
+          message: speechMsg,
+          onPlay: handlePlaySpeech,
+          onSkip: handleSkipSpeech,
+        }}
+        outcome={{
+          report: coordinator.report,
+          history: coordinator.history,
+        }}
       />
       <TeacherFooter
         primaryText={primaryText}

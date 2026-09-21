@@ -16,30 +16,45 @@ import { TeacherLiveRounds } from './TeacherLiveRounds';
 import { TeacherLobby } from './TeacherLobby';
 import styles from './TeacherView.module.css';
 
-export interface TeacherMainContentProps {
-  step: string;
-  session: SessionModel | null;
-  currentRound?: RoundModel | null;
+/** Quiz-setup slice: topics, count, generation, bank source. */
+export interface QuizSetupProps {
   topics: TopicModel[];
   selectedTopic: string;
   count: number;
   genError?: string | null;
   progress: GenerationProgress | null;
-  rosterProps: RosterTableProps;
-  voiceDone: number;
-  voicePlayed: boolean;
-  voiceLang: SpeechLanguage;
-  speechState: SpeechState;
-  speechMessage: string;
-  report: SessionReport | null;
-  history: StoredRoundHistory[];
+  source: 'generate' | 'bank';
+  bankStep: React.ReactNode;
   onSelectTopic: (topic: string) => void;
   onChangeCount: (count: number) => void;
-  onPlaySpeech: () => void;
-  onSkipSpeech: () => void;
-  source: 'generate' | 'bank';
   onSourceChange: (s: 'generate' | 'bank') => void;
-  bankStep: React.ReactNode;
+}
+
+/** Speech playback slice for live rounds. */
+export interface LiveVoiceProps {
+  done: number;
+  played: boolean;
+  lang: SpeechLanguage;
+  state: SpeechState;
+  message: string;
+  onPlay: () => void;
+  onSkip: () => void;
+}
+
+/** Post-match outcome slice. */
+export interface MatchOutcomeProps {
+  report: SessionReport | null;
+  history: StoredRoundHistory[];
+}
+
+export interface TeacherMainContentProps {
+  step: string;
+  session: SessionModel | null;
+  currentRound?: RoundModel | null;
+  quiz: QuizSetupProps;
+  roster: RosterTableProps;
+  voice: LiveVoiceProps;
+  outcome: MatchOutcomeProps;
 }
 
 /**
@@ -47,33 +62,18 @@ export interface TeacherMainContentProps {
  * Renders the active workspace screen: topic selector, question count picker,
  * pre-game lobby, live voting/reveal rounds, or end-of-game match report.
  *
- * @param {TeacherMainContentProps} props - Component props containing current step state and callbacks.
+ * @param {TeacherMainContentProps} props - Step state plus the quiz, roster,
+ * voice and outcome slices.
  * @returns {JSX.Element} The rendered main content panel.
  */
 export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   step,
   session,
   currentRound,
-  topics,
-  selectedTopic,
-  count,
-  genError,
-  progress,
-  rosterProps,
-  voiceDone,
-  voicePlayed,
-  voiceLang,
-  speechState,
-  speechMessage,
-  report,
-  history,
-  onSelectTopic,
-  onChangeCount,
-  onPlaySpeech,
-  onSkipSpeech,
-  source,
-  onSourceChange,
-  bankStep,
+  quiz,
+  roster,
+  voice,
+  outcome,
 }) => {
   const host = useHostAddress();
   const hostAddress = host ? `${host}/alumno` : '';
@@ -82,40 +82,40 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
       {step === 'topic' && (
         <section id="s-topic" className={styles.stack}>
           <SourceSwitch
-            value={source}
-            onChange={onSourceChange}
+            value={quiz.source}
+            onChange={quiz.onSourceChange}
             options={QUESTION_SOURCE_OPTIONS}
             ariaLabel="Origen de preguntas"
           />
           <TopicSelector
-            topics={topics}
-            selectedTopic={selectedTopic}
-            onSelectTopic={onSelectTopic}
+            topics={quiz.topics}
+            selectedTopic={quiz.selectedTopic}
+            onSelectTopic={quiz.onSelectTopic}
           />
         </section>
       )}
-      {step === 'count' && source === 'generate' && (
+      {step === 'count' && quiz.source === 'generate' && (
         <section id="s-count" className={styles.stack}>
           <QuestionCountPicker
-            count={count}
-            topicLabel={getTopicLabel(selectedTopic)}
-            onChangeCount={onChangeCount}
-            errorNote={genError}
+            count={quiz.count}
+            topicLabel={getTopicLabel(quiz.selectedTopic)}
+            onChangeCount={quiz.onChangeCount}
+            errorNote={quiz.genError}
           />
           <Collapsible title="Actividad de generación">
             <TelemetryView />
           </Collapsible>
         </section>
       )}
-      {step === 'count' && source === 'bank' && (
-        <section id="s-count">{bankStep}</section>
+      {step === 'count' && quiz.source === 'bank' && (
+        <section id="s-count">{quiz.bankStep}</section>
       )}
       {step === 'lobby' && (
         <TeacherLobby
           session={session}
-          progress={progress}
+          progress={quiz.progress}
           hostAddress={hostAddress}
-          rosterProps={rosterProps}
+          rosterProps={roster}
         />
       )}
       {(step === 'question' || step === 'reveal') && session && currentRound && (
@@ -123,18 +123,18 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           step={step}
           session={session}
           round={currentRound}
-          voiceDone={voiceDone}
-          voicePlayed={voicePlayed}
-          voiceLang={voiceLang}
-          speechState={speechState}
-          speechMessage={speechMessage}
-          onPlaySpeech={onPlaySpeech}
-          onSkipSpeech={onSkipSpeech}
+          voiceDone={voice.done}
+          voicePlayed={voice.played}
+          voiceLang={voice.lang}
+          speechState={voice.state}
+          speechMessage={voice.message}
+          onPlaySpeech={voice.onPlay}
+          onSkipSpeech={voice.onSkip}
         />
       )}
       {step === 'stats' && (
         <section id="s-stats">
-          <MatchReportView report={report} history={history} />
+          <MatchReportView report={outcome.report} history={outcome.history} />
         </section>
       )}
     </main>
