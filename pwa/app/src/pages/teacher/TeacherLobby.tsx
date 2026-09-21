@@ -3,6 +3,7 @@ import { GenerationProgress } from '../../features/question-generator/generator.
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
 import { RosterTable, RosterTableProps } from '../../features/roster/RosterTable';
 import { SessionModel } from '../../features/session-engine/session.types';
+import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherLobby.module.css';
 
 export interface TeacherLobbyProps {
@@ -24,7 +25,7 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
   hostAddress,
 }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
+    <div className={styles.stack} id="s-lobby">
       {progress ? (
         <QuestionGenerationProgress
           progress={progress}
@@ -58,7 +59,7 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
         </div>
       )}
 
-      <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }} id="genHelp">
+      <p className={utils.help} id="genHelp">
         Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.
       </p>
 

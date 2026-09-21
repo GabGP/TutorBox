@@ -5,6 +5,7 @@ import { RoundModel, SessionModel } from '../../features/session-engine/session.
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
 import { TallyBars } from '../../shared/ui/TallyBars/TallyBars';
 import utils from '../../shared/styles/utils.module.css';
+import styles from './TeacherLiveRounds.module.css';
 
 export interface TeacherLiveRoundsProps {
   step: 'question' | 'reveal';
@@ -67,8 +68,8 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
       : '';
 
     return (
-      <section id="s-question" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <section id="s-question" className={styles.stack}>
+        <div className={styles.topRow}>
           <CountdownRing
             id="ring"
             size={74}
@@ -76,23 +77,23 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
             duration={round.duration_seconds}
           />
           <div className={utils.grow}>
-            <div style={{ fontSize: '14px', color: 'var(--mute2)', fontWeight: 500 }} id="qcounter">
+            <div className={styles.counter} id="qcounter">
               Pregunta {round.round_index + 1} de {session.question_count}
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 600, lineHeight: 1.3 }} id="qtext">
+            <div className={styles.question} id="qtext">
               {q.question_text}
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', fontSize: '16px', color: 'var(--mute)' }}>
-          <b style={{ fontSize: '30px', color: 'var(--p)' }} id="answered">
+        <div className={styles.answeredRow}>
+          <b className={styles.answeredNum} id="answered">
             {round.votes_cast}
           </b>
           <span id="answeredLbl">
             {round.votes_cast === 1 ? 'respuesta recibida' : 'respuestas recibidas'}
           </span>
         </div>
-        {qHelp && <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }} id="qhelp">{qHelp}</p>}
+        {qHelp && <p className={styles.help} id="qhelp">{qHelp}</p>}
         <TallyBars id="qbars" options={q.options} counts={null} totalVotes={0} />
       </section>
     );
@@ -102,10 +103,10 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
     const showSpeech = Boolean(decision?.should_speak && voiceDone !== round.round_index);
 
     return (
-      <section id="s-reveal" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div className="okcard">
-          <div style={{ fontSize: '14px', fontWeight: 500, letterSpacing: '0.3px' }}>RESPUESTA CORRECTA</div>
-          <div style={{ fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 700 }} id="correct">
+      <section id="s-reveal" className={styles.stack}>
+        <div>
+          <div className={styles.revealLabel}>RESPUESTA CORRECTA</div>
+          <div className={styles.correct} id="correct">
             {tally.correct_option} · {q.options[tally.correct_option]}
           </div>
         </div>
@@ -128,9 +129,9 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
           />
         )}
 
-        <div className="card row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className={styles.hitsRow}>
           <span>Aciertos en esta pregunta</span>
-          <b id="hits" style={{ fontSize: '22px', color: 'var(--p)' }}>
+          <b id="hits" className={styles.hitsNum}>
             {tally.correct_count}/{tally.total_votes}
           </b>
         </div>

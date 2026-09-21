@@ -119,6 +119,16 @@
   gap: 16px;
 }
 
+.title {
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--mute2);
+}
+
 .footer {
   position: sticky;
   bottom: 0;

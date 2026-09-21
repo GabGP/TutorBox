@@ -10,6 +10,12 @@
   flex-wrap: wrap;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .lbl {
   font-size: 14px;
   opacity: 0.82;

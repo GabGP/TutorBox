@@ -94,11 +94,10 @@ export const StudentView: React.FC = () => {
 
     if (showAccount && user) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className={styles.accountPanel}>
             <button
               type="button"
-              className={`${styles.logoutBtn} ${utils.rowInline6}`}
-              style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px' }}
+              className={`${styles.logoutBtn} ${styles.accountBack} ${utils.rowInline6}`}
               onClick={() => setShowAccount(false)}
             >
               <ArrowLeft size={16} aria-hidden /> Volver al juego

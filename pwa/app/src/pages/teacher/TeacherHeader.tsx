@@ -42,10 +42,10 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
         <ArrowLeft size={24} aria-hidden />
       </button>
       <div className={utils.grow}>
-        <div style={{ fontSize: '19px', fontWeight: 600 }} id="title">
+        <div className={styles.title} id="title">
           {title}
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--mute2)' }} id="subtitle">
+        <div className={styles.subtitle} id="subtitle">
           {subtitle}
         </div>
       </div>
@@ -59,10 +59,9 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       {onOpenSettings && (
         <button
           id="settings"
-          className={styles.voiceBtn}
           onClick={onOpenSettings}
           aria-label="Ajustes"
-          style={{ display: 'inline-flex', alignItems: 'center' }}
+          className={`${styles.voiceBtn} ${utils.rowInline}`}
         >
           <Settings size={18} aria-hidden />
         </button>

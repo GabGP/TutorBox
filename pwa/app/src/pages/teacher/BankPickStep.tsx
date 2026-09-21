@@ -15,6 +15,7 @@ import {
 import generatorStyles from '../../features/question-generator/generator.module.css';
 import formStyles from '../../shared/styles/forms.module.css';
 import utils from '../../shared/styles/utils.module.css';
+import styles from './BankPickStep.module.css';
 import { SourceSwitch } from './SourceSwitch';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 
@@ -81,7 +82,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-bank">
+    <div className={styles.stack} id="s-bank">
       <SourceSwitch<BankTab>
         value={tab}
         onChange={setTab}
@@ -91,7 +92,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
 
       {tab === 'elegir' && (
         <>
-          <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }}>
+          <p className={styles.description}>
             Marca las preguntas que quieres usar ({getTopicLabel(selectedTopic)}). El juego
             se crea solo con las elegidas, sin generar.
           </p>
@@ -156,7 +157,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
           {genError && (
             <div className={formStyles.errorBanner}>{genError}</div>
           )}
-          <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }}>
+          <p className={styles.description}>
             Las nuevas preguntas se eligen solas para el juego.
           </p>
         </>

@@ -72,6 +72,18 @@
   cursor: pointer;
 }
 
+.accountPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accountBack {
+  align-self: flex-start;
+  height: 40px;
+  padding: 0 18px;
+}
+
 .mainContent {
   flex: 1;
   min-height: 0;
