@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SessionReport } from '../session-engine/session.types';
 import { generateCsvDataUri } from './csvExport';
 import {
@@ -26,9 +26,9 @@ export const MatchReportView: React.FC<MatchReportViewProps> = ({
   report,
   history,
 }) => {
-  const hardest = getHardestQuestions(history, 3);
-  const repeatedErrors = getTopRepeatedErrors(history, 3);
-  const csvUri = generateCsvDataUri(history);
+  const hardest = useMemo(() => getHardestQuestions(history, 3), [history]);
+  const repeatedErrors = useMemo(() => getTopRepeatedErrors(history, 3), [history]);
+  const csvUri = useMemo(() => generateCsvDataUri(history), [history]);
 
   const avgText = report
     ? `${Math.round(report.average_accuracy_percentage)}%`
