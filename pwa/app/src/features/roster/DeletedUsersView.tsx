@@ -50,7 +50,7 @@ export const DeletedUsersView: React.FC<DeletedUsersViewProps> = ({
       {showDeleted && (
         <div className={listStyles.rosterList} id="rosterDeleted">
           {deleted.length === 0 ? (
-            <div style={{ color: 'var(--mute)' }}>No hay cuentas eliminadas.</div>
+            <div className={styles.empty}>No hay cuentas eliminadas.</div>
           ) : (
             deleted.map((u) => (
               <div key={u.id} className={listStyles.rosterItem}>
@@ -59,8 +59,7 @@ export const DeletedUsersView: React.FC<DeletedUsersViewProps> = ({
                 {onRecoverUser && (
                   <span className={styles.recoverRow}>
                     <input
-                      className={formStyles.addInput}
-                      style={{ flex: 1, height: '40px', fontSize: '15px' }}
+                      className={`${formStyles.addInput} ${styles.recoverInput}`}
                       maxLength={32}
                       placeholder="Nombre nuevo"
                       value={recoverName[String(u.id)] || ''}

@@ -95,14 +95,13 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
         <>
           <label
             htmlFor="sheetRole"
-            style={{ fontSize: '14px', fontWeight: 600, color: 'var(--mute2)' }}
+            className={styles.roleLabel}
           >
             Rol
           </label>
           <select
             id="sheetRole"
-            className={formStyles.addInput}
-            style={{ width: '100%' }}
+            className={`${formStyles.addInput} ${styles.roleSelect}`}
             value={pendingRole || user.role}
             onChange={(e) => {
               setPendingRole(e.target.value);

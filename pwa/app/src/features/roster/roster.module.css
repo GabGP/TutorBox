@@ -41,6 +41,16 @@
   min-width: 0;
 }
 
+.recoverInput {
+  flex: 1;
+  height: 40px;
+  font-size: 15px;
+}
+
+.empty {
+  color: var(--mute);
+}
+
 /* Sheet content typography and actions (overlay/panel live in shared/ui/Sheet). */
 .sheetTitle {
   font-size: 21px;

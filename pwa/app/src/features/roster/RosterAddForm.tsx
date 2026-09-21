@@ -41,20 +41,18 @@ export const RosterAddForm: React.FC<RosterAddFormProps> = ({
     <div className={formStyles.addForm}>
       <input
         id="newUser"
-        className={formStyles.addInput}
-        style={{ flex: 1 }}
+        className={`${formStyles.addInput} ${formStyles.fill}`}
         maxLength={32}
         placeholder="Usuario nuevo"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         disabled={submitting}
       />
-      <input
-        id="newPin"
-        type="password"
-        className={formStyles.addInput}
-        style={{ flex: '0 0 96px' }}
-        inputMode="numeric"
+        <input
+          id="newPin"
+          type="password"
+          className={`${formStyles.addInput} ${formStyles.pin96}`}
+          inputMode="numeric"
         maxLength={8}
         placeholder="PIN"
         value={pin}
@@ -62,11 +60,10 @@ export const RosterAddForm: React.FC<RosterAddFormProps> = ({
         disabled={submitting}
       />
       {creatableRoles.length > 1 && (
-        <select
-          id="newRole"
-          className={formStyles.addInput}
-          style={{ flex: '0 0 120px' }}
-          value={role}
+          <select
+            id="newRole"
+            className={`${formStyles.addInput} ${formStyles.pin120}`}
+            value={role}
           onChange={(e) => setRole(e.target.value)}
           disabled={submitting}
           aria-label="Rol"

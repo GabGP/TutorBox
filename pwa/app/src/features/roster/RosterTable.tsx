@@ -72,7 +72,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
 
       <div className={listStyles.rosterList} id="roster">
         {students.length === 0 ? (
-          <div style={{ color: 'var(--mute)' }}>
+          <div className={styles.empty}>
             Todavía no hay alumnos. Agregue uno o pídales crear su cuenta en la dirección de arriba.
           </div>
         ) : (

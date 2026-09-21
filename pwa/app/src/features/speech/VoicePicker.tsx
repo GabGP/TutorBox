@@ -52,8 +52,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
 
       <div className={formStyles.addForm}>
         <select
-          className={formStyles.addInput}
-          style={{ flex: '0 0 130px' }}
+          className={`${formStyles.addInput} ${formStyles.pin130}`}
           value={lang}
           onChange={(e) => setLang(e.target.value as SpeechLanguage)}
           aria-label="Idioma"
@@ -63,8 +62,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         </select>
         <select
           id="voicePick"
-          className={formStyles.addInput}
-          style={{ flex: 1 }}
+          className={`${formStyles.addInput} ${formStyles.fill}`}
           value={voiceKey}
           onChange={(e) => setVoiceKey(e.target.value)}
           aria-label="Voz"
