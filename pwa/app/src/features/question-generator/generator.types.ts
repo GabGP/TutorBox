@@ -67,19 +67,4 @@ export interface GenerationProgress {
   statuses?: QuestionGenerationStatus[];
 }
 
-export const PROGRESS_ANIMATION = {
-  STAGE_SPEED_SECONDS: 5,
-  SHIMMER_SPEED_SECONDS: 5,
-  CYCLE_SPEED_SECONDS: 5,
-  ORBIT_SPEED_SECONDS: 3.6,
-  DEFAULT_QUESTION_ETA_SECONDS: 12,
-  MOBILE_PILL_COLS_MAX: 5,
-  DESKTOP_PILL_COLS_MAX: 10,
-} as const;
-
-export const PEDAGOGICAL_STAGES = [
-  'Redactando el enunciado del problema...',
-  'Diseñando opciones para dudas frecuentes...',
-  'Comprobando la exactitud de los cálculos...',
-  'Guardando en el banco del dispositivo...',
-] as const;
+export { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';

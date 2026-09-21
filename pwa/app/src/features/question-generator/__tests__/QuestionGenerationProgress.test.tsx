@@ -2,9 +2,11 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GenerationProgress,
+} from '../generator.types';
+import {
   PEDAGOGICAL_STAGES,
   PROGRESS_ANIMATION,
-} from '../generator.types';
+} from '../generator.constants';
 import { formatDuration, QuestionGenerationProgress } from '../QuestionGenerationProgress';
 
 describe('QuestionGenerationProgress Component', () => {
