@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, X } from 'lucide-react';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import rosterStyles from '../roster/roster.module.css';
 import { GenerationLogItem } from './generator.types';
@@ -42,8 +43,8 @@ export const TelemetryDetailSheet: React.FC<TelemetryDetailSheetProps> = ({
   return (
     <Sheet label={`Detalle de generación #${log.id}`} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <b style={{ fontSize: '16px' }}>
-          {log.success ? '✔ Generación exitosa' : '✘ Generación fallida'}
+        <b style={{ fontSize: '16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          {log.success ? <><Check size={16} aria-hidden /> Generación exitosa</> : <><X size={16} aria-hidden /> Generación fallida</>}
         </b>
         <div style={{ fontSize: '14px' }}>
           <b>Tema:</b> {getTopicLabel(log.topic)}

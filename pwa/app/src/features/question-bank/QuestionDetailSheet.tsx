@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import {
   getMisconceptionLabel,
@@ -38,7 +39,9 @@ export const QuestionDetailSheet: React.FC<QuestionDetailSheetProps> = ({
           return (
             <div key={k} style={{ fontSize: '14px' }}>
               <b>{k}:</b> {question.options[k]}
-              {k === question.correct_option ? ' ✔' : ''}
+              {k === question.correct_option ? (
+                <Check size={14} aria-hidden style={{ display: 'inline', verticalAlign: '-2px', marginLeft: '4px' }} />
+              ) : null}
               {k !== question.correct_option && distractor && (
                 <span style={{ color: 'var(--mute2)' }}>
                   {' '}

@@ -78,8 +78,8 @@ export const PROGRESS_ANIMATION = {
 } as const;
 
 export const PEDAGOGICAL_STAGES = [
-  '✍️ Redactando el enunciado del problema...',
-  '🎨 Diseñando opciones para dudas frecuentes...',
-  '📐 Comprobando la exactitud de los cálculos...',
-  '💾 Guardando en el banco del dispositivo...',
+  'Redactando el enunciado del problema...',
+  'Diseñando opciones para dudas frecuentes...',
+  'Comprobando la exactitud de los cálculos...',
+  'Guardando en el banco del dispositivo...',
 ] as const;

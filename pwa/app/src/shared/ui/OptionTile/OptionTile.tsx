@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import styles from './OptionTile.module.css';
 
 export interface OptionTileProps {
@@ -52,7 +53,7 @@ export const OptionTile: React.FC<OptionTileProps> = ({
     >
       <i className={styles.letterBadge}>{letter}</i>
       <span className={styles.optionText}>{text}</span>
-      {isPicked && <span className={styles.checkBadge}>✓</span>}
+      {isPicked && <span className={styles.checkBadge}><Check size={19} aria-hidden /></span>}
     </button>
   );
 };

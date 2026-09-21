@@ -1,10 +1,11 @@
+import { Library, Zap, type LucideIcon } from 'lucide-react';
 import styles from './TeacherView.module.css';
 
 export type QuestionSource = 'generate' | 'bank';
 
 export interface SwitchOption<T extends string> {
   value: T;
-  glyph: string;
+  icon: LucideIcon;
   label: string;
 }
 
@@ -48,7 +49,7 @@ export function SourceSwitch<T extends string>({
           className={`${styles.switchOpt} ${value === o.value ? styles.switchOptOn : ''}`}
           onClick={() => onChange(o.value)}
         >
-          {o.glyph} {o.label}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><o.icon size={18} aria-hidden /> {o.label}</span>
         </button>
       ))}
     </div>
@@ -56,6 +57,6 @@ export function SourceSwitch<T extends string>({
 }
 
 export const QUESTION_SOURCE_OPTIONS: SwitchOption<QuestionSource>[] = [
-  { value: 'generate', glyph: '⚡', label: 'Generar' },
-  { value: 'bank', glyph: '📚', label: 'Banco' },
+  { value: 'generate', icon: Zap, label: 'Generar' },
+  { value: 'bank', icon: Library, label: 'Banco' },
 ];

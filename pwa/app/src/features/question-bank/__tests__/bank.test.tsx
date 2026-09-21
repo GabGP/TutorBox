@@ -241,8 +241,11 @@ describe('QuestionBankView', () => {
     const body =
       screen.getByRole('dialog', { name: 'Detalle pregunta q1' }).textContent ??
       '';
-    expect(body).toContain('B: 42 ✔');
+    expect(body).toContain('B: 42');
     expect(body).not.toContain('B ✔:');
+    expect(
+      screen.getByRole('dialog', { name: 'Detalle pregunta q1' }).querySelector('svg')
+    ).toBeInTheDocument();
     vi.restoreAllMocks();
   });
 

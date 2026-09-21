@@ -1,4 +1,5 @@
 import React from 'react';
+import { Minus, Plus } from 'lucide-react';
 import styles from './generator.module.css';
 
 export interface QuestionCountPickerProps {
@@ -48,7 +49,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
             aria-label="Una pregunta menos"
             onClick={handleDecrement}
           >
-            −
+            <Minus size={28} aria-hidden />
           </button>
           <button
             type="button"
@@ -57,7 +58,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
             aria-label="Una pregunta más"
             onClick={handleIncrement}
           >
-            +
+            <Plus size={28} aria-hidden />
           </button>
         </div>
       </div>

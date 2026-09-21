@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import { SpeechState } from './speech.types';
 import styles from './SpeechStatusBadge.module.css';
 
@@ -48,7 +49,7 @@ export const SpeechStatusBadge: React.FC<SpeechStatusBadgeProps> = ({
             <span className={styles.bar} />
           </div>
         ) : isDone ? (
-          <span>✓</span>
+          <Check size={16} aria-hidden />
         ) : (
           <span className={styles.pip} />
         )}

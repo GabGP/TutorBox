@@ -109,7 +109,7 @@ describe('StudentView Component', () => {
     fireEvent.click(screen.getByRole('button', { name: 'carlos' }));
     expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
     expect(screen.getByText('Cambiar PIN')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '← Volver al juego' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al juego' }));
     expect(screen.getByText('Hola, carlos')).toBeInTheDocument();
   });
 

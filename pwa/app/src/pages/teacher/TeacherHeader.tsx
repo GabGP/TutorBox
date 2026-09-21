@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import styles from './TeacherView.module.css';
 
@@ -37,7 +38,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
         onClick={onBack}
         aria-label="Volver"
       >
-        ←
+        <ArrowLeft size={24} aria-hidden />
       </button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '19px', fontWeight: 600 }} id="title">
@@ -60,8 +61,9 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
           className={styles.voiceBtn}
           onClick={onOpenSettings}
           aria-label="Ajustes"
+          style={{ display: 'inline-flex', alignItems: 'center' }}
         >
-          ⚙
+          <Settings size={18} aria-hidden />
         </button>
       )}
     </header>

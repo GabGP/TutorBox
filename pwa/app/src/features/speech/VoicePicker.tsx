@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, Volume2 } from 'lucide-react';
 import { storage } from '../../shared/lib/storage';
 import reportStyles from '../match-report/report.module.css';
 import rosterStyles from '../roster/roster.module.css';
@@ -265,7 +266,11 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
           onClick={handleSaveDefault}
           disabled={busy || !voice || isSavedSelection}
         >
-          {isSavedSelection ? '✔ Predeterminada' : 'Guardar como predeterminada'}
+          {isSavedSelection ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Check size={16} aria-hidden /> Predeterminada</span>
+          ) : (
+            'Guardar como predeterminada'
+          )}
         </button>
       </div>
 
@@ -293,12 +298,16 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
               <span className={reportStyles.btnBar} />
             </span>
           )}
-          <span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             {previewPhase === 'loading'
               ? 'Generando…'
               : previewPhase === 'playing'
                 ? 'Sonando…'
-                : '🔊 Escuchar'}
+                : (
+                  <>
+                    <Volume2 size={18} aria-hidden /> Escuchar
+                  </>
+                )}
           </span>
         </button>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, CircleHelp, Divide, LayoutGrid, Percent, Plus, Variable, type LucideIcon } from 'lucide-react';
 import styles from './generator.module.css';
 import { TopicModel } from './generator.types';
 
@@ -8,12 +9,12 @@ export interface TopicSelectorProps {
   onSelectTopic: (topicName: string) => void;
 }
 
-const TOPIC_METADATA: Record<string, { label: string; glyph: string }> = {
-  '': { label: 'Todos los temas', glyph: '∗' },
-  arithmetic: { label: 'Aritmética', glyph: '+' },
-  decimals_percentages: { label: 'Decimales y porcentajes', glyph: '%' },
-  fractions: { label: 'Fracciones', glyph: '½' },
-  pre_algebra: { label: 'Pre-álgebra', glyph: 'x' },
+const TOPIC_METADATA: Record<string, { label: string; icon: LucideIcon }> = {
+  '': { label: 'Todos los temas', icon: LayoutGrid },
+  arithmetic: { label: 'Aritmética', icon: Plus },
+  decimals_percentages: { label: 'Decimales y porcentajes', icon: Percent },
+  fractions: { label: 'Fracciones', icon: Divide },
+  pre_algebra: { label: 'Pre-álgebra', icon: Variable },
 };
 
 /**
@@ -119,8 +120,9 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
       {options.map((t) => {
         const id = t.name;
         const label = t.label || getTopicLabel(id) || id || 'Todos los temas';
-        const meta = TOPIC_METADATA[id] || { label, glyph: '?' };
+        const meta = TOPIC_METADATA[id] || { label, icon: CircleHelp };
         const isSelected = selectedTopic === id;
+        const GlyphIcon = meta.icon;
         const description = id
           ? 'Preguntas creadas por el modelo'
           : 'Mezcla de todos los temas';
@@ -133,12 +135,12 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
             onClick={() => onSelectTopic(id)}
             data-id={id}
           >
-            <span className={styles.glyph}>{meta.glyph}</span>
+            <span className={styles.glyph}><GlyphIcon size={24} aria-hidden /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <div className={styles.l}>{meta.label}</div>
               <div className={styles.m}>{description}</div>
             </span>
-            <span className={styles.tick}>{isSelected ? '✓' : ''}</span>
+            <span className={styles.tick}>{isSelected ? <Check size={22} aria-hidden /> : null}</span>
           </button>
         );
       })}

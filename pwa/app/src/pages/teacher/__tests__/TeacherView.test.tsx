@@ -245,7 +245,7 @@ describe('TeacherView Component', () => {
     expect(
       screen.getByText('Creando las preguntas con IA...')
     ).toBeInTheDocument();
-    expect(screen.getByText('⚡ P2')).toBeInTheDocument();
+    expect(screen.getByText('P2')).toBeInTheDocument();
 
     const primaryBtn = screen.getByRole('button', { name: /Creando preguntas/ });
     expect(primaryBtn).toBeDisabled();

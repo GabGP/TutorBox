@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { AccountCard } from '../../features/auth/AccountCard';
 import { EntryForm, resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { ForcedPinModal } from '../../features/auth/ForcedPinModal';
@@ -95,14 +96,14 @@ export const StudentView: React.FC = () => {
     if (showAccount && user) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <button
-            type="button"
-            className={styles.logoutBtn}
-            style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px' }}
-            onClick={() => setShowAccount(false)}
-          >
-            ← Volver al juego
-          </button>
+            <button
+              type="button"
+              className={styles.logoutBtn}
+              style={{ alignSelf: 'flex-start', height: '40px', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => setShowAccount(false)}
+            >
+              <ArrowLeft size={16} aria-hidden /> Volver al juego
+            </button>
           <AccountCard
             user={user}
             onProfileChanged={restoreSession}

@@ -1,4 +1,5 @@
 import React, { useId, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import styles from './Collapsible.module.css';
 
 export interface CollapsibleProps {
@@ -38,7 +39,7 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
           className={`${styles.chev} ${open ? styles.chevOpen : ''}`}
           aria-hidden
         >
-          ▾
+          <ChevronDown size={18} aria-hidden />
         </span>
         {title}
       </button>

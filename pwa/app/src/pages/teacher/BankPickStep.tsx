@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Minus, Plus, SquareCheck, Zap } from 'lucide-react';
 import { QuestionBankView } from '../../features/question-bank/QuestionBankView';
 import { QuestionForm } from '../../features/question-bank/QuestionForm';
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
@@ -15,9 +16,9 @@ import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 export type BankTab = 'elegir' | 'crear' | 'pregrow';
 
 const BANK_TABS = [
-  { value: 'elegir', glyph: '☑', label: 'Elegir' },
-  { value: 'crear', glyph: '＋', label: 'Crear' },
-  { value: 'pregrow', glyph: '⚡', label: 'Pre-generar' },
+  { value: 'elegir', icon: SquareCheck, label: 'Elegir' },
+  { value: 'crear', icon: Plus, label: 'Crear' },
+  { value: 'pregrow', icon: Zap, label: 'Pre-generar' },
 ] as const;
 
 export interface BankPickStepProps {
@@ -122,7 +123,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
                 aria-label="Pre-generar una menos"
                 onClick={() => onChangeCount(Math.max(1, count - 1))}
               >
-                −
+                <Minus size={28} aria-hidden />
               </button>
               <button
                 type="button"
@@ -130,7 +131,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
                 aria-label="Pre-generar una más"
                 onClick={() => onChangeCount(Math.min(20, count + 1))}
               >
-                +
+                <Plus size={28} aria-hidden />
               </button>
             </div>
           </div>
@@ -141,7 +142,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
               onClick={handlePregenerate}
               disabled={pregenerating}
             >
-              {pregenerating ? 'Generando…' : '＋ Pre-generar en banco'}
+              {pregenerating ? 'Generando…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Plus size={18} aria-hidden /> Pre-generar en banco</span>}
             </button>
           </div>
           {progress && (

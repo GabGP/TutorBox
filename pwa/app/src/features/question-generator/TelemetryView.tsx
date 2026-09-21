@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Check, Gauge, X } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
@@ -45,7 +46,7 @@ const TelemetryLogRow: React.FC<TelemetryLogRowProps> = ({
           log.success ? teleStyles.ok : teleStyles.fail
         }`}
       >
-        {log.success ? '✔' : '✘'}
+        {log.success ? <Check size={16} aria-hidden /> : <X size={16} aria-hidden />}
       </span>
       <span className={teleStyles.cell}>
         <span className={teleStyles.primary}>{topicLabel}</span>
@@ -287,13 +288,13 @@ export const TelemetryView: React.FC = () => {
               {metrics.total_generations} intentos ·{' '}
               {formatPercent(metrics.success_rate)} éxito
             </span>
-            <span className={rosterStyles.roleTag}>
-              ⌀ {formatLatency(metrics.avg_duration_ms)}
+            <span className={rosterStyles.roleTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Gauge size={13} aria-hidden /> {formatLatency(metrics.avg_duration_ms)}
             </span>
           </div>
           <div role="listitem" style={{ padding: '10px 12px' }}>
-            <span className={rosterStyles.studentName}>
-              ✔ {metrics.successful_generations} · ✘{' '}
+            <span className={rosterStyles.studentName} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={14} aria-hidden /> {metrics.successful_generations} · <X size={14} aria-hidden />{' '}
               {metrics.failed_generations} · {metrics.avg_attempts}{' '}
               intentos/pregunta
             </span>

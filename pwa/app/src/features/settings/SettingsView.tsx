@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ArrowLeft, ChevronDown, Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
 import { AccountCard } from '../auth/AccountCard';
 import { User } from '../auth/auth.types';
 import { RosterTable } from '../roster/RosterTable';
@@ -38,7 +39,7 @@ const COLLAPSE_MS = 320;
 
 interface SettingsRowProps {
   id: SectionId;
-  icon: string;
+  icon: LucideIcon;
   label: string;
   content: React.ReactNode;
   title?: string;
@@ -82,6 +83,7 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
     []
   );
 
+  const Icon = icon;
   return (
     <div className={styles.row}>
       <button
@@ -91,12 +93,12 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
         aria-expanded={open}
         title={title}
       >
-        <span aria-hidden>{icon}</span> {label}
+        <span aria-hidden style={{ display: 'inline-flex' }}><Icon size={18} aria-hidden /></span> {label}
         <span
           className={`${styles.chev} ${open ? styles.chevOpen : ''}`}
           aria-hidden
         >
-          ▾
+          <ChevronDown size={18} aria-hidden />
         </span>
       </button>
       <div
@@ -128,7 +130,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const row = (
     id: SectionId,
-    icon: string,
+    icon: LucideIcon,
     label: string,
     content: React.ReactNode,
     title?: string
@@ -147,13 +149,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className={styles.list} id="s-settings">
-      <button type="button" className={styles.backBtn} onClick={onClose}>
-        ← Volver
+      <button type="button" className={styles.backBtn} onClick={onClose} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <ArrowLeft size={18} aria-hidden /> Volver
       </button>
 
       {row(
         'cuenta',
-        '👤',
+        UserIcon,
         'Mi cuenta',
         <AccountCard
           user={user}
@@ -165,7 +167,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {roster &&
         row(
           'usuarios',
-          '👥',
+          Users,
           'Usuarios',
           <RosterTable
             students={roster.users}
@@ -187,14 +189,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {bankEnabled &&
         row(
           'voz',
-          '🔊',
+          Volume2,
           'Voz',
           <VoicePicker isAdmin={user.role === 'admin'} />
         )}
 
       {bankEnabled &&
         user.role === 'admin' &&
-        row('auditoria', '🧾', 'Auditoría', <AuditView />, 'Solo admins')}
+        row('auditoria', Receipt, 'Auditoría', <AuditView />, 'Solo admins')}
     </div>
   );
 };

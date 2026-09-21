@@ -89,7 +89,7 @@ describe('TeacherLobby Component', () => {
       screen.getByText(/1 pregunta\(s\) con error/)
     ).toBeInTheDocument();
     expect(
-      screen.getByText('✓ 2 de 3 preguntas listas. 1 no salieron del modelo.')
+      screen.getByText('2 de 3 preguntas listas. 1 no salieron del modelo.')
     ).toBeInTheDocument();
     // …not in the old duplicated note below the card.
     expect(screen.queryByText(/no salieron del modelo; el juego tendrá/)).toBeNull();

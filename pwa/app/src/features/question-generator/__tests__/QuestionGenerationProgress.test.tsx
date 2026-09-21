@@ -45,15 +45,18 @@ describe('QuestionGenerationProgress Component', () => {
     expect(pills).toHaveLength(5);
 
     // Done pills (0 and 1)
-    expect(pills[0]).toHaveTextContent('✓ P1');
-    expect(pills[1]).toHaveTextContent('✓ P2');
+    expect(pills[0]).toHaveTextContent('P1');
+    expect(pills[0]).toHaveAttribute('aria-label', 'Pregunta 1: success');
+    expect(pills[1]).toHaveTextContent('P2');
+    expect(pills[1]).toHaveAttribute('aria-label', 'Pregunta 2: success');
 
     // Active pill (2)
-    expect(pills[2]).toHaveTextContent('⚡ P3');
+    expect(pills[2]).toHaveTextContent('P3');
+    expect(pills[2]).toHaveAttribute('aria-label', 'Pregunta 3: generating');
 
     // Pending pills (3 and 4)
-    expect(pills[3]).toHaveTextContent('○ P4');
-    expect(pills[4]).toHaveTextContent('○ P5');
+    expect(pills[3]).toHaveTextContent('P4');
+    expect(pills[4]).toHaveTextContent('P5');
   });
 
   it('renders failed question status pill and failure count badge', () => {
@@ -66,9 +69,9 @@ describe('QuestionGenerationProgress Component', () => {
     render(<QuestionGenerationProgress progress={failedProgress} />);
 
     const pills = screen.getAllByRole('listitem');
-    expect(pills[0]).toHaveTextContent('✓ P1');
-    expect(pills[1]).toHaveTextContent('✕ P2');
-    expect(pills[2]).toHaveTextContent('⚡ P3');
+    expect(pills[0]).toHaveTextContent('P1');
+    expect(pills[1]).toHaveTextContent('P2');
+    expect(pills[2]).toHaveTextContent('P3');
 
     expect(screen.getByText(/1 pregunta\(s\) con error/)).toBeInTheDocument();
   });
@@ -123,10 +126,10 @@ describe('QuestionGenerationProgress Component', () => {
 
     expect(screen.getByText('¡Preguntas listas para jugar!')).toBeInTheDocument();
     expect(screen.getByText('100%')).toBeInTheDocument();
-    expect(screen.getByText('✓ Preguntas y distractores pedagógicos verificados con éxito.')).toBeInTheDocument();
+    expect(screen.getByText('Preguntas y distractores pedagógicos verificados con éxito.')).toBeInTheDocument();
     const pills = screen.getAllByRole('listitem');
     expect(pills).toHaveLength(5);
-    pills.forEach((pill) => expect(pill).toHaveTextContent(/✓ P/));
+    pills.forEach((pill) => expect(pill).toHaveTextContent(/P/));
   });
 
   it('preserves failed pills and reports partial counts when done with failures', () => {
@@ -146,12 +149,12 @@ describe('QuestionGenerationProgress Component', () => {
 
     const pills = screen.getAllByRole('listitem');
     expect(pills).toHaveLength(5);
-    expect(pills[0]).toHaveTextContent('✓ P1');
-    expect(pills[1]).toHaveTextContent('✕ P2');
-    expect(pills[2]).toHaveTextContent('✓ P3');
+    expect(pills[0]).toHaveTextContent('P1');
+    expect(pills[1]).toHaveTextContent('P2');
+    expect(pills[2]).toHaveTextContent('P3');
 
     expect(
-      screen.getByText('✓ 4 de 5 preguntas listas. 1 no salieron del modelo.')
+      screen.getByText('4 de 5 preguntas listas. 1 no salieron del modelo.')
     ).toBeInTheDocument();
     expect(screen.getByText(/1 pregunta\(s\) con error/)).toBeInTheDocument();
   });
