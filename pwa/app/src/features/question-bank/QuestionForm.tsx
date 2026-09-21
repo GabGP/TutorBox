@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
 import {
@@ -126,7 +127,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
     try {
       const res = await bankApi.validateQuestion(buildDraft());
       setValidation(
-        res.is_valid ? ['✔ Válida: cálculo y distractores correctos'] : res.errors
+        res.is_valid ? ['Válida: cálculo y distractores correctos'] : res.errors
       );
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -210,28 +211,52 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
         value={fText}
         onChange={(e) => setFText(e.target.value)}
       />
-      {OPTION_KEYS.map((k) => (
-        <div className={formStyles.row} key={k}>
-          <select
-            className={`${formStyles.input} ${formStyles.small}`}
-            value={fCorrect === k ? k : ''}
-            onChange={() => setFCorrect(k)}
-            aria-label={`Correcta ${k}`}
-            title="Marca la correcta"
-          >
-            <option value="">{k}</option>
-            <option value={k}>✔{k}</option>
-          </select>
-          <input
-            className={`${formStyles.input} ${formStyles.grow}`}
-            placeholder={`Opción ${k}`}
-            value={fOptions[k]}
-            onChange={(e) =>
-              setFOptions((prev) => ({ ...prev, [k]: e.target.value }))
-            }
-          />
-        </div>
-      ))}
+      <fieldset className={formStyles.group}>
+        <legend className={formStyles.legend}>
+          Opciones <span className={formStyles.hint}>— marca la correcta</span>
+        </legend>
+        {OPTION_KEYS.map((k) => {
+          const isCorrect = fCorrect === k;
+          return (
+            <div
+              className={`${formStyles.option} ${isCorrect ? formStyles.optionCorrect : ''}`}
+              key={k}
+            >
+              <label className={formStyles.pick} title="Marca la correcta">
+                <input
+                  type="radio"
+                  className={formStyles.radio}
+                  name={`correcta-${editingId ?? 'nueva'}`}
+                  checked={isCorrect}
+                  onChange={() => setFCorrect(k)}
+                  aria-label={`Correcta ${k}`}
+                />
+                <span className={formStyles.letter} aria-hidden="true">
+                  {k}
+                </span>
+              </label>
+              <input
+                className={`${formStyles.input} ${formStyles.grow}`}
+                placeholder={`Opción ${k}`}
+                aria-label={`Opción ${k}`}
+                value={fOptions[k]}
+                onChange={(e) =>
+                  setFOptions((prev) => ({ ...prev, [k]: e.target.value }))
+                }
+              />
+              {isCorrect && (
+                <span className={formStyles.correctBadge} title="Respuesta correcta">
+                  <Check size={18} aria-hidden />
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </fieldset>
+      <fieldset className={formStyles.group}>
+        <legend className={formStyles.legend}>
+          Errores frecuentes <span className={formStyles.hint}>— solo distractoras</span>
+        </legend>
       {distractorKeys.map((k) => {
         const currentMisc = fDistractors[k]?.misconception || '';
         const setMisc = (misconception: string) =>
@@ -243,7 +268,11 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
             },
           }));
         return (
-        <div className={formStyles.row} key={`d-${k}`}>
+        <div className={formStyles.distractor} key={`d-${k}`}>
+          <div className={formStyles.distractorHead} aria-hidden="true">
+            <span className={formStyles.letterSm}>{k}</span>
+          </div>
+          <div className={formStyles.row}>
           {misconceptionOptions.length > 0 ? (
             <select
               className={`${formStyles.input} ${formStyles.misc}`}
@@ -289,12 +318,17 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
             }
           />
         </div>
+        </div>
         );
       })}
+      </fieldset>
       {validation && (
         <div className={rosterStyles.alert} id="bankValidation">
           {validation.map((v, i) => (
-            <div key={i}>{v}</div>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {v.startsWith('Válida:') ? <Check size={16} aria-hidden /> : null}
+              <span>{v}</span>
+            </div>
           ))}
         </div>
       )}
