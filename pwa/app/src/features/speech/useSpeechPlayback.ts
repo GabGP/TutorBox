@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
-import { SpeechLanguage, SpeechState } from './speech.types';
 import { getSpeechVoiceKey, speechApi } from './speechApi';
+import { SpeechLanguage, SpeechState } from './speech.types';
+import { useAudioPlayer } from './useAudioPlayer';
+import { useVoiceCache } from './useVoiceCache';
 
 export interface UseSpeechPlaybackReturn {
   state: SpeechState;
@@ -12,8 +14,6 @@ export interface UseSpeechPlaybackReturn {
   stopPlayback: () => void;
 }
 
-type InFlight = { roundIndex: number; key: string; promise: Promise<string>; generation: number };
-
 function waitForNextPaint(): Promise<void> {
   if (typeof requestAnimationFrame === 'function') {
     return new Promise((resolve) => requestAnimationFrame(() => resolve()));
@@ -22,8 +22,10 @@ function waitForNextPaint(): Promise<void> {
 }
 
 /**
- * Custom React hook for controlling offline speech synthesis playback and speculative prefetching.
- * Pre-fetches WAV blobs on round close, manages audio playback, and bypasses mobile autoplay blocks.
+ * Speech playback orchestration: voice-keyed blob cache (useVoiceCache) plus
+ * audio element control (useAudioPlayer), with run/generation tokens that
+ * invalidate stale fetches and plays. Pre-fetches WAV blobs on round close
+ * and bypasses mobile autoplay blocks.
  */
 export function useSpeechPlayback(
   sessionId: string | null,
@@ -36,17 +38,35 @@ export function useSpeechPlayback(
   const activeVoiceKey = getSpeechVoiceKey(language);
   const [prevVoiceKey, setPrevVoiceKey] = useState(activeVoiceKey);
 
-  const clipUrlRef = useRef<string | null>(null);
-  const cachedRoundRef = useRef<number>(-1);
-  const cachedKeyRef = useRef<string>(activeVoiceKey);
-  const inFlightRef = useRef<InFlight | null>(null);
-  const voiceGenerationRef = useRef(0);
+  const {
+    prefetch,
+    generation: cacheGeneration,
+    bumpGeneration,
+    keyMatches,
+    setKey,
+    peekUrl,
+    readCached,
+    store,
+    clearSlot,
+    drop,
+    release,
+    getInFlight,
+    clearInFlight,
+  } = useVoiceCache(sessionId, language);
+  const { stop: stopPlayer, play } = useAudioPlayer();
   const activeRunRef = useRef(0);
-  const playbackTokenRef = useRef(0);
   // Tracks an in-progress run independently of rendered state, so a tap
   // can never be swallowed by a stale `loading` closure nor start a
   // duplicate fetch. Always released in `finally`.
   const busyRef = useRef(false);
+  // Ref mirrors so speak/stopPlayback stay referentially stable instead of
+  // churning on every state transition.
+  const stateRef = useRef(state);
+  const currentRoundRef = useRef(currentRound);
+  useEffect(() => {
+    stateRef.current = state;
+    currentRoundRef.current = currentRound;
+  }, [state, currentRound]);
 
   // Reset cached clip and preparation state when the saved voice changes.
   // This must run before child reveal effects can autoplay after Settings
@@ -54,213 +74,192 @@ export function useSpeechPlayback(
   // preparation state.
   useLayoutEffect(() => {
     if (prevVoiceKey !== activeVoiceKey) {
-      voiceGenerationRef.current += 1;
+      bumpGeneration();
       activeRunRef.current += 1;
-      playbackTokenRef.current += 1;
+      stopPlayer(peekUrl());
       busyRef.current = false;
       setPrevVoiceKey(activeVoiceKey);
       setState('idle');
       setMessage('');
-      const player = getAudioPlayer();
-      if (player) {
-        player.onended = null;
-        player.onerror = null;
-        stopAudio(player, clipUrlRef.current);
-      }
-      if (clipUrlRef.current) {
-        clipUrlRef.current = null;
-      }
-      cachedRoundRef.current = -1;
-      cachedKeyRef.current = activeVoiceKey;
-      inFlightRef.current = null;
+      drop();
+      setKey(activeVoiceKey);
+      clearInFlight();
     }
-  }, [activeVoiceKey, prevVoiceKey]);
+  }, [
+    activeVoiceKey,
+    prevVoiceKey,
+    bumpGeneration,
+    stopPlayer,
+    peekUrl,
+    drop,
+    setKey,
+    clearInFlight,
+  ]);
 
   const stopPlayback = useCallback(() => {
     activeRunRef.current += 1;
-    playbackTokenRef.current += 1;
+    stopPlayer();
     busyRef.current = false;
-    const player = getAudioPlayer();
-    if (player) {
-      player.onended = null;
-      player.onerror = null;
-      stopAudio(player);
-    }
-    if (state === 'playing' || state === 'loading') {
+    if (stateRef.current === 'playing' || stateRef.current === 'loading') {
       setState('idle');
       setMessage('');
     }
-  }, [state]);
+  }, [stopPlayer]);
 
-  const prefetch = useCallback(async (roundIndex: number) => {
-    if (!sessionId) return;
-    const key = getSpeechVoiceKey(language);
-    const generation = voiceGenerationRef.current;
-    if (cachedRoundRef.current === roundIndex && cachedKeyRef.current === key && clipUrlRef.current) return;
-    if (inFlightRef.current?.roundIndex === roundIndex && inFlightRef.current?.key === key) return;
+  const playCachedUrl = useCallback(
+    async (
+      playerEl: HTMLAudioElement,
+      url: string,
+      roundIndex: number,
+      isCurrent: () => boolean
+    ) => {
+      await play(playerEl, url, roundIndex, isCurrent, {
+        onPlaying: (idx) => {
+          setCurrentRound(idx);
+          setState('playing');
+          setMessage('Leyendo la explicación en voz alta…');
+        },
+        onDone: () => {
+          setState('done');
+          setMessage('Explicación leída.');
+        },
+        onError: () => {
+          setState('error');
+          setMessage('No se pudo reproducir el audio.');
+        },
+        onBlocked: () => {
+          setState('blocked');
+          setMessage('Toque “Escuchar” para reproducir la explicación.');
+        },
+      });
+    },
+    [play]
+  );
 
-    console.info(`[Speech] Prefetch started for round ${roundIndex} (${language})`);
-    const fetchPromise = speechApi.getSpeechBlobUrl(sessionId, language);
-    inFlightRef.current = { roundIndex, key, promise: fetchPromise, generation };
-    try {
-      const url = await fetchPromise;
-      if (voiceGenerationRef.current === generation && cachedKeyRef.current === key) {
-        if (clipUrlRef.current && clipUrlRef.current !== url) URL.revokeObjectURL(clipUrlRef.current);
-        clipUrlRef.current = url;
-        cachedRoundRef.current = roundIndex;
-        console.info(`[Speech] Prefetch ready for round ${roundIndex}`);
-      } else {
-        URL.revokeObjectURL(url);
-      }
-    } catch {
-      console.info(`[Speech] Prefetch skipped for round ${roundIndex} (>51% rule not met)`);
-    } finally {
-      if (inFlightRef.current?.promise === fetchPromise) inFlightRef.current = null;
-    }
-  }, [sessionId, language]);
-
-  const playCachedUrl = useCallback(async (
-    player: HTMLAudioElement,
-    url: string,
-    roundIndex: number,
-    generation: number,
-  ) => {
-    const playbackToken = ++playbackTokenRef.current;
-    const isCurrent = () =>
-      voiceGenerationRef.current === generation && playbackTokenRef.current === playbackToken;
-    if (!isCurrent()) return;
-
-    player.pause();
-    player.src = url;
-    player.currentTime = 0;
-    player.onended = () => {
-      if (!isCurrent()) return;
-      console.info(`[Speech] Playback finished for round ${roundIndex}`);
-      setState('done');
-      setMessage('Explicación leída.');
-    };
-    player.onerror = () => {
-      if (!isCurrent()) return;
-      setState('error');
-      setMessage('No se pudo reproducir el audio.');
-    };
-    setCurrentRound(roundIndex);
-    setState('playing');
-    setMessage('Leyendo la explicación en voz alta…');
-    console.info(`[Speech] Playback started for round ${roundIndex}`);
-    try {
-      await player.play();
-    } catch {
-      if (isCurrent()) {
-        setState('blocked');
-        setMessage('Toque “Escuchar” para reproducir la explicación.');
-      }
-    }
-  }, []);
-
-  const speak = useCallback(async (roundIndex: number) => {
-    if (!sessionId) return;
-    const key = getSpeechVoiceKey(language);
-    if (busyRef.current) return;
-    if (state === 'playing' && currentRound === roundIndex && cachedKeyRef.current === key) return;
-    busyRef.current = true;
-    const generation = voiceGenerationRef.current;
-    const runId = ++activeRunRef.current;
-    const isCurrent = () =>
-      voiceGenerationRef.current === generation && activeRunRef.current === runId;
-    try {
-      const player = getAudioPlayer();
-      if (!player) return;
-      if (cachedRoundRef.current === roundIndex && cachedKeyRef.current === key && clipUrlRef.current) {
-        await playCachedUrl(player, clipUrlRef.current, roundIndex, generation);
+  const speak = useCallback(
+    async (roundIndex: number) => {
+      if (!sessionId) return;
+      const key = getSpeechVoiceKey(language);
+      if (busyRef.current) return;
+      if (
+        stateRef.current === 'playing' &&
+        currentRoundRef.current === roundIndex &&
+        keyMatches(key)
+      ) {
         return;
       }
+      busyRef.current = true;
+      const generation = cacheGeneration();
+      const runId = ++activeRunRef.current;
+      const isCurrent = () =>
+        cacheGeneration() === generation && activeRunRef.current === runId;
+      try {
+        const playerEl = getAudioPlayer();
+        if (!playerEl) return;
+        const cachedUrl = readCached(roundIndex, key);
+        if (cachedUrl) {
+          await playCachedUrl(playerEl, cachedUrl, roundIndex, isCurrent);
+          return;
+        }
 
-      const inFlight = inFlightRef.current;
-      if (
-        inFlight?.roundIndex === roundIndex &&
-        inFlight.key === key &&
-        inFlight.generation === generation
-      ) {
+        const inFlight = getInFlight();
+        if (
+          inFlight?.roundIndex === roundIndex &&
+          inFlight.key === key &&
+          inFlight.generation === generation
+        ) {
+          setState('loading');
+          setMessage('Preparando la voz…');
+          await waitForNextPaint();
+          if (!isCurrent()) return;
+          try {
+            const inFlightUrl = await inFlight.promise;
+            if (!isCurrent()) {
+              URL.revokeObjectURL(inFlightUrl);
+              return;
+            }
+            await playCachedUrl(playerEl, inFlightUrl, roundIndex, isCurrent);
+            return;
+          } catch {
+            // Fall through to fresh fetch on error
+          }
+        }
+
+        const oldUrl = peekUrl();
+        if (oldUrl) {
+          stopAudio(playerEl, oldUrl);
+          clearSlot();
+        }
+        unlockAudio(playerEl);
+        setKey(key);
         setState('loading');
         setMessage('Preparando la voz…');
+        // Start the fetch synchronously so concurrent speak() calls dedupe
+        // onto it (via busyRef) and autoplay observes it in the same tick;
+        // the paint wait below only lets the 'loading' state flush first.
+        const pendingFetch = speechApi.getSpeechBlobUrl(sessionId, language);
         await waitForNextPaint();
-        if (!isCurrent()) return;
-        try {
-          const inFlightUrl = await inFlight.promise;
-          if (!isCurrent()) {
-            URL.revokeObjectURL(inFlightUrl);
-            return;
-          }
-          await playCachedUrl(player, inFlightUrl, roundIndex, generation);
+        if (!isCurrent()) {
+          // Voice switched (or a newer run started) while preparing: drop
+          // the take and release its blob so stale audio never plays.
+          void pendingFetch.then(
+            (staleUrl) => URL.revokeObjectURL(staleUrl),
+            () => {}
+          );
           return;
-        } catch { /* Fall through to fresh fetch on error */ }
-      }
+        }
 
-      if (clipUrlRef.current) {
-        stopAudio(player, clipUrlRef.current);
-        clipUrlRef.current = null;
-        cachedRoundRef.current = -1;
-      }
-      unlockAudio(player);
-      cachedKeyRef.current = key;
-      setState('loading');
-      setMessage('Preparando la voz…');
-      // Start the fetch synchronously so concurrent speak() calls dedupe
-      // onto it (via busyRef) and autoplay observes it in the same tick;
-      // the paint wait below only lets the 'loading' state flush first.
-      const pendingFetch = speechApi.getSpeechBlobUrl(sessionId, language);
-      await waitForNextPaint();
-      if (!isCurrent()) {
-        // Voice switched (or a newer run started) while preparing: drop
-        // the take and release its blob so stale audio never plays.
-        void pendingFetch.then(
-          (staleUrl) => URL.revokeObjectURL(staleUrl),
-          () => {}
-        );
-        return;
-      }
+        let url: string;
+        try {
+          url = await pendingFetch;
+        } catch (err: unknown) {
+          if (!isCurrent()) return;
+          const e = err as { status?: number };
+          setState('error');
+          setMessage(
+            e.status === 503
+              ? language === 'quc'
+                ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
+                : 'Este aparato no tiene voz instalada (espeak-ng).'
+              : 'No se pudo preparar la voz.'
+          );
+          return;
+        }
 
-      let url: string;
-      try {
-        url = await pendingFetch;
-      } catch (err: unknown) {
-        if (!isCurrent()) return;
-        const e = err as { status?: number };
-        setState('error');
-        setMessage(
-          e.status === 503
-            ? language === 'quc' ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta." : 'Este aparato no tiene voz instalada (espeak-ng).'
-            : 'No se pudo preparar la voz.'
-        );
-        return;
+        if (!isCurrent()) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        store(roundIndex, key, url);
+        await playCachedUrl(playerEl, url, roundIndex, isCurrent);
+      } finally {
+        if (activeRunRef.current === runId) busyRef.current = false;
       }
-
-      if (!isCurrent()) {
-        URL.revokeObjectURL(url);
-        return;
-      }
-      clipUrlRef.current = url;
-      cachedRoundRef.current = roundIndex;
-      await playCachedUrl(player, url, roundIndex, generation);
-    } finally {
-      if (activeRunRef.current === runId) busyRef.current = false;
-    }
-  }, [sessionId, language, state, currentRound, playCachedUrl]);
+    },
+    [
+      sessionId,
+      language,
+      cacheGeneration,
+      keyMatches,
+      readCached,
+      getInFlight,
+      peekUrl,
+      clearSlot,
+      setKey,
+      store,
+      playCachedUrl,
+    ]
+  );
 
   useEffect(() => {
     return () => {
       activeRunRef.current += 1;
-      playbackTokenRef.current += 1;
       busyRef.current = false;
-      const player = getAudioPlayer();
-      if (player) {
-        player.onended = null;
-        player.onerror = null;
-        stopAudio(player, clipUrlRef.current);
-      }
-      clipUrlRef.current = null;
+      stopPlayer(peekUrl());
+      release();
     };
+    // Stable callbacks + refs only; runs once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { state, message, currentRound, speak, prefetch, stopPlayback };
