@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { PROGRESS_ANIMATION } from './generator.constants';
 import { GenerationProgress, QuestionGenerationStatus, TopicModel } from './generator.types';
 import { generatorApi } from './generatorApi';
 
@@ -28,7 +29,7 @@ export function useQuestionGenerator() {
       setError(null);
 
       const startTime = Date.now();
-      let eta = 12;
+      let eta: number = PROGRESS_ANIMATION.DEFAULT_QUESTION_ETA_SECONDS;
       try {
         const metrics = await generatorApi.getMetrics(topic || undefined);
         if (metrics && metrics.avg_duration_ms > 0) {
@@ -45,18 +46,27 @@ export function useQuestionGenerator() {
       const statuses: QuestionGenerationStatus[] = Array(count).fill('pending');
       if (count > 0) statuses[0] = 'generating';
 
-      const currentProgress: GenerationProgress = {
+      // Local mutable working state; only immutable snapshots are published
+      // so consumers never observe an object that later gets mutated.
+      const draft = {
         done: 0,
         total: count,
         failed: 0,
-        ids: [],
+        ids: [] as string[],
         eta,
         currentIndex: 1,
         currentTopic: initialTopic,
-        currentSubconcept: null,
-        statuses: [...statuses],
+        currentSubconcept: null as string | null,
       };
-      setProgress({ ...currentProgress });
+      const publish = () => {
+        const snapshot: GenerationProgress = {
+          ...draft,
+          ids: [...draft.ids],
+          statuses: [...statuses],
+        };
+        setProgress(snapshot);
+      };
+      publish();
 
       for (let i = 0; i < count; i++) {
         if (tokenRef.current !== currentToken) return null;
@@ -74,11 +84,10 @@ export function useQuestionGenerator() {
           : null;
 
         statuses[i] = 'generating';
-        currentProgress.currentIndex = i + 1;
-        currentProgress.currentTopic = effectiveTopic;
-        currentProgress.currentSubconcept = subconcept;
-        currentProgress.statuses = [...statuses];
-        setProgress({ ...currentProgress });
+        draft.currentIndex = i + 1;
+        draft.currentTopic = effectiveTopic;
+        draft.currentSubconcept = subconcept;
+        publish();
 
         try {
           const res = await generatorApi.generateQuestion({
@@ -87,36 +96,35 @@ export function useQuestionGenerator() {
             save_to_bank: true,
           });
           if (tokenRef.current !== currentToken) return null;
-          currentProgress.ids.push(res.question.id);
+          draft.ids = [...draft.ids, res.question.id];
           statuses[i] = 'success';
         } catch {
           if (tokenRef.current !== currentToken) return null;
-          currentProgress.failed++;
+          draft.failed++;
           statuses[i] = 'failed';
         }
 
-        currentProgress.done++;
+        draft.done++;
         const elapsedMs = Date.now() - startTime;
-        if (currentProgress.done > 0) {
-          currentProgress.eta = Math.max(1, Math.round(elapsedMs / (currentProgress.done * 1000)));
+        if (draft.done > 0) {
+          draft.eta = Math.max(1, Math.round(elapsedMs / (draft.done * 1000)));
         }
         if (i + 1 < count) {
           statuses[i + 1] = 'generating';
         }
-        currentProgress.statuses = [...statuses];
-        setProgress({ ...currentProgress });
+        publish();
       }
 
       setIsGenerating(false);
 
-      if (currentProgress.ids.length === 0) {
+      if (draft.ids.length === 0) {
         const msg =
           'El modelo no respondió a ninguna pregunta. Revise que el modelo local esté encendido e intente de nuevo.';
         setError(msg);
         return null;
       }
 
-      return currentProgress.ids;
+      return draft.ids;
     },
     []
   );
