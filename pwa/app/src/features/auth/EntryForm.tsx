@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { UserRole } from './auth.types';
+import { toErrorMessage } from '../../shared/lib/errors';
 import styles from './auth.module.css';
+
+export { resolvePostLoginRedirect } from '../../shared/routing/session';
 
 export interface EntryFormProps {
   title: string;
@@ -11,22 +13,6 @@ export interface EntryFormProps {
   headerExtra?: React.ReactNode;
   idPrefix?: string;
   externalError?: string | null;
-}
-
-/**
- * Resolves the post-login landing page for a role relative to the current portal.
- * Students belong on /alumno/, staff (teacher/admin) on /maestro/.
- * Returns the target path, or null when already on the right portal.
- */
-export function resolvePostLoginRedirect(
-  role: UserRole | string | undefined,
-  currentPath: string
-): string | null {
-  const isStaff = role === 'teacher' || role === 'admin';
-  if (isStaff) {
-    return currentPath.includes('/maestro') ? null : '/maestro/';
-  }
-  return currentPath.includes('/maestro') ? '/alumno/' : null;
 }
 
 /**
@@ -76,11 +62,11 @@ export const EntryForm: React.FC<EntryFormProps> = ({
         await onLogin(cleanUser, cleanPin);
       }
     } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
+      const e = err as { status?: number };
       if (e.status === 409) {
         setError('Ese nombre ya está en uso, elige otro');
       } else {
-        setError(e.message || 'Error al iniciar sesión');
+        setError(toErrorMessage(err, 'Error al iniciar sesión'));
       }
     } finally {
       setSubmitting(false);

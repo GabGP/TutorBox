@@ -1,4 +1,5 @@
 import { requestApi, requestBlobUrl } from '../../shared/api/httpClient';
+import { toQuery } from '../../shared/api/query';
 import { storage } from '../../shared/lib/storage';
 import {
   SpeechLanguage,
@@ -18,9 +19,10 @@ export const ttsApi = {
    * Checks current memory residency and active model status.
    */
   async getStatus(engine?: string, lang: SpeechLanguage = 'es'): Promise<TTSStatusResponse> {
-    const params = new URLSearchParams({ lang });
-    if (engine) params.set('engine', engine);
-    return requestApi<TTSStatusResponse>('GET', `/tts/status?${params.toString()}`);
+    return requestApi<TTSStatusResponse>(
+      'GET',
+      `/tts/status${toQuery({ lang, engine })}`
+    );
   },
 
   /**
@@ -41,27 +43,11 @@ export const ttsApi = {
    * Lists available voices for the specified language and optional engine.
    */
   async getVoices(lang: SpeechLanguage = 'es', engine?: string): Promise<TTSVoiceItem[]> {
-    const params = new URLSearchParams({ lang });
-    if (engine) params.set('engine', engine);
-    return requestApi<TTSVoiceItem[]>('GET', `/tts/voices?${params.toString()}`);
+    return requestApi<TTSVoiceItem[]>('GET', `/tts/voices${toQuery({ lang, engine })}`);
   },
 };
 
-/**
- * Cache key for a round clip: language plus the saved voice selection,
- * so changing the default voice never replays a stale clip.
- */
-export function getSpeechVoiceKey(language: SpeechLanguage): string {
-  const pref = storage.getVoicePreference();
-  if (
-    pref &&
-    (pref.lang || 'es') === language &&
-    (pref.engine || pref.voice)
-  ) {
-    return `${language}::${pref.engine || ''}::${pref.voice || ''}`;
-  }
-  return `${language}::default`;
-}
+export { getSpeechVoiceKey } from '../../shared/lib/voicePreference';
 
 /**
  * API client contract for offline TTS speech audio stream retrieval.
@@ -77,13 +63,13 @@ export const speechApi = {
    * @returns {Promise<string>} Blob URL ready for HTMLAudioElement playback.
    */
   async getSpeechBlobUrl(sessionId: string, language: SpeechLanguage = 'es'): Promise<string> {
-    const params = new URLSearchParams({ lang: language });
     const pref = storage.getVoicePreference();
-    if (pref && (pref.lang || 'es') === language) {
-      if (pref.engine) params.set('engine', pref.engine);
-      if (pref.voice) params.set('voice', pref.voice);
-    }
-    return requestBlobUrl(`/session/${sessionId}/speech?${params.toString()}`);
+    const suffix = toQuery({
+      lang: language,
+      engine: pref && (pref.lang || 'es') === language ? pref.engine : undefined,
+      voice: pref && (pref.lang || 'es') === language ? pref.voice : undefined,
+    });
+    return requestBlobUrl(`/session/${sessionId}/speech${suffix}`);
   },
 
   /**

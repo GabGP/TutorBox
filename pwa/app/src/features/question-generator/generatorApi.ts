@@ -1,4 +1,5 @@
 import { requestApi } from '../../shared/api/httpClient';
+import { toQuery } from '../../shared/api/query';
 import {
   FullGenerationMetrics,
   GenerateQuestionResponse,
@@ -27,10 +28,9 @@ export const generatorApi = {
    * @returns {Promise<GenerationMetrics>} Generation duration and count telemetry.
    */
   async getMetrics(topic?: string): Promise<GenerationMetrics> {
-    const query = topic ? `?topic=${encodeURIComponent(topic)}` : '';
     return requestApi<GenerationMetrics>(
       'GET',
-      `/quiz/generation-metrics${query}`,
+      `/quiz/generation-metrics${toQuery({ topic })}`,
       undefined,
       true
     );
@@ -43,13 +43,9 @@ export const generatorApi = {
     topic?: string;
     model_name?: string;
   }): Promise<FullGenerationMetrics> {
-    const query = new URLSearchParams();
-    if (params?.topic) query.set('topic', params.topic);
-    if (params?.model_name) query.set('model_name', params.model_name);
-    const suffix = query.toString() ? `?${query.toString()}` : '';
     return requestApi<FullGenerationMetrics>(
       'GET',
-      `/quiz/generation-metrics${suffix}`
+      `/quiz/generation-metrics${toQuery({ topic: params?.topic, model_name: params?.model_name })}`
     );
   },
 
@@ -63,14 +59,16 @@ export const generatorApi = {
     limit?: number;
     offset?: number;
   }): Promise<{ logs: GenerationLogItem[]; total: number }> {
-    const query = new URLSearchParams();
-    if (params?.topic) query.set('topic', params.topic);
-    if (params?.user_id !== undefined) query.set('user_id', String(params.user_id));
-    if (params?.success !== undefined)
-      query.set('success', String(params.success));
-    query.set('limit', String(params?.limit ?? 20));
-    query.set('offset', String(params?.offset ?? 0));
-    return requestApi('GET', `/quiz/generation-logs?${query.toString()}`);
+    return requestApi(
+      'GET',
+      `/quiz/generation-logs${toQuery({
+        topic: params?.topic,
+        user_id: params?.user_id,
+        success: params?.success,
+        limit: params?.limit ?? 20,
+        offset: params?.offset ?? 0,
+      })}`
+    );
   },
 
   /**

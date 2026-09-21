@@ -1,4 +1,5 @@
 import { requestApi } from '../../shared/api/httpClient';
+import { toQuery } from '../../shared/api/query';
 
 export interface DistractorDetail {
   misconception: string;
@@ -41,12 +42,15 @@ export const bankApi = {
     limit?: number;
     offset?: number;
   }): Promise<{ questions: BankQuestion[]; total: number }> {
-    const query = new URLSearchParams();
-    if (params?.topic) query.set('topic', params.topic);
-    if (params?.subconcept) query.set('subconcept', params.subconcept);
-    query.set('limit', String(params?.limit ?? 5));
-    query.set('offset', String(params?.offset ?? 0));
-    return requestApi('GET', `/quiz/questions?${query.toString()}`);
+    return requestApi(
+      'GET',
+      `/quiz/questions${toQuery({
+        topic: params?.topic,
+        subconcept: params?.subconcept,
+        limit: params?.limit ?? 5,
+        offset: params?.offset ?? 0,
+      })}`
+    );
   },
 
   async getQuestion(id: string): Promise<BankQuestion> {
