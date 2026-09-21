@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { getRoleLabel } from '../../shared/constants/roles';
+import { toErrorMessage } from '../../shared/lib/errors';
+import formStyles from '../../shared/styles/forms.module.css';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import styles from './roster.module.css';
 import { RosterStudent } from './roster.types';
@@ -13,12 +16,6 @@ export interface UserEditSheetProps {
   editableRoles?: string[];
   onRoleChange?: (id: string, role: string) => Promise<unknown>;
 }
-
-const ROLE_LABELS: Record<string, string> = {
-  student: 'Alumno',
-  teacher: 'Docente',
-  admin: 'Admin',
-};
 
 /**
  * Edit card for a roster user. Role edits are staged locally and applied
@@ -58,8 +55,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
       await onRoleChange(user.id, pendingRole);
       onClose();
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setRoleError(e.message || 'Error al cambiar rol');
+      setRoleError(toErrorMessage(err, 'Error al cambiar rol'));
     } finally {
       setBusy(false);
     }
@@ -105,7 +101,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
           </label>
           <select
             id="sheetRole"
-            className={styles.addInput}
+            className={formStyles.addInput}
             style={{ width: '100%' }}
             value={pendingRole || user.role}
             onChange={(e) => {
@@ -117,7 +113,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
           >
             {editableRoles.map((r) => (
               <option key={r} value={r}>
-                {ROLE_LABELS[r] || r}
+                {getRoleLabel(r)}
               </option>
             ))}
           </select>
@@ -132,7 +128,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
             </button>
           )}
           {roleError && (
-            <div className={styles.errorBanner}>{roleError}</div>
+            <div className={formStyles.errorBanner}>{roleError}</div>
           )}
         </>
       )}

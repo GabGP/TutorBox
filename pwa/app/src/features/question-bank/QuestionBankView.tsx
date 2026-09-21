@@ -7,7 +7,8 @@ import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { generatorApi } from '../question-generator/generatorApi';
 import { TopicModel } from '../question-generator/generator.types';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
-import rosterStyles from '../roster/roster.module.css';
+import formStyles from '../../shared/styles/forms.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
@@ -156,18 +157,18 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const pages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className={rosterStyles.container} id="bank">
-      <div className={rosterStyles.rowb}>
+    <div className={listStyles.container} id="bank">
+      <div className={listStyles.rowb}>
         <b>Banco de preguntas</b>
         <span id="bankCount">
           {selectable ? `${selectedIds.length} elegidas · ${total}` : total}
         </span>
       </div>
 
-      <div className={rosterStyles.addForm}>
+      <div className={formStyles.addForm}>
         <select
           id="bankTopic"
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: 1 }}
           value={topic}
           onChange={(e) => {
@@ -186,12 +187,12 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       </div>
 
       {error && (
-        <div className={rosterStyles.errorBanner} id="bankErr">
+        <div className={formStyles.errorBanner} id="bankErr">
           {error}
         </div>
       )}
       {notice && (
-        <div className={rosterStyles.alert} id="bankNote">
+        <div className={formStyles.alert} id="bankNote">
           {notice}
         </div>
       )}
@@ -295,7 +296,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               >
                 <button
                   type="button"
-                  className={rosterStyles.studentName}
+                  className={listStyles.studentName}
                   onClick={() => handleFaceTap(q)}
                   style={{
                     cursor: 'pointer',
@@ -306,7 +307,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
                   {q.question_text}
                 </button>
                 <span
-                  className={rosterStyles.roleTag}
+                  className={listStyles.roleTag}
                   style={{ minWidth: '84px', textAlign: 'center' }}
                 >
                   {getTopicLabel(q.topic)}

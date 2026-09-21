@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Volume2 } from 'lucide-react';
 import { storage } from '../../shared/lib/storage';
 import { BtnSpinner, PlayButton } from '../../shared/ui/PlayButton/PlayButton';
-import rosterStyles from '../roster/roster.module.css';
+import formStyles from '../../shared/styles/forms.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import { speechApi, ttsApi } from './speechApi';
 import { SpeechLanguage, TTSStatusResponse, TTSVoiceItem } from './speech.types';
 
@@ -202,14 +203,14 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
   };
 
   return (
-    <div className={rosterStyles.container} id="voices">
-      <div className={rosterStyles.rowb}>
+    <div className={listStyles.container} id="voices">
+      <div className={listStyles.rowb}>
         <b>Voz</b>
       </div>
 
-      <div className={rosterStyles.addForm}>
+      <div className={formStyles.addForm}>
         <select
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: '0 0 130px' }}
           value={lang}
           onChange={(e) => setLang(e.target.value as SpeechLanguage)}
@@ -220,7 +221,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         </select>
         <select
           id="voicePick"
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: 1 }}
           value={voiceKey}
           onChange={(e) => setVoiceKey(e.target.value)}
@@ -256,13 +257,13 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         )}
       </div>
 
-      {error && <div className={rosterStyles.errorBanner}>{error}</div>}
-      {notice && <div className={rosterStyles.alert}>{notice}</div>}
+      {error && <div className={formStyles.errorBanner}>{error}</div>}
+      {notice && <div className={formStyles.alert}>{notice}</div>}
 
-      <div className={rosterStyles.addForm}>
+      <div className={formStyles.addForm}>
         <button
           type="button"
-          className={rosterStyles.submitAdd}
+          className={formStyles.submitAdd}
           onClick={handleSaveDefault}
           disabled={busy || !voice || isSavedSelection}
         >
@@ -274,7 +275,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         </button>
       </div>
 
-      <div className={rosterStyles.addForm}>
+      <div className={formStyles.addForm}>
         <PlayButton
           phase={previewPhase}
           onClick={handlePreview}
@@ -293,10 +294,10 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
       </div>
 
       {isAdmin && (
-        <div className={rosterStyles.addForm}>
+        <div className={formStyles.addForm}>
           <button
             type="button"
-            className={rosterStyles.submitAdd}
+            className={formStyles.submitAdd}
             onClick={handleLoad}
             disabled={busy || previewPhase !== 'idle' || !voice}
           >
@@ -305,7 +306,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
           </button>
           <button
             type="button"
-            className={rosterStyles.submitAdd}
+            className={formStyles.submitAdd}
             onClick={handleUnload}
             disabled={busy || previewPhase !== 'idle'}
           >

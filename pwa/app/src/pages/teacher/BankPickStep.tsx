@@ -9,7 +9,7 @@ import {
   GenerationProgress,
 } from '../../features/question-generator/generator.types';
 import generatorStyles from '../../features/question-generator/generator.module.css';
-import rosterStyles from '../../features/roster/roster.module.css';
+import formStyles from '../../shared/styles/forms.module.css';
 import { SourceSwitch } from './SourceSwitch';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 
@@ -104,7 +104,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
       {tab === 'crear' && (
         <>
           {createNotice && (
-            <div className={rosterStyles.alert}>{createNotice}</div>
+            <div className={formStyles.alert}>{createNotice}</div>
           )}
           <QuestionForm initial={null} onSaved={handleCreated} />
         </>
@@ -135,10 +135,10 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
               </button>
             </div>
           </div>
-          <div className={rosterStyles.addForm}>
+          <div className={formStyles.addForm}>
             <button
               type="button"
-              className={rosterStyles.submitAdd}
+              className={formStyles.submitAdd}
               onClick={handlePregenerate}
               disabled={pregenerating}
             >
@@ -149,7 +149,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
             <QuestionGenerationProgress progress={progress} isComplete={false} />
           )}
           {genError && (
-            <div className={rosterStyles.errorBanner}>{genError}</div>
+            <div className={formStyles.errorBanner}>{genError}</div>
           )}
           <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }}>
             Las nuevas preguntas se eligen solas para el juego.

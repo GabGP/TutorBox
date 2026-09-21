@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getRoleLabel } from '../../shared/constants/roles';
 import { authApi } from './authApi';
 import { User } from './auth.types';
 import styles from './auth.module.css';
@@ -114,11 +115,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className={styles.profileName}>{user.username}</div>
           <div className={styles.profileRole}>
-            {user.role === 'student'
-              ? 'Alumno'
-              : user.role === 'teacher'
-                ? 'Docente'
-                : 'Admin'}
+            {getRoleLabel(user.role)}
           </div>
         </div>
       </div>

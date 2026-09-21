@@ -9,7 +9,8 @@ import {
 } from '../../shared/taxonomy/labels';
 import { OPTION_LETTERS } from '../../shared/constants/options';
 import { toErrorMessage } from '../../shared/lib/errors';
-import rosterStyles from '../roster/roster.module.css';
+import sharedForms from '../../shared/styles/forms.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import formStyles from './QuestionForm.module.css';
 import { BankQuestion, BankQuestionCreate, bankApi } from './bankApi';
 
@@ -152,19 +153,19 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
 
   return (
     <div className={formStyles.form} id={editingId ? 'bankEdit' : 'bankCreate'}>
-      <div className={rosterStyles.rowb}>
+      <div className={listStyles.rowb}>
         <b>{editingId ? 'Editar pregunta' : 'Nueva pregunta'}</b>
         {onCancel && (
           <button
             type="button"
-            className={rosterStyles.toggleLink}
+            className={sharedForms.toggleLink}
             onClick={onCancel}
           >
             Cancelar
           </button>
         )}
       </div>
-      {error && <div className={rosterStyles.errorBanner}>{error}</div>}
+      {error && <div className={sharedForms.errorBanner}>{error}</div>}
       <div className={formStyles.row}>
         <select
           className={`${formStyles.input} ${formStyles.grow}`}
@@ -321,7 +322,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
       })}
       </fieldset>
       {validation && (
-        <div className={rosterStyles.alert} id="bankValidation">
+        <div className={sharedForms.alert} id="bankValidation">
           {validation.map((v, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {v.startsWith('Válida:') ? <Check size={16} aria-hidden /> : null}

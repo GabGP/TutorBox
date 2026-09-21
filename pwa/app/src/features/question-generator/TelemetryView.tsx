@@ -3,7 +3,9 @@ import { Check, Gauge, X } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
-import rosterStyles from '../roster/roster.module.css';
+import { getRoleLabel } from '../../shared/constants/roles';
+import formStyles from '../../shared/styles/forms.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import { generatorApi } from './generatorApi';
 import { rosterApi } from '../roster/rosterApi';
 import {
@@ -205,15 +207,15 @@ export const TelemetryView: React.FC = () => {
       : '—';
 
   return (
-    <div className={rosterStyles.container} id="telemetry">
-      <div className={rosterStyles.rowb}>
+    <div className={listStyles.container} id="telemetry">
+      <div className={listStyles.rowb}>
         <b>Actividad de generación</b>
         <span id="telemetryCount">{total}</span>
       </div>
 
-      <div className={rosterStyles.addForm}>
+      <div className={formStyles.addForm}>
         <select
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: 1 }}
           value={topic}
           onChange={(e) => {
@@ -230,7 +232,7 @@ export const TelemetryView: React.FC = () => {
           ))}
         </select>
         <select
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: '0 0 130px' }}
           value={successFilter}
           onChange={(e) => {
@@ -244,7 +246,7 @@ export const TelemetryView: React.FC = () => {
           <option value="false">Fallos</option>
         </select>
         <select
-          className={rosterStyles.addInput}
+          className={formStyles.addInput}
           style={{ flex: '0 0 150px' }}
           value={userId}
           onChange={(e) => {
@@ -256,7 +258,7 @@ export const TelemetryView: React.FC = () => {
           <option value="">Todos los usuarios</option>
           {userOptions.map((u) => (
             <option key={u.id} value={u.id}>
-              {u.username} · {u.role === 'admin' ? 'Admin' : 'Docente'}
+              {u.username} · {getRoleLabel(u.role)}
             </option>
           ))}
           {extraUserIds.map((id) => (
@@ -267,7 +269,7 @@ export const TelemetryView: React.FC = () => {
         </select>
       </div>
 
-      {error && <div className={rosterStyles.errorBanner}>{error}</div>}
+      {error && <div className={formStyles.errorBanner}>{error}</div>}
 
       {metrics && (
         <DataList
@@ -284,16 +286,16 @@ export const TelemetryView: React.FC = () => {
               alignItems: 'center',
             }}
           >
-            <span className={rosterStyles.studentName}>
+            <span className={listStyles.studentName}>
               {metrics.total_generations} intentos ·{' '}
               {formatPercent(metrics.success_rate)} éxito
             </span>
-            <span className={rosterStyles.roleTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span className={listStyles.roleTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Gauge size={13} aria-hidden /> {formatLatency(metrics.avg_duration_ms)}
             </span>
           </div>
           <div role="listitem" style={{ padding: '10px 12px' }}>
-            <span className={rosterStyles.studentName} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span className={listStyles.studentName} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Check size={14} aria-hidden /> {metrics.successful_generations} · <X size={14} aria-hidden />{' '}
               {metrics.failed_generations} · {metrics.avg_attempts}{' '}
               intentos/pregunta

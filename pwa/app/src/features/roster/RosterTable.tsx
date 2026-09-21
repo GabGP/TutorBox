@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { getRoleLabel } from '../../shared/constants/roles';
+import formStyles from '../../shared/styles/forms.module.css';
+import listStyles from '../../shared/styles/lists.module.css';
 import styles from './roster.module.css';
 import { DeletedUser, RosterStudent } from './roster.types';
 import { UserEditSheet } from './UserEditSheet';
@@ -20,12 +23,6 @@ export interface RosterTableProps {
   editableRoles?: string[];
   onRoleChange?: (id: string, role: string) => Promise<unknown>;
 }
-
-const ROLE_LABELS: Record<string, string> = {
-  student: 'Alumno',
-  teacher: 'Docente',
-  admin: 'Admin',
-};
 
 /**
  * Classroom User Roster Management Table.
@@ -84,16 +81,16 @@ export const RosterTable: React.FC<RosterTableProps> = ({
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.rowb}>
+    <div className={listStyles.container}>
+      <div className={listStyles.rowb}>
         <b>Usuarios registrados</b>
         <span id="rosterCount">{students.length}</span>
       </div>
 
-      <div className={styles.addForm}>
+      <div className={formStyles.addForm}>
         <input
           id="newUser"
-          className={styles.addInput}
+          className={formStyles.addInput}
           style={{ flex: 1 }}
           maxLength={32}
           placeholder="Usuario nuevo"
@@ -104,7 +101,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
         <input
           id="newPin"
           type="password"
-          className={styles.addInput}
+          className={formStyles.addInput}
           style={{ flex: '0 0 96px' }}
           inputMode="numeric"
           maxLength={8}
@@ -116,7 +113,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
         {creatableRoles.length > 1 && (
           <select
             id="newRole"
-            className={styles.addInput}
+            className={formStyles.addInput}
             style={{ flex: '0 0 120px' }}
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -125,7 +122,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
           >
             {creatableRoles.map((r) => (
               <option key={r} value={r}>
-                {ROLE_LABELS[r] || r}
+                {getRoleLabel(r)}
               </option>
             ))}
           </select>
@@ -133,7 +130,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
         <button
           type="button"
           id="addStudent"
-          className={styles.submitAdd}
+          className={formStyles.submitAdd}
           onClick={handleAdd}
           disabled={submitting}
         >
@@ -142,27 +139,27 @@ export const RosterTable: React.FC<RosterTableProps> = ({
       </div>
 
       {error && (
-        <div className={styles.errorBanner} id="rosterErr">
+        <div className={formStyles.errorBanner} id="rosterErr">
           {error}
         </div>
       )}
 
       {pinNotice && (
-        <div className={styles.alert} id="pinNote">
+        <div className={formStyles.alert} id="pinNote">
           {pinNotice}
         </div>
       )}
 
-      <div className={styles.rosterList} id="roster">
+      <div className={listStyles.rosterList} id="roster">
         {students.length === 0 ? (
           <div style={{ color: 'var(--mute)' }}>
             Todavía no hay alumnos. Agregue uno o pídales crear su cuenta en la dirección de arriba.
           </div>
         ) : (
           students.map((u) => (
-            <div key={u.id} className={styles.rosterItem}>
-              <span className={styles.studentName}>{u.username}</span>
-              <span className={styles.roleTag}>{ROLE_LABELS[u.role] || u.role}</span>
+            <div key={u.id} className={listStyles.rosterItem}>
+              <span className={listStyles.studentName}>{u.username}</span>
+              <span className={listStyles.roleTag}>{getRoleLabel(u.role)}</span>
               <button
                 type="button"
                 className={styles.resetBtn}
@@ -189,7 +186,7 @@ export const RosterTable: React.FC<RosterTableProps> = ({
       {onToggleDeleted && (
         <button
           type="button"
-          className={styles.toggleLink}
+          className={formStyles.toggleLink}
           onClick={onToggleDeleted}
         >
           {showDeleted ? 'Ocultar eliminados' : 'Ver eliminados'}
@@ -197,18 +194,18 @@ export const RosterTable: React.FC<RosterTableProps> = ({
       )}
 
       {showDeleted && (
-        <div className={styles.rosterList} id="rosterDeleted">
+        <div className={listStyles.rosterList} id="rosterDeleted">
           {deleted.length === 0 ? (
             <div style={{ color: 'var(--mute)' }}>No hay cuentas eliminadas.</div>
           ) : (
             deleted.map((u) => (
-              <div key={u.id} className={styles.rosterItem}>
-                <span className={styles.studentName}>{u.former_username}</span>
-                <span className={styles.roleTag}>{ROLE_LABELS[u.role] || u.role}</span>
+              <div key={u.id} className={listStyles.rosterItem}>
+                <span className={listStyles.studentName}>{u.former_username}</span>
+                <span className={listStyles.roleTag}>{getRoleLabel(u.role)}</span>
                 {onRecoverUser && (
                   <span className={styles.recoverRow}>
                     <input
-                      className={styles.addInput}
+                      className={formStyles.addInput}
                       style={{ flex: 1, height: '40px', fontSize: '15px' }}
                       maxLength={32}
                       placeholder="Nombre nuevo"
