@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { UserRole } from '../../features/auth/auth.types';
-import { storage } from '../lib/storage';
 
 /**
  * Canonical portal routing helpers. Replaces substring `includes('/maestro')`
@@ -49,25 +48,4 @@ export function useHostAddress(): string {
     setHost(getHostAddress());
   }, []);
   return host;
-}
-
-/**
- * Pinned `?s=` session with last-known fallback shared by student/display.
- * Single owner of the `tb_last_session` fallback pattern.
- */
-export function usePinnedSession() {
-  const pinnedId = useMemo(() => getSessionQueryParamId(), []);
-  const [lastSid, setLastSid] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLastSid(storage.getLastStudentSessionId());
-  }, []);
-
-  const targetSessionId = pinnedId ?? lastSid;
-
-  useEffect(() => {
-    if (pinnedId) storage.setLastStudentSessionId(pinnedId);
-  }, [pinnedId]);
-
-  return { pinnedId, lastSid, targetSessionId };
 }
