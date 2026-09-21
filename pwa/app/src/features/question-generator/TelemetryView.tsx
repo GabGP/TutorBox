@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, Gauge, X } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
-import { Pagination } from '../../shared/ui/Pagination/Pagination';
+import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { getRoleLabel } from '../../shared/constants/roles';
+import { usePagination } from '../../shared/lib/pagination';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
+import utils from '../../shared/styles/utils.module.css';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { generatorApi } from './generatorApi';
 import { rosterApi } from '../roster/rosterApi';
@@ -92,8 +94,7 @@ export const TelemetryView: React.FC = () => {
     Array<{ id: string; username: string; role: string }>
   >([]);
   const [successFilter, setSuccessFilter] = useState<string>('');
-  const [offset, setOffset] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { offset, setOffset, pageSize, setPageSize } = usePagination(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<GenerationLogItem | null>(null);
@@ -160,16 +161,6 @@ export const TelemetryView: React.FC = () => {
     load(topic, userId, successFilter, offset, pageSize);
   }, [topic, userId, successFilter, offset, pageSize, load]);
 
-  // Clamp offset when total shrinks (e.g. filter change) so pagination
-  // never strands on an empty page.
-  useEffect(() => {
-    if (total > 0 && offset >= total) {
-      setOffset(Math.max(0, (Math.ceil(total / pageSize) - 1) * pageSize));
-    }
-  }, [total, offset, pageSize]);
-
-  const page = Math.floor(offset / pageSize) + 1;
-  const pages = Math.max(1, Math.ceil(total / pageSize));
   const userNameById = new Map(userOptions.map((u) => [u.id, u.username]));
   // Newest first (created_at, then id as tiebreak), so the latest
   // attempts always lead regardless of server ordering.
@@ -286,12 +277,12 @@ export const TelemetryView: React.FC = () => {
               {metrics.total_generations} intentos ·{' '}
               {formatPercent(metrics.success_rate)} éxito
             </span>
-            <span className={listStyles.roleTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span className={`${listStyles.roleTag} ${utils.rowInline4}`}>
               <Gauge size={13} aria-hidden /> {formatLatency(metrics.avg_duration_ms)}
             </span>
           </div>
           <div role="listitem" style={{ padding: '10px 12px' }}>
-            <span className={listStyles.studentName} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span className={`${listStyles.studentName} ${utils.rowInline4}`}>
               <Check size={14} aria-hidden /> {metrics.successful_generations} · <X size={14} aria-hidden />{' '}
               {metrics.failed_generations} · {metrics.avg_attempts}{' '}
               intentos/pregunta
@@ -369,22 +360,14 @@ export const TelemetryView: React.FC = () => {
         </DataList>
       )}
 
-      <Pagination
+      <Pager
         id="telemetryPager"
-        page={page}
-        pages={pages}
+        offset={offset}
         pageSize={pageSize}
+        total={total}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
-        onPrev={() => setOffset((o) => Math.max(0, o - pageSize))}
-        onNext={() =>
-          setOffset((o) => Math.min((pages - 1) * pageSize, o + pageSize))
-        }
-        onFirst={() => setOffset(0)}
-        onLast={() => setOffset((pages - 1) * pageSize)}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setOffset(0);
-        }}
+        onOffsetChange={setOffset}
+        onPageSizeChange={setPageSize}
         disabled={loading}
       />
 

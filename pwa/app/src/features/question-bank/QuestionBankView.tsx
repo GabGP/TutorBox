@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
-import { Pagination } from '../../shared/ui/Pagination/Pagination';
+import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
+import { usePagination } from '../../shared/lib/pagination';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
+import utils from '../../shared/styles/utils.module.css';
 import { BankQuestion, bankApi } from './bankApi';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
@@ -44,8 +46,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [topic, setTopic] = useState(initialTopic);
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { offset, setOffset, pageSize, setPageSize } = usePagination(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -145,9 +146,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     }
   };
 
-  const page = Math.floor(offset / pageSize) + 1;
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-
   return (
     <div className={listStyles.container} id="bank">
       <div className={listStyles.rowb}>
@@ -246,7 +244,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
                   style={{ flex: '0 0 auto' }}
                 />
               )}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className={utils.grow}>
               <SwipeRow
                 ariaLabel={`Pregunta ${q.id}`}
                 open={openSwipeId === q.id}
@@ -311,20 +309,14 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         </DataList>
       )}
 
-      <Pagination
+      <Pager
         id="bankPager"
-        page={page}
-        pages={pages}
+        offset={offset}
         pageSize={pageSize}
+        total={total}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
-        onPrev={() => setOffset((o) => Math.max(0, o - pageSize))}
-        onNext={() => setOffset((o) => o + pageSize)}
-        onFirst={() => setOffset(0)}
-        onLast={() => setOffset((pages - 1) * pageSize)}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setOffset(0);
-        }}
+        onOffsetChange={setOffset}
+        onPageSizeChange={setPageSize}
         disabled={loading}
       />
 
