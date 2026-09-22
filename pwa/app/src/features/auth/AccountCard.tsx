@@ -1,6 +1,7 @@
 import React from 'react';
 import { getRoleLabel } from '../../shared/constants/roles';
 import utils from '../../shared/styles/utils.module.css';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { User } from './auth.types';
 import styles from './auth.module.css';
 import { PinForm } from './PinForm';
@@ -25,7 +26,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   onProfileChanged,
   onSessionInvalidated,
 }) => {
-  const { notice, username, pin } = useAccountForms(user, {
+  const { notice, username, pin, toasts, dismissToast } = useAccountForms(user, {
     onProfileChanged,
     onSessionInvalidated,
   });
@@ -60,6 +61,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
           {notice}
         </div>
       )}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </section>
   );
 };

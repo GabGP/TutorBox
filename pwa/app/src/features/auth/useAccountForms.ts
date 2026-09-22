@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toErrorMessage } from '../../shared/lib/errors';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { authApi } from './authApi';
 import type { User } from './auth.types';
 import { validatePinPair } from './pinValidation';
@@ -35,7 +36,8 @@ interface UseAccountFormsCallbacks {
 /**
  * State machine behind AccountCard: username self-rename (two-tap confirm,
  * ends the session) plus voluntary PIN rotation (re-authenticates, session
- * survives). A single shared `notice` banner serves both forms.
+ * survives). The rename notice stays inline (the session ends right after);
+ * the PIN confirmation floats as a toast.
  */
 export function useAccountForms(
   user: User,
@@ -51,6 +53,7 @@ export function useAccountForms(
   const [notice, setNotice] = useState('');
   const [confirmName, setConfirmName] = useState(false);
   const [submitting, setSubmitting] = useState<'username' | 'pin' | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   // Typing a new value disarms an armed rename confirm.
   const setNamePin = (v: string) => {
@@ -122,7 +125,7 @@ export function useAccountForms(
       setPinCurrent('');
       setNewPin('');
       setConfirmPin('');
-      setNotice('PIN actualizado.');
+      pushToast({ message: 'PIN actualizado.' });
       await onProfileChanged();
     } catch (err: unknown) {
       setPinError(toErrorMessage(err, 'Error al cambiar el PIN'));
@@ -152,5 +155,5 @@ export function useAccountForms(
     setConfirmPin,
     handlePinChange,
   };
-  return { notice, username, pin, busy: submitting !== null };
+  return { notice, username, pin, toasts, dismissToast, busy: submitting !== null };
 }
