@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Volume2 } from 'lucide-react';
 import { BtnSpinner, PlayButton } from '../../shared/ui/PlayButton/PlayButton';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
@@ -32,7 +33,8 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
     savedKey,
     status,
     error,
-    notice,
+    toasts,
+    dismissToast,
     busy,
     previewPhase,
     engineOf,
@@ -98,7 +100,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
       </div>
 
       {error && <div className={formStyles.errorBanner}>{error}</div>}
-      {notice && <div className={formStyles.alert}>{notice}</div>}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       <div className={formStyles.addForm}>
         <button

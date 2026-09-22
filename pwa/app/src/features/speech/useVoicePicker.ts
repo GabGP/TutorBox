@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toErrorMessage } from '../../shared/lib/errors';
 import { storage } from '../../shared/lib/storage';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { speechApi, ttsApi } from './speechApi';
 import type { SpeechLanguage, TTSStatusResponse, TTSVoiceItem } from './speech.types';
 
@@ -37,7 +38,7 @@ export function useVoicePicker() {
   });
   const [status, setStatus] = useState<TTSStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
   const [busy, setBusy] = useState(false);
   const [previewPhase, setPreviewPhase] = useState<PreviewPhase>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -88,7 +89,6 @@ export function useVoicePicker() {
     if (!voice) return;
     setBusy(true);
     setError(null);
-    setNotice(null);
     setStatus(null);
     try {
       storage.setVoicePreference({ lang, engine: engineOf, voice });
@@ -96,7 +96,7 @@ export function useVoicePicker() {
       await ttsApi.unload({}).catch(() => null);
       const s = await ttsApi.getStatus(undefined, lang).catch(() => null);
       setStatus(s);
-      setNotice('Voz guardada como predeterminada para el juego.');
+      pushToast({ message: 'Voz guardada como predeterminada para el juego.' });
     } catch (err: unknown) {
       setError(toErrorMessage(err, 'Error al guardar la voz'));
     } finally {
@@ -152,14 +152,13 @@ export function useVoicePicker() {
   const handleLoad = async () => {
     setBusy(true);
     setError(null);
-    setNotice(null);
     // Clear stale status first: the server evicts other resident engines
     // on load, so the previous "Motor" line must not linger as if current.
     setStatus(null);
     try {
       const res = await ttsApi.load({ lang, engine: engineOf, voice: voice || undefined });
       setStatus({ engine: res.engine, loaded: res.loaded, model_id: res.model_id });
-      setNotice(`Voz cargada (${res.engine}, ${res.load_ms}ms).`);
+      pushToast({ message: `Voz cargada (${res.engine}, ${res.load_ms}ms).` });
     } catch (err: unknown) {
       setError(toErrorMessage(err, 'Error al cargar voz'));
       const s = await ttsApi.getStatus(undefined, lang).catch(() => null);
@@ -172,13 +171,12 @@ export function useVoicePicker() {
   const handleUnload = async () => {
     setBusy(true);
     setError(null);
-    setNotice(null);
     setStatus(null);
     try {
       await ttsApi.unload({ engine: engineOf });
       const s = await ttsApi.getStatus(undefined, lang).catch(() => null);
       setStatus(s);
-      setNotice('Voz descargada de memoria.');
+      pushToast({ message: 'Voz descargada de memoria.' });
     } catch (err: unknown) {
       setError(toErrorMessage(err, 'Error al descargar voz'));
     } finally {
@@ -195,7 +193,8 @@ export function useVoicePicker() {
     savedKey,
     status,
     error,
-    notice,
+    toasts,
+    dismissToast,
     busy,
     previewPhase,
     engineOf,
