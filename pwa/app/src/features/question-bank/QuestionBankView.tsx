@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
-import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { usePagination } from '../../shared/lib/pagination';
@@ -12,9 +10,9 @@ import { useTopics } from '../../shared/taxonomy/useTopics';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
-import utils from '../../shared/styles/utils.module.css';
 import styles from './QuestionBankView.module.css';
 import { BankQuestion, bankApi } from './bankApi';
+import { BankQuestionRow } from './BankQuestionRow';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
 import { SchemaViewer } from './SchemaViewer';
@@ -25,7 +23,8 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 /**
  * Question-bank browser: topic filter, swipe rows with Info/Edit/Delete
  * actions, detail in a floating sheet (refreshed from the server on open),
- * two-tap delete, and an edit affordance opening the floating edit sheet.
+ * full-row hold-to-confirm delete (see BankQuestionRow), and an edit
+ * affordance opening the floating edit sheet.
  * Optional select mode (checkboxes + tap-to-toggle) lets the quiz-prep
  * flow build a match from hand-picked questions. Creation lives in the
  * Crear tab; the JSON contract viewer is admin-only.
@@ -119,13 +118,14 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirmDelete !== id) {
-      setConfirmDelete(id);
-      return;
-    }
-    await handleDeleteCommit(id);
+  const handleArmDelete = (id: string) => {
+    // Swipe tap only arms; the row swaps to a HoldButton that commits.
+    setConfirmDelete(id);
   };
+
+  const handleDisarmDelete = useCallback(() => {
+    setConfirmDelete(null);
+  }, []);
 
   const handleSavedEdit = (id: string) => {
     setEditing(null);
@@ -197,75 +197,30 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
           emptyText="No hay preguntas para este filtro."
         >
           {questions.map((q) => (
-            <div
+            <BankQuestionRow
               key={q.id}
-              role="listitem"
-              className={selectable ? styles.selectRow : undefined}
-            >
-              {selectable && (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(q.id)}
-                  onChange={() => onToggleSelect?.(q.id)}
-                  aria-label={`Elegir pregunta ${q.id}`}
-                  className={styles.selectCheck}
-                />
-              )}
-              <div className={utils.grow}>
-              <SwipeRow
-                ariaLabel={`Pregunta ${q.id}`}
-                open={openSwipeId === q.id}
-                onOpenChange={(next) => {
-                  setOpenSwipeId(next ? q.id : null);
-                  // Disarm this row on close; disarm any other armed row
-                  // when opening a different one so confirm never leaks.
-                  if (!next) {
-                    if (confirmDelete === q.id) setConfirmDelete(null);
-                  } else if (confirmDelete && confirmDelete !== q.id) {
-                    setConfirmDelete(null);
-                  }
-                }}
-                actions={[
-                  {
-                    key: 'info',
-                    label: 'Info',
-                    ariaLabel: `Ver detalle pregunta ${q.id}`,
-                    icon: <Eye aria-hidden />,
-                    onActivate: () => {
-                      void handleOpenDetail(q);
-                    },
-                  },
-                  {
-                    key: 'edit',
-                    label: 'Editar',
-                    ariaLabel: `Editar pregunta ${q.id}`,
-                    icon: <Pencil aria-hidden />,
-                    onActivate: () => setEditing(q),
-                  },
-                  {
-                    key: 'delete',
-                    label: confirmDelete === q.id ? '¿Confirmar?' : 'Eliminar',
-                    icon: <Trash2 aria-hidden />,
-                    tone: 'danger',
-                    onActivate: () => void handleDelete(q.id),
-                  },
-                ]}
-              >
-                <button
-                  type="button"
-                  className={`${listStyles.studentName} ${styles.faceButton}`}
-                  onClick={() => handleFaceTap(q)}
-                >
-                  {q.question_text}
-                </button>
-                <span
-                  className={`${listStyles.roleTag} ${styles.topicTag}`}
-                >
-                  {getTopicLabel(q.topic)}
-                </span>
-              </SwipeRow>
-              </div>
-            </div>
+              question={q}
+              selectable={selectable}
+              selected={selectedIds.includes(q.id)}
+              confirmArmed={confirmDelete === q.id}
+              swipeOpen={openSwipeId === q.id}
+              onToggleSelect={(id) => onToggleSelect?.(id)}
+              onFaceTap={handleFaceTap}
+              onEdit={(row) => setEditing(row)}
+              onArmDelete={handleArmDelete}
+              onCommitDelete={(id) => void handleDeleteCommit(id)}
+              onDisarmDelete={handleDisarmDelete}
+              onOpenChange={(next) => {
+                setOpenSwipeId(next ? q.id : null);
+                // Disarm this row on close; disarm any other armed row
+                // when opening a different one so confirm never leaks.
+                if (!next) {
+                  if (confirmDelete === q.id) setConfirmDelete(null);
+                } else if (confirmDelete && confirmDelete !== q.id) {
+                  setConfirmDelete(null);
+                }
+              }}
+            />
           ))}
         </DataList>
       )}

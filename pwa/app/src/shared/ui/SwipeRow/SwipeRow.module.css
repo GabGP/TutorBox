@@ -63,8 +63,8 @@
 .danger {
   color: var(--bad-ink);
   background: var(--bad-bg);
-  /* Fixed width so arming "Eliminar" → "¿Confirmar?" never resizes the
-     strip and jumps the face. Fits the longer confirm label. */
+  /* Fixed width so an armed delete action never resizes the
+     strip and jumps the face. */
   min-width: 96px;
 }
 

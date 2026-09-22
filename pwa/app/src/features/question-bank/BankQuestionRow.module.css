@@ -1,0 +1,26 @@
+.confirmRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.confirmHold {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cancelBtn {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--tint);
+  color: var(--p);
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.16s ease;
+}
+
+.cancelBtn:hover {
+  background: var(--tint2);
+}

@@ -69,8 +69,8 @@ export const SwipeRow: React.FC<SwipeRowProps> = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; baseOpen: boolean } | null>(null);
-  // Measured strip width (post-layout) so arming delete ("Eliminar" →
-  // "¿Confirmar?") never uses a stale render-time width that jumps the face.
+  // Measured strip width (post-layout) so an armed delete action never
+  // uses a stale render-time width that jumps the face.
   const [actionsW, setActionsW] = useState(0);
 
   useLayoutEffect(() => {
