@@ -3,6 +3,10 @@ import { getRoleLabel } from '../../shared/constants/roles';
 import { toErrorMessage } from '../../shared/lib/errors';
 import formStyles from '../../shared/styles/forms.module.css';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
+import {
+  HOLD_LONG_MS,
+  HOLD_SHORT_MS,
+} from '../../shared/ui/HoldButton/holdDurations';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import styles from './roster.module.css';
 import { RosterStudent } from './roster.types';
@@ -127,7 +131,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
         </>
       )}
       <HoldButton
-        holdTime={800}
+        holdTime={HOLD_SHORT_MS}
         size="md"
         disabled={busy}
         ariaLabel="Reiniciar PIN"
@@ -142,7 +146,7 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
       {onDeleteUser && (
         <>
           <HoldButton
-            holdTime={2000}
+            holdTime={HOLD_LONG_MS}
             size="md"
             disabled={busy}
             ariaLabel="Eliminar cuenta"

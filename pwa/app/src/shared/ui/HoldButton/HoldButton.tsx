@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import type { HoldButtonProps } from './holdButton.types';
+import { HOLD_LONG_MS } from './holdDurations';
 import { useHoldProgress } from './useHoldProgress';
 import styles from './HoldButton.module.css';
 
@@ -17,7 +18,7 @@ export const HoldButton: React.FC<HoldButtonProps> = ({
   size = 'md',
   radius = 14,
   fillDirection = 'right',
-  holdTime = 2000,
+  holdTime = HOLD_LONG_MS,
   releaseTime = 200,
   pressScale = 0.97,
   wave = true,

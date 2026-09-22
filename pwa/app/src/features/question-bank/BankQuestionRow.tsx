@@ -4,6 +4,7 @@ import { getTopicLabel } from '../../shared/taxonomy/labels';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
+import { HOLD_LONG_MS } from '../../shared/ui/HoldButton/holdDurations';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import styles from './BankQuestionRow.module.css';
 import viewStyles from './QuestionBankView.module.css';
@@ -73,7 +74,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
         {confirmArmed ? (
           <div className={styles.confirmRow}>
             <HoldButton
-              holdTime={2000}
+              holdTime={HOLD_LONG_MS}
               size="sm"
               className={styles.confirmHold}
               ariaLabel={`Mantén para eliminar pregunta ${question.id}`}

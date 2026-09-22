@@ -1,5 +1,6 @@
 import React from 'react';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
+import { HOLD_SHORT_MS } from '../../shared/ui/HoldButton/holdDurations';
 import styles from './auth.module.css';
 import type { PinFormModel } from './useAccountForms';
 
@@ -11,7 +12,7 @@ interface PinFormProps {
 
 /**
  * Voluntary PIN rotation form: current PIN plus double-entry of the new one,
- * submitted through a short (800ms) press-and-hold guard.
+ * submitted through the SHORT press-and-hold guard (see holdDurations).
  */
 export const PinForm: React.FC<PinFormProps> = ({ form, disabled = false }) => {
   const busy = form.busy || disabled;
@@ -57,7 +58,7 @@ export const PinForm: React.FC<PinFormProps> = ({ form, disabled = false }) => {
         disabled={busy}
       />
       <HoldButton
-        holdTime={800}
+        holdTime={HOLD_SHORT_MS}
         size="md"
         id="accChangePin"
         ariaLabel="Cambiar PIN"

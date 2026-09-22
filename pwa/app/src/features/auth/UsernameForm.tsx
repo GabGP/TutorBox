@@ -1,5 +1,6 @@
 import React from 'react';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
+import { HOLD_LONG_MS } from '../../shared/ui/HoldButton/holdDurations';
 import styles from './auth.module.css';
 import type { UsernameFormModel } from './useAccountForms';
 
@@ -46,7 +47,7 @@ export const UsernameForm: React.FC<UsernameFormProps> = ({ form, disabled = fal
         disabled={busy}
       />
       <HoldButton
-        holdTime={2000}
+        holdTime={HOLD_LONG_MS}
         size="md"
         id="accChangeUser"
         ariaLabel="Cambiar mi nombre"

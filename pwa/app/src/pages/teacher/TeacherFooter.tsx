@@ -1,5 +1,6 @@
 import React from 'react';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
+import { HOLD_MEDIUM_MS } from '../../shared/ui/HoldButton/holdDurations';
 import { StepDots } from '../../shared/ui/StepDots/StepDots';
 import styles from './TeacherView.module.css';
 
@@ -17,7 +18,7 @@ export interface TeacherFooterProps {
  * Teacher Console Bottom Action Bar and Wizard Progress.
  * Renders the primary action CTA, secondary navigation/reset button, and wizard step dots.
  * The irreversible `Terminar la pregunta` CTA is a press-and-hold guard
- * (1200ms medium hold); all other primary labels stay single-tap.
+ * (MEDIUM tier, see holdDurations); all other primary labels stay single-tap.
  */
 export const TeacherFooter: React.FC<TeacherFooterProps> = ({
   primaryText,
@@ -43,7 +44,7 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
         {primaryText === 'Terminar la pregunta' ? (
           <HoldButton
             key="terminar"
-            holdTime={1200}
+            holdTime={HOLD_MEDIUM_MS}
             size="md"
             id="primary"
             ariaLabel="Terminar la pregunta"
