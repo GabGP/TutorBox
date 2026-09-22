@@ -9,7 +9,6 @@ export interface UsernameFormModel {
   namePin: string;
   newUsername: string;
   nameError: string;
-  confirmName: boolean;
   busy: boolean;
   setNamePin: (v: string) => void;
   setNewUsername: (v: string) => void;
@@ -34,10 +33,11 @@ interface UseAccountFormsCallbacks {
 }
 
 /**
- * State machine behind AccountCard: username self-rename (two-tap confirm,
- * ends the session) plus voluntary PIN rotation (re-authenticates, session
- * survives). The rename notice stays inline (the session ends right after);
- * the PIN confirmation floats as a toast.
+ * State machine behind AccountCard: username self-rename (guarded by
+ * HoldButton press-and-hold since it ends the session) plus voluntary
+ * PIN rotation (re-authenticates, session survives). The rename notice
+ * stays inline (the session ends right after); the PIN confirmation
+ * floats as a toast.
  */
 export function useAccountForms(
   user: User,
@@ -51,18 +51,14 @@ export function useAccountForms(
   const [nameError, setNameError] = useState('');
   const [pinError, setPinError] = useState('');
   const [notice, setNotice] = useState('');
-  const [confirmName, setConfirmName] = useState(false);
   const [submitting, setSubmitting] = useState<'username' | 'pin' | null>(null);
   const { toasts, pushToast, dismissToast } = useToastQueue();
 
-  // Typing a new value disarms an armed rename confirm.
   const setNamePin = (v: string) => {
     setNamePinState(v);
-    setConfirmName(false);
   };
   const setNewUsername = (v: string) => {
     setNewUsernameState(v);
-    setConfirmName(false);
   };
 
   const handleUsernameChange = async () => {
@@ -73,13 +69,8 @@ export function useAccountForms(
       setNameError('Escribe tu PIN actual y el nombre nuevo');
       return;
     }
-    // Renaming edits YOUR OWN account and ends the session: arm a
-    // two-tap confirm so it never happens by accident.
-    if (!confirmName) {
-      setConfirmName(true);
-      return;
-    }
-    setConfirmName(false);
+    // Renaming edits YOUR OWN account and ends the session: the
+    // HoldButton press-and-hold is the confirm, so submit directly.
     setSubmitting('username');
     setNameError('');
     setNotice('');
@@ -138,7 +129,6 @@ export function useAccountForms(
     namePin,
     newUsername,
     nameError,
-    confirmName,
     busy: submitting === 'username',
     setNamePin,
     setNewUsername,

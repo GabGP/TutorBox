@@ -31,11 +31,12 @@ describe('SettingsView accordion', () => {
     renderView();
     const header = screen.getByRole('button', { name: /Mi cuenta/ });
     fireEvent.click(header);
-    expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
+    // HoldButton renders dual ink layers (base + clipped fill).
+    expect(screen.getAllByText('Cambiar mi nombre')).toHaveLength(2);
 
     fireEvent.click(header);
     // Still rendered while collapsing…
-    expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
+    expect(screen.getAllByText('Cambiar mi nombre')).toHaveLength(2);
 
     act(() => {
       vi.advanceTimersByTime(400);

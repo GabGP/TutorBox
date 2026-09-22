@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AccountCard } from '../AccountCard';
 import { authApi } from '../authApi';
+import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 
 const user = { id: 'u1', username: 'carlos', role: 'student' as const };
 
@@ -18,117 +19,149 @@ describe('AccountCard', () => {
     expect(screen.getByText('Alumno')).toBeInTheDocument();
   });
 
-  it('validates empty PIN change', () => {    render(
-      <AccountCard
-        user={user}
-        onProfileChanged={vi.fn()}
-        onSessionInvalidated={vi.fn()}
-      />
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar PIN' }));
-    expect(
-      screen.getByText('Escribe tu PIN actual y el nuevo dos veces')
-    ).toBeInTheDocument();
+  it('validates empty PIN change on hold', () => {
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={vi.fn()}
+          onSessionInvalidated={vi.fn()}
+        />
+      );
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar PIN' });
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(800);
+      expect(
+        screen.getByText('Escribe tu PIN actual y el nuevo dos veces')
+      ).toBeInTheDocument();
+    } finally {
+      teardownHoldTimers();
+    }
   });
 
-  it('validates current PIN separately for username change', () => {
-    render(
-      <AccountCard
-        user={user}
-        onProfileChanged={vi.fn()}
-        onSessionInvalidated={vi.fn()}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
-      target: { value: 'carlos2' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
-    expect(
-      screen.getByText('Escribe tu PIN actual y el nombre nuevo')
-    ).toBeInTheDocument();
+  it('validates current PIN separately for username change on hold', () => {
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={vi.fn()}
+          onSessionInvalidated={vi.fn()}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
+        target: { value: 'carlos2' },
+      });
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar mi nombre' });
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(2000);
+      expect(
+        screen.getByText('Escribe tu PIN actual y el nombre nuevo')
+      ).toBeInTheDocument();
+    } finally {
+      teardownHoldTimers();
+    }
   });
 
-  it('rejects mismatched new PINs', () => {    render(
-      <AccountCard
-        user={user}
-        onProfileChanged={vi.fn()}
-        onSessionInvalidated={vi.fn()}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar PIN)'), {
-      target: { value: '1111' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)'), {
-      target: { value: '2222' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Repite el PIN nuevo'), {
-      target: { value: '3333' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar PIN' }));
-    expect(screen.getByText('Los dos PIN no coinciden')).toBeInTheDocument();
+  it('rejects mismatched new PINs on hold', () => {
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={vi.fn()}
+          onSessionInvalidated={vi.fn()}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar PIN)'), {
+        target: { value: '1111' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)'), {
+        target: { value: '2222' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Repite el PIN nuevo'), {
+        target: { value: '3333' },
+      });
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar PIN' });
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(800);
+      expect(screen.getByText('Los dos PIN no coinciden')).toBeInTheDocument();
+    } finally {
+      teardownHoldTimers();
+    }
   });
 
-  it('submits PIN change and refreshes profile', async () => {
+  it('submits PIN change on hold and refreshes profile', async () => {
     const spy = vi.spyOn(authApi, 'changePin').mockResolvedValue({} as never);
     const onProfileChanged = vi.fn();
-    render(
-      <AccountCard
-        user={user}
-        onProfileChanged={onProfileChanged}
-        onSessionInvalidated={vi.fn()}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar PIN)'), {
-      target: { value: '1111' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)'), {
-      target: { value: '2222' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Repite el PIN nuevo'), {
-      target: { value: '2222' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar PIN' }));
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith('carlos', '1111', '2222')
-    );
-    expect(onProfileChanged).toHaveBeenCalled();
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={onProfileChanged}
+          onSessionInvalidated={vi.fn()}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar PIN)'), {
+        target: { value: '1111' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)'), {
+        target: { value: '2222' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Repite el PIN nuevo'), {
+        target: { value: '2222' },
+      });
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar PIN' });
+      fireEvent.click(holdBtn);
+      expect(spy).not.toHaveBeenCalled();
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(800);
+      await act(async () => {});
+      expect(spy).toHaveBeenCalledWith('carlos', '1111', '2222');
+      expect(onProfileChanged).toHaveBeenCalled();
+    } finally {
+      teardownHoldTimers();
+    }
     spy.mockRestore();
   });
 
-  it('submits username change and invalidates session', async () => {
+  it('submits username change on hold and invalidates session', async () => {
     const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
     const onSessionInvalidated = vi.fn();
-    render(
-      <AccountCard
-        user={user}
-        onProfileChanged={vi.fn()}
-        onSessionInvalidated={onSessionInvalidated}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar nombre)'), {
-      target: { value: '1111' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
-      target: { value: 'carlos2' },
-    });
-    // Renaming edits your own account and ends the session: first tap
-    // only arms the confirm, second tap submits.
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
-    expect(spy).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
-    ).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
-    );
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith('1111', 'carlos2')
-    );
-    expect(onSessionInvalidated).toHaveBeenCalled();
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={vi.fn()}
+          onSessionInvalidated={onSessionInvalidated}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar nombre)'), {
+        target: { value: '1111' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
+        target: { value: 'carlos2' },
+      });
+      // Renaming edits your own account and ends the session: a plain
+      // click never submits, only a full press-and-hold does.
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar mi nombre' });
+      fireEvent.click(holdBtn);
+      expect(spy).not.toHaveBeenCalled();
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(2000);
+      await act(async () => {});
+      expect(spy).toHaveBeenCalledWith('1111', 'carlos2');
+      expect(onSessionInvalidated).toHaveBeenCalled();
+    } finally {
+      teardownHoldTimers();
+    }
     spy.mockRestore();
   });
 
-  it('disarms the rename confirm when inputs change', () => {
+  it('ignores a plain click on rename without holding', () => {
     const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
     render(
       <AccountCard
@@ -144,15 +177,6 @@ describe('AccountCard', () => {
       target: { value: 'carlos2' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi nombre' }));
-    expect(
-      screen.getByRole('button', { name: 'Toca de nuevo para confirmar' })
-    ).toBeInTheDocument();
-    fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
-      target: { value: 'carlos3' },
-    });
-    expect(
-      screen.getByRole('button', { name: 'Cambiar mi nombre' })
-    ).toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });

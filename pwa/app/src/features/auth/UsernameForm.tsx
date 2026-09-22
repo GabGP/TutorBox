@@ -1,4 +1,5 @@
 import React from 'react';
+import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
 import styles from './auth.module.css';
 import type { UsernameFormModel } from './useAccountForms';
 
@@ -9,8 +10,8 @@ interface UsernameFormProps {
 }
 
 /**
- * Self username rename form: current-PIN gate plus two-tap confirm,
- * since renaming your own account ends the session.
+ * Self username rename form: current-PIN gate plus HoldButton
+ * press-and-hold, since renaming your own account ends the session.
  */
 export const UsernameForm: React.FC<UsernameFormProps> = ({ form, disabled = false }) => {
   const busy = form.busy || disabled;
@@ -44,15 +45,16 @@ export const UsernameForm: React.FC<UsernameFormProps> = ({ form, disabled = fal
         onChange={(e) => form.setNewUsername(e.target.value)}
         disabled={busy}
       />
-      <button
-        type="button"
+      <HoldButton
+        holdTime={2000}
+        size="md"
         id="accChangeUser"
-        className={styles.submitBtn}
-        onClick={form.handleUsernameChange}
+        ariaLabel="Cambiar mi nombre"
         disabled={busy}
+        onHold={() => void form.handleUsernameChange()}
       >
-        {form.confirmName ? 'Toca de nuevo para confirmar' : 'Cambiar mi nombre'}
-      </button>
+        Cambiar mi nombre
+      </HoldButton>
       {form.nameError && (
         <div className={styles.errorBanner} id="accNameErr">
           {form.nameError}

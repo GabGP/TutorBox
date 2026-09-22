@@ -1,4 +1,5 @@
 import React from 'react';
+import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
 import styles from './auth.module.css';
 import type { PinFormModel } from './useAccountForms';
 
@@ -9,7 +10,8 @@ interface PinFormProps {
 }
 
 /**
- * Voluntary PIN rotation form: current PIN plus double-entry of the new one.
+ * Voluntary PIN rotation form: current PIN plus double-entry of the new one,
+ * submitted through a short (800ms) press-and-hold guard.
  */
 export const PinForm: React.FC<PinFormProps> = ({ form, disabled = false }) => {
   const busy = form.busy || disabled;
@@ -54,15 +56,17 @@ export const PinForm: React.FC<PinFormProps> = ({ form, disabled = false }) => {
         }}
         disabled={busy}
       />
-      <button
-        type="button"
+      <HoldButton
+        holdTime={800}
+        size="md"
         id="accChangePin"
-        className={styles.submitBtn}
-        onClick={form.handlePinChange}
+        ariaLabel="Cambiar PIN"
         disabled={busy}
+        doneLabel="PIN actualizado"
+        onHold={() => void form.handlePinChange()}
       >
         Cambiar PIN
-      </button>
+      </HoldButton>
       {form.pinError && (
         <div className={styles.errorBanner} id="accPinErr">
           {form.pinError}

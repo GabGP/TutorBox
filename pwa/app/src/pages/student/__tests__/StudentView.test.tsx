@@ -107,8 +107,9 @@ describe('StudentView Component', () => {
 
     render(<StudentView />);
     fireEvent.click(screen.getByRole('button', { name: 'carlos' }));
-    expect(screen.getByText('Cambiar mi nombre')).toBeInTheDocument();
-    expect(screen.getByText('Cambiar PIN')).toBeInTheDocument();
+    // HoldButtons render dual ink layers (base + clipped fill).
+    expect(screen.getAllByText('Cambiar mi nombre')).toHaveLength(2);
+    expect(screen.getAllByText('Cambiar PIN')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Volver al juego' }));
     expect(screen.getByText('Hola, carlos')).toBeInTheDocument();
   });
