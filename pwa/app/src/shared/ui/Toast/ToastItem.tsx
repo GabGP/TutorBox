@@ -1,118 +1,149 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
-import type { ToastExitReason, ToastItem } from './toast.types';
+import React, { useRef } from 'react';
+import { Check, CircleX, TriangleAlert, X } from 'lucide-react';
+import { useFuseTimer } from './useFuseTimer';
+import { useSwipeDismiss } from './useSwipeDismiss';
+import { useToastExit, type ToastExit } from './useToastExit';
+import { ToastFuse } from './ToastFuse';
+import type { ToastItemProps } from './toast.types';
 import styles from './Toast.module.css';
 
-export interface ToastItemProps {
-  toast: ToastItem;
-  /** Swipe distance in px before release dismisses (slow drag). */
-  swipeDistance?: number;
-  dismissible?: boolean;
-  onExit: (id: string, reason: ToastExitReason) => void;
-}
+const TONE_ICON = { success: Check, warn: TriangleAlert, error: CircleX } as const;
 
 /**
- * Single floating toast: auto-dismiss fuse, swipe-away drag, Esc and
- * close button. Success uses role=status; errors use role=alert.
+ * Single floating toast (SwipeToast port, dependency-free): exit machine,
+ * fuse timer and swipe physics around the icon/title/description/action
+ * card. Cross-hook calls go through refs to keep callbacks stable.
  */
 export const ToastItemView: React.FC<ToastItemProps> = ({
   toast,
   swipeDistance = 40,
+  settleBounce = 0.2,
+  slideMs = 400,
+  pauseOnHover = true,
+  closeButton = true,
   dismissible = true,
   onExit,
 }) => {
   const duration = toast.duration ?? 4000;
   const tone = toast.tone ?? 'success';
-  const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef<{ x: number; y: number; t: number } | null>(null);
-  const dragLast = useRef<{ x: number; y: number; t: number } | null>(null);
+  const fuse = toast.fuse ?? 'bottom';
+  const exitRef = useRef<ToastExit | null>(null);
+  const fuseRef = useRef<{ pause: () => void; resume: () => void } | null>(null);
 
-  useEffect(() => {
-    if (!dismissible || duration <= 0) return;
-    const timer = window.setTimeout(() => onExit(toast.id, 'timeout'), duration);
-    return () => window.clearTimeout(timer);
-  }, [dismissible, duration, onExit, toast.id]);
+  const { dragY, swiping, snapStyle, bindSwipe, isDragging } = useSwipeDismiss({
+    swipeDistance,
+    settleBounce,
+    disabled: !dismissible,
+    onSwipe: () => exitRef.current?.commitSwipe(),
+    onDragEnd: () => {
+      const ex = exitRef.current;
+      if (!ex) return;
+      if (ex.phase === 'open' && !ex.leaving) fuseRef.current?.resume();
+      ex.consumePending();
+    },
+  });
 
-  useEffect(() => {
-    if (!dismissible) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onExit(toast.id, 'escape');
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [dismissible, onExit, toast.id]);
+  const exit = useToastExit({
+    slideMs,
+    toastId: toast.id,
+    dismissible,
+    isDragging,
+    holdFuse: () => fuseRef.current?.pause(),
+    releaseFuse: () => fuseRef.current?.resume(),
+    onExit,
+  });
+  exitRef.current = exit;
 
-  const onPointerDown = (event: React.PointerEvent): void => {
-    if (!dismissible) return;
-    dragStart.current = { x: event.clientX, y: event.clientY, t: performance.now() };
-    dragLast.current = { x: event.clientX, y: event.clientY, t: performance.now() };
-    setDragging(true);
+  const { pauseFuse, resumeFuse, fuseHeld } = useFuseTimer(
+    duration,
+    exit.phase === 'open' && !exit.leaving,
+    () => exitRef.current?.close('timeout')
+  );
+  fuseRef.current = { pause: pauseFuse, resume: resumeFuse };
+
+  const open = exit.phase === 'open' && !exit.leaving;
+  const ToneIcon = TONE_ICON[tone];
+  const endPress = (e: React.PointerEvent, end: (ev: React.PointerEvent) => void) => {
+    end(e);
+    if (exit.phase === 'open' && !exit.leaving) resumeFuse();
   };
-
-  const onPointerMove = (event: React.PointerEvent): void => {
-    if (!dismissible || !dragStart.current) return;
-    const dx = event.clientX - dragStart.current.x;
-    const dy = event.clientY - dragStart.current.y;
-    if (offset === null && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-    dragLast.current = { x: event.clientX, y: event.clientY, t: performance.now() };
-    setOffset({ x: dx, y: dy });
-  };
-
-  const endDrag = (event: React.PointerEvent): void => {
-    if (!dismissible || !dragStart.current) {
-      dragStart.current = null;
-      setDragging(false);
-      setOffset(null);
-      return;
-    }
-    const start = dragStart.current;
-    const last = dragLast.current ?? { x: event.clientX, y: event.clientY, t: performance.now() };
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    const dt = Math.max(1, performance.now() - last.t);
-    const velocity = Math.hypot(event.clientX - last.x, event.clientY - last.y) / dt;
-    dragStart.current = null;
-    dragLast.current = null;
-    setDragging(false);
-    const farEnough = Math.abs(dy) > swipeDistance || Math.abs(dx) > swipeDistance;
-    if (farEnough || velocity > 0.6) {
-      setOffset(null);
-      onExit(toast.id, 'swipe');
-    } else {
-      setOffset(null);
-    }
-  };
-
-  const role = tone === 'error' ? 'alert' : 'status';
 
   return (
     <div
-      className={`${styles.toast} ${styles[tone]} ${dragging ? styles.dragging : ''}`}
-      role={role}
+      className={`${styles.toast} ${styles[tone]}${open ? '' : ` ${styles.exiting}`}${exit.instant ? ` ${styles.instant}` : ''}`}
+      role={tone === 'error' ? 'alert' : 'status'}
       aria-live={tone === 'error' ? 'assertive' : 'polite'}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={() => {
-        dragStart.current = null;
-        dragLast.current = null;
-        setDragging(false);
-        setOffset(null);
+      aria-atomic="true"
+      tabIndex={0}
+      data-phase={exit.phase}
+      data-fuse={duration > 0 ? fuse : 'none'}
+      data-dismissible={dismissible ? 'true' : 'false'}
+      data-swiping={swiping ? '' : undefined}
+      onPointerDown={(e) => {
+        if (exit.leaving) return;
+        exit.markPointer();
+        if (exit.phase === 'closing') exit.rescue();
+        pauseFuse();
+        bindSwipe.onPointerDown(e);
       }}
-      style={offset ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined}
+      onPointerMove={bindSwipe.onPointerMove}
+      onPointerUp={(e) => endPress(e, bindSwipe.onPointerUp)}
+      onPointerCancel={(e) => endPress(e, bindSwipe.onPointerCancel)}
+      onPointerEnter={(e) => {
+        if (pauseOnHover && e.pointerType === 'mouse') pauseFuse();
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse' && open) resumeFuse();
+      }}
+      onFocus={pauseFuse}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget) && open) resumeFuse();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') exit.markKeyboard();
+        if (e.key === 'Escape' && dismissible) {
+          e.stopPropagation();
+          exit.close('escape');
+        }
+      }}
+      style={{
+        ['--toast-slide' as string]: `${slideMs}ms`,
+        ...(swiping || exit.leaving
+          ? { transform: exit.leaving ? `translateY(calc(${dragY}px + 120%))` : `translateY(${dragY}px)` }
+          : undefined),
+        ...snapStyle,
+      }}
     >
-      <span className={styles.message}>{toast.message}</span>
-      {dismissible && (
+      <span className={styles.icon} aria-hidden="true">
+        {toast.icon ?? <ToneIcon size={18} />}
+      </span>
+      <span className={styles.body}>
+        <span className={styles.title}>{toast.message}</span>
+        {toast.description ? <span className={styles.desc}>{toast.description}</span> : null}
+      </span>
+      {toast.actionLabel ? (
+        <button
+          type="button"
+          className={styles.action}
+          onClick={() => {
+            toast.onAction?.();
+            exit.close('action');
+          }}
+        >
+          {toast.actionLabel}
+        </button>
+      ) : null}
+      {closeButton && dismissible ? (
         <button
           type="button"
           className={styles.close}
           aria-label="Descartar aviso"
-          onClick={() => onExit(toast.id, 'close')}
+          onClick={() => exit.close('close')}
         >
-          <X size={16} aria-hidden />
+          <X size={12} aria-hidden />
         </button>
-      )}
+      ) : null}
+      <ToastFuse fuse={fuse} duration={duration} held={fuseHeld} />
     </div>
   );
 };
