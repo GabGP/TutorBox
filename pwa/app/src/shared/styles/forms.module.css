@@ -111,3 +111,18 @@
     min-width: 0;
   }
 }
+
+/* Narrow containers (e.g. the 560px settings dialog on desktop): same
+   stacking, driven by the dialog width instead of the viewport. */
+@container (max-width: 560px) {
+  .addForm {
+    flex-wrap: wrap;
+  }
+  .addForm > input,
+  .addForm > select,
+  .addForm > textarea,
+  .addForm > button {
+    flex: 1 1 100% !important;
+    min-width: 0;
+  }
+}

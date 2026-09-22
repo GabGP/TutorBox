@@ -17,7 +17,11 @@
   max-width: 560px;
   max-height: 85dvh;
   overflow-y: auto;
+  overflow-x: clip;
   overscroll-behavior: contain;
+  /* Narrow-dialog containment: descendants (e.g. form rows) respond to
+     the dialog width, not the viewport (see forms.module.css). */
+  container-type: inline-size;
   background: var(--panel);
   border-radius: 28px 28px 0 0;
   padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
