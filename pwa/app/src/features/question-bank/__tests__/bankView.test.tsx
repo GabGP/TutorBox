@@ -58,6 +58,41 @@ describe('QuestionBankView browsing and selection', () => {
     vi.restoreAllMocks();
   });
 
+  it('opens detail via Info without selecting in select mode', async () => {
+    const onToggleSelect = vi.fn();
+    vi.spyOn(httpClient, 'requestApi').mockImplementation(
+      async (_m: string, path: string) => {
+        if (path.startsWith('/quiz/topics')) return [];
+        if (path === '/quiz/questions/q1') return question;
+        if (path.startsWith('/quiz/questions'))
+          return { questions: [question], total: 1 };
+        return {};
+      }
+    );
+    render(
+      <QuestionBankView
+        selectable
+        selectedIds={[]}
+        onToggleSelect={onToggleSelect}
+      />
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Ver detalle pregunta q1' })
+      ).toBeInTheDocument()
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ver detalle pregunta q1' })
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole('dialog', { name: 'Detalle pregunta q1' })
+      ).toBeInTheDocument()
+    );
+    expect(onToggleSelect).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+
   it('marks the correct answer to the right of the option text', async () => {
     vi.spyOn(httpClient, 'requestApi').mockImplementation(
       async (_m: string, path: string) => {

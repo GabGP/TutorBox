@@ -206,6 +206,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               swipeOpen={openSwipeId === q.id}
               onToggleSelect={(id) => onToggleSelect?.(id)}
               onFaceTap={handleFaceTap}
+              onOpenDetail={(row) => void handleOpenDetail(row)}
               onEdit={(row) => setEditing(row)}
               onArmDelete={handleArmDelete}
               onCommitDelete={(id) => void handleDeleteCommit(id)}

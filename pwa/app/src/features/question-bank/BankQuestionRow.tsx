@@ -17,6 +17,7 @@ export interface BankQuestionRowProps {
   swipeOpen: boolean;
   onToggleSelect: (id: string) => void;
   onFaceTap: (question: BankQuestion) => void;
+  onOpenDetail: (question: BankQuestion) => void;
   onEdit: (question: BankQuestion) => void;
   onArmDelete: (id: string) => void;
   onCommitDelete: (id: string) => void;
@@ -38,6 +39,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   swipeOpen,
   onToggleSelect,
   onFaceTap,
+  onOpenDetail,
   onEdit,
   onArmDelete,
   onCommitDelete,
@@ -104,7 +106,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
                 label: 'Info',
                 ariaLabel: `Ver detalle pregunta ${question.id}`,
                 icon: <Eye aria-hidden />,
-                onActivate: () => onFaceTap(question),
+                onActivate: () => onOpenDetail(question),
               },
               {
                 key: 'edit',
