@@ -20,15 +20,15 @@ describe('PWA document meta (P0-1)', () => {
     const html = readAppFile('index.html');
     expect(html).toMatch(/name="theme-color" content="#0B6E99"/);
     expect(html).toMatch(/name="description"/);
-    expect(html).toMatch(/rel="manifest" href="\/manifest\.webmanifest"/);
-    expect(html).toMatch(/rel="icon".*favicon\.svg/);
-    expect(html).toMatch(/apple-touch-icon/);
+    expect(html).toMatch(/rel="manifest" href="\/static\/manifest\.webmanifest"/);
+    expect(html).toMatch(/rel="icon".*\/static\/favicon\.svg/);
+    expect(html).toMatch(/apple-touch-icon.*\/static\/icon-192\.svg/);
   });
 
   it('ships a valid installable manifest starting at /alumno/', () => {
-    const manifestPath = resolve(APP_ROOT, 'public/manifest.webmanifest');
+    const manifestPath = resolve(APP_ROOT, 'public/static/manifest.webmanifest');
     expect(existsSync(manifestPath)).toBe(true);
-    const manifest = JSON.parse(readAppFile('public/manifest.webmanifest'));
+    const manifest = JSON.parse(readAppFile('public/static/manifest.webmanifest'));
     expect(manifest.name).toBe('TutorBox');
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('/alumno/');
