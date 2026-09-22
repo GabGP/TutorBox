@@ -37,7 +37,6 @@ describe('TeacherView Component', () => {
       deleted: [],
       showDeleted: false,
       loading: false,
-      error: null,
       pinNotice: null,
       toasts: [],
       dismissToast: vi.fn(),
@@ -51,7 +50,6 @@ describe('TeacherView Component', () => {
       changeUserRole: vi.fn(),
       recoverStudent: vi.fn(),
       toggleDeleted: vi.fn(),
-      clearError: vi.fn(),
       clearPinNotice: vi.fn(),
     });
     vi.mocked(useSpeechPlayback).mockReturnValue({

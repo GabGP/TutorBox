@@ -133,16 +133,6 @@
 .infoCard .h { font-size: 16px; font-weight: 600; }
 .infoCard .pText { font-size: 17px; color: var(--p); font-weight: 500; margin-top: 6px; }
 
-.note {
-  border-radius: 24px;
-  background: var(--bad-bg);
-  border: 1px solid var(--bad-line);
-  padding: 16px 18px;
-  color: var(--bad-ink);
-  font-size: 15px;
-  line-height: 1.45;
-}
-
 @media (min-width: 900px) {
   .topics {
     display: grid;

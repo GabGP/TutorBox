@@ -13,11 +13,13 @@ interface UseRosterManagerOptions {
  * Provides roster synchronization (students for the lobby, all users for
  * Settings), user creation with roles, temporary PIN resets, soft-delete,
  * recovery of deleted accounts, and error state tracking.
- * Transient confirmations (e.g. delete) go to the toast queue so layout
- * never shifts; PIN temporals stay inline until the teacher copies them.
+ * Transient confirmations (e.g. delete) and mutation failures both go to
+ * the toast queue so layout never shifts; PIN temporals stay inline until
+ * the teacher copies them. Field-tied errors (e.g. role select) stay
+ * inline in their sheet on top of the transient toast.
  *
  * @param {UseRosterManagerOptions} [options={}] - Hook options (e.g. enable gating).
- * @returns {object} User lists, loading/error states, PIN notices, toasts, and mutation methods.
+ * @returns {object} User lists, loading states, PIN notices, toasts, and mutation methods.
  */
 export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {}) {
   const [students, setStudents] = useState<RosterStudent[]>([]);
@@ -25,16 +27,17 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
   const [deleted, setDeleted] = useState<DeletedUser[]>([]);
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [pinNotice, setPinNotice] = useState<string | null>(null);
   const { toasts, pushToast, dismissToast } = useToastQueue();
+
+  const fail = (message: string) =>
+    pushToast({ message, tone: 'error' });
 
   const loadStudents = useCallback(async () => {
     setLoading(true);
     try {
       const data = await rosterApi.getStudents();
       setStudents(data);
-      setError(null);
     } catch {
       // Ignore network errors in quiet polling
     } finally {
@@ -73,7 +76,6 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
   }, []);
 
   const addStudent = async (username: string, pin: string, role = 'student') => {
-    setError(null);
     try {
       await rosterApi.createStudent(username, pin, role);
       await refresh();
@@ -85,25 +87,23 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
           : e.status === 403
             ? 'No tienes permiso para crear ese rol'
             : toErrorMessage(err, 'Error al agregar alumno');
-      setError(msg);
+      fail(msg);
       throw new Error(msg);
     }
   };
 
   const resetStudentPin = async (studentId: string, studentName: string) => {
-    setError(null);
     try {
       const res = await rosterApi.resetPin(studentId);
       setPinNotice(
         `PIN temporal de ${studentName}: ${res.temporary_pin}. Al entrar deberá elegir un PIN nuevo.`
       );
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al reiniciar PIN'));
+      fail(toErrorMessage(err, 'Error al reiniciar PIN'));
     }
   };
 
   const deleteStudent = async (studentId: string, studentName: string) => {
-    setError(null);
     try {
       await rosterApi.deleteUser(studentId);
       pushToast({ message: `Cuenta de ${studentName} eliminada.` });
@@ -117,13 +117,12 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
           : e.status === 403
             ? 'No tienes permiso para eliminar esa cuenta'
             : toErrorMessage(err, 'Error al eliminar cuenta');
-      setError(msg);
+      fail(msg);
       throw new Error(msg);
     }
   };
 
   const changeUserRole = async (userId: string, role: string) => {
-    setError(null);
     try {
       await rosterApi.changeRole(userId, role);
       setPinNotice(null);
@@ -136,13 +135,12 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
           : e.status === 403
             ? 'No tienes permiso para ese rol'
             : toErrorMessage(err, 'Error al cambiar rol');
-      setError(msg);
+      fail(msg);
       throw new Error(msg);
     }
   };
 
   const recoverStudent = async (userId: string, username: string) => {
-    setError(null);
     try {
       const res = await rosterApi.recoverUser(userId, username);
       setPinNotice(
@@ -156,7 +154,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
         e.status === 409
           ? 'Ese nombre ya está en uso, elige otro'
           : toErrorMessage(err, 'Error al recuperar cuenta');
-      setError(msg);
+      fail(msg);
       throw new Error(msg);
     }
   };
@@ -173,7 +171,6 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     deleted,
     showDeleted,
     loading,
-    error,
     pinNotice,
     toasts,
     dismissToast,
@@ -187,7 +184,6 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     changeUserRole,
     recoverStudent,
     toggleDeleted,
-    clearError: () => setError(null),
     clearPinNotice: () => setPinNotice(null),
   };
 }

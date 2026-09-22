@@ -16,8 +16,25 @@ describe('EntryForm Component', () => {
     render(<EntryForm title="Iniciar sesión" onLogin={onLogin} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
-    expect(screen.getByText('Escribe tu usuario y tu PIN')).toBeInTheDocument();
+    // Validation floats as an error toast (assertive alert), not a banner.
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Escribe tu usuario y tu PIN'
+    );
     expect(onLogin).not.toHaveBeenCalled();
+  });
+
+  it('floats external errors as error toasts without shifting layout', () => {
+    render(
+      <EntryForm
+        title="Panel del docente"
+        onLogin={vi.fn()}
+        externalError="Esta página es para docentes."
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Esta página es para docentes.'
+    );
+    expect(screen.queryByTestId('toast-viewport')).toBeInTheDocument();
   });
 
   it('allows toggling to signup mode when allowSignup is enabled', () => {

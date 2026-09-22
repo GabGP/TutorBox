@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { QuestionForm } from '../QuestionForm';
+import { bankApi } from '../bankApi';
 import { generatorApi } from '../../question-generator/generatorApi';
 import { question } from './bankFixture';
 
@@ -75,6 +76,17 @@ describe('QuestionForm taxonomy selects', () => {
       target: { value: '' },
     });
     expect(screen.getByLabelText('Subconcepto')).toHaveValue('');
+    vi.restoreAllMocks();
+  });
+
+  it('floats save failures as error toasts without shifting the form', async () => {
+    vi.spyOn(generatorApi, 'getTopics').mockResolvedValue([]);
+    vi.spyOn(bankApi, 'createQuestion').mockRejectedValue({ status: 500 });
+    render(<QuestionForm initial={null} onSaved={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Error al guardar')
+    );
     vi.restoreAllMocks();
   });
 

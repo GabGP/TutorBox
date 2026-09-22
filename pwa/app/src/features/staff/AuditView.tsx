@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { toErrorMessage } from '../../shared/lib/errors';
 import { usePagination } from '../../shared/lib/pagination';
-import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pager } from '../../shared/ui/Pager/Pager';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { AuditLogItem, auditApi } from './auditApi';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -12,12 +13,13 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50];
 /**
  * Admin audit trail viewer. Renders audit entries newest-first in a shared
  * DataList shell with client-side pagination. Parent must only mount for
- * `role === 'admin'`.
+ * `role === 'admin'`. Load failures float as error toasts so the list
+ * never shifts.
  */
 export const AuditView: React.FC = () => {
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const { offset, setOffset, pageSize, setPageSize } = usePagination(20);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   useEffect(() => {
     auditApi
@@ -26,9 +28,9 @@ export const AuditView: React.FC = () => {
         setLogs([...items].sort((a, b) => b.id - a.id))
       )
       .catch((err: unknown) => {
-        setError(toErrorMessage(err, 'Error al cargar auditoría'));
+        pushToast({ message: toErrorMessage(err, 'Error al cargar auditoría'), tone: 'error' });
       });
-  }, []);
+  }, [pushToast]);
 
   const pageItems = logs.slice(offset, offset + pageSize);
 
@@ -38,11 +40,11 @@ export const AuditView: React.FC = () => {
         <b>Auditoría</b>
         <span>{logs.length}</span>
       </div>
-      {error && <div className={formStyles.errorBanner}>{error}</div>}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
       <DataList
         id="auditList"
         ariaLabel="Auditoría"
-        isEmpty={pageItems.length === 0 && !error}
+        isEmpty={pageItems.length === 0}
         emptyText="Sin registros."
       >
         {pageItems.map((l) => (

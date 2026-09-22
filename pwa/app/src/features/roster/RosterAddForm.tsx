@@ -10,7 +10,7 @@ export interface RosterAddFormProps {
 
 /**
  * Inline user-addition form (username + PIN + optional role picker).
- * Mutation errors surface through the parent hook's banner, not here.
+ * Mutation errors surface through the parent hook's error toasts, not here.
  */
 export const RosterAddForm: React.FC<RosterAddFormProps> = ({
   onAddStudent,

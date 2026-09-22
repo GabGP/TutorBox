@@ -101,4 +101,20 @@ describe('QuestionBankView loading, contract and editing', () => {
     );
     vi.restoreAllMocks();
   });
+
+  it('floats bank load failures as error toasts', async () => {
+    vi.spyOn(httpClient, 'requestApi').mockImplementation(
+      async (_m: string, path: string) => {
+        if (path.startsWith('/quiz/topics')) return [];
+        throw { status: 500 };
+      }
+    );
+    render(<QuestionBankView />);
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Error al cargar preguntas'
+      )
+    );
+    vi.restoreAllMocks();
+  });
 });

@@ -61,6 +61,15 @@ describe('BankPickStep', () => {
     vi.restoreAllMocks();
   });
 
+  it('floats pre-generation errors as error toasts', async () => {
+    mockBankBackend();
+    render(<BankPickStep {...baseProps} genError="El modelo no respondió" />);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'El modelo no respondió'
+    );
+    vi.restoreAllMocks();
+  });
+
   it('pre-generates from the Pre-generar tab', async () => {
     mockBankBackend();
     const onPregenerate = vi.fn().mockResolvedValue(['q9']);

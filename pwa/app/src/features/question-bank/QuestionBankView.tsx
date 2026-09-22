@@ -28,6 +28,8 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * Optional select mode (checkboxes + tap-to-toggle) lets the quiz-prep
  * flow build a match from hand-picked questions. Creation lives in the
  * Crear tab; the JSON contract viewer is admin-only.
+ * Load and mutation failures float as error toasts so the list never
+ * shifts; successes already toast through the same queue.
  */
 export interface QuestionBankViewProps {
   selectable?: boolean;
@@ -52,7 +54,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [total, setTotal] = useState(0);
   const { offset, setOffset, pageSize, setPageSize } = usePagination(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { toasts, pushToast, dismissToast } = useToastQueue();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editing, setEditing] = useState<BankQuestion | null>(null);
@@ -61,7 +62,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
 
   const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);
-    setError(null);
     try {
       const res = await bankApi.listQuestions({
         topic: t || undefined,
@@ -71,7 +71,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       setQuestions(res.questions || []);
       setTotal(res.total ?? 0);
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al cargar preguntas'));
+      pushToast({ message: toErrorMessage(err, 'Error al cargar preguntas'), tone: 'error' });
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       setQuestions((prev) => prev.map((x) => (x.id === q.id ? fresh : x)));
       setDetail(fresh);
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al actualizar el detalle'));
+      pushToast({ message: toErrorMessage(err, 'Error al actualizar el detalle'), tone: 'error' });
     }
   };
 
@@ -114,7 +114,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
       if (selectable && selectedIds.includes(id)) onToggleSelect?.(id);
       load(topic, offset, pageSize);
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al eliminar'));
+      pushToast({ message: toErrorMessage(err, 'Error al eliminar'), tone: 'error' });
     }
   };
 
@@ -163,11 +163,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         </select>
       </div>
 
-      {error && (
-        <div className={formStyles.errorBanner} id="bankErr">
-          {error}
-        </div>
-      )}
       <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       {loading ? (
@@ -237,7 +232,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
         disabled={loading}
       />
 
-      {isAdmin && <SchemaViewer onError={setError} />}
+      {isAdmin && <SchemaViewer onError={(message) => pushToast({ message, tone: 'error' })} />}
 
       <QuestionEditSheet
         question={editing}

@@ -161,6 +161,41 @@ describe('AccountCard', () => {
     spy.mockRestore();
   });
 
+  it('floats the rename confirmation as a toast and invalidates session', async () => {
+    const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
+    const onSessionInvalidated = vi.fn();
+    setupHoldTimers();
+    try {
+      render(
+        <AccountCard
+          user={user}
+          onProfileChanged={vi.fn()}
+          onSessionInvalidated={onSessionInvalidated}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar nombre)'), {
+        target: { value: '1111' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Nombre nuevo'), {
+        target: { value: 'carlos2' },
+      });
+      const holdBtn = screen.getByRole('button', { name: 'Cambiar mi nombre' });
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(2000);
+      await act(async () => {});
+      expect(spy).toHaveBeenCalledWith('1111', 'carlos2');
+      expect(onSessionInvalidated).toHaveBeenCalled();
+      // Success floats as a toast; no inline notice banner shifts the card.
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Nombre actualizado. Inicia sesión de nuevo.'
+      );
+      expect(document.getElementById('accNote')).toBeNull();
+    } finally {
+      teardownHoldTimers();
+    }
+    spy.mockRestore();
+  });
+
   it('ignores a plain click on rename without holding', () => {
     const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
     render(

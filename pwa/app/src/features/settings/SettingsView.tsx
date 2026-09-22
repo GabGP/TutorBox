@@ -86,7 +86,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           'Usuarios',
           <RosterTable
             students={roster.users}
-            error={roster.error}
             pinNotice={roster.pinNotice}
             onAddStudent={roster.onAddStudent}
             onResetPin={roster.onResetPin}

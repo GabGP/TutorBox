@@ -174,4 +174,15 @@ describe('TelemetryView', () => {
     );
     vi.restoreAllMocks();
   });
+
+  it('floats load failures as error toasts, keeps filter errors inline', async () => {
+    vi.spyOn(httpClient, 'requestApi').mockRejectedValue({ status: 500 });
+    render(<TelemetryView />);
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Error al cargar actividad'
+      )
+    );
+    vi.restoreAllMocks();
+  });
 });

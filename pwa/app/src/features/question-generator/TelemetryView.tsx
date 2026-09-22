@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { toErrorMessage } from '../../shared/lib/errors';
 import { usePagination } from '../../shared/lib/pagination';
 import formStyles from '../../shared/styles/forms.module.css';
@@ -26,7 +28,8 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * Generation telemetry viewer: aggregate reliability/latency metrics plus
  * the paginated attempt log. Merged into the shared DataList + Pagination
  * treatment (same as the question bank) while keeping all filters,
- * metrics info, and log details.
+ * metrics info, and log details. Load failures float as error toasts;
+ * the user-ID filter validation stays inline next to its field.
  */
 export const TelemetryView: React.FC = () => {
   const [metrics, setMetrics] = useState<FullGenerationMetrics | null>(null);
@@ -41,6 +44,7 @@ export const TelemetryView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<GenerationLogItem | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   useEffect(() => {
     rosterApi
@@ -91,7 +95,7 @@ export const TelemetryView: React.FC = () => {
         setLogs(l.logs || []);
         setTotal(l.total ?? (l.logs || []).length);
       } catch (err: unknown) {
-        setError(toErrorMessage(err, 'Error al cargar actividad'));
+        pushToast({ message: toErrorMessage(err, 'Error al cargar actividad'), tone: 'error' });
       } finally {
         setLoading(false);
       }
@@ -173,6 +177,7 @@ export const TelemetryView: React.FC = () => {
       />
 
       {error && <div className={formStyles.errorBanner}>{error}</div>}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       {metrics && <TelemetryMetricsCard metrics={metrics} />}
 

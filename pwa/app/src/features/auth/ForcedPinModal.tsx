@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { toErrorMessage } from '../../shared/lib/errors';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import styles from './auth.module.css';
 import { validatePinPair } from './pinValidation';
 
@@ -13,7 +15,8 @@ export interface ForcedPinModalProps {
 /**
  * Forced PIN Rotation Modal component.
  * Prompts users flagged with `must_change_pin: true` to supply and confirm a new
- * non-default PIN before gaining full system access.
+ * non-default PIN before gaining full system access. Failures float as error
+ * toasts so the card never shifts layout.
  *
  * @param {ForcedPinModalProps} props - Component props containing the rotation callback and titles.
  * @returns {JSX.Element} The rendered forced PIN rotation form card.
@@ -26,8 +29,11 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
 }) => {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+
+  const fail = (message: string) =>
+    pushToast({ message, tone: 'error' });
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -36,7 +42,7 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
 
     const pairError = validatePinPair(a, b, currentPin);
     if (pairError) {
-      setError(
+      fail(
         pairError === 'empty'
           ? 'Escribe y confirma tu nuevo PIN'
           : pairError === 'mismatch'
@@ -47,12 +53,11 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
     }
 
     setSubmitting(true);
-    setError('');
 
     try {
       await onPinChange(a);
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al cambiar PIN'));
+      fail(toErrorMessage(err, 'Error al cambiar PIN'));
     } finally {
       setSubmitting(false);
     }
@@ -93,11 +98,7 @@ export const ForcedPinModal: React.FC<ForcedPinModalProps> = ({
         disabled={submitting}
       />
 
-      {error && (
-        <div className={styles.errorBanner} id="perr">
-          {error}
-        </div>
-      )}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       <button
         type="button"

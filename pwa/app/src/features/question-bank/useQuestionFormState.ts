@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { OPTION_LETTERS } from '../../shared/constants/options';
 import { toErrorMessage } from '../../shared/lib/errors';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { BankQuestion, BankQuestionCreate, bankApi } from './bankApi';
 
@@ -22,7 +23,9 @@ function emptyDistractors(
 /**
  * Field state behind QuestionForm: taxonomy/text/options/correct/distractor
  * draft synced from `initial`, taxonomy-driven option lists, draft building,
- * and the standalone validate + save flows.
+ * and the standalone validate + save flows. Validate/save failures float
+ * as error toasts so the form never shifts; validation results stay
+ * inline (they are the editing output, not a transient note).
  */
 export function useQuestionFormState(
   initial: BankQuestion | null,
@@ -42,8 +45,8 @@ export function useQuestionFormState(
     emptyDistractors(initial?.distractors)
   );
   const [validation, setValidation] = useState<string[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   const editingId = initial?.id || null;
 
@@ -60,7 +63,6 @@ export function useQuestionFormState(
     setFCorrect(initial?.correct_option || 'A');
     setFDistractors(emptyDistractors(initial?.distractors));
     setValidation(null);
-    setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial?.id]);
 
@@ -120,20 +122,18 @@ export function useQuestionFormState(
 
   const handleValidate = async () => {
     setValidation(null);
-    setError(null);
     try {
       const res = await bankApi.validateQuestion(buildDraft());
       setValidation(
         res.is_valid ? ['Válida: cálculo y distractores correctos'] : res.errors
       );
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al validar'));
+      pushToast({ message: toErrorMessage(err, 'Error al validar'), tone: 'error' });
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
-    setError(null);
     try {
       const payload: BankQuestionCreate = { ...buildDraft(), id: editingId };
       const saved = editingId
@@ -141,7 +141,7 @@ export function useQuestionFormState(
         : await bankApi.createQuestion(payload);
       onSaved(saved.id, Boolean(editingId));
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al guardar'));
+      pushToast({ message: toErrorMessage(err, 'Error al guardar'), tone: 'error' });
     } finally {
       setSaving(false);
     }
@@ -160,7 +160,8 @@ export function useQuestionFormState(
     subconceptOptions,
     misconceptionOptions,
     validation,
-    error,
+    toasts,
+    dismissToast,
     saving,
     setFTopic,
     setFSubconcept,

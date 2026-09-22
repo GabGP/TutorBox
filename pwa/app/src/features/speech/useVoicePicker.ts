@@ -21,6 +21,8 @@ export function parseKey(key: string): { engine?: string; voice?: string } {
 /**
  * State behind VoicePicker: language + voice selection, saved-default
  * persistence, short preview playback, and admin load/unload memory ops.
+ * Confirmations and failures both float as toasts so the picker never
+ * shifts layout.
  */
 export function useVoicePicker() {
   const [lang, setLang] = useState<SpeechLanguage>(() => {
@@ -37,14 +39,12 @@ export function useVoicePicker() {
     return pref?.voice ? `${pref.engine || ''}::${pref.voice}` : '';
   });
   const [status, setStatus] = useState<TTSStatusResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { toasts, pushToast, dismissToast } = useToastQueue();
   const [busy, setBusy] = useState(false);
   const [previewPhase, setPreviewPhase] = useState<PreviewPhase>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const refresh = useCallback(async (l: SpeechLanguage) => {
-    setError(null);
     try {
       const [v, s] = await Promise.all([
         ttsApi.getVoices(l),
@@ -65,9 +65,9 @@ export function useVoicePicker() {
             : ''
       );
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al cargar voces'));
+      pushToast({ message: toErrorMessage(err, 'Error al cargar voces'), tone: 'error' });
     }
-  }, []);
+  }, [pushToast]);
 
   useEffect(() => {
     refresh(lang);
@@ -88,7 +88,6 @@ export function useVoicePicker() {
   const handleSaveDefault = async () => {
     if (!voice) return;
     setBusy(true);
-    setError(null);
     setStatus(null);
     try {
       storage.setVoicePreference({ lang, engine: engineOf, voice });
@@ -98,7 +97,7 @@ export function useVoicePicker() {
       setStatus(s);
       pushToast({ message: 'Voz guardada como predeterminada para el juego.' });
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al guardar la voz'));
+      pushToast({ message: toErrorMessage(err, 'Error al guardar la voz'), tone: 'error' });
     } finally {
       setBusy(false);
     }
@@ -122,7 +121,6 @@ export function useVoicePicker() {
     }
     if (previewPhase !== 'idle' || !voice) return;
     setPreviewPhase('loading');
-    setError(null);
     try {
       const url = await speechApi.getPreviewBlobUrl({
         lang,
@@ -139,19 +137,18 @@ export function useVoicePicker() {
       audio.onerror = () => {
         URL.revokeObjectURL(url);
         setPreviewPhase('idle');
-        setError('No se pudo reproducir la muestra');
+        pushToast({ message: 'No se pudo reproducir la muestra', tone: 'error' });
       };
       await audio.play();
       setPreviewPhase('playing');
     } catch (err: unknown) {
       setPreviewPhase('idle');
-      setError(toErrorMessage(err, 'Error al generar muestra'));
+      pushToast({ message: toErrorMessage(err, 'Error al generar muestra'), tone: 'error' });
     }
   };
 
   const handleLoad = async () => {
     setBusy(true);
-    setError(null);
     // Clear stale status first: the server evicts other resident engines
     // on load, so the previous "Motor" line must not linger as if current.
     setStatus(null);
@@ -160,7 +157,7 @@ export function useVoicePicker() {
       setStatus({ engine: res.engine, loaded: res.loaded, model_id: res.model_id });
       pushToast({ message: `Voz cargada (${res.engine}, ${res.load_ms}ms).` });
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al cargar voz'));
+      pushToast({ message: toErrorMessage(err, 'Error al cargar voz'), tone: 'error' });
       const s = await ttsApi.getStatus(undefined, lang).catch(() => null);
       setStatus(s);
     } finally {
@@ -170,7 +167,6 @@ export function useVoicePicker() {
 
   const handleUnload = async () => {
     setBusy(true);
-    setError(null);
     setStatus(null);
     try {
       await ttsApi.unload({ engine: engineOf });
@@ -178,7 +174,7 @@ export function useVoicePicker() {
       setStatus(s);
       pushToast({ message: 'Voz descargada de memoria.' });
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Error al descargar voz'));
+      pushToast({ message: toErrorMessage(err, 'Error al descargar voz'), tone: 'error' });
     } finally {
       setBusy(false);
     }
@@ -192,7 +188,6 @@ export function useVoicePicker() {
     setVoiceKey,
     savedKey,
     status,
-    error,
     toasts,
     dismissToast,
     busy,

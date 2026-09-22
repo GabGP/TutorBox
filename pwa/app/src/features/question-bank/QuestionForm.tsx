@@ -7,6 +7,7 @@ import {
 import sharedForms from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { DistractorEditor } from './DistractorEditor';
 import { OptionEditor } from './OptionEditor';
 import formStyles from './QuestionForm.module.css';
@@ -46,7 +47,8 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
     subconceptOptions,
     misconceptionOptions,
     validation,
-    error,
+    toasts,
+    dismissToast,
     saving,
   } = form;
 
@@ -64,7 +66,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({
           </button>
         )}
       </div>
-      {error && <div className={sharedForms.errorBanner}>{error}</div>}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
       <div className={formStyles.row}>
         <select
           className={`${formStyles.input} ${formStyles.grow}`}

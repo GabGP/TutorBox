@@ -32,7 +32,6 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
     setVoiceKey,
     savedKey,
     status,
-    error,
     toasts,
     dismissToast,
     busy,
@@ -99,7 +98,6 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         )}
       </div>
 
-      {error && <div className={formStyles.errorBanner}>{error}</div>}
       <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       <div className={formStyles.addForm}>

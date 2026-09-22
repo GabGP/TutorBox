@@ -55,4 +55,22 @@ describe('useRosterManager toast migration', () => {
     expect(result.current.pinNotice).toContain('4321');
     expect(result.current.toasts).toHaveLength(0);
   });
+
+  it('floats mutation failures as error toasts', async () => {
+    vi.spyOn(rosterApi, 'createStudent').mockRejectedValue({ status: 409 });
+    vi.spyOn(rosterApi, 'getStudents').mockResolvedValue([]);
+    vi.spyOn(rosterApi, 'getAll').mockResolvedValue({ users: [] });
+
+    const { result } = renderHook(() => useRosterManager({ enabled: false }));
+
+    await act(async () => {
+      await expect(
+        result.current.addStudent('ana', '1234')
+      ).rejects.toThrow('Ese usuario ya existe');
+    });
+
+    expect(result.current.toasts).toHaveLength(1);
+    expect(result.current.toasts[0].tone).toBe('error');
+    expect(result.current.toasts[0].message).toBe('Ese usuario ya existe');
+  });
 });

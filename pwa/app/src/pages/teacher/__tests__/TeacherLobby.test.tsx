@@ -5,7 +5,6 @@ import { TeacherLobby } from '../TeacherLobby';
 describe('TeacherLobby Component', () => {
   const dummyRosterProps = {
     students: [],
-    error: null,
     pinNotice: null,
     onAddStudent: vi.fn(),
     onResetPin: vi.fn(),

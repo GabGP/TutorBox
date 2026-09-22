@@ -35,9 +35,9 @@ interface UseAccountFormsCallbacks {
 /**
  * State machine behind AccountCard: username self-rename (guarded by
  * HoldButton press-and-hold since it ends the session) plus voluntary
- * PIN rotation (re-authenticates, session survives). The rename notice
- * stays inline (the session ends right after); the PIN confirmation
- * floats as a toast.
+ * PIN rotation (re-authenticates, session survives). Both confirmations
+ * float as toasts so the card never shifts layout; field validation
+ * errors stay inline next to their inputs.
  */
 export function useAccountForms(
   user: User,
@@ -50,7 +50,6 @@ export function useAccountForms(
   const [confirmPin, setConfirmPin] = useState('');
   const [nameError, setNameError] = useState('');
   const [pinError, setPinError] = useState('');
-  const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState<'username' | 'pin' | null>(null);
   const { toasts, pushToast, dismissToast } = useToastQueue();
 
@@ -73,13 +72,12 @@ export function useAccountForms(
     // HoldButton press-and-hold is the confirm, so submit directly.
     setSubmitting('username');
     setNameError('');
-    setNotice('');
     try {
       // Server verifies the current PIN first (anti-oracle ordering).
       await authApi.changeUsername(cleanPin, cleanName);
       setNewUsernameState('');
       setNamePinState('');
-      setNotice('Nombre actualizado. Inicia sesión de nuevo.');
+      pushToast({ message: 'Nombre actualizado. Inicia sesión de nuevo.' });
       await onSessionInvalidated();
     } catch (err: unknown) {
       setNameError(toErrorMessage(err, 'Error al cambiar el nombre'));
@@ -108,7 +106,6 @@ export function useAccountForms(
     }
     setSubmitting('pin');
     setPinError('');
-    setNotice('');
     try {
       // Server verifies the current PIN first; changePin re-authenticates,
       // so the session survives.
@@ -145,5 +142,5 @@ export function useAccountForms(
     setConfirmPin,
     handlePinChange,
   };
-  return { notice, username, pin, toasts, dismissToast, busy: submitting !== null };
+  return { username, pin, toasts, dismissToast, busy: submitting !== null };
 }

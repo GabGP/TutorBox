@@ -23,6 +23,17 @@ describe('AuditView', () => {
     );
     vi.restoreAllMocks();
   });
+
+  it('floats load failures as error toasts', async () => {
+    vi.spyOn(httpClient, 'requestApi').mockRejectedValue({ status: 500 });
+    render(<AuditView />);
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Error al cargar auditoría'
+      )
+    );
+    vi.restoreAllMocks();
+  });
 });
 
 describe('VoicePicker', () => {
@@ -204,6 +215,17 @@ describe('VoicePicker', () => {
     expect(
       screen.getByRole('button', { name: 'Descargar' })
     ).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
+  it('floats voice load failures as error toasts', async () => {
+    vi.spyOn(httpClient, 'requestApi').mockRejectedValue({ status: 500 });
+    render(<VoicePicker />);
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Error al cargar voces'
+      )
+    );
     vi.restoreAllMocks();
   });
 });

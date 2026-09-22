@@ -26,7 +26,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   onProfileChanged,
   onSessionInvalidated,
 }) => {
-  const { notice, username, pin, toasts, dismissToast } = useAccountForms(user, {
+  const { username, pin, toasts, dismissToast } = useAccountForms(user, {
     onProfileChanged,
     onSessionInvalidated,
   });
@@ -56,11 +56,6 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         </>
       )}
 
-      {notice && (
-        <div className={styles.successBanner} id="accNote">
-          {notice}
-        </div>
-      )}
       <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </section>
   );

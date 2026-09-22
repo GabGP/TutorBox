@@ -39,7 +39,7 @@ export const TeacherView: React.FC = () => {
   const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
   const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
     usePlayedRounds(coordinator.sid, voiceLang);
-  const { students, users, deleted, showDeleted, error: rosterErr, pinNotice, toasts, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
+  const { students, users, deleted, showDeleted, pinNotice, toasts, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
   const creatableRoles =
@@ -173,7 +173,7 @@ export const TeacherView: React.FC = () => {
           onSourceChange: coordinator.setSource,
         }}
         roster={{
-          students, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
+          students, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
         }}
         voice={{
           done: voiceDone,
@@ -206,7 +206,7 @@ export const TeacherView: React.FC = () => {
           onClose={handleCloseSettings}
           staffEnabled={isStaff}
           roster={{
-            users, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
+            users, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
             creatableRoles, deleted, showDeleted, onDeleteUser: deleteStudent,
             onRecoverUser: recoverStudent, onToggleDeleted: toggleDeleted,
             onRoleChange: changeUserRole,

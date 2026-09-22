@@ -10,7 +10,6 @@ import { UserEditSheet } from './UserEditSheet';
 
 export interface RosterTableProps {
   students: RosterStudent[];
-  error?: string | null;
   pinNotice?: string | null;
   onAddStudent: (username: string, pin: string, role?: string) => Promise<unknown>;
   onResetPin: (id: string, username: string) => Promise<unknown>;
@@ -31,10 +30,11 @@ export interface RosterTableProps {
  * a single Editar affordance opening the floating edit card, plus the
  * soft-deleted accounts view. Form state lives in RosterAddForm and
  * DeletedUsersView; this component only hosts the edit sheet.
+ * Mutation failures float as error toasts from the parent hook, so the
+ * list never shifts; PIN temporals stay inline until copied.
  */
 export const RosterTable: React.FC<RosterTableProps> = ({
   students,
-  error,
   pinNotice,
   onAddStudent,
   onResetPin,
@@ -57,12 +57,6 @@ export const RosterTable: React.FC<RosterTableProps> = ({
       </div>
 
       <RosterAddForm onAddStudent={onAddStudent} creatableRoles={creatableRoles} />
-
-      {error && (
-        <div className={formStyles.errorBanner} id="rosterErr">
-          {error}
-        </div>
-      )}
 
       {pinNotice && (
         <div className={formStyles.alert} id="pinNote">

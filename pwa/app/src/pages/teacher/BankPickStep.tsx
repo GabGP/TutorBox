@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Minus, Plus, SquareCheck, Zap } from 'lucide-react';
 import { QuestionBankView } from '../../features/question-bank/QuestionBankView';
 import { QuestionForm } from '../../features/question-bank/QuestionForm';
@@ -47,7 +47,8 @@ export interface BankPickStepProps {
  * Quiz-prep bank picker: hand-pick stored questions (Elegir), write one
  * manually (Crear), or fill the bank on demand (Pre-generar), with the
  * generation activity log underneath. The match is built only from the
- * chosen questions — no generation involved.
+ * chosen questions — no generation involved. Pre-generation failures
+ * float as error toasts so the layout never shifts.
  */
 export const BankPickStep: React.FC<BankPickStepProps> = ({
   selectedTopic,
@@ -65,6 +66,10 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   const [tab, setTab] = useState<BankTab>('elegir');
   const [reloadKey, setReloadKey] = useState(0);
   const { toasts, pushToast, dismissToast } = useToastQueue();
+
+  useEffect(() => {
+    if (genError) pushToast({ message: genError, tone: 'error' });
+  }, [genError, pushToast]);
 
   const handlePregenerate = async () => {
     const ids = (await onPregenerate()) as unknown;
@@ -150,9 +155,6 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
           </div>
           {progress && (
             <QuestionGenerationProgress progress={progress} isComplete={false} />
-          )}
-          {genError && (
-            <div className={formStyles.errorBanner}>{genError}</div>
           )}
           <p className={styles.description}>
             Las nuevas preguntas se eligen solas para el juego.
