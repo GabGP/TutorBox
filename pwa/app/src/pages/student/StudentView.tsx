@@ -67,6 +67,27 @@ export const StudentView: React.FC = () => {
   else if (step === 'result') mood = isHit ? 'good' : 'bad';
   useBodyMood(mood);
 
+  // Header connection indicator: green once the live session is syncing,
+  // amber while logged in without a session yet, grey when logged out.
+  // Previously the dot was always green, even next to "Sin conexión".
+  const connectionState: 'online' | 'idle' | 'offline' = !user
+    ? 'offline'
+    : session
+      ? 'online'
+      : 'idle';
+  const dotClass =
+    connectionState === 'online'
+      ? styles.dotOnline
+      : connectionState === 'idle'
+        ? styles.dotIdle
+        : styles.dotOffline;
+  const dotLabel =
+    connectionState === 'online'
+      ? 'Conectado a la sesión'
+      : connectionState === 'idle'
+        ? 'Esperando la sesión'
+        : 'Sin conexión';
+
   useOptionKeyboard(castVote, step === 'play');
 
   useEffect(() => {
@@ -150,12 +171,12 @@ export const StudentView: React.FC = () => {
     <div className={styles.studentShell}>
       <header className={styles.header}>
         <span>TutorBox</span>
-        <span>
-          <i className={styles.statusDot} />
+        <span className={styles.headerActions}>
+          <i className={`${styles.statusDot} ${dotClass}`} role="status" aria-label={dotLabel} />
           {user ? (
             <button
               id="who"
-              className={styles.logoutBtn}
+              className={`${styles.logoutBtn} ${styles.userBtn}`}
               onClick={() => setShowAccount((v) => !v)}
               title="Mi cuenta"
             >

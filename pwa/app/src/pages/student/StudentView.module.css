@@ -55,21 +55,50 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--D);
+  background: #9aa9b2;
   display: inline-block;
   margin-right: 6px;
+  flex: 0 0 auto;
+}
+
+.dotOnline {
+  background: var(--D);
+}
+
+.dotIdle {
+  background: var(--C);
+}
+
+.dotOffline {
+  background: #9aa9b2;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .logoutBtn {
   color: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  height: 30px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 12px;
   margin-left: 8px;
-  border-radius: 15px;
+  border-radius: 22px;
   background: rgba(19, 30, 35, 0.06);
   cursor: pointer;
+}
+
+.userBtn {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .accountPanel {

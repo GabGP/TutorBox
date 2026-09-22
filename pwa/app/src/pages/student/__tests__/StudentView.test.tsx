@@ -55,6 +55,7 @@ describe('StudentView Component', () => {
     render(<StudentView />);
     expect(screen.getByText('TutorBox')).toBeInTheDocument();
     expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Sin conexión' })).toBeInTheDocument();
     expect(screen.queryByText('Salir')).not.toBeInTheDocument();
     expect(screen.getByText('Entra al juego')).toBeInTheDocument();
   });
@@ -81,6 +82,7 @@ describe('StudentView Component', () => {
     render(<StudentView />);
     expect(screen.getByText('carlos')).toBeInTheDocument();
     expect(screen.getByText('Salir')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Esperando la sesión' })).toBeInTheDocument();
     expect(screen.getByText('Hola, carlos')).toBeInTheDocument();
     expect(screen.getByText('C')).toBeInTheDocument();
     expect(screen.getByText('Tu maestro está preparando el juego.')).toBeInTheDocument();
@@ -157,6 +159,7 @@ describe('StudentView Component', () => {
 
     render(<StudentView />);
     expect(screen.getByText('Pregunta 1 de 5')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Conectado a la sesión' })).toBeInTheDocument();
     expect(screen.getByText('¿Cuánto es 4 + 4?')).toBeInTheDocument();
     expect(screen.getByText('6')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
