@@ -131,7 +131,7 @@ Follow these sequential steps when adding or modifying database schemas:
 3. **Validate Idempotency & Clean Bootstrap**:
    Run the migration unit test suite:
    ```bash
-   pytest backend/tests/db/test_migrations.py
+   pytest backend/tests/core/db/test_migrations.py
    ```
 4. **Update Documentation**:
    * Add the new migration entry to the changelog in this file ([`docs/database/migrations.md`](migrations.md)).

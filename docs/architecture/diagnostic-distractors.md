@@ -215,13 +215,13 @@ Every multiple-choice diagnostic quiz question in TutorBox is governed by an imm
 * **Schema Version**: `1.0.0`
 * **Canonical Schema URI (`$id`)**: `https://tutorbox.local/schemas/v1/quiz_question.schema.json`
 * **Static Repository Artifact**: `backend/schemas/v1/quiz_question.schema.json`
-* **Dynamic Inspection Endpoint**: `GET /quiz/schema` (public, unauthenticated)
+* **Dynamic Inspection Endpoint**: `GET /api/v1/quiz/schema` (public, unauthenticated)
 * **Anti-Drift CI Gate**: Automated unit tests (`backend/tests/modes/quiz/contracts/test_schema.py`) strictly guarantee that Pydantic contract definitions, static repository schema files, and API endpoints remain 100% synchronized.
 
 ---
 
 ## Next Steps
 
-* **[Quiz API Specification](../api/quiz.md)**: Explore the endpoint contracts for `/quiz/schema`, `/quiz/generate`, `/quiz/validate`, `/quiz/questions`, and `/quiz/topics`.
+* **[Quiz API Specification](../api/quiz.md)**: Explore the endpoint contracts for `/api/v1/quiz/schema`, `/api/v1/quiz/generate`, `/api/v1/quiz/validate`, `/api/v1/quiz/questions`, and `/api/v1/quiz/topics`.
 * **[Database Schema Reference](../database/README.md)**: Inspect the `quiz_questions` table specification and migration changelog.
 * **[Backend Guide](../../backend/README.md)**: Run tests and inspect backend implementation details.

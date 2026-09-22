@@ -75,11 +75,11 @@ On the **NVIDIA Jetson Orin Nano (8GB)**, CPU and GPU share a single unified LPD
 | **OS & Kernel Baseline** | 600 MB | 200 MB | **~0.8 GB** | Headless Ubuntu 22.04 LTS (GUI disabled, 25W mode, `jetson_clocks`). |
 | **HDMI Classroom UI** | 400 MB | 200 MB | **~0.6 GB** | Lightweight Chromium kiosk rendering question timer and live voting charts. |
 | **FastAPI + SQLite + Nginx** | 300 MB | 200 MB | **~0.5 GB** | Python 3.11 runtime, SymPy AST engine, SQLite WAL cache, and Nginx proxy. |
-| **Offline Neural TTS (Spanish & K'iche')** | 100 MB | 200 MB | **~0.3 GB** | ONNX Runtime (`Piper-TTS` / `Sherpa-ONNX` VITS model). |
-| **SLM Inference (`llama.cpp`)** | 1,500 MB | 700 MB | **~2.2 GB** | • **Model Weights (`Q4_K_M`)**: ~1.5 GB (Dense 2B class)<br/>• **CUDA Runtime Context**: ~400 MB<br/>• **KV Cache (2K context)**: ~300 MB |
+| **Offline Neural TTS (Spanish & K'iche')** | 100 MB | 200 MB | **~0.3 GB co-resident / ~3.3 GB phased** | Lightweight path: ONNX Runtime (`Sherpa-ONNX` +192 MB / `Piper` +202 MB) stays co-resident. Quality path: `Qwen3-TTS 1.7B` (~3.3 GB shared UMA) is lifecycle-decoupled — preload during voting via `POST /api/v1/tts/load` after `POST /api/v1/llm/unload` (see [Voice Feedback](voice-feedback.md)). |
+| **SLM Inference (`llama.cpp`, Gemma 4 A2B `Q4_K_M`)** | 3,800 MB | 900 MB | **~4.7 GB when resident** | Measured Week 4 footprint; never co-resident with Qwen3-TTS on 8 GB UMA. Phased lifecycle: SLM active during generation, unloaded during voting/speech. |
 | **Dynamic Classroom Pool** | — | 500 MB | **~0.5 GB** | Active WebSocket buffers and concurrent state for 15–20 student sessions. |
 | **OS Safety & Page Cache** | — | — | **~2.6 GB** | Inactive page cache and emergency headroom to prevent kernel OOM killer. |
 | **Total Usable Budget** | — | — | **~7.5 GB** | **100% of available physical memory safely budgeted.** |
 
 > [!WARNING]
-> **MoE vs. Dense Parameter Constraint**: If an MoE model with 2B active parameters has a larger total parameter count (e.g. 8B–12B total), **all parameters must reside in RAM**, requiring ~4.5–6.0 GB for weights alone. Therefore, TutorBox targets a **Dense 2B parameter class** (or QAT-optimized edge equivalent) to guarantee the required headroom for TTS, HDMI display, and OS page cache.
+> **MoE vs. Dense Parameter Constraint & Phased Lifecycle (Week 4 measured)**: The production SLM (`Gemma 4 A2B Q4_K_M` via `llama.cpp`) occupies ~4.7 GB resident, and `Qwen3-TTS 1.7B` occupies ~3.3 GB shared UMA. They are **never co-resident** on the 8 GB Jetson Orin Nano — the backend unloads one before preloading the other during the 20–30 s voting window. For continuous background operation without lifecycle swaps, prefer `Sherpa-ONNX` (+192 MB) or `Piper` (+202 MB).

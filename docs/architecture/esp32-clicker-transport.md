@@ -292,8 +292,8 @@ In the Teacher Device Management view (`GET /devices`), the teacher sees a live 
 * Clicker firmware enforces a **200ms hardware debounce** timer to eliminate contact bounce jitter.
 * While transmitting or showing solid green, further button presses are ignored until the LED cycle completes.
 
-### 2. In-Window Vote Overrides
-* If the teacher's quiz timer is still running (e.g. 30-second window), a student who changes their mind can press a different button (e.g. 'C'). The backend updates `votes_by_user[user_id] = 'C'` and returns `200 OK`.
+### 2. First-Press Locking (No In-Window Overrides)
+* First press locks: a student can only submit one vote per question round. Any second press in the same round is rejected with `409 Conflict` at the engine level and via `UNIQUE(round_id, student_id)` at the database layer. Firmware must treat `409` as final (red blink) and not retry as an update.
 
 ### 3. Unassigned Clicker Defense
 * If an unassigned clicker sends a vote, the backend rejects with `403 Forbidden` (`{"detail": "Device is not assigned to any student."}`). The clicker blinks red 3 times to prompt the student to notify the teacher.

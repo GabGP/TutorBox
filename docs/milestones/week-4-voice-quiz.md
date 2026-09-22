@@ -75,6 +75,8 @@ This document summarizes the technical deliverables, architectural implementatio
 | **Kokoro-82M** | CPU | 1,867.7 ms | **2.315 s** | **0.2781x** | 0.78 | 24,000 Hz | +488 MB RAM / +5.7 MB VRAM |
 | **eSpeak-ng** | CPU | 86.3 ms | **0.325 s** | **0.0306x** | 0.78 | 22,050 Hz | +9.6 MB RAM / +0.5 MB VRAM |
 
+   * See [Voice Feedback Architecture](../architecture/voice-feedback.md#7-empirical-latency--real-time-factor-benchmarks) for the daemon profiling run (Qwen 2.481 s / Sherpa 0.443 s / Piper 0.420 s) — same `<= 3.0 s` SLA verdict, variance from corpus length and hardware topology.
+
 5. **Jetson Orin Nano 8GB Memory Architecture & Lifecycle Decoupling**:
    * Asynchronous lifecycle separation: question generation and speech synthesis do not execute concurrently.
    * Invoking `/api/v1/llm/unload` frees the ~4.7 GB SLM footprint before preloading Qwen3-TTS during the 20–30s student voting window, guaranteeing ~5.5 GB of free unified memory.
