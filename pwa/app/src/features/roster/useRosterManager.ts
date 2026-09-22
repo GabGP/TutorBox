@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toErrorMessage } from '../../shared/lib/errors';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { DeletedUser, RosterStudent } from './roster.types';
 import { rosterApi } from './rosterApi';
 
@@ -12,9 +13,11 @@ interface UseRosterManagerOptions {
  * Provides roster synchronization (students for the lobby, all users for
  * Settings), user creation with roles, temporary PIN resets, soft-delete,
  * recovery of deleted accounts, and error state tracking.
+ * Transient confirmations (e.g. delete) go to the toast queue so layout
+ * never shifts; PIN temporals stay inline until the teacher copies them.
  *
  * @param {UseRosterManagerOptions} [options={}] - Hook options (e.g. enable gating).
- * @returns {object} User lists, loading/error states, PIN notices, and mutation methods.
+ * @returns {object} User lists, loading/error states, PIN notices, toasts, and mutation methods.
  */
 export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {}) {
   const [students, setStudents] = useState<RosterStudent[]>([]);
@@ -24,6 +27,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pinNotice, setPinNotice] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   const loadStudents = useCallback(async () => {
     setLoading(true);
@@ -102,7 +106,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     setError(null);
     try {
       await rosterApi.deleteUser(studentId);
-      setPinNotice(`Cuenta de ${studentName} eliminada.`);
+      pushToast({ message: `Cuenta de ${studentName} eliminada.` });
       await refresh();
       if (showDeleted) await loadDeleted();
     } catch (err: unknown) {
@@ -171,6 +175,8 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     loading,
     error,
     pinNotice,
+    toasts,
+    dismissToast,
     loadStudents,
     loadUsers,
     loadDeleted,

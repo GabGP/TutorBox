@@ -39,6 +39,8 @@ describe('TeacherView Component', () => {
       loading: false,
       error: null,
       pinNotice: null,
+      toasts: [],
+      dismissToast: vi.fn(),
       loadStudents: vi.fn(),
       loadUsers: vi.fn(),
       loadDeleted: vi.fn(),

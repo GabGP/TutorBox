@@ -4,6 +4,7 @@ import { resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { BankPickStep } from './BankPickStep';
 import { useRosterManager } from '../../features/roster/useRosterManager';
 import { TeacherSettingsSheet } from './TeacherSettingsSheet';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
@@ -38,7 +39,7 @@ export const TeacherView: React.FC = () => {
   const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
   const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
     usePlayedRounds(coordinator.sid, voiceLang);
-  const { students, users, deleted, showDeleted, error: rosterErr, pinNotice, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
+  const { students, users, deleted, showDeleted, error: rosterErr, pinNotice, toasts, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
   const creatableRoles =
@@ -212,6 +213,7 @@ export const TeacherView: React.FC = () => {
           }}
         />
       )}
+      <ToastViewport toasts={toasts ?? []} onDismiss={(id) => dismissToast?.(id)} />
     </div>
   );
 };
