@@ -232,6 +232,7 @@ __marimo__/
 # Agent instructions & directories
 agents/
 .agents/
+AGENTS.md
 CLAUDE.md
 claude.md
 progress.md
