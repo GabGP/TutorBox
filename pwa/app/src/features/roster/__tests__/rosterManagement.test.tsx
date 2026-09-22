@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import * as httpClient from '../../../shared/api/httpClient';
 import { RosterTable } from '../RosterTable';
 import { rosterApi } from '../rosterApi';
 import type { RosterStudent } from '../roster.types';
 import { UserEditSheet } from '../UserEditSheet';
+import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 
 const students: RosterStudent[] = [
   { id: '1', username: 'ana', role: 'student' },
@@ -74,42 +75,56 @@ describe('RosterTable management UI', () => {
     expect(screen.getByLabelText('Rol')).toBeInTheDocument();
   });
 
-  it('opens the edit sheet with reset action from a row', async () => {
-    const onResetPin = vi.fn().mockResolvedValue(undefined);
-    render(
-      <RosterTable
-        students={students}
-        onAddStudent={vi.fn()}
-        onResetPin={onResetPin}
-      />
-    );
-    // Compact rows expose a single Editar affordance (no inline actions).
-    expect(screen.queryByText('Reiniciar PIN')).not.toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
-    fireEvent.click(screen.getByRole('button', { name: 'Reiniciar PIN' }));
-    await waitFor(() => expect(onResetPin).toHaveBeenCalledWith('1', 'ana'));
+  it('holds the reset action in the sheet before calling onResetPin (800ms)', async () => {
+    setupHoldTimers();
+    try {
+      const onResetPin = vi.fn().mockResolvedValue(undefined);
+      render(
+        <RosterTable
+          students={students}
+          onAddStudent={vi.fn()}
+          onResetPin={onResetPin}
+        />
+      );
+      // Compact rows expose a single Editar affordance (no inline actions).
+      expect(screen.queryByText('Reiniciar PIN')).not.toBeInTheDocument();
+      fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
+      const resetBtn = screen.getByRole('button', { name: 'Reiniciar PIN' });
+      // A plain click never resets: press-and-hold is the confirm.
+      fireEvent.click(resetBtn);
+      expect(onResetPin).not.toHaveBeenCalled();
+      fireEvent.pointerDown(resetBtn, { pointerId: 1 });
+      advanceHold(800);
+      await act(async () => {});
+      expect(onResetPin).toHaveBeenCalledWith('1', 'ana');
+    } finally {
+      teardownHoldTimers();
+    }
   });
 
-  it('asks for delete confirmation inside the sheet before calling onDeleteUser', async () => {
-    const onDeleteUser = vi.fn().mockResolvedValue(undefined);
-    render(
-      <RosterTable
-        students={students}
-        onAddStudent={vi.fn()}
-        onResetPin={vi.fn()}
-        onDeleteUser={onDeleteUser}
-      />
-    );
-    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
-    fireEvent.click(screen.getByRole('button', { name: 'Eliminar cuenta' }));
-    expect(onDeleteUser).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole('button', { name: 'Toca de nuevo para eliminar' })
-    ).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Toca de nuevo para eliminar' })
-    );
-    await waitFor(() => expect(onDeleteUser).toHaveBeenCalledWith('1', 'ana'));
+  it('holds delete in the sheet before calling onDeleteUser (2000ms)', async () => {
+    setupHoldTimers();
+    try {
+      const onDeleteUser = vi.fn().mockResolvedValue(undefined);
+      render(
+        <RosterTable
+          students={students}
+          onAddStudent={vi.fn()}
+          onResetPin={vi.fn()}
+          onDeleteUser={onDeleteUser}
+        />
+      );
+      fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
+      const deleteBtn = screen.getByRole('button', { name: 'Eliminar cuenta' });
+      fireEvent.click(deleteBtn);
+      expect(onDeleteUser).not.toHaveBeenCalled();
+      fireEvent.pointerDown(deleteBtn, { pointerId: 1 });
+      advanceHold(2000);
+      await act(async () => {});
+      expect(onDeleteUser).toHaveBeenCalledWith('1', 'ana');
+    } finally {
+      teardownHoldTimers();
+    }
   });
 
   it('hides delete in the sheet when onDeleteUser is absent (lobby)', () => {    render(

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getRoleLabel } from '../../shared/constants/roles';
 import { toErrorMessage } from '../../shared/lib/errors';
 import formStyles from '../../shared/styles/forms.module.css';
+import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import styles from './roster.module.css';
 import { RosterStudent } from './roster.types';
@@ -31,13 +32,11 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
   editableRoles,
   onRoleChange,
 }) => {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [roleError, setRoleError] = useState('');
   const [pendingRole, setPendingRole] = useState('');
 
   useEffect(() => {
-    setConfirmDelete(false);
     setBusy(false);
     setRoleError('');
     setPendingRole(user?.role || '');
@@ -72,10 +71,6 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
     setBusy(true);
     try {
       await onDeleteUser?.(user.id, user.username);
@@ -131,32 +126,38 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
           )}
         </>
       )}
-      <button
-        type="button"
-        className={styles.sheetAction}
-        onClick={handleReset}
+      <HoldButton
+        holdTime={800}
+        size="md"
         disabled={busy}
+        ariaLabel="Reiniciar PIN"
+        doneLabel="PIN reiniciado"
+        onHold={() => void handleReset()}
       >
         Reiniciar PIN
-      </button>
+      </HoldButton>
       <div className={styles.sheetHint}>
         Genera un PIN temporal; al entrar deberá elegir uno nuevo.
       </div>
       {onDeleteUser && (
         <>
-          <button
-            type="button"
-            className={`${styles.sheetAction} ${styles.sheetDanger}`}
-            onClick={handleDelete}
+          <HoldButton
+            holdTime={2000}
+            size="md"
             disabled={busy}
+            ariaLabel="Eliminar cuenta"
+            backgroundColor="var(--bad-bg, #FFE9E7)"
+            fillColor="var(--bad, #B3261E)"
+            textColor="var(--bad-ink, #5F1710)"
+            fillTextColor="#ffffff"
+            doneLabel="Eliminada"
+            onHold={() => void handleDelete()}
           >
-            {confirmDelete ? 'Toca de nuevo para eliminar' : 'Eliminar cuenta'}
-          </button>
-          {confirmDelete && (
-            <div className={styles.sheetHint}>
-              Se revocan sus sesiones y se liberan sus clickers.
-            </div>
-          )}
+            Eliminar cuenta
+          </HoldButton>
+          <div className={styles.sheetHint}>
+            Se revocan sus sesiones y se liberan sus clickers.
+          </div>
         </>
       )}
     </Sheet>
