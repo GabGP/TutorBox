@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
+import { Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
 import { AccordionRow } from '../../shared/ui/Accordion/Accordion';
 import { AccountCard } from '../auth/AccountCard';
 import { User } from '../auth/auth.types';
@@ -23,7 +23,6 @@ export interface SettingsViewProps {
   user: User;
   onProfileChanged: () => Promise<unknown>;
   onSessionInvalidated: () => Promise<unknown> | void;
-  onClose: () => void;
   roster?: SettingsRosterBundle;
   /** Gates the Voz / Auditoría sections (both need staff backends). */
   staffEnabled?: boolean;
@@ -40,7 +39,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   user,
   onProfileChanged,
   onSessionInvalidated,
-  onClose,
   roster,
   staffEnabled = false,
 }) => {
@@ -70,10 +68,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className={styles.list} id="s-settings">
-      <button type="button" className={styles.backBtn} onClick={onClose}>
-        <ArrowLeft size={18} aria-hidden /> Volver
-      </button>
-
       {row(
         'cuenta',
         UserIcon,

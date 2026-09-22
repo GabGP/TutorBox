@@ -18,7 +18,6 @@ describe('SettingsView accordion', () => {
         user={{ id: 't1', username: 'profe', role: 'teacher' }}
         onProfileChanged={vi.fn()}
         onSessionInvalidated={vi.fn()}
-        onClose={vi.fn()}
       />
     );
   }

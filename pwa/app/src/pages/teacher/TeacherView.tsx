@@ -3,7 +3,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { BankPickStep } from './BankPickStep';
 import { useRosterManager } from '../../features/roster/useRosterManager';
-import { SettingsView } from '../../features/settings/SettingsView';
+import { TeacherSettingsSheet } from './TeacherSettingsSheet';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
@@ -133,33 +133,15 @@ export const TeacherView: React.FC = () => {
   return (
     <div className={styles.shell} id="shell">
       <TeacherHeader
-        title={showSettings ? 'Ajustes' : title}
-        subtitle={showSettings ? 'Tu cuenta y opciones' : subtitle}
+        title={title}
+        subtitle={subtitle}
         step={step}
         voiceLang={voiceLang}
         onBack={() => coordinator.setWizard('topic')}
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
         onOpenSettings={() => setShowSettings(true)}
       />
-      {showSettings && user ? (
-        <main className={styles.mainContent}>
-          <SettingsView
-            user={user}
-            onProfileChanged={restoreSession}
-            onSessionInvalidated={logout}
-            onClose={handleCloseSettings}
-            staffEnabled={isStaff}
-            roster={{
-              users, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
-              creatableRoles, deleted, showDeleted, onDeleteUser: deleteStudent,
-              onRecoverUser: recoverStudent, onToggleDeleted: toggleDeleted,
-              onRoleChange: changeUserRole,
-            }}
-          />
-        </main>
-      ) : (
-        <>
-          <TeacherMainContent
+      <TeacherMainContent
         step={step}
         session={coordinator.session}
         currentRound={curRound}
@@ -215,7 +197,20 @@ export const TeacherView: React.FC = () => {
         onPrimary={handlePrimary}
         onSecondary={handleSecondary}
       />
-        </>
+      {showSettings && user && (
+        <TeacherSettingsSheet
+          user={user}
+          onProfileChanged={restoreSession}
+          onSessionInvalidated={logout}
+          onClose={handleCloseSettings}
+          staffEnabled={isStaff}
+          roster={{
+            users, error: rosterErr, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
+            creatableRoles, deleted, showDeleted, onDeleteUser: deleteStudent,
+            onRecoverUser: recoverStudent, onToggleDeleted: toggleDeleted,
+            onRoleChange: changeUserRole,
+          }}
+        />
       )}
     </div>
   );
