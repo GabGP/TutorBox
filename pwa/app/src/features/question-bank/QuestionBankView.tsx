@@ -4,6 +4,8 @@ import { DataList } from '../../shared/ui/DataList/DataList';
 import { Pager } from '../../shared/ui/Pager/Pager';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { usePagination } from '../../shared/lib/pagination';
 import { toErrorMessage } from '../../shared/lib/errors';
 import { useTopics } from '../../shared/taxonomy/useTopics';
@@ -52,7 +54,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const { offset, setOffset, pageSize, setPageSize } = usePagination(DEFAULT_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [detail, setDetail] = useState<BankQuestion | null>(null);
@@ -107,7 +109,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     setOpenSwipeId(null);
     try {
       await bankApi.deleteQuestion(id);
-      setNotice('Pregunta eliminada.');
+      pushToast({ message: 'Pregunta eliminada.' });
       if (detail?.id === id) setDetail(null);
       // A deleted question must not stay counted as selected.
       if (selectable && selectedIds.includes(id)) onToggleSelect?.(id);
@@ -128,7 +130,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const handleSavedEdit = (id: string) => {
     setEditing(null);
     setOpenSwipeId(null);
-    setNotice(`Pregunta actualizada (${id}).`);
+    pushToast({ message: `Pregunta actualizada (${id}).` });
     load(topic, offset, pageSize);
   };
 
@@ -166,11 +168,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
           {error}
         </div>
       )}
-      {notice && (
-        <div className={formStyles.alert} id="bankNote">
-          {notice}
-        </div>
-      )}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
       {loading ? (
         <DataList

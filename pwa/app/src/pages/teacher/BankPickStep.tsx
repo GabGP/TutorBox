@@ -14,6 +14,8 @@ import {
 } from '../../features/question-generator/generator.constants';
 import generatorStyles from '../../features/question-generator/generator.module.css';
 import formStyles from '../../shared/styles/forms.module.css';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './BankPickStep.module.css';
 import { SourceSwitch } from './SourceSwitch';
@@ -62,7 +64,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
 }) => {
   const [tab, setTab] = useState<BankTab>('elegir');
   const [reloadKey, setReloadKey] = useState(0);
-  const [createNotice, setCreateNotice] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
 
   const handlePregenerate = async () => {
     const ids = (await onPregenerate()) as unknown;
@@ -77,7 +79,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   const handleCreated = (id: string) => {
     onEnsureBankIds([id]);
     setReloadKey((k) => k + 1);
-    setCreateNotice(`Pregunta guardada (${id}) y elegida para el juego.`);
+    pushToast({ message: `Pregunta guardada (${id}) y elegida para el juego.` });
     setTab('elegir');
   };
 
@@ -108,12 +110,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
       )}
 
       {tab === 'crear' && (
-        <>
-          {createNotice && (
-            <div className={formStyles.alert}>{createNotice}</div>
-          )}
-          <QuestionForm initial={null} onSaved={handleCreated} />
-        </>
+        <QuestionForm initial={null} onSaved={handleCreated} />
       )}
 
       {tab === 'pregrow' && (
@@ -166,6 +163,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
       <Collapsible title="Actividad de generación">
         <TelemetryView />
       </Collapsible>
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </div>
   );
 };
