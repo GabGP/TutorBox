@@ -104,30 +104,32 @@ input {
   font: inherit;
 }
 
-/* Dynamic shell mood: follows game state transitions */
+/* Dynamic shell mood: hook only — .studentShell paints the wash (see
+   StudentView.module.css). No important flags and no global header/p overrides
+   so teacher/display and auth cards never get white-washed. */
 body {
   transition: background 0.35s ease;
 }
 body[data-mood='good'] {
-  background: var(--D) !important;
-  color: #fff !important;
+  background: var(--D);
+  color: #fff;
 }
 body[data-mood='bad'] {
-  background: var(--bad) !important;
-  color: #fff !important;
+  background: var(--bad);
+  color: #fff;
 }
 body[data-mood='final'] {
-  background: var(--navy) !important;
-  color: #fff !important;
+  background: var(--navy);
+  color: #fff;
 }
-body[data-mood] header {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-body[data-mood] button[id='out'] {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-body[data-mood] p {
-  color: rgba(255, 255, 255, 0.86) !important;
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Option letter colors */

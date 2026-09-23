@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.captive import captive_not_found_handler, foreign_host_redirect
+from api.pwa_assets import router as pwa_assets_router
 from api.router import root_router
 from core.config import load_env_file
 from core.config.constants import PROJECT_ROOT
@@ -100,6 +101,7 @@ app = FastAPI(
 )
 
 app.include_router(root_router)
+app.include_router(pwa_assets_router)
 # Captive portal: unknown pages requested through a hijacked name land on /alumno/.
 app.add_exception_handler(404, captive_not_found_handler)
 for _name in CLIENT_MOUNTS:
