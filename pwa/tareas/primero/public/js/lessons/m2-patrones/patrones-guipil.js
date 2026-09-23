@@ -87,7 +87,8 @@ export default class PatronesGuipilLesson {
     this._buildButtons();
     this._weavingAnim = 0;
 
-    setTimeout(() => audio.speak('¿Cuál color sigue en el patrón? ¡Toca el correcto!', { rate: 0.8 }), 400);
+    const first = this.round === 0 && !this._missed ? '¡Mira el güipil maya! ' : '';
+    setTimeout(() => audio.speak(first + '¿Qué color sigue en el patrón? ¡Toca el correcto!', { rate: 0.8 }), 400);
   }
 
   _onTap(x, y) {
@@ -107,19 +108,21 @@ export default class PatronesGuipilLesson {
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
     if (correct) {
-      this.correctAnswers++;
+      if (!this._missed) this.correctAnswers++; this._missed = false;
       audio.playSuccess();
       audio.speak(`¡Muy bien! Es ${COLOR_NAMES[this._correctColor]}`, { rate: 0.9 });
       this._spawnParticles(x, y);
       this._weavingAnim = 1; // trigger complete weave animation
     } else {
+      this._missed = true;
       audio.playError();
-      audio.speak('¡Inténtalo de nuevo!', { rate: 0.85 });
+      audio.speak('¡Casi! Di los colores desde el principio. ¿Qué color sigue?', { rate: 0.85 });
     }
     setTimeout(() => {
       this.isShowingFeedback = false;
       this._feedbackAlpha = 0;
       this._selectedBtn = null;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupRound();
@@ -143,7 +146,6 @@ export default class PatronesGuipilLesson {
     this._lastTime = performance.now();
     this._setupRound();
     this._loop();
-    setTimeout(() => audio.speak('¡Mira el güipil maya! ¿Cuál color sigue?', { rate: 0.8 }), 600);
   }
 
   update(dt) {

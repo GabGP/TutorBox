@@ -68,8 +68,21 @@ primero/
 
 ## CNB Modules
 
-| # | World | Topic | CNB Area |
-|---|-------|-------|----------|
+This app covers **Primero (1er grado) only** — one app per grade. Each module is one of the 7
+Primero math competencies, and every lesson teaches a content number from that same competency
+(source: `../cnb/1er-grado-CNB-1.pdf`, pages 93–98; enforced by `tests/check-lessons.mjs`).
+
+| # | World | Competencia (Primero) | Lessons (contenido CNB) |
+|---|-------|-----------------------|-------------------------|
+| 1 | Volcán Santiaguito | Relaciones por posición y distancia | Arriba y Abajo · Adentro y Afuera · Cerca y Lejos (1.1.2) |
+| 2 | Tejido Maya | Patrones en la cultura y la naturaleza | Patrones del Güipil (2.2.1) · Patrones de la Naturaleza (2.1.1) · Patrones de Formas (2.1.2) |
+| 3 | Mercado del Pueblo | Conjuntos | Agrupar Frutas (3.1.2) · Todos, Algunos, Ninguno (3.2.1) · Más o Menos (3.3.1) |
+| 4 | Milpa de Maíz | Aritmética básica | Contar del 1 al 9 (4.1.2) · Sumar Jocotes (4.8.1) · Restar Elotes (4.8.6) |
+| 5 | Tikal | Solución de problemas | Las Gallinas de María (5.3.1) · La Granja en Gráfica (5.2.2) · Tortillas para la Familia (5.3.1) |
+| 6 | Antigua Guatemala | Figuras geométricas | Formas en la Ciudad (6.1.2) · Medir el Contorno (6.2.1) · Construir Figuras (6.1.2) |
+| 7 | Lago Atitlán | Medidas, tiempo, calendario | El Reloj del Pueblo (7.2.1) · Los Meses del Año (7.3.1) · Tecomates y Puños (7.1.1) |
+
+---|-------|-------|----------|
 | 1 | Volcán Santiaguito | Ubicación (arriba/abajo, adentro/afuera) | Geometría y Medición |
 | 2 | Tejido Maya | Patrones del Güipil | Álgebra |
 | 3 | Mercado del Pueblo | Conjuntos y clasificación | Números |
@@ -112,9 +125,11 @@ to `STATIC_ASSETS` in `public/sw.js`:
   module: () => import('../lessons/m4-aritmetica/sumar-jocotes.js') }
 ```
 
-Rules the check below enforces: every map entry loads **its own** file, has a CNB number, and
-every round has exactly one right answer. A wrong tap never ends a round — the child hears the
-hint and tries again; stars count first-try answers.
+Rules the check below enforces: every map entry loads **its own** file, has a CNB number from its
+module's competency, and every round has exactly one right answer. In **every** lesson a wrong
+answer never ends a round — the child hears "¡Casi!" and a hint, and tries again; stars count
+first-try answers. Q'uq' says the intro and the first question as one sentence, because each new
+sentence cuts off the previous one.
 
 **Check and preview** (no dependencies):
 
@@ -127,6 +142,20 @@ Lessons with free-form interaction (dragging, tracing, the clock) still extend `
 (`public/js/engine/scene.js`) directly — see `m7-medicion/reloj-interactivo.js`.
 
 ---
+
+## Art
+
+Everything is drawn in code or SVG; nothing is loaded from the internet.
+
+| What | Where | Notes |
+| :--- | :--- | :--- |
+| Q'uq' the quetzal | `public/icons/quq.svg` | The **only** drawing of him: every screen shows this file, and canvas lessons use `drawQuq()` from `lessons/shared/draw.js`. |
+| App & Android icons | `public/icons/icon.svg`, `icon-192.png`, `icon-512.png`, `../android/.../drawable-nodpi/ic_launcher_foreground.png` | Generated from `quq.svg` — after editing it run `python tools/render-icons.py` (needs Chrome + Pillow). |
+| Map worlds | `public/icons/worlds/m1.svg` … `m7.svg` | Volcán Santiaguito, güipil, mercado, milpa, Tikal, Arco de Santa Catalina, Atitlán. |
+| Fruit, maize, farm animals | `public/js/lessons/shared/art.js` | Canvas drawings used instead of emoji, so they look the same on every phone (the mango emoji does not exist before Android 9). Pass them anywhere an emoji is accepted. |
+
+Check it all at once: serve this folder and open `tests/gallery.html`; `tests/map-preview.html`
+opens the real map with a sample child and stars.
 
 ## Design Principles
 

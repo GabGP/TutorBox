@@ -119,8 +119,8 @@ body {
 }
 
 .loading-kuk {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 170px;
   animation: kukBounce 1s ease-in-out infinite;
 }
 
@@ -279,9 +279,11 @@ body {
   box-shadow: 0 0 20px rgba(255,215,0,0.6), var(--shadow-strong);
 }
 
-.world-node-emoji {
-  font-size: 2rem;
-  line-height: 1;
+/* Drawn world pictures (icons/worlds/m1-m7.svg) inside the coloured node. */
+.world-node-icon {
+  width: 66%;
+  height: 66%;
+  pointer-events: none;
 }
 
 .world-node-stars {
@@ -345,7 +347,8 @@ body {
   transform: scale(0.9);
 }
 
-.kuk-guide svg {
+.kuk-guide svg,
+.kuk-guide img {
   width: 100%;
   height: 100%;
 }
@@ -1091,10 +1094,15 @@ body {
 
 @media (max-width: 360px) {
   .world-node { width: 76px; height: 76px; }
-  .world-node-emoji { font-size: 1.6rem; }
   .btn-large { font-size: 1rem; min-height: 54px; }
 }
 
 @media (prefers-color-scheme: dark) {
   .parent-card { background: rgba(0,0,0,0.3); }
+}
+
+/* Q'uq' images: whole drawing visible, never dragged. */
+[class*="kuk"] img, img.loading-kuk {
+  object-fit: contain;
+  -webkit-user-drag: none;
 }

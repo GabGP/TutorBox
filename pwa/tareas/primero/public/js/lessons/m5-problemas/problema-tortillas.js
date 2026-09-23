@@ -1,5 +1,5 @@
 // Módulo 5 · Tortillas para la Familia
-// CNB Primero 5.3.1 (problemas con suma o resta), 3.3.1 (uno a uno) y 4.8.1 / 4.8.6.
+// CNB Primero, competencia 5 — 5.3.1 (solución de problemas aplicando suma o resta).
 import { ChoiceLesson, numberChoices } from '../shared/choice-lesson.js';
 import { drawEmoji, drawItems } from '../shared/draw.js';
 

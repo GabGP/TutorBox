@@ -164,17 +164,19 @@ export default class Contar19Lesson {
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
     if (correct) {
-      this.correctAnswers++;
+      if (!this._missed) this.correctAnswers++; this._missed = false;
       audio.playSuccess();
       audio.speak(`¡Correcto! ¡${COUNTING_WORDS[this._targetCount-1].charAt(0).toUpperCase() + COUNTING_WORDS[this._targetCount-1].slice(1)}!`, { rate: 0.9 });
       this._spawnParticles(x, y);
     } else {
+      this._missed = true;
       audio.playError();
-      audio.speak('¡Cuenta de nuevo!', { rate: 0.85 });
+      audio.speak('¡Casi! Cuenta los jocotes otra vez, uno por uno.', { rate: 0.85 });
     }
     setTimeout(() => {
       this.isShowingFeedback = false;
       this._feedbackAlpha = 0;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupJocotes();

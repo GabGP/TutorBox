@@ -60,9 +60,9 @@ export default class RelojInteractivoLesson {
   _setupRound() {
     const targets = [3, 6, 9];
     const activities = [
-      { hour: 3, icon: '🌤️', label: 'Tres en punto', narration: '¡Pon las manecillas a las 3 en punto!' },
-      { hour: 6, icon: '🌆', label: 'Seis en punto', narration: '¡Pon las manecillas a las 6 en punto!' },
-      { hour: 9, icon: '🌙', label: 'Nueve en punto', narration: '¡Pon las manecillas a las 9 en punto!' }
+      { hour: 3, icon: '🌤️', label: 'Tres en punto', narration: 'Son las 3 en punto. Mueve la manecilla pequeña hasta el 3.' },
+      { hour: 6, icon: '🌆', label: 'Seis en punto', narration: 'Son las 6 en punto. Mueve la manecilla pequeña hasta el 6.' },
+      { hour: 9, icon: '🌙', label: 'Nueve en punto', narration: 'Son las 9 en punto. Mueve la manecilla pequeña hasta el 9.' }
     ];
 
     this._targetHour = targets[this.round];
@@ -71,7 +71,10 @@ export default class RelojInteractivoLesson {
     this._correctSnap = false;
     this._checkTimer = 0;
 
-    setTimeout(() => audio.speak(this._activity.narration, { rate: 0.8 }), 400);
+    setTimeout(() => {
+      audio.speak((this._intro || '') + this._activity.narration, { rate: 0.8 });
+      this._intro = '';
+    }, 400);
   }
 
   _hourToAngle(hour) {
@@ -161,17 +164,19 @@ export default class RelojInteractivoLesson {
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
     if (correct) {
-      this.correctAnswers++;
+      if (!this._missed) this.correctAnswers++; this._missed = false;
       audio.playSuccess();
       audio.speak(`¡Correcto! ¡Las ${this._targetHour} en punto!`, { rate: 0.9 });
       this._spawnParticles(x, y);
     } else {
       this.errors++;
+      this._missed = true;
       audio.playError();
-      audio.speak(`¡Inténtalo de nuevo! Busca las ${this._targetHour}.`, { rate: 0.85 });
+      audio.speak(`¡Casi! Mueve la manecilla pequeña hasta el ${this._targetHour}.`, { rate: 0.85 });
     }
     setTimeout(() => {
       this.isShowingFeedback = false; this._feedbackAlpha = 0; this._correctSnap = false;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupRound();
@@ -189,9 +194,9 @@ export default class RelojInteractivoLesson {
     this._resize();
     this._running = true;
     this._lastTime = performance.now();
+    this._intro = '¡Vamos a leer el reloj del pueblo! '; // spoken with the first question
     this._setupRound();
     this._loop();
-    setTimeout(() => audio.speak('¡Mueve la manecilla del reloj al número correcto!', { rate: 0.8 }), 600);
   }
 
   update(dt) {

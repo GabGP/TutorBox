@@ -9,7 +9,24 @@ export function inset(box, fx, fy = fx) {
   return { x: box.x + box.w * fx, y: box.y + box.h * fy, w: box.w * (1 - 2 * fx), h: box.h * (1 - 2 * fy) };
 }
 
+/** `emoji` may also be a drawing function from art.js (ctx, cx, cy, size). */
+// The one drawing of Q'uq' (icons/quq.svg) for canvas scenes. Located relative to this module so
+// it works in the app, the APK and tests/preview.html; draws nothing until the image has loaded.
+const QUQ = typeof Image === 'undefined'
+  ? null
+  : Object.assign(new Image(), { src: new URL('../../../icons/quq.svg', import.meta.url).href });
+
+export function drawQuq(ctx, cx, cy, height) {
+  if (!QUQ || !QUQ.complete || !QUQ.naturalWidth) return;
+  const width = (height * QUQ.naturalWidth) / QUQ.naturalHeight;
+  ctx.drawImage(QUQ, cx - width / 2, cy - height / 2, width, height);
+}
+
 export function drawEmoji(ctx, emoji, cx, cy, size) {
+  if (typeof emoji === 'function') {
+    emoji(ctx, cx, cy, size);
+    return;
+  }
   ctx.save();
   ctx.font = `${Math.round(size)}px sans-serif`;
   ctx.textAlign = 'center';
@@ -20,7 +37,8 @@ export function drawEmoji(ctx, emoji, cx, cy, size) {
 
 /**
  * Lays `count` copies of an item out in a tidy grid inside `box`, so a child can count them.
- * `item` is an emoji or a function (ctx, cx, cy, size) for things with no emoji (jocote, tortilla).
+ * `item` is an emoji or a function (ctx, cx, cy, size) for things with no emoji (jocote, tortilla),
+ * or a list of those to draw a mixed group.
  * The last `crossed` items are drawn faded with a red cross (things taken away).
  * `slots` sizes the grid for at least that many items: groups that are compared must share it,
  * or 2 big mangos look like more than 5 small ones.
@@ -40,8 +58,9 @@ export function drawItems(ctx, item, count, box, { crossed = 0, maxSize = Infini
     const taken = i >= count - crossed;
     ctx.save();
     if (taken) ctx.globalAlpha = 0.35;
-    if (typeof item === 'function') item(ctx, x, y, size);
-    else drawEmoji(ctx, item, x, y, size);
+    const it = Array.isArray(item) ? item[i] : item;
+    if (typeof it === 'function') it(ctx, x, y, size);
+    else drawEmoji(ctx, it, x, y, size);
     ctx.restore();
     if (taken) drawCross(ctx, x, y, size * 0.45);
   }

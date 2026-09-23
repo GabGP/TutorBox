@@ -90,7 +90,8 @@ export default class IdentificarFormasLesson {
     this._shapes.forEach(s => { s.found = false; s.glowT = 0; });
 
     setTimeout(() => {
-      audio.speak(shapeNarrations[this._targetShape], { rate: 0.8 });
+      audio.speak((this._intro || '') + shapeNarrations[this._targetShape], { rate: 0.8 });
+      this._intro = '';
     }, 400);
   }
 
@@ -161,9 +162,9 @@ export default class IdentificarFormasLesson {
     this._buildScene();
     this._running = true;
     this._lastTime = performance.now();
+    this._intro = '¡Mira la Antigua Guatemala! '; // spoken with the first question
     this._setupRound();
     this._loop();
-    setTimeout(() => audio.speak('¡Mira la Antigua Guatemala! ¿Puedes encontrar las formas?', { rate: 0.8 }), 600);
   }
 
   update(dt) {

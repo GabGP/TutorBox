@@ -1,7 +1,7 @@
 // Service Worker - Aprende Matemáticas con Q'uq'
 // Cache-first for assets, network-first for API
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `kuk-math-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
@@ -32,22 +32,32 @@ const STATIC_ASSETS = [
   './js/lessons/m7-medicion/reloj-interactivo.js',
   './js/lessons/shared/choice-lesson.js',
   './js/lessons/shared/draw.js',
-  './js/lessons/m2-patrones/patrones-numeros.js',
   './js/lessons/m2-patrones/patrones-formas.js',
-  './js/lessons/m3-conjuntos/contar-conjunto.js',
   './js/lessons/m3-conjuntos/mas-menos.js',
   './js/lessons/m4-aritmetica/sumar-jocotes.js',
   './js/lessons/m4-aritmetica/restar-elotes.js',
-  './js/lessons/m5-problemas/problema-quetzales.js',
   './js/lessons/m5-problemas/problema-tortillas.js',
-  './js/lessons/m6-geometria/formas-naturaleza.js',
   './js/lessons/m6-geometria/construir-formas.js',
-  './js/lessons/m7-medicion/dias-semana.js',
-  './js/lessons/m7-medicion/mas-alto-bajo.js',
+  './js/lessons/m2-patrones/patrones-naturaleza.js',
+  './js/lessons/m3-conjuntos/todos-algunos-ninguno.js',
+  './js/lessons/m5-problemas/granja-grafica.js',
+  './js/lessons/m6-geometria/medir-contorno.js',
+  './js/lessons/m7-medicion/meses-del-anio.js',
+  './js/lessons/m7-medicion/tecomates-punos.js',
   './manifest.json',
   './fonts/nunito-latin.woff2',
-  './icons/icon-192.svg',
-  './icons/icon-512.svg'
+  './js/lessons/shared/art.js',
+  './icons/quq.svg',
+  './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/worlds/m1.svg',
+  './icons/worlds/m2.svg',
+  './icons/worlds/m3.svg',
+  './icons/worlds/m4.svg',
+  './icons/worlds/m5.svg',
+  './icons/worlds/m6.svg',
+  './icons/worlds/m7.svg'
 ];
 
 // Install: cache all static assets

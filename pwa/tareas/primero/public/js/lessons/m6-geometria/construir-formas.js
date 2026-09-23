@@ -1,5 +1,5 @@
 // Módulo 6 · Construir Figuras
-// CNB Primero 6.1.2 (clasificación por número de lados: triángulo y cuadriláteros) y 1.3.1 (líneas rectas y curvas).
+// CNB Primero, competencia 6 — 6.1.2 (clasificación de figuras por su forma y por el número de lados).
 import { ChoiceLesson, numberChoices } from '../shared/choice-lesson.js';
 import { drawShape, drawSticks } from '../shared/draw.js';
 

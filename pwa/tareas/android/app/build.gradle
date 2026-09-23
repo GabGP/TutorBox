@@ -29,6 +29,12 @@ android {
         main.assets.srcDirs = ['../../primero/public']
     }
 
+    androidResources {
+        // Android's default ignore list, plus the crash dumps Git Bash on Windows can leave in any
+        // folder it ran in: they must never ship inside the children's app.
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!*.stackdump'
+    }
+
     signingConfigs {
         release {
             if (keystoreProps.exists()) {

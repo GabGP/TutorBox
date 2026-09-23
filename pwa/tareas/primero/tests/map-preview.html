@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!-- Dev-only: open the real app on the map with a sample child and some stars, so the map art
+     can be checked without playing. Serve pwa/tareas/primero and open /tests/map-preview.html -->
+<meta charset="UTF-8" />
+<script type="module">
+  import { MODULES } from '../public/js/data/modules.js';
+  const progress = {};
+  MODULES.slice(0, 6).forEach((m) => {
+    progress[m.id] = Object.fromEntries(m.lessons.map((l) => [l.id, { stars: 2 }]));
+  });
+  localStorage.setItem('kuk_progress_v1', JSON.stringify(progress));
+  localStorage.setItem('kuk_current_user', JSON.stringify({ id: 1, name: 'Ana', avatar: 1, parentPin: null }));
+  location.replace('../public/index.html#map');
+</script>

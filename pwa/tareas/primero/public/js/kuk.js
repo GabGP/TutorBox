@@ -41,46 +41,9 @@ class Kuk {
     this._startBounce();
   }
 
-  _svgKuk(size = 90) {
-    return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
-      <!-- Tail feathers -->
-      <ellipse cx="50" cy="118" rx="4.5" ry="18" fill="#1B5E20" transform="rotate(-18,50,118)"/>
-      <ellipse cx="50" cy="120" rx="4.5" ry="22" fill="#2E7D32"/>
-      <ellipse cx="50" cy="118" rx="4.5" ry="18" fill="#1B5E20" transform="rotate(18,50,118)"/>
-      <ellipse cx="48" cy="116" rx="3" ry="16" fill="#00E676" transform="rotate(-8,48,116)"/>
-      <ellipse cx="52" cy="116" rx="3" ry="16" fill="#00E676" transform="rotate(8,52,116)"/>
-      <!-- Body -->
-      <ellipse cx="50" cy="78" rx="22" ry="28" fill="#2E7D32"/>
-      <!-- Red chest -->
-      <ellipse cx="50" cy="86" rx="15" ry="18" fill="#C62828"/>
-      <ellipse cx="50" cy="90" rx="11" ry="12" fill="#EF5350"/>
-      <!-- Left wing -->
-      <ellipse cx="28" cy="75" rx="13" ry="20" fill="#1B5E20" transform="rotate(-22,28,75)"/>
-      <ellipse cx="30" cy="77" rx="8" ry="14" fill="#4CAF50" transform="rotate(-22,30,77)"/>
-      <!-- Right wing -->
-      <ellipse cx="72" cy="75" rx="13" ry="20" fill="#1B5E20" transform="rotate(22,72,75)"/>
-      <ellipse cx="70" cy="77" rx="8" ry="14" fill="#4CAF50" transform="rotate(22,70,77)"/>
-      <!-- Head -->
-      <circle cx="50" cy="44" r="22" fill="#2E7D32"/>
-      <!-- Crest -->
-      <ellipse cx="44" cy="26" rx="4" ry="10" fill="#4CAF50" transform="rotate(-18,44,26)"/>
-      <ellipse cx="50" cy="23" rx="4" ry="12" fill="#69F0AE"/>
-      <ellipse cx="56" cy="26" rx="4" ry="10" fill="#4CAF50" transform="rotate(18,56,26)"/>
-      <!-- Eyes -->
-      <circle cx="42" cy="42" r="8.5" fill="white"/>
-      <circle cx="58" cy="42" r="8.5" fill="white"/>
-      <circle cx="43.5" cy="43" r="5" fill="#1A237E"/>
-      <circle cx="59.5" cy="43" r="5" fill="#1A237E"/>
-      <circle cx="44" cy="42" r="2.5" fill="black"/>
-      <circle cx="60" cy="42" r="2.5" fill="black"/>
-      <circle cx="44.5" cy="41" r="1.2" fill="white"/>
-      <circle cx="60.5" cy="41" r="1.2" fill="white"/>
-      <!-- Beak -->
-      <path d="M 44 53 Q 50 61 56 53 L 50 58 Z" fill="#FFA000"/>
-      <!-- Cheek blush -->
-      <ellipse cx="36" cy="48" rx="5" ry="3.5" fill="rgba(255,100,100,0.35)"/>
-      <ellipse cx="64" cy="48" rx="5" ry="3.5" fill="rgba(255,100,100,0.35)"/>
-    </svg>`;
+  _svgKuk() {
+    // The one drawing of Q'uq' (icons/quq.svg), shared by every screen.
+    return '<img src="icons/quq.svg" alt="" draggable="false" style="width:100%;height:100%;object-fit:contain" />';
   }
 
   _onClick() {

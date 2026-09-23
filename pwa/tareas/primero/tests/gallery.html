@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- Dev-only: every drawing in one page (Q'uq', app icons, the 7 worlds, the lesson art). -->
+<html lang="es-GT">
+<head>
+  <meta charset="UTF-8" />
+  <title>Galería de arte</title>
+  <style>
+    body { margin: 0; padding: 12px; font-family: sans-serif; background: #F5F5F5; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .world { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; }
+    .world img { width: 66%; height: 66%; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <img src="../public/icons/quq.svg" style="width:120px;height:170px" />
+    <img src="../public/icons/icon-512.png" style="width:170px;border-radius:36px" />
+    <img src="../public/icons/icon-192.png" style="width:96px;border-radius:50%" />
+  </div>
+  <div class="row" id="worlds"></div>
+  <canvas id="art" width="470" height="220"></canvas>
+  <script type="module">
+    import { MODULES } from '../public/js/data/modules.js';
+    import * as art from '../public/js/lessons/shared/art.js';
+    for (const m of MODULES) {
+      document.getElementById('worlds').insertAdjacentHTML('beforeend',
+        `<div class="world" style="background:${m.color}"><img src="../public/icons/worlds/${m.id}.svg" /></div>`);
+    }
+    const ctx = document.getElementById('art').getContext('2d');
+    Object.values(art).forEach((draw, i) => {
+      const x = 10 + (i % 5) * 92, y = 10 + Math.floor(i / 5) * 105;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(x, y, 84, 95);
+      draw(ctx, x + 42, y + 47, 70);
+    });
+  </script>
+</body>
+</html>

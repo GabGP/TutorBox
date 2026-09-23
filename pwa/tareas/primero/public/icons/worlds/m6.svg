@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mundo 6 · Antigua Guatemala (Arco de Santa Catalina) -->
+  <path d="M2 30 L14 12 L26 30 Z" fill="#78909C" opacity="0.6"/>
+  <rect x="6" y="26" width="52" height="32" fill="#FBC02D"/>
+  <rect x="5" y="24" width="54" height="4" fill="#F9A825"/>
+  <path d="M21 58 V43 A11 11 0 0 1 43 43 V58 Z" fill="#6D4C41"/>
+  <rect x="26" y="11" width="12" height="13" fill="#FBC02D"/>
+  <path d="M24 11 L32 4 L40 11 Z" fill="#E53935"/>
+  <circle cx="32" cy="17.5" r="4" fill="#FFFFFF"/>
+  <path d="M32 17.5 V15 M32 17.5 H34" stroke="#333333" stroke-width="1" stroke-linecap="round"/>
+  <path d="M11 34 H17 M47 34 H53" stroke="#F57F17" stroke-width="3"/>
+</svg>

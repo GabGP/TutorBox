@@ -4,6 +4,7 @@
 
 import audio from '../../engine/audio.js';
 import { TouchHandler } from '../../engine/touch.js';
+import { drawQuq } from '../shared/draw.js';
 
 export default class ArriababajoLesson {
   constructor(canvasId, config = {}) {
@@ -58,13 +59,10 @@ export default class ArriababajoLesson {
     this._quetzalY = this.H * 0.2;
     this._rabbitY = this.H * 0.78;
 
+    this._intro = '¡Mira el árbol! '; // spoken with the first question
     this._setupRound();
     this._loop();
 
-    // Intro narration
-    setTimeout(() => {
-      audio.speak('¡Mira el árbol! ¿Quién está arriba y quién está abajo?', { rate: 0.8 });
-    }, 600);
   }
 
   _setupRound() {
@@ -97,7 +95,8 @@ export default class ArriababajoLesson {
 
     setTimeout(() => {
       if (this._currentQuestion) {
-        audio.speak(this._currentQuestion.narration, { rate: 0.8 });
+        audio.speak((this._intro || '') + this._currentQuestion.narration, { rate: 0.8 });
+        this._intro = '';
       }
     }, 400);
   }
@@ -126,19 +125,21 @@ export default class ArriababajoLesson {
     this._feedbackAlpha = 0.6;
 
     if (correct) {
-      this.correctAnswers++;
+      if (!this._missed) this.correctAnswers++; this._missed = false;
       audio.playSuccess();
       audio.speak('¡Muy bien! ¡Correcto!', { rate: 0.9 });
       this._spawnParticles(x, y);
     } else {
       this.errors++;
+      this._missed = true;
       audio.playError();
-      audio.speak('¡Inténtalo de nuevo!', { rate: 0.85 });
+      audio.speak('¡Casi! ' + this._currentQuestion.narration, { rate: 0.85 });
     }
 
     setTimeout(() => {
       this._feedbackAlpha = 0;
       this.isShowingFeedback = false;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) {
         this._finish();
@@ -340,61 +341,8 @@ export default class ArriababajoLesson {
   }
 
   _drawQuetzal(ctx, x, y, size) {
-    ctx.save();
-    // Tail
-    ctx.fillStyle = '#1B5E20';
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.7, size * 0.08, size * 0.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#00E676';
-    ctx.beginPath();
-    ctx.ellipse(x - size * 0.06, y + size * 0.65, size * 0.05, size * 0.4, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x + size * 0.06, y + size * 0.65, size * 0.05, size * 0.4, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-    // Body
-    ctx.fillStyle = '#2E7D32';
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.15, size * 0.28, size * 0.38, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Red chest
-    ctx.fillStyle = '#C62828';
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.28, size * 0.18, size * 0.22, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Head
-    ctx.fillStyle = '#2E7D32';
-    ctx.beginPath();
-    ctx.arc(x, y - size * 0.1, size * 0.22, 0, Math.PI * 2);
-    ctx.fill();
-    // Crest
-    ctx.fillStyle = '#69F0AE';
-    ctx.beginPath();
-    ctx.ellipse(x, y - size * 0.38, size * 0.05, size * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Eye
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(x + size * 0.09, y - size * 0.12, size * 0.07, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    ctx.arc(x + size * 0.1, y - size * 0.12, size * 0.04, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(x + size * 0.105, y - size * 0.13, size * 0.015, 0, Math.PI * 2);
-    ctx.fill();
-    // Beak
-    ctx.fillStyle = '#FFA000';
-    ctx.beginPath();
-    ctx.moveTo(x + size * 0.14, y - size * 0.08);
-    ctx.lineTo(x + size * 0.28, y - size * 0.04);
-    ctx.lineTo(x + size * 0.14, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    // Q'uq' himself (icons/quq.svg), the same drawing as on every other screen.
+    drawQuq(ctx, x, y + size * 0.3, size * 1.7);
   }
 
   _drawRabbit(ctx, x, y, size) {

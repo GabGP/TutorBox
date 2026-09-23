@@ -96,7 +96,7 @@ export function renderMap(navigate, currentProgress) {
     const starDisplay = '⭐'.repeat(Math.min(3, Math.floor(starsFrac * 3)));
 
     node.innerHTML = `
-      <span class="world-node-emoji">${mod.emoji}</span>
+      <img class="world-node-icon" src="icons/worlds/${mod.id}.svg" alt="" draggable="false" />
       <div class="world-node-stars">
         ${[0,1,2].map(j => `<span class="world-node-star ${j < Math.floor(starsFrac * 3) ? 'earned' : ''}">★</span>`).join('')}
       </div>
@@ -123,29 +123,14 @@ export function renderMap(navigate, currentProgress) {
     position: absolute;
     width: 64px;
     height: 64px;
-    left: calc(50% - 32px);
-    bottom: 80px;
+    left: calc(50% + 40px); /* beside world 1, so its picture stays visible */
+    bottom: 70px;
     z-index: 15;
     animation: kukBounce 2s ease-in-out infinite;
     filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
     pointer-events: none;
   `;
-  kukEl.innerHTML = `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="50" cy="118" rx="4" ry="16" fill="#1B5E20"/>
-    <ellipse cx="50" cy="120" rx="4" ry="20" fill="#2E7D32"/>
-    <ellipse cx="50" cy="118" rx="4" ry="16" fill="#1B5E20" transform="rotate(15,50,118)"/>
-    <ellipse cx="50" cy="78" rx="20" ry="26" fill="#2E7D32"/>
-    <ellipse cx="50" cy="86" rx="14" ry="16" fill="#C62828"/>
-    <circle cx="50" cy="44" r="20" fill="#2E7D32"/>
-    <ellipse cx="50" cy="24" rx="3.5" ry="11" fill="#69F0AE"/>
-    <circle cx="43" cy="42" r="7" fill="white"/>
-    <circle cx="57" cy="42" r="7" fill="white"/>
-    <circle cx="44" cy="43" r="4" fill="#1A237E"/>
-    <circle cx="58" cy="43" r="4" fill="#1A237E"/>
-    <circle cx="44.5" cy="42" r="2" fill="black"/>
-    <circle cx="58.5" cy="42" r="2" fill="black"/>
-    <path d="M 44 52 Q 50 59 56 52 L 50 57 Z" fill="#FFA000"/>
-  </svg>`;
+  kukEl.innerHTML = '<img src="icons/quq.svg" alt="" draggable="false" style="width:100%;height:100%;object-fit:contain" />';
   nodesContainer.appendChild(kukEl);
 
   // Parent dashboard button (bottom of screen)

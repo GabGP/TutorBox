@@ -43,9 +43,9 @@ export default class CercaLejosLesson {
     this._resize();
     this._running = true;
     this._lastTime = performance.now();
+    this._intro = '¡Mira! Unas cosas están cerca y otras están lejos. '; // spoken with the first question
     this._setupRound();
     this._loop();
-    setTimeout(() => audio.speak('¡Mira! ¿Cuál está cerca y cuál está lejos?', { rate: 0.8 }), 600);
   }
 
   _getSceneObjects() {
@@ -67,7 +67,10 @@ export default class CercaLejosLesson {
       { narration: '¿El pájaro está cerca o lejos?', ask: '¿El pájaro está cerca? ¡Tócalo!', targetId: 'close_bird', correctProp: true }
     ];
     this._currentQuestion = questions[this.round];
-    setTimeout(() => audio.speak(this._currentQuestion.narration, { rate: 0.8 }), 400);
+    setTimeout(() => {
+      audio.speak((this._intro || '') + this._currentQuestion.narration, { rate: 0.8 });
+      this._intro = '';
+    }, 400);
   }
 
   _onTap(x, y) {
@@ -91,10 +94,11 @@ export default class CercaLejosLesson {
     this.isShowingFeedback = true;
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
-    if (correct) { this.correctAnswers++; audio.playSuccess(); audio.speak('¡Correcto! ¡Muy bien!'); this._spawnParticles(x, y); }
-    else { audio.playError(); audio.speak('¡Inténtalo de nuevo!'); }
+    if (correct) { if (!this._missed) this.correctAnswers++; this._missed = false; audio.playSuccess(); audio.speak('¡Correcto! ¡Muy bien!'); this._spawnParticles(x, y); }
+    else { this._missed = true; audio.playError(); audio.speak('¡Casi! ' + this._currentQuestion.narration, { rate: 0.85 }); }
     setTimeout(() => {
       this.isShowingFeedback = false; this._feedbackAlpha = 0;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupRound();

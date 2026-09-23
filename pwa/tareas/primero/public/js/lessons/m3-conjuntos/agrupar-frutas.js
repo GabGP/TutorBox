@@ -177,7 +177,7 @@ export default class AgruparFrutasLesson {
           audio.playError();
           this._feedbackCorrect = false;
           this._feedbackAlpha = 0.35;
-          audio.speak('¡Eso no va ahí!', { rate: 0.9 });
+          audio.speak('¡Esa fruta va en la otra canasta!', { rate: 0.9 });
         }
         break;
       }
@@ -206,7 +206,7 @@ export default class AgruparFrutasLesson {
     this._running = true;
     this._lastTime = performance.now();
     this._loop();
-    setTimeout(() => audio.speak('¡Pon cada fruta en su canasta! Mangos con mangos, bananas con bananas.', { rate: 0.8 }), 700);
+    setTimeout(() => audio.speak('¡Pon cada fruta en su canasta! Mangos con mangos, bananos con bananos.', { rate: 0.8 }), 700);
   }
 
   update(dt) {

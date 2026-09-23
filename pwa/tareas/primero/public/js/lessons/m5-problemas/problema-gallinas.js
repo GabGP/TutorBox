@@ -167,16 +167,18 @@ export default class ProblemaGallinasLesson {
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
     if (correct) {
-      this.correctAnswers++;
+      if (!this._missed) this.correctAnswers++; this._missed = false;
       audio.playSuccess();
       audio.speak(`¡Correcto! ¡${this._problem.answer} gallinas!`, { rate: 0.9 });
       this._spawnParticles(x, y);
     } else {
+      this._missed = true;
       audio.playError();
-      audio.speak('¡Cuenta las gallinas de nuevo!', { rate: 0.85 });
+      audio.speak('¡Casi! Cuenta las gallinas otra vez, una por una.', { rate: 0.85 });
     }
     setTimeout(() => {
       this.isShowingFeedback = false; this._feedbackAlpha = 0;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupRound();

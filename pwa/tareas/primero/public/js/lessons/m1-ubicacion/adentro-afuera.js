@@ -70,7 +70,10 @@ export default class AdentroAfueraLesson {
       { ask: '¿El gato está adentro o afuera?', correctProp: true, targetId: 'cat', narration: '¿El gato está adentro o afuera de la casa?' }
     ];
     this._currentQuestion = questions[this.round];
-    setTimeout(() => audio.speak(this._currentQuestion.narration, { rate: 0.8 }), 400);
+    setTimeout(() => {
+      audio.speak((this._intro || '') + this._currentQuestion.narration, { rate: 0.8 });
+      this._intro = '';
+    }, 400);
   }
 
   _onTap(x, y) {
@@ -95,11 +98,12 @@ export default class AdentroAfueraLesson {
     this.isShowingFeedback = true;
     this._feedbackCorrect = correct;
     this._feedbackAlpha = 0.5;
-    if (correct) { this.correctAnswers++; audio.playSuccess(); audio.speak('¡Correcto! ¡Muy bien!'); this._spawnParticles(x, y); }
-    else { audio.playError(); audio.speak('¡Inténtalo de nuevo!'); }
+    if (correct) { if (!this._missed) this.correctAnswers++; this._missed = false; audio.playSuccess(); audio.speak('¡Correcto! ¡Muy bien!'); this._spawnParticles(x, y); }
+    else { this._missed = true; audio.playError(); audio.speak('¡Casi! ' + this._currentQuestion.narration, { rate: 0.85 }); }
     setTimeout(() => {
       this.isShowingFeedback = false;
       this._feedbackAlpha = 0;
+      if (!correct) return; // same question again until it is right
       this.round++;
       if (this.round >= this.totalRounds) this._finish();
       else this._setupRound();
@@ -119,9 +123,9 @@ export default class AdentroAfueraLesson {
     this._resize();
     this._running = true;
     this._lastTime = performance.now();
+    this._intro = '¡Mira la casa! '; // spoken with the first question
     this._setupRound();
     this._loop();
-    setTimeout(() => audio.speak('¡Mira la casa! ¿Qué está adentro y qué está afuera?', { rate: 0.8 }), 600);
   }
 
   update(dt) {

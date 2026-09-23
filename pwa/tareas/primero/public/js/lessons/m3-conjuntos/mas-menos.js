@@ -2,6 +2,7 @@
 // CNB Primero 3.2.1 (muchos, pocos, tantos como) y 3.3.1 (correspondencia uno a uno: mayor, menor, igual).
 import { ChoiceLesson } from '../shared/choice-lesson.js';
 import { drawBasket, drawItems } from '../shared/draw.js';
+import { mango, banano, tomate, pollito } from '../shared/art.js';
 
 const basketOf = (item, n, slots = n) => (ctx, box) => {
   drawBasket(ctx, { x: box.x, y: box.y + box.h * 0.35, w: box.w, h: box.h * 0.6 });
@@ -25,26 +26,26 @@ export default class MasMenosLesson extends ChoiceLesson {
         say: '¿Qué canasta tiene MÁS mangos?',
         ask: '¿Dónde hay más mangos?',
         hint: 'Cuenta los mangos de cada canasta y compara.',
-        choices: compare('🥭', [5, 2], 'more'),
+        choices: compare(mango, [5, 2], 'more'),
       },
       {
         say: '¿Qué canasta tiene MENOS tomates?',
         ask: '¿Dónde hay menos tomates?',
         hint: 'La que tiene menos es la que tiene pocos.',
-        choices: compare('🍅', [3, 6], 'fewer'),
+        choices: compare(tomate, [3, 6], 'fewer'),
       },
       {
         say: 'Mira esta canasta de bananos. ¿Cuál canasta de abajo tiene TANTOS bananos como esta?',
         ask: '¿Cuál tiene tantos como esta?',
         hint: 'Junta un banano de arriba con uno de abajo. ¿Sobra alguno?',
-        scene: basketOf('🍌', 4, 4),
-        choices: compare('🍌', [4, 3], 4),
+        scene: basketOf(banano, 4, 4),
+        choices: compare(banano, [4, 3], 4),
       },
       {
         say: '¿Dónde hay MÁS pollitos? Cuenta con cuidado.',
         ask: '¿Dónde hay más pollitos?',
         hint: 'Están casi iguales. Cuéntalos uno por uno.',
-        choices: compare('🐤', [4, 5], 'more'),
+        choices: compare(pollito, [4, 5], 'more'),
       },
     ];
   }

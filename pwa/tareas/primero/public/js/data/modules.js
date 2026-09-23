@@ -1,5 +1,6 @@
-// Module Definitions - All 7 CNB Modules
-// Each module maps to a real Guatemalan location and CNB competency
+// Module Definitions: one module per CNB Primero math competency (m1 = competencia 1 ... m7 = 7).
+// Each lesson's `cnb` is a Primero content number from that same competency (checked by
+// tests/check-lessons.mjs). Source: ../cnb/1er-grado-CNB-1.pdf, pages 93-98.
 
 export const MODULES = [
   {
@@ -11,7 +12,7 @@ export const MODULES = [
     world: 'Volcán Santiaguito',
     description: 'Aprende dónde están las cosas: arriba, abajo, adentro, afuera',
     totalLessons: 3,
-    cnb: 'Geometría y Medición - Posición y ubicación',
+    cnb: 'Competencia 1: Establece relaciones entre personas, objetos y figuras geométricas por su posición en el espacio y por la distancia que hay entre ellos.',
     lessons: [
       {
         id: 'arriba-abajo',
@@ -43,9 +44,9 @@ export const MODULES = [
     color: '#6A1B9A',
     bgColor: '#F3E5F5',
     world: 'Tejido Maya',
-    description: 'Descubre los patrones en los güipiles mayas',
+    description: 'Descubre patrones en la naturaleza y en los güipiles mayas',
     totalLessons: 3,
-    cnb: 'Álgebra - Patrones y secuencias',
+    cnb: 'Competencia 2: Expresa ideas referidas a patrones y relaciones matemáticas que se dan en las manifestaciones culturales en su entorno familiar.',
     lessons: [
       {
         id: 'patrones-guipil',
@@ -55,11 +56,11 @@ export const MODULES = [
         module: () => import('../lessons/m2-patrones/patrones-guipil.js')
       },
       {
-        id: 'patrones-numeros',
-        name: 'Patrones de Números',
-        emoji: '🔢',
-        cnb: '4.1.5',
-        module: () => import('../lessons/m2-patrones/patrones-numeros.js')
+        id: 'patrones-naturaleza',
+        name: 'Patrones de la Naturaleza',
+        emoji: '🌿',
+        cnb: '2.1.1',
+        module: () => import('../lessons/m2-patrones/patrones-naturaleza.js')
       },
       {
         id: 'patrones-formas',
@@ -77,9 +78,9 @@ export const MODULES = [
     color: '#E65100',
     bgColor: '#FFF3E0',
     world: 'Mercado del Pueblo',
-    description: 'Agrupa y clasifica frutas del mercado guatemalteco',
+    description: 'Agrupa, compara y clasifica frutas del mercado',
     totalLessons: 3,
-    cnb: 'Números - Conjuntos y clasificación',
+    cnb: 'Competencia 3: Expresa ideas y pensamientos con libertad y coherencia utilizando diferentes signos, símbolos gráficos, algoritmos y términos matemáticos.',
     lessons: [
       {
         id: 'agrupar-frutas',
@@ -89,11 +90,11 @@ export const MODULES = [
         module: () => import('../lessons/m3-conjuntos/agrupar-frutas.js')
       },
       {
-        id: 'contar-conjunto',
-        name: 'Contar el Conjunto',
+        id: 'todos-algunos-ninguno',
+        name: 'Todos, Algunos, Ninguno',
         emoji: '🧺',
-        cnb: '4.1.2',
-        module: () => import('../lessons/m3-conjuntos/contar-conjunto.js')
+        cnb: '3.2.1',
+        module: () => import('../lessons/m3-conjuntos/todos-algunos-ninguno.js')
       },
       {
         id: 'mas-menos',
@@ -111,9 +112,9 @@ export const MODULES = [
     color: '#F9A825',
     bgColor: '#FFFDE7',
     world: 'Milpa de Maíz',
-    description: 'Cuenta del 1 al 9 con jocotes y maíz guatemalteco',
+    description: 'Cuenta, suma y resta con jocotes y elotes',
     totalLessons: 3,
-    cnb: 'Números - Operaciones básicas de suma y resta',
+    cnb: 'Competencia 4: Utiliza conocimientos y experiencias de aritmética básica en la interacción con su entorno familiar.',
     lessons: [
       {
         id: 'contar-1-9',
@@ -145,9 +146,9 @@ export const MODULES = [
     color: '#4E342E',
     bgColor: '#EFEBE9',
     world: 'Tikal',
-    description: 'Resuelve problemas de la vida diaria guatemalteca',
+    description: 'Resuelve problemas y lee gráficas de la granja',
     totalLessons: 3,
-    cnb: 'Números - Resolución de problemas',
+    cnb: 'Competencia 5: Expresa opiniones sobre hechos y eventos de la vida cotidiana, relacionados con la solución de problemas.',
     lessons: [
       {
         id: 'problema-gallinas',
@@ -157,11 +158,11 @@ export const MODULES = [
         module: () => import('../lessons/m5-problemas/problema-gallinas.js')
       },
       {
-        id: 'problema-quetzales',
-        name: 'Quetzales del Mercado',
-        emoji: '💰',
-        cnb: '7.4.1',
-        module: () => import('../lessons/m5-problemas/problema-quetzales.js')
+        id: 'granja-grafica',
+        name: 'La Granja en Gráfica',
+        emoji: '📊',
+        cnb: '5.2.2',
+        module: () => import('../lessons/m5-problemas/granja-grafica.js')
       },
       {
         id: 'problema-tortillas',
@@ -179,23 +180,23 @@ export const MODULES = [
     color: '#C62828',
     bgColor: '#FFEBEE',
     world: 'Antigua Guatemala',
-    description: 'Identifica figuras en la arquitectura de la Antigua',
+    description: 'Identifica, compara y mide figuras de tu entorno',
     totalLessons: 3,
-    cnb: 'Geometría - Identificación de figuras planas',
+    cnb: 'Competencia 6: Identifica formas y relaciones de figuras geométricas vinculadas a situaciones matemáticas y a su entorno familiar.',
     lessons: [
       {
         id: 'identificar-formas',
         name: 'Formas en la Ciudad',
         emoji: '🔺',
-        cnb: '1.4.1',
+        cnb: '6.1.2',
         module: () => import('../lessons/m6-geometria/identificar-formas.js')
       },
       {
-        id: 'formas-naturaleza',
-        name: 'Formas en la Naturaleza',
-        emoji: '🌿',
-        cnb: '1.4.1',
-        module: () => import('../lessons/m6-geometria/formas-naturaleza.js')
+        id: 'medir-contorno',
+        name: 'Medir el Contorno',
+        emoji: '📐',
+        cnb: '6.2.1',
+        module: () => import('../lessons/m6-geometria/medir-contorno.js')
       },
       {
         id: 'construir-formas',
@@ -213,9 +214,9 @@ export const MODULES = [
     color: '#01579B',
     bgColor: '#E1F5FE',
     world: 'Lago Atitlán',
-    description: 'Aprende a medir el tiempo con el reloj',
+    description: 'Mide con tecomates y puños, lee el reloj y conoce el calendario',
     totalLessons: 3,
-    cnb: 'Geometría y Medición - Tiempo y longitud',
+    cnb: 'Competencia 7: Construye nuevos conocimientos a partir de nuevos modelos de la ciencia y la cultura.',
     lessons: [
       {
         id: 'reloj-interactivo',
@@ -225,18 +226,18 @@ export const MODULES = [
         module: () => import('../lessons/m7-medicion/reloj-interactivo.js')
       },
       {
-        id: 'dias-semana',
-        name: 'Días de la Semana',
+        id: 'meses-del-anio',
+        name: 'Los Meses del Año',
         emoji: '📅',
         cnb: '7.3.1',
-        module: () => import('../lessons/m7-medicion/dias-semana.js')
+        module: () => import('../lessons/m7-medicion/meses-del-anio.js')
       },
       {
-        id: 'mas-alto-bajo',
-        name: 'Más Alto o Más Bajo',
-        emoji: '📏',
-        cnb: '1.1.3',
-        module: () => import('../lessons/m7-medicion/mas-alto-bajo.js')
+        id: 'tecomates-punos',
+        name: 'Tecomates y Puños',
+        emoji: '🥣',
+        cnb: '7.1.1',
+        module: () => import('../lessons/m7-medicion/tecomates-punos.js')
       }
     ]
   }

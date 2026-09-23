@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170" width="120" height="170">
+  <!-- Q'uq', the resplendent quetzal. The ONE drawing of him: every screen shows this file,
+       and tools/render-icons.py builds the app and Android icons from it. -->
+  <!-- Long tail streamers and the white under-tail -->
+  <path d="M53 108 C47 130 55 150 69 168 C62 150 56 131 61 112 Z" fill="#17803F"/>
+  <path d="M63 108 C62 130 71 148 88 164 C79 148 70 130 69 112 Z" fill="#23A55A"/>
+  <path d="M50 106 L60 130 L70 106 Z" fill="#F2F2F2"/>
+  <!-- Body, red belly and wings -->
+  <ellipse cx="60" cy="86" rx="30" ry="33" fill="#1E9A50"/>
+  <ellipse cx="60" cy="97" rx="20" ry="19" fill="#D7263D"/>
+  <ellipse cx="60" cy="101" rx="13" ry="11" fill="#E8475A"/>
+  <path d="M33 72 C21 90 25 110 42 118 C37 102 37 88 44 75 Z" fill="#157A3E"/>
+  <path d="M87 72 C99 90 95 110 78 118 C83 102 83 88 76 75 Z" fill="#157A3E"/>
+  <path d="M35 84 C31 94 33 104 39 110" stroke="#2BC06A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M85 84 C89 94 87 104 81 110" stroke="#2BC06A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Head and the rounded quetzal crest -->
+  <circle cx="60" cy="50" r="26" fill="#23A55A"/>
+  <path d="M37 44 C34 22 52 9 69 14 C80 17 86 28 84 40 C76 30 64 27 54 30 C47 33 41 38 37 44 Z" fill="#2BC06A"/>
+  <ellipse cx="52" cy="22" rx="8" ry="3.5" fill="#FFFFFF" opacity="0.25" transform="rotate(-20 52 22)"/>
+  <!-- Face -->
+  <ellipse cx="44" cy="61" rx="4.5" ry="2.8" fill="#FF8A80" opacity="0.7"/>
+  <ellipse cx="76" cy="61" rx="4.5" ry="2.8" fill="#FF8A80" opacity="0.7"/>
+  <circle cx="51" cy="50" r="9" fill="#FFFFFF"/>
+  <circle cx="69" cy="50" r="9" fill="#FFFFFF"/>
+  <circle cx="52.5" cy="51.5" r="5.2" fill="#1A1A2E"/>
+  <circle cx="70.5" cy="51.5" r="5.2" fill="#1A1A2E"/>
+  <circle cx="54.2" cy="49.4" r="1.9" fill="#FFFFFF"/>
+  <circle cx="72.2" cy="49.4" r="1.9" fill="#FFFFFF"/>
+  <path d="M54.5 60 Q60 56.5 65.5 60 L60 68.5 Z" fill="#FFC83D"/>
+  <path d="M56.5 62 Q60 60.5 63.5 62" stroke="#E0A020" stroke-width="1" fill="none"/>
+</svg>

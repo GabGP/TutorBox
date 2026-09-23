@@ -82,20 +82,7 @@ export async function renderLesson(navigate, params = {}) {
     animation: kukBounce 2s ease-in-out infinite;
     filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
   `;
-  kukEl.innerHTML = `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="50" cy="120" rx="4" ry="20" fill="#2E7D32"/>
-    <ellipse cx="50" cy="78" rx="20" ry="26" fill="#2E7D32"/>
-    <ellipse cx="50" cy="86" rx="14" ry="16" fill="#C62828"/>
-    <circle cx="50" cy="44" r="20" fill="#2E7D32"/>
-    <ellipse cx="50" cy="24" rx="3.5" ry="11" fill="#69F0AE"/>
-    <circle cx="43" cy="42" r="7" fill="white"/>
-    <circle cx="57" cy="42" r="7" fill="white"/>
-    <circle cx="44" cy="43" r="4" fill="#1A237E"/>
-    <circle cx="58" cy="43" r="4" fill="#1A237E"/>
-    <circle cx="44.5" cy="42" r="2" fill="black"/>
-    <circle cx="58.5" cy="42" r="2" fill="black"/>
-    <path d="M 44 52 Q 50 59 56 52 L 50 57 Z" fill="#FFA000"/>
-  </svg>`;
+  kukEl.innerHTML = '<img src="icons/quq.svg" alt="" draggable="false" style="width:100%;height:100%;object-fit:contain" />';
   screen.appendChild(kukEl);
 
   // ── Load lesson module ───────────────────────────────────────────────────
