@@ -53,6 +53,8 @@ RESERVED_PREFIXES: tuple[str, ...] = (
     "/alumno/",
     "/pantalla/",
     "/static/",
+    "/tareas/",
+    "/descargas/",
     "/manifest.webmanifest",
     "/favicon.",
     "/icon-",

@@ -91,6 +91,21 @@ Append-only audit trail recording sensitive operational, staff, and hardware pai
 * `device_assigned`: Clicker linked to student.
 * `device_unassigned`: Clicker unlinked from student.
 * `device_deleted`: Clicker removed from fleet.
+* `mode_changed`: Teacher switched the classroom mode (`PUT /api/v1/mode`).
+
+---
+
+### <a id="table-appliance_state"></a>Table: `appliance_state`
+Single row (`id = 1`) holding the classroom-wide mode the teacher picked from `/maestro/`. The
+appliance has no keyboard, so this row is how the choice reaches the screen and student phones,
+and it survives a power cycle. Created by migration `011` and seeded with `quiz`.
+
+| Column | Type | Constraints | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INTEGER` | `PRIMARY KEY`, `CHECK (id = 1)` | — | Always `1`; enforces a single row. |
+| `mode` | `TEXT` | `NOT NULL`, `CHECK (mode IN ('quiz','tutor','apps'))` | `'quiz'` | Active mode. |
+| `updated_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC time of the last change. |
+| `updated_by` | `INTEGER` | `NULL`, `FOREIGN KEY -> users(id) ON DELETE SET NULL` | `NULL` | Staff user who made the last change. |
 
 ---
 

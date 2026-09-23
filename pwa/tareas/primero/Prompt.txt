@@ -1,0 +1,227 @@
+# Prompt para App Educativa: Matemáticas CNB Guatemala (1er Grado)
+
+---
+
+**Prompt:**
+
+> Construye una aplicación web educativa estilo Brilliant.org para enseñar matemáticas a niños guatemaltecos de 5-7 años (1er grado primaria), basada en el CNB (Curriculum Nacional Base) del Ministerio de Educación de Guatemala.
+>
+> ## Restricciones críticas de diseño
+>
+> 1. **Los niños NO saben leer.** Todo debe comunicarse con imágenes, iconos, colores, animaciones y audio. Cero texto visible para el niño (solo para el dashboard de padres).
+> 2. **Mobile-first.** El 90%+ de usuarios accederá desde teléfonos Android de gama baja. Diseña para pantallas de 5-6 pulgadas, touch, con poco RAM.
+> 3. **Contexto 100% guatemalteco.** Usa elementos visuales de Guatemala: quetzales (ave y moneda), volcanes, mercados, trajes típicos, maíz, tortillas, tamales, güipiles, autobuses coloridos, frutas tropicales (mangos, jocotes, bananos), numeración Maya, paisajes de Atitlán, Tikal, Antigua.
+> 4. **Estilo visual:** Ilustraciones alegres tipo cartoon con colores vibrantes. Personajes diversos (niños con trajes de diferentes regiones: Kaqchikel, K'iche', Q'eqchi', Ladino). NO fotos reales — todo ilustrado.
+>
+> ## Las 7 competencias del CNB a cubrir (organizadas en módulos)
+>
+> ### MÓDULO 1: "¿Dónde está?" — Ubicación espacial (Competencia 1)
+> **Competencia:** Establece relaciones entre personas, objetos y figuras geométricas por su posición en el espacio y por la distancia que hay entre ellos.
+>
+> Lecciones interactivas:
+> - **Arriba/Abajo:** Escena de un árbol con un quetzal arriba y un conejo abajo. El niño toca donde está cada animal.
+> - **Adentro/Afuera:** Un mercado guatemalteco. Arrastra frutas adentro o afuera de una canasta.
+> - **Cerca/Lejos:** Vista del Lago Atitlán. Toca el volcán que está cerca vs. el que está lejos.
+> - **Derecha/Izquierda:** Un autobús colorido (camioneta). Arrastra pasajeros al lado correcto.
+> - **Adelante/Atrás:** Fila en una tortillería. ¿Quién está adelante? ¿Quién atrás?
+> - **Largo/Corto, Grande/Pequeño:** Compara güipiles, tamales, o serpientes de diferentes tamaños arrastrando al grupo correcto.
+> - **Líneas rectas y curvas:** Traza caminos con el dedo: línea recta al mercado, línea curva por el río.
+> - **Figuras en el entorno:** Encuentra círculos, triángulos y cuadrados escondidos en una escena de Antigua Guatemala.
+>
+> ### MÓDULO 2: "Patrones mágicos" — Patrones y cultura (Competencia 2)
+> **Competencia:** Expresa ideas referidas a patrones y relaciones matemáticas en manifestaciones culturales.
+>
+> Lecciones interactivas:
+> - **Patrones en güipiles:** Un telar muestra una secuencia de colores (rojo-azul-rojo-?). El niño completa el patrón.
+> - **Patrones en la naturaleza:** Hojas, flores, mazorcas de maíz con patrones de forma y color.
+> - **Patrones en música:** Secuencia de sonidos de marimba (tun-tun-pam, tun-tun-?). El niño toca el instrumento correcto.
+> - **Crea tu patrón:** Selecciona cuentas de colores para hacer una pulsera con patrón repetitivo.
+> - **Patrones en cerámica:** Completa diseños de vasijas mayas siguiendo la secuencia.
+>
+> ### MÓDULO 3: "Mis conjuntos" — Conjuntos y clasificación (Competencia 3)
+> **Competencia:** Expresa ideas utilizando diferentes signos, símbolos gráficos, algoritmos y términos matemáticos.
+>
+> Lecciones interactivas:
+> - **Agrupar por tipo:** Clasifica frutas del mercado (mangos con mangos, bananos con bananos).
+> - **Muchos/Pocos:** Dos canastas en el mercado. ¿Cuál tiene muchos? ¿Cuál pocos? Toca la correcta.
+> - **Más que / Menos que:** Dos grupos de quetzales (moneda). ¿Cuál tiene más?
+> - **Todos/Algunos/Ninguno:** Un corral con animales. "Toca TODOS los pollos" o "toca ALGUNOS."
+> - **Correspondencia uno a uno:** Cada niño necesita un tamal. Arrastra un tamal a cada niño. ¿Sobran o faltan?
+>
+> ### MÓDULO 4: "Contemos juntos" — Aritmética básica (Competencia 4)
+> **Competencia:** Utiliza conocimientos y experiencias de aritmética básica en la interacción con su entorno.
+>
+> Lecciones interactivas (progresivas):
+> - **Contar 1-9:** Toca cada jocote en el árbol mientras suena el número. Animación de conteo.
+> - **Asociar número-cantidad:** Aparece el número 5 grande y animado. Arrastra 5 tortillas al comal.
+> - **El cero:** Un plato vacío. No hay tamales. Eso es CERO. Animación divertida.
+> - **Números 10-20:** Usa mazorcas como decenas y granos como unidades. Construye números.
+> - **Números 21-99:** Sistema posicional visual con canastas de 10 y unidades sueltas.
+> - **Contar de 2 en 2, de 5 en 5:** Salta un personaje por una recta numérica gigante.
+> - **Antes y después (sucesor/antecesor):** ¿Qué número viene antes del 7? ¿Y después?
+> - **Mayor/Menor/Igual:** Dos grupos de monedas con cocodrilo "come-números" (>, <, =).
+> - **Orden ascendente/descendente:** Ordena volcanes del más bajo al más alto (números).
+> - **Suma sin llevar:** Animación: 3 mangos + 2 mangos = ? mangos (se juntan visualmente).
+> - **Suma llevando:** Representación visual con decenas y unidades.
+> - **Resta sin prestar:** 5 tamales, te comes 2, ¿cuántos quedan? (animación de desaparecer).
+> - **Resta prestando:** Visual con canastas de decena que se "abren" en unidades.
+> - **Fracciones (1/2, 1/3, 1/4):** Parte una tortilla por la mitad. Parte un pastel en 3. Interactivo con gestos de cortar.
+> - **Números ordinales 1°-10°:** Carrera de animales. ¿Quién llegó primero? ¿Segundo?
+> - **Numeración Maya (0-19):** Puntos y rayas. El caracol es cero. Construye números mayas arrastrando puntos y rayas.
+>
+> ### MÓDULO 5: "Resolvamos problemas" — Resolución de problemas (Competencia 5)
+> **Competencia:** Expresa opiniones sobre hechos y eventos cotidianos relacionados con la solución de problemas.
+>
+> Lecciones interactivas:
+> - **Problemas con audio:** Narración: "María tiene 3 gallinas y le regalan 2 más. ¿Cuántas tiene?" El niño arrastra las gallinas y cuenta.
+> - **Juegos con reglas:** Mini-juegos tipo tablero donde el niño debe seguir instrucciones paso a paso.
+> - **Recopilar datos:** "¿Cuántos perros ves? ¿Cuántos gatos?" Toca para contar y la barra crece (gráfica simple).
+> - **Predecir:** "Si sigue lloviendo, ¿el río subirá o bajará?" (conceptos de más/menos).
+> - **Problemas de compra-venta:** Tienda del mercado. Tienes 5 quetzales, un mango cuesta 2. ¿Cuántos puedes comprar? ¿Cuánto te sobra?
+>
+> ### MÓDULO 6: "Formas por todos lados" — Geometría (Competencia 6)
+> **Competencia:** Identifica formas y relaciones de figuras geométricas vinculadas a su entorno.
+>
+> Lecciones interactivas:
+> - **Identificar formas:** Foto estilizada de Antigua. Toca todos los rectángulos (puertas), círculos (ruedas), triángulos (techos).
+> - **Clasificar figuras:** Arrastra figuras: las que tienen líneas rectas a un lado, las curvas al otro.
+> - **Triángulos vs. Cuadriláteros:** Cuenta los lados tocándolos. 3 lados = triángulo, 4 = cuadrilátero.
+> - **Semejanzas y diferencias:** Dos figuras. ¿En qué se parecen? ¿En qué son diferentes? (Selección visual).
+> - **Perímetro:** Un hormiguita camina alrededor de una figura. Cuenta cuántos pasos da en cada lado.
+>
+> ### MÓDULO 7: "Medir el mundo" — Medición y ciencia (Competencia 7)
+> **Competencia:** Construye nuevos conocimientos a partir de nuevos modelos de la ciencia y la cultura.
+>
+> Lecciones interactivas:
+> - **Medir con unidades no estándar:** ¿Cuántos "pies" mide la mesa? ¿Cuántas "manos"?
+> - **Metro y centímetros:** Regla gigante interactiva. Mide objetos arrastrando la regla.
+> - **Peso:** Balanza interactiva. ¿Qué pesa más, una sandía o un mango?
+> - **Capacidad:** Llena vasos y cubetas (tecomates). ¿Cuántos vasos caben en la cubeta?
+> - **El reloj:** Reloj interactivo. Arrastra las manecillas a la hora en punto y media hora.
+> - **Calendario gregoriano:** Toca los días, identifica semanas, meses del año con eventos guatemaltecos (feria, Semana Santa, 15 de septiembre).
+> - **Calendario Maya Cholq'ij:** Introducción visual a los nawales. Identifica los días con su símbolo.
+> - **Moneda guatemalteca:** Monedas y billetes. Juego de tiendita: paga, recibe cambio.
+>
+> ## Mecánicas tipo Brilliant
+>
+> - **Aprendizaje por descubrimiento:** Nunca explicar primero. Dejar que el niño interactúe y descubra.
+> - **Progresión desbloqueada:** Cada módulo tiene 5-8 lecciones. Completar una desbloquea la siguiente. Mapa visual tipo camino (como Duolingo pero con paisaje guatemalteco: volcanes → lago → selva → pirámide → mercado).
+> - **Retroalimentación inmediata:** Correcto = sonido alegre de marimba + animación de estrellas. Incorrecto = sonido suave + la respuesta correcta se ilumina brevemente + se puede reintentar.
+> - **Sin penalización:** Nunca mostrar "error" o "incorrecto" de forma negativa. Simplemente guiar hacia la respuesta correcta.
+> - **Estrellas por lección:** 1-3 estrellas por lección completada. Colecciona estrellas en un "cielo nocturno" (gamificación).
+> - **Personaje guía:** Un quetzal animado llamado "Kuk" (referencia al quetzal en K'iche') que hace gestos, celebra aciertos y anima cuando hay errores.
+> - **Audio narración:** Todas las instrucciones son por audio (español guatemalteco). Opción futura: K'iche', Kaqchikel, Q'eqchi'.
+> - **Sesiones cortas:** Cada lección dura 3-5 minutos máximo. Ideal para atención de niños de 5-7 años.
+>
+> ## Arquitectura de la app
+>
+> ### Pantallas principales:
+> 1. **Mapa de aventura** (home): Camino visual con los 7 módulos como "mundos". Cada mundo tiene su paisaje guatemalteco.
+> 2. **Lección interactiva:** Pantalla completa, sin distracciones. Solo la actividad, el personaje guía, y botones grandes de interacción.
+> 3. **Perfil del niño:** Avatar personalizable con trajes típicos. Muestra estrellas y progreso.
+> 4. **Dashboard de padres** (con PIN): Progreso detallado, competencias cubiertas, tiempo de uso. ESTE sí tiene texto.
+>
+> ### Interacciones touch:
+> - Tap (tocar)
+> - Drag and drop (arrastrar)
+> - Swipe (deslizar)
+> - Trazar con el dedo (para líneas y números)
+> - NO usar: pinch, doble-tap, gestos complejos
+>
+> ### Tecnología requerida:
+> - Canvas o SVG para animaciones interactivas
+> - Web Audio API para sonidos
+> - Service Worker para funcionar offline (muchas zonas rurales de Guatemala sin internet estable)
+> - LocalStorage/IndexedDB para guardar progreso offline
+> - Sync cuando haya conexión
+>
+> ## Entregables esperados:
+> 1. Estructura de proyecto completa
+> 2. Pantalla de mapa de aventura funcional
+> 3. Al menos 1 lección interactiva completa de cada módulo como ejemplo
+> 4. Sistema de progreso con estrellas
+> 5. Personaje guía con animaciones básicas
+> 6. Responsive mobile-first
+> 7. Modo offline (PWA)
+
+---
+
+##  de Stack Tecnológico: Node.js + Vanilla JS/Canvas
+
+
+**Backend: Express (Node.js)**
+- Lo que ya sabes. Rápido para API REST simples.
+- Endpoints: auth, guardar/cargar progreso, analytics para padres.
+- Base de datos: SQLite para empezar (cero config), migrar a PostgreSQL después.
+
+**Frontend: Vanilla JS + Canvas API**
+- Para una app de este tipo, un framework de frontend (React, Vue) te estorba más de lo que ayuda. Las lecciones interactivas son básicamente mini-juegos con canvas.
+- Cada lección es un "scene" independiente con su propio canvas y lógica.
+- Usa un mini-router vanilla para navegación SPA.
+- CSS custom properties para theming.
+- Web Audio API para sonidos.
+
+**PWA (Progressive Web App)**
+- Service Worker para cache offline (Workbox simplifica esto).
+- IndexedDB (via librería `idb`) para progreso offline.
+- Manifest.json para que se instale como app nativa.
+
+**Estructura sugerida:**
+
+```
+matematicas-gt/
+├── server/
+│   ├── index.js              (Express server)
+│   ├── routes/
+│   │   ├── auth.js           (Login padres con PIN)
+│   │   ├── progress.js       (Guardar/cargar progreso)
+│   │   └── analytics.js      (Dashboard padres)
+│   └── db/
+│       └── schema.sql        (SQLite → PostgreSQL later)
+├── public/
+│   ├── index.html
+│   ├── manifest.json         (PWA)
+│   ├── sw.js                 (Service Worker)
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   ├── app.js            (Router, state management)
+│   │   ├── engine/
+│   │   │   ├── scene.js      (Base class para lecciones)
+│   │   │   ├── canvas.js     (Helpers de dibujo)
+│   │   │   ├── audio.js      (Sonidos y narración)
+│   │   │   ├── touch.js      (Gestos: drag, tap, trace)
+│   │   │   └── animation.js  (Tweens, easing)
+│   │   ├── screens/
+│   │   │   ├── map.js        (Mapa de aventura)
+│   │   │   ├── lesson.js     (Contenedor de lecciones)
+│   │   │   ├── profile.js    (Perfil del niño)
+│   │   │   └── parent.js     (Dashboard padres)
+│   │   └── lessons/
+│   │       ├── m1-ubicacion/
+│   │       │   ├── arriba-abajo.js
+│   │       │   ├── adentro-afuera.js
+│   │       │   └── ...
+│   │       ├── m2-patrones/
+│   │       ├── m3-conjuntos/
+│   │       ├── m4-aritmetica/
+│   │       ├── m5-problemas/
+│   │       ├── m6-geometria/
+│   │       └── m7-medicion/
+│   └── assets/
+│       ├── sprites/           (SVGs de personajes, objetos)
+│       ├── backgrounds/       (Escenas: mercado, lago, volcanes)
+│       ├── audio/
+│       │   ├── sfx/           (Efectos: marimba, estrellas)
+│       │   └── narration/     (Instrucciones habladas)
+│       └── fonts/
+```
+
+
+### Librerías clave (todas ligeras)
+
+- **howler.js** (~10KB) — Audio cross-browser mejor que Web Audio API crudo
+- **idb** (~1KB) — Wrapper de IndexedDB para storage offline
+- **workbox** — Genera Service Workers para PWA
+- **PixiJS** (opcional, ~200KB) — Si quieres WebGL rendering
+- **lottie-web** (opcional) — Para animaciones vectoriales complejas (el quetzal guía)

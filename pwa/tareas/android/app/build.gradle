@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Release signing comes from keystore.properties (never committed, see README). Without it the
+// APK is signed with this machine's debug key: fine for testing, but phones refuse an update
+// signed with a different key, so create the release key before handing the app to families.
+def keystoreProps = rootProject.file('keystore.properties')
+
+android {
+    namespace 'org.tutorbox.primero'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'org.tutorbox.primero'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        // The APK packs the web app as-is: no copy, no second source of truth.
+        main.assets.srcDirs = ['../../primero/public']
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreProps.exists()) {
+                def p = new Properties()
+                keystoreProps.withInputStream { p.load(it) }
+                storeFile rootProject.file(p.storeFile)
+                storePassword p.storePassword
+                keyAlias p.keyAlias
+                keyPassword p.keyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig keystoreProps.exists() ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+}
+
+// `gradlew publishApk`: build the release APK and put it where the Jetson serves /descargas/.
+tasks.register('publishApk', Copy) {
+    dependsOn 'assembleRelease'
+    from(layout.buildDirectory.dir('outputs/apk/release')) { include '*.apk' }
+    into rootProject.file('../descargas')
+    rename { 'primero.apk' }
+}

@@ -20,6 +20,7 @@ VALID_ACTIONS = frozenset(
         "quiz_question_created",
         "quiz_question_updated",
         "quiz_question_deleted",
+        "mode_changed",
     }
 )
 

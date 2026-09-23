@@ -1,0 +1,15 @@
+{
+  "name": "matematicas-gt",
+  "version": "1.0.0",
+  "description": "Guatemalan Math App for 1st Graders - Aprende Matemáticas con Kuk",
+  "keywords": ["education", "guatemala", "math", "kids", "pwa"],
+  "author": "PrimerGT",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npx serve public",
+    "start": "npx serve public"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

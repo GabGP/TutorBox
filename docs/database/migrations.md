@@ -62,6 +62,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 | **008** | `008_add_quiz_questions.sql` | Question Bank | Creates `quiz_questions` table with JSON distractors | Week 2 |
 | **009** | `009_add_quiz_generation_logs.sql` | AI Telemetry | Creates `quiz_generation_logs` for latency and retry metrics | Week 2 |
 | **010** | `010_add_quiz_sessions_and_votes.sql` | Session Engine | Creates `quiz_sessions`, `quiz_session_rounds`, `quiz_session_votes` | Week 3 |
+| **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
 
 ---
 
@@ -115,6 +116,10 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
     UNIQUE(round_id, student_id)
     ```
   * Includes performance indexes: `idx_quiz_rounds_session_index`, `idx_quiz_votes_round_student`, `idx_quiz_votes_student`, `idx_quiz_votes_analytics`.
+
+### <a id="011-classroom-mode-switch"></a>011: Classroom Mode Switch
+* **File**: [`backend/migrations/011_add_appliance_mode.sql`](../../backend/migrations/011_add_appliance_mode.sql)
+* **Description**: Creates `appliance_state`, a single-row table (`CHECK (id = 1)`) holding the classroom-wide mode (`quiz`, `tutor`, `apps`) the teacher picks from their phone, and seeds it with `quiz` via `INSERT OR IGNORE` so re-runs are harmless. See [core.md](core.md#table-appliance_state).
 
 ---
 

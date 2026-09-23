@@ -183,7 +183,7 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 
 | Subsystem Domain | Specification Document | Included Tables | Core Policies & Invariants |
 | :--- | :--- | :--- | :--- |
-| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
+| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
 | **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$) |
 | **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `010+`)<br>• Idempotent SQL execution & rollback procedures |

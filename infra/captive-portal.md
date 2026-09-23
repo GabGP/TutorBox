@@ -90,7 +90,7 @@ Implemented in [`backend/src/api/captive.py`](../backend/src/api/captive.py), wi
 | `GET /` with an appliance `Host` | `307 → /alumno/` (unchanged) |
 | Unknown page (`404`) with a **foreign** `Host`, `GET`/`HEAD` | same `302` — the walled garden: any address a student types lands on the student page |
 | Unknown page with an appliance `Host`, or any method other than `GET`/`HEAD` | plain `{"detail": "Not Found"}` |
-| Anything under `/api/`, `/health`, `/maestro/`, `/alumno/`, `/pantalla/`, `/static/` | **never redirected** — API 404s keep their JSON body; a missing asset stays a 404 |
+| Anything under `/api/`, `/health`, `/maestro/`, `/alumno/`, `/pantalla/`, `/static/`, `/tareas/`, `/descargas/` | **never redirected** — API 404s keep their JSON body; a missing asset stays a 404 |
 
 *Appliance host* = `localhost`, any IP literal (`192.168.8.2`, `[fd00::2]`), or the hostname of
 `CAPTIVE_PORTAL_URL` (`tutorbox` by default). Everything else only resolves to the box because of the

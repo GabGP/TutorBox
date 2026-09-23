@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es-GT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2E7D32" />
+  <title>Llévate a Q'uq' a casa</title>
+  <!-- Served by the Jetson at /descargas/. Everything is inline or local: the classroom has no internet. -->
+  <style>
+    @font-face {
+      font-family: 'Nunito';
+      font-weight: 400 900;
+      font-display: swap;
+      src: url('/tareas/primero/fonts/nunito-latin.woff2') format('woff2');
+    }
+    :root {
+      --green: #2E7D32;
+      --green-dark: #1B5E20;
+      --sky: #E3F4FB;
+      --yellow: #FFD54F;
+      --ink: #1F2A1F;
+      --muted: #52606D;
+      --card: #FFFFFF;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Nunito', 'Trebuchet MS', sans-serif;
+      color: var(--ink);
+      background: var(--sky);
+      line-height: 1.45;
+    }
+    main { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+    header { text-align: center; }
+    header svg { width: 96px; height: 96px; }
+    h1 { font-size: 1.7rem; font-weight: 900; margin: 8px 0 4px; }
+    .lead { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+    .download {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      min-height: 64px; padding: 14px 20px; border-radius: 18px;
+      background: var(--yellow); color: var(--ink); text-decoration: none;
+      font-size: 1.25rem; font-weight: 900; box-shadow: 0 5px 0 #C9A227;
+    }
+    .download:active { transform: translateY(3px); box-shadow: 0 2px 0 #C9A227; }
+    .download svg { width: 28px; height: 28px; flex: none; }
+    .size { text-align: center; color: var(--muted); font-size: .9rem; margin: 8px 0 24px; }
+    .missing {
+      display: none; background: #FFF3E0; border-radius: 14px; padding: 14px;
+      margin-bottom: 24px; font-weight: 700;
+    }
+    h2 { font-size: 1.25rem; font-weight: 900; margin: 28px 0 12px; }
+    ol { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+    ol li {
+      counter-increment: step; display: grid; grid-template-columns: 72px 1fr; gap: 14px;
+      align-items: center; background: var(--card); border-radius: 18px; padding: 14px;
+      margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    }
+    ol li svg { width: 72px; height: 72px; }
+    ol li p { margin: 0; font-size: 1.05rem; }
+    ol li p::before {
+      content: counter(step); display: inline-grid; place-items: center;
+      width: 28px; height: 28px; margin-right: 8px; border-radius: 50%;
+      background: var(--green); color: #fff; font-weight: 900; font-size: .95rem;
+    }
+    .note {
+      background: var(--card); border-left: 6px solid var(--green); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 12px;
+    }
+    .note strong { display: block; margin-bottom: 2px; }
+    code { font-family: inherit; font-weight: 900; color: var(--green-dark); }
+    a.play { color: var(--green-dark); font-weight: 800; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <!-- Q'uq' the quetzal -->
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="48" fill="#7CC6E8" />
+      <path d="M46 70 L40 94 L50 88 Z M54 70 L60 94 L50 88 Z" fill="#1B5E20" />
+      <ellipse cx="50" cy="60" rx="17" ry="21" fill="#2E7D32" />
+      <ellipse cx="50" cy="66" rx="11" ry="12" fill="#D32F2F" />
+      <circle cx="50" cy="36" r="14" fill="#2E7D32" />
+      <path d="M45 25 Q50 10 55 25 Z" fill="#69F0AE" />
+      <circle cx="45" cy="35" r="5" fill="#fff" /><circle cx="46" cy="36" r="2.6" fill="#1A237E" />
+      <circle cx="56" cy="35" r="5" fill="#fff" /><circle cx="57" cy="36" r="2.6" fill="#1A237E" />
+      <path d="M48 42 L54 42 L51 47 Z" fill="#FFC107" />
+    </svg>
+    <h1>Llévate a Q'uq' a casa</h1>
+    <p class="lead">Juega y aprende matemáticas en tu teléfono, <strong>sin internet</strong>.</p>
+  </header>
+
+  <p class="missing" id="missing">
+    La app todavía no está lista en esta TutorBox. Pídele a tu maestra o maestro que la agregue.
+  </p>
+
+  <a class="download" id="download" href="primero.apk" download="QuqMatematicas.apk">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    Descargar la app
+  </a>
+  <p class="size">Para teléfonos Android · menos de 1 MB</p>
+
+  <h2>Cómo instalarla</h2>
+  <ol>
+    <li>
+      <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="30" width="24" height="10" rx="5" fill="#FFD54F" /><circle cx="44" cy="44" r="6" fill="#FFB74D" opacity=".9" /></svg>
+      <p>Toca el botón amarillo <strong>Descargar la app</strong>.</p>
+    </li>
+    <li>
+      <!-- Chrome warns on every APK served over plain HTTP; the offline TutorBox cannot use HTTPS. -->
+      <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="22" y="22" width="28" height="22" rx="3" fill="#fff" stroke="#90A4AE" /><path d="M28 29h16M28 33h10" stroke="#B0BEC5" stroke-width="2" /><rect x="36" y="37" width="12" height="5" rx="2.5" fill="#2E7D32" /></svg>
+      <p>Si Chrome dice que el archivo <strong>no se puede descargar de forma segura</strong>, toca <strong>Conservar</strong>. Es normal: la TutorBox funciona sin internet.</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="22" y="14" width="28" height="14" rx="3" fill="#fff" stroke="#90A4AE" /><path d="M25 21h8" stroke="#52606D" stroke-width="2" /><text x="35" y="23.5" font-size="5.5" font-weight="900" fill="#2E7D32" font-family="sans-serif">Abrir</text></svg>
+      <p>Cuando termine, toca <strong>Abrir</strong> en el aviso de la descarga (o búscala en <strong>Descargas</strong>).</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="30" width="24" height="12" rx="6" fill="#B0BEC5" /><circle cx="42" cy="36" r="5" fill="#2E7D32" /><path d="M24 22h24" stroke="#52606D" stroke-width="2" /></svg>
+      <p>Si el teléfono pide permiso, toca <strong>Configuración</strong>, activa <strong>Permitir de esta fuente</strong> y regresa. Solo se hace la primera vez.</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="44" width="24" height="10" rx="5" fill="#2E7D32" /><circle cx="36" cy="26" r="9" fill="#7CC6E8" /><ellipse cx="36" cy="28" rx="4" ry="5" fill="#2E7D32" /></svg>
+      <p>Toca <strong>Instalar</strong> y después <strong>Abrir</strong>. ¡Busca a Q'uq' en tu pantalla de inicio!</p>
+    </li>
+  </ol>
+
+  <h2>Bueno saber</h2>
+  <div class="note">
+    <strong>Funciona sin internet</strong>
+    Todas las lecciones vienen dentro de la app. Q'uq' habla con la voz del teléfono.
+  </div>
+  <div class="note">
+    <strong>El progreso se guarda en el teléfono</strong>
+    Si desinstalas la app, se borran las estrellas. Para actualizarla, descárgala otra vez aquí e
+    instálala encima: el progreso se queda.
+  </div>
+  <div class="note">
+    <strong>¿No se descarga?</strong>
+    Abre Chrome y escribe <code>tutorbox/descargas</code>.
+  </div>
+  <div class="note">
+    <strong>¿Tienes iPhone?</strong>
+    La app es solo para Android. En la escuela puedes jugar desde el navegador en
+    <a class="play" href="/tareas/primero/">tutorbox/tareas/primero</a>.
+  </div>
+</main>
+<script>
+  // A parent should see a friendly message, not a raw 404, when the APK was not copied here yet.
+  fetch('primero.apk', { method: 'HEAD' })
+    .then((r) => { if (!r.ok) throw new Error(); })
+    .catch(() => {
+      document.getElementById('download').style.display = 'none';
+      document.getElementById('missing').style.display = 'block';
+    });
+</script>
+</body>
+</html>

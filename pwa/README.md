@@ -130,7 +130,31 @@ pnpm build      # Build production bundle to dist/
 
 ---
 
-## 3. Architecture & Offline Design
+## <a id="3-tareas--take-home-math-apps-tareas"></a>3. Tareas — take-home math apps (`tareas/`)
+
+Grade-specific math apps that students also take home. Unlike `pilas/` and `app/` they need no
+backend: plain static files, no build step.
+
+| Path | Served at | What it is |
+| :--- | :--- | :--- |
+| [`tareas/primero/`](tareas/primero/README.md) | `/tareas/primero/` | "Aprende Matemáticas con Q'uq'" — 1st-grade (Primero) CNB math, vanilla JS + Canvas. Played in the classroom browser. |
+| [`tareas/android/`](tareas/android/README.md) | — | Android wrapper that packs `primero/public` into an offline APK (`gradlew publishApk`). |
+| `tareas/descargas/` | `/descargas/` | Family download page with install steps (Spanish) plus `primero.apk`. |
+| `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |
+
+**Why an APK and not an installable PWA:** browsers only run service workers (offline support) and
+offer "Install app" on HTTPS pages, and the offline Jetson serves plain `http://tutorbox`. The APK
+carries every file inside and speaks through the phone's own offline text-to-speech, so it keeps
+working at home with no internet. Android only; iPhones can still play in the classroom browser.
+Chrome warns *"no se puede descargar de forma segura"* on any APK over HTTP — families tap
+**Conservar**; the download page says so.
+
+Both mounts are listed in `REPO_MOUNTS` (`backend/src/main.py`) and exempt from captive-portal
+redirects (`RESERVED_PREFIXES`, `backend/src/api/captive.py`).
+
+---
+
+## 4. Architecture & Offline Design
 
 * **Network Delivery**: Static pages served by the appliance over the isolated `TutorBox` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.

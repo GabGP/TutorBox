@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -35,6 +36,16 @@ logger = logging.getLogger("tutorbox")
 CLIENT_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 
 DEFAULT_CLIENT_DIR = (PROJECT_ROOT / ".cache" / "pwa" / "dist").resolve()
+
+# Static apps checked into the repo (no build step): the Primero math app for use in the
+# classroom browser, and the page where families download its Android APK to take home.
+# Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
+REPO_MOUNTS = {
+    "tareas/primero": PROJECT_ROOT / "pwa" / "tareas" / "primero" / "public",
+    "descargas": PROJECT_ROOT / "pwa" / "tareas" / "descargas",
+}
+# Without it the APK is served as text/plain and Android saves it as "primero.apk.txt".
+mimetypes.add_type("application/vnd.android.package-archive", ".apk")
 
 
 def resolve_client_dir(raw_dir: str | None = None) -> Path:
@@ -108,6 +119,8 @@ for _name in CLIENT_MOUNTS:
     app.mount(
         f"/{_name}", StaticFiles(directory=CLIENT_DIR / _name, html=True), name=_name
     )
+for _name, _directory in REPO_MOUNTS.items():
+    app.mount(f"/{_name}", StaticFiles(directory=_directory, html=True), name=_name)
 
 
 @app.get("/", include_in_schema=False)

@@ -47,7 +47,7 @@ The API specification is decomposed into cohesive domain modules:
 
 | Domain | Specification Document | Key Endpoints | Roles |
 | :--- | :--- | :--- | :---: |
-| **System & Health** | **[system.md](system.md)** | `GET /health`<br>`GET /generate_204` and the other captive-portal probes | Public |
+| **System & Health** | **[system.md](system.md)** | `GET /health`<br>`GET /generate_204` and the other captive-portal probes<br>`GET/PUT /api/v1/mode` | Public,<br>Teacher,<br>Admin |
 | **Authentication & Users** | **[auth.md](auth.md)** | `POST /api/v1/auth/login`<br>`POST /api/v1/auth/logout`<br>`POST /api/v1/users/signup`<br>`GET /api/v1/users/me`<br>`PATCH /api/v1/users/me/pin`<br>`PATCH /api/v1/users/me/username` | Public,<br>Student,<br>Staff |
 | **Staff Administration** | **[staff.md](staff.md)** | `GET/POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`PATCH /api/v1/staff/users/{id}/role`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
 | **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
@@ -132,6 +132,8 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/quiz/questions/{id}` | `PUT` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/staff/users/{id}/role` | `PATCH` | ❌ | ❌ | ✅ (No admin) | ✅ (All) | **Yes (403)** | [staff.md](staff.md) |
+| `/api/v1/mode` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [system.md](system.md#classroom-mode) |
+| `/api/v1/mode` | `PUT` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [system.md](system.md#classroom-mode) |
 | `/api/v1/session` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
 | `/api/v1/session/current` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
