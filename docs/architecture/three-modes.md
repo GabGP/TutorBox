@@ -102,6 +102,28 @@ All three modes classify errors using a shared concept taxonomy (`topic`, `subco
 
 ---
 
+## <a id="4-choosing-the-mode"></a>4. Choosing the Mode (the teacher's phone is the remote)
+
+The Jetson has a screen but no keyboard. It boots straight into the classroom screen
+(`/pantalla/`, [kiosk](../../infra/README.md)), and the **teacher picks one mode for the whole class**
+from `/maestro/` on a phone. The choice is stored on the appliance (`appliance_state`,
+[`GET`/`PUT /api/v1/mode`](../api/system.md#classroom-mode)), so it survives a reboot, and every screen
+polls it every 3 s:
+
+| Mode | Teacher (`/maestro/`) | Class screen (`/pantalla/`) | Student phone (`/alumno/`, opened by the captive portal) |
+| :--- | :--- | :--- | :--- |
+| `quiz` | Quiz setup and live rounds | Quiz idle / question / tally | Login, then the quiz |
+| `tutor` | Notice: tutor not ready yet (Week 5) | "El tutor llega pronto" | "El tutor llega pronto" card |
+| `apps` | Notice with the download address | Q'uq' + `tutorbox/descargas` | Download card for the take-home Primero app (Android APK) and a link to play it in the browser |
+
+The switch is refused (`409`) while a quiz round is live. Take-home mode is how mode 3 reaches
+families today: the grade-specific apps in [`pwa/tareas/`](../../pwa/README.md#3-tareas--take-home-math-apps-tareas)
+(Primero first), installed as an offline Android app from the appliance.
+
+Code: `pwa/app/src/features/mode/` (API client, polling hook, picker and cards).
+
+---
+
 ## Next Steps
 
 * **[10-Week Engineering Roadmap](../milestones/roadmap.md)**: Review Week 2 Quiz Contract & Diagnostic Distractors milestones.

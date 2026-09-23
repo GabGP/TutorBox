@@ -8,7 +8,11 @@ import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
+import { TeacherModeNotice } from '../../features/mode/ModeCards';
+import { ModePicker } from '../../features/mode/ModePicker';
+import { useApplianceMode } from '../../features/mode/useApplianceMode';
 import { storage } from '../../shared/lib/storage';
+import { useHostAddress } from '../../shared/routing/session';
 import { TeacherAuthView } from './TeacherAuthView';
 import { TeacherFooter } from './TeacherFooter';
 import { TeacherHeader } from './TeacherHeader';
@@ -44,6 +48,10 @@ export const TeacherView: React.FC = () => {
   });
   const creatableRoles =
     user?.role === 'admin' ? ['student', 'teacher', 'admin'] : ['student', 'teacher'];
+  // The appliance has no keyboard: this page is the remote that picks the class mode.
+  const classMode = useApplianceMode({ enabled: isStaff });
+  const mode = classMode.mode ?? 'quiz';
+  const host = useHostAddress();
 
   const { state: speechState, message: speechMsg, speak, prefetch, stopPlayback } = useSpeechPlayback(
     coordinator.sid,
@@ -130,6 +138,8 @@ export const TeacherView: React.FC = () => {
   }
 
   const { title, subtitle, primaryText, secondaryText, wizardIdx } = vm;
+  // Offer the switch whenever no game is running (the backend also refuses it mid-game).
+  const showModePicker = mode !== 'quiz' || step === 'topic' || step === 'stats';
 
   return (
     <div className={styles.shell} id="shell">
@@ -142,62 +152,78 @@ export const TeacherView: React.FC = () => {
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
         onOpenSettings={() => setShowSettings(true)}
       />
-      <TeacherMainContent
-        step={step}
-        session={coordinator.session}
-        currentRound={curRound}
-        quiz={{
-          topics: coordinator.topics,
-          selectedTopic: coordinator.topic,
-          count: coordinator.count,
-          genError: coordinator.genError,
-          progress: coordinator.progress,
-          source: coordinator.source,
-          bankStep: (
-            <BankPickStep
-              selectedTopic={coordinator.topic}
-              count={coordinator.count}
-              onChangeCount={coordinator.setCount}
-              genError={coordinator.genError}
-              progress={coordinator.progress}
-              pregenerating={coordinator.isGenerating}
-              bankIds={coordinator.bankIds}
-              onToggleBankId={coordinator.toggleBankId}
-              onEnsureBankIds={coordinator.ensureBankIds}
-              onPregenerate={coordinator.pregenerate}
-              isAdmin={user?.role === 'admin'}
-            />
-          ),
-          onSelectTopic: coordinator.setTopic,
-          onChangeCount: coordinator.setCount,
-          onSourceChange: coordinator.setSource,
-        }}
-        roster={{
-          students, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
-        }}
-        voice={{
-          done: voiceDone,
-          played: curRound ? hasPlayed(curRound.round_index) : false,
-          lang: voiceLang,
-          state: speechState,
-          message: speechMsg,
-          onPlay: handlePlaySpeech,
-          onSkip: handleSkipSpeech,
-        }}
-        outcome={{
-          report: coordinator.report,
-          history: coordinator.history,
-        }}
-      />
-      <TeacherFooter
-        primaryText={primaryText}
-        secondaryText={secondaryText}
-        isPrimaryDisabled={vm.isPrimaryDisabled}
-        isLobbySuccess={vm.isLobbySuccess}
-        wizardIndex={wizardIdx}
-        onPrimary={handlePrimary}
-        onSecondary={handleSecondary}
-      />
+      {showModePicker && (
+        <ModePicker
+          mode={classMode.mode}
+          saving={classMode.saving}
+          error={classMode.error}
+          onChange={classMode.setMode}
+        />
+      )}
+      {mode !== 'quiz' ? (
+        <main className={styles.mainContent}>
+          <TeacherModeNotice mode={mode} host={host} />
+        </main>
+      ) : (
+        <>
+          <TeacherMainContent
+            step={step}
+            session={coordinator.session}
+            currentRound={curRound}
+            quiz={{
+              topics: coordinator.topics,
+              selectedTopic: coordinator.topic,
+              count: coordinator.count,
+              genError: coordinator.genError,
+              progress: coordinator.progress,
+              source: coordinator.source,
+              bankStep: (
+                <BankPickStep
+                  selectedTopic={coordinator.topic}
+                  count={coordinator.count}
+                  onChangeCount={coordinator.setCount}
+                  genError={coordinator.genError}
+                  progress={coordinator.progress}
+                  pregenerating={coordinator.isGenerating}
+                  bankIds={coordinator.bankIds}
+                  onToggleBankId={coordinator.toggleBankId}
+                  onEnsureBankIds={coordinator.ensureBankIds}
+                  onPregenerate={coordinator.pregenerate}
+                  isAdmin={user?.role === 'admin'}
+                />
+              ),
+              onSelectTopic: coordinator.setTopic,
+              onChangeCount: coordinator.setCount,
+              onSourceChange: coordinator.setSource,
+            }}
+            roster={{
+              students, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
+            }}
+            voice={{
+              done: voiceDone,
+              played: curRound ? hasPlayed(curRound.round_index) : false,
+              lang: voiceLang,
+              state: speechState,
+              message: speechMsg,
+              onPlay: handlePlaySpeech,
+              onSkip: handleSkipSpeech,
+            }}
+            outcome={{
+              report: coordinator.report,
+              history: coordinator.history,
+            }}
+          />
+          <TeacherFooter
+            primaryText={primaryText}
+            secondaryText={secondaryText}
+            isPrimaryDisabled={vm.isPrimaryDisabled}
+            isLobbySuccess={vm.isLobbySuccess}
+            wizardIndex={wizardIdx}
+            onPrimary={handlePrimary}
+            onSecondary={handleSecondary}
+          />
+        </>
+      )}
       {showSettings && user && (
         <TeacherSettingsSheet
           user={user}

@@ -130,6 +130,13 @@ pnpm build      # Build production bundle to dist/
 
 ---
 
+### Classroom mode
+
+`src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
+`/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
+
+---
+
 ## <a id="3-tareas--take-home-math-apps-tareas"></a>3. Tareas — take-home math apps (`tareas/`)
 
 Grade-specific math apps that students also take home. Unlike `pilas/` and `app/` they need no

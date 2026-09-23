@@ -12,6 +12,8 @@ import { useOptionKeyboard } from '../../shared/lib/keyboard';
 import { storage } from '../../shared/lib/storage';
 import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
 import utils from '../../shared/styles/utils.module.css';
+import { StudentModeCard } from '../../features/mode/ModeCards';
+import { useApplianceMode } from '../../features/mode/useApplianceMode';
 import { StudentScreens } from './StudentScreens';
 import styles from './StudentView.module.css';
 
@@ -22,6 +24,8 @@ import styles from './StudentView.module.css';
 export const StudentView: React.FC = () => {
   const { user, pendingPin, mustChangePin, login, signupAndLogin, handlePinChange, logout, restoreSession } =
     useAuth();
+  // The class mode the teacher picked: in tutor / take-home mode the phone shows that card.
+  const { mode } = useApplianceMode();
   const [showAccount, setShowAccount] = useState(false);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const targetSessionId = useMemo(() => getSessionQueryParamId(), []);
@@ -133,6 +137,11 @@ export const StudentView: React.FC = () => {
           />
         </div>
       );
+    }
+
+    // No login needed to download the take-home app or read the tutor notice.
+    if (mode === 'tutor' || mode === 'apps') {
+      return <StudentModeCard mode={mode} />;
     }
 
     if (!user || ['teacher', 'admin'].includes(user.role)) {

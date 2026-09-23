@@ -1,0 +1,14 @@
+# TutorBox — open the classroom screen (/pantalla/) full-screen when the Jetson boots.
+# The appliance has a screen but no keyboard: the teacher drives it from /maestro/ on a phone.
+#
+# Install on the Jetson (desktop user with automatic login enabled):
+#   mkdir -p ~/.config/autostart
+#   cp infra/kiosk/tutorbox-kiosk.desktop ~/.config/autostart/
+# See infra/README.md (Classroom screen) for auto-login and screen-blanking settings.
+[Desktop Entry]
+Type=Application
+Name=TutorBox pantalla
+Comment=Pantalla de la clase en modo quiosco
+# Wait for the backend (nginx :80 -> FastAPI) before opening, so the screen never shows an error page.
+Exec=sh -c 'until curl -sf http://localhost/health >/dev/null; do sleep 2; done; exec chromium-browser --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble --check-for-update-interval=31536000 http://localhost/pantalla/'
+X-GNOME-Autostart-enabled=true
