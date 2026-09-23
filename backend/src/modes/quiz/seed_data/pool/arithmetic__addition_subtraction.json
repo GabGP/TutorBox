@@ -1,0 +1,758 @@
+[
+  {
+    "id": "pool_arithmetic_addition_subtraction_001",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 19 + 25?",
+    "options": {
+      "A": "44",
+      "B": "34",
+      "C": "314",
+      "D": "6"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste sumar la decena que llevabas."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "Escribiste la suma completa de las unidades en vez de llevar una decena."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el más por un menos y restaste los números."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_002",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 90 - 52?",
+    "options": {
+      "A": "42",
+      "B": "38",
+      "C": "48",
+      "D": "-38"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "borrowing_error",
+        "explanation": "En las unidades quitaste el número de arriba al de abajo en vez de pedir prestado."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste bajar una decena después de pedir prestado."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Restaste al revés, el número pequeño menos el grande."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_003",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 19 + 71?",
+    "options": {
+      "A": "80",
+      "B": "810",
+      "C": "90",
+      "D": "52"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Al sumar las unidades no pasaste la decena que sobraba."
+      },
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "No reagrupaste: escribiste las unidades completas junto a las decenas."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Hiciste una resta en lugar de la suma que pedía el signo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_004",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 61 - 17?",
+    "options": {
+      "A": "78",
+      "B": "54",
+      "C": "-44",
+      "D": "44"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste 61 y 17 en vez de restarlos."
+      },
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Pediste prestado pero no le quitaste la decena al número de arriba."
+      },
+      "C": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 61 de 17 y te salió un número negativo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_005",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 15 + 65?",
+    "options": {
+      "A": "80",
+      "B": "710",
+      "C": "50",
+      "D": "70"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "Pusiste el número entero de las unidades abajo sin reagrupar la decena."
+      },
+      "C": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 65 a 15 en vez de sumarlos."
+      },
+      "D": {
+        "misconception": "alignment_error",
+        "explanation": "Te llevaste una decena pero no la sumaste en la columna de las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_006",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 65 - 38?",
+    "options": {
+      "A": "33",
+      "B": "27",
+      "C": "-27",
+      "D": "103"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "borrowing_error",
+        "explanation": "No pediste prestado y restaste al revés en la columna de las unidades."
+      },
+      "C": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el orden de la resta y el número salió negativo."
+      },
+      "D": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste en lugar de restar como pedía el signo menos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_007",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 35 + 56?",
+    "options": {
+      "A": "811",
+      "B": "21",
+      "C": "91",
+      "D": "81"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "borrowing_error",
+        "explanation": "Escribiste la suma completa de las unidades en vez de llevar una decena."
+      },
+      "B": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el más por un menos y restaste los números."
+      },
+      "D": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste sumar la decena que llevabas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_008",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 50 - 32?",
+    "options": {
+      "A": "22",
+      "B": "28",
+      "C": "82",
+      "D": "18"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "borrowing_error",
+        "explanation": "En las unidades quitaste el número de arriba al de abajo en vez de pedir prestado."
+      },
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste bajar una decena después de pedir prestado."
+      },
+      "C": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Juntaste los dos números en lugar de quitar uno del otro."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_009",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 29 + 67?",
+    "options": {
+      "A": "96",
+      "B": "38",
+      "C": "86",
+      "D": "816"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "sign_error",
+        "explanation": "Hiciste una resta en lugar de la suma que pedía el signo."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Al sumar las unidades no pasaste la decena que sobraba."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "No reagrupaste: escribiste las unidades completas junto a las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_010",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 72 - 55?",
+    "options": {
+      "A": "-17",
+      "B": "17",
+      "C": "23",
+      "D": "27"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 72 de 55 y te salió un número negativo."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "Restaste la cifra pequeña de la grande en las unidades sin pedir prestado."
+      },
+      "D": {
+        "misconception": "alignment_error",
+        "explanation": "Pediste prestado pero no le quitaste la decena al número de arriba."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_011",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 27 + 43?",
+    "options": {
+      "A": "16",
+      "B": "60",
+      "C": "70",
+      "D": "610"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 43 a 27 en vez de sumarlos."
+      },
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Te llevaste una decena pero no la sumaste en la columna de las decenas."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "Pusiste el número entero de las unidades abajo sin reagrupar la decena."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_012",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 62 - 53?",
+    "options": {
+      "A": "-9",
+      "B": "115",
+      "C": "19",
+      "D": "9"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el orden de la resta y el número salió negativo."
+      },
+      "B": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste en lugar de restar como pedía el signo menos."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Al pedir prestado dejaste las decenas de arriba sin cambiar."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_013",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 18 + 56?",
+    "options": {
+      "A": "74",
+      "B": "64",
+      "C": "614",
+      "D": "38"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste sumar la decena que llevabas."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "Escribiste la suma completa de las unidades en vez de llevar una decena."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el más por un menos y restaste los números."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_014",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 36 - 28?",
+    "options": {
+      "A": "64",
+      "B": "8",
+      "C": "12",
+      "D": "-8"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Juntaste los dos números en lugar de quitar uno del otro."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "En las unidades quitaste el número de arriba al de abajo en vez de pedir prestado."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Restaste al revés, el número pequeño menos el grande."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_015",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 54 + 39?",
+    "options": {
+      "A": "83",
+      "B": "813",
+      "C": "93",
+      "D": "15"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Al sumar las unidades no pasaste la decena que sobraba."
+      },
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "No reagrupaste: escribiste las unidades completas junto a las decenas."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Hiciste una resta en lugar de la suma que pedía el signo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_016",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 82 - 53?",
+    "options": {
+      "A": "135",
+      "B": "31",
+      "C": "39",
+      "D": "29"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste 82 y 53 en vez de restarlos."
+      },
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "Restaste la cifra pequeña de la grande en las unidades sin pedir prestado."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Pediste prestado pero no le quitaste la decena al número de arriba."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_017",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 27 + 59?",
+    "options": {
+      "A": "86",
+      "B": "716",
+      "C": "32",
+      "D": "76"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "Pusiste el número entero de las unidades abajo sin reagrupar la decena."
+      },
+      "C": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 59 a 27 en vez de sumarlos."
+      },
+      "D": {
+        "misconception": "alignment_error",
+        "explanation": "Te llevaste una decena pero no la sumaste en la columna de las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_018",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 73 - 29?",
+    "options": {
+      "A": "54",
+      "B": "44",
+      "C": "-44",
+      "D": "56"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Al pedir prestado dejaste las decenas de arriba sin cambiar."
+      },
+      "C": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el orden de la resta y el número salió negativo."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "No pediste prestado y restaste al revés en la columna de las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_019",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 57 + 37?",
+    "options": {
+      "A": "814",
+      "B": "20",
+      "C": "94",
+      "D": "84"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "borrowing_error",
+        "explanation": "Escribiste la suma completa de las unidades en vez de llevar una decena."
+      },
+      "B": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el más por un menos y restaste los números."
+      },
+      "D": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste sumar la decena que llevabas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_020",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 90 - 53?",
+    "options": {
+      "A": "47",
+      "B": "-37",
+      "C": "143",
+      "D": "37"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste bajar una decena después de pedir prestado."
+      },
+      "B": {
+        "misconception": "sign_error",
+        "explanation": "Restaste al revés, el número pequeño menos el grande."
+      },
+      "C": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Juntaste los dos números en lugar de quitar uno del otro."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_021",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 94 - 76?",
+    "options": {
+      "A": "18",
+      "B": "-18",
+      "C": "170",
+      "D": "22"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el orden de la resta y el número salió negativo."
+      },
+      "C": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste en lugar de restar como pedía el signo menos."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "No pediste prestado y restaste al revés en la columna de las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_022",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 32 + 38?",
+    "options": {
+      "A": "6",
+      "B": "70",
+      "C": "60",
+      "D": "610"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el más por un menos y restaste los números."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste sumar la decena que llevabas."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "Escribiste la suma completa de las unidades en vez de llevar una decena."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_023",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 90 - 38?",
+    "options": {
+      "A": "62",
+      "B": "128",
+      "C": "52",
+      "D": "68"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Olvidaste bajar una decena después de pedir prestado."
+      },
+      "B": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Juntaste los dos números en lugar de quitar uno del otro."
+      },
+      "D": {
+        "misconception": "borrowing_error",
+        "explanation": "En las unidades quitaste el número de arriba al de abajo en vez de pedir prestado."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_024",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 47 + 28?",
+    "options": {
+      "A": "19",
+      "B": "65",
+      "C": "615",
+      "D": "75"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "sign_error",
+        "explanation": "Hiciste una resta en lugar de la suma que pedía el signo."
+      },
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Al sumar las unidades no pasaste la decena que sobraba."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "No reagrupaste: escribiste las unidades completas junto a las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_025",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 40 - 13?",
+    "options": {
+      "A": "27",
+      "B": "33",
+      "C": "37",
+      "D": "-27"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "borrowing_error",
+        "explanation": "Restaste la cifra pequeña de la grande en las unidades sin pedir prestado."
+      },
+      "C": {
+        "misconception": "alignment_error",
+        "explanation": "Pediste prestado pero no le quitaste la decena al número de arriba."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 40 de 13 y te salió un número negativo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_026",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 37 + 54?",
+    "options": {
+      "A": "81",
+      "B": "91",
+      "C": "811",
+      "D": "17"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "alignment_error",
+        "explanation": "Te llevaste una decena pero no la sumaste en la columna de las decenas."
+      },
+      "C": {
+        "misconception": "borrowing_error",
+        "explanation": "Pusiste el número entero de las unidades abajo sin reagrupar la decena."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Restaste 54 a 37 en vez de sumarlos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_addition_subtraction_027",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 34 - 27?",
+    "options": {
+      "A": "61",
+      "B": "17",
+      "C": "7",
+      "D": "-7"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_instead_of_subtracted",
+        "explanation": "Sumaste en lugar de restar como pedía el signo menos."
+      },
+      "B": {
+        "misconception": "alignment_error",
+        "explanation": "Al pedir prestado dejaste las decenas de arriba sin cambiar."
+      },
+      "D": {
+        "misconception": "sign_error",
+        "explanation": "Cambiaste el orden de la resta y el número salió negativo."
+      }
+    }
+  }
+]

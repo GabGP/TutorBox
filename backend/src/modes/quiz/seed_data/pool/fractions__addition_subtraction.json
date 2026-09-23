@@ -1,0 +1,758 @@
+[
+  {
+    "id": "pool_fractions_addition_subtraction_001",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 3/4 + 5/6?",
+    "options": {
+      "A": "19/12",
+      "B": "4/5",
+      "C": "2",
+      "D": "4"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los numeradores y también los denominadores."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Sumaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste los denominadores entre sí en vez de buscar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_002",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/3 + 1/2?",
+    "options": {
+      "A": "2/5",
+      "B": "5/6",
+      "C": "2/3",
+      "D": "2"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_003",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/12 - 1/3?",
+    "options": {
+      "A": "2/5",
+      "B": "1/2",
+      "C": "1/4",
+      "D": "2/3"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_004",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/12 + 5/6?",
+    "options": {
+      "A": "5/9",
+      "B": "5/6",
+      "C": "5/3",
+      "D": "5/4"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los numeradores y también los denominadores."
+      },
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Sumaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste los denominadores entre sí en vez de buscar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_005",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/6 - 2/3?",
+    "options": {
+      "A": "1/6",
+      "B": "1/2",
+      "C": "1",
+      "D": "1/3"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de restar."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste arriba y sumaste abajo como si fueran números sueltos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_006",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 11/12 - 3/4?",
+    "options": {
+      "A": "2/3",
+      "B": "1/6",
+      "C": "1",
+      "D": "1/2"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_007",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/10 - 1/2?",
+    "options": {
+      "A": "3/5",
+      "B": "3/4",
+      "C": "1/5",
+      "D": "1/2"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste también los denominadores en vez de buscar el común."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste los numeradores pero sumaste los denominadores."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_008",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/12 + 1/2?",
+    "options": {
+      "A": "1/2",
+      "B": "3/5",
+      "C": "3/7",
+      "D": "11/12"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      },
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_009",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 3/4 - 1/2?",
+    "options": {
+      "A": "1/4",
+      "B": "1",
+      "C": "1/3",
+      "D": "1/2"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_010",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 9/10 - 4/5?",
+    "options": {
+      "A": "1",
+      "B": "1/10",
+      "C": "1/3",
+      "D": "1/2"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste también los denominadores en vez de buscar el común."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste los numeradores pero sumaste los denominadores."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los numeradores sin convertir las fracciones a un denominador común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_011",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/12 + 1/3?",
+    "options": {
+      "A": "8/9",
+      "B": "8/15",
+      "C": "11/12",
+      "D": "2/3"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_012",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/10 - 1/5?",
+    "options": {
+      "A": "6/5",
+      "B": "2/5",
+      "C": "3/5",
+      "D": "1/2"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_013",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/2 + 3/10?",
+    "options": {
+      "A": "4/5",
+      "B": "1/3",
+      "C": "2",
+      "D": "1/2"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los numeradores y también los denominadores."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Sumaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste los denominadores entre sí en vez de buscar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_014",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/8 + 3/4?",
+    "options": {
+      "A": "1/3",
+      "B": "7/8",
+      "C": "1/2",
+      "D": "1"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_015",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/8 - 1/4?",
+    "options": {
+      "A": "1/2",
+      "B": "3/4",
+      "C": "5/8",
+      "D": "3/2"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_016",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/8 - 1/4?",
+    "options": {
+      "A": "1/3",
+      "B": "1/2",
+      "C": "1",
+      "D": "3/8"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste los numeradores pero sumaste los denominadores."
+      },
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste también los denominadores en vez de buscar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_017",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/6 + 2/3?",
+    "options": {
+      "A": "3/2",
+      "B": "7/6",
+      "C": "7/3",
+      "D": "7/9"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_018",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 2/3 - 1/2?",
+    "options": {
+      "A": "1/3",
+      "B": "1/6",
+      "C": "1",
+      "D": "1/5"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      },
+      "C": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_019",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 11/12 + 3/4?",
+    "options": {
+      "A": "7/6",
+      "B": "7/4",
+      "C": "5/3",
+      "D": "7/8"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Sumaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste los denominadores entre sí en vez de buscar el común."
+      },
+      "D": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste los numeradores y también los denominadores."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_020",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 9/10 - 2/5?",
+    "options": {
+      "A": "7/10",
+      "B": "7/5",
+      "C": "7/15",
+      "D": "1/2"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de restar."
+      },
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste arriba y sumaste abajo como si fueran números sueltos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_021",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/12 + 1/6?",
+    "options": {
+      "A": "1/4",
+      "B": "1/3",
+      "C": "1/9",
+      "D": "1/6"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Sumaste los de arriba y dejaste el primer denominador sin cambiar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_022",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 9/10 - 1/5?",
+    "options": {
+      "A": "8/5",
+      "B": "7/10",
+      "C": "8/15",
+      "D": "4/5"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste también los denominadores en vez de buscar el común."
+      },
+      "C": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste los numeradores pero sumaste los denominadores."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los numeradores sin convertir las fracciones a un denominador común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_023",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/10 + 1/2?",
+    "options": {
+      "A": "1",
+      "B": "2/3",
+      "C": "6/5",
+      "D": "4/5"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      },
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      },
+      "D": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_024",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/12 - 1/4?",
+    "options": {
+      "A": "3/4",
+      "B": "3/8",
+      "C": "1/2",
+      "D": "1/3"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      },
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_025",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 7/8 - 3/4?",
+    "options": {
+      "A": "1/8",
+      "B": "1/3",
+      "C": "1/2",
+      "D": "1"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_denominators",
+        "explanation": "Restaste los numeradores pero sumaste los denominadores."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los numeradores sin convertir las fracciones a un denominador común."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Restaste también los denominadores en vez de buscar el común."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_026",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 1/2 + 1/5?",
+    "options": {
+      "A": "2/7",
+      "B": "7/10",
+      "C": "1",
+      "D": "2/3"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Sumaste arriba con arriba y abajo con abajo como si fueran números sueltos."
+      },
+      "C": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "No buscaste el denominador común antes de sumar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Hiciste una resta con los denominadores en lugar de igualarlos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_addition_subtraction_027",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "addition_subtraction",
+    "question_text": "¿Cuánto es 5/6 - 3/4?",
+    "options": {
+      "A": "1/5",
+      "B": "1/3",
+      "C": "1/12",
+      "D": "1"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_denominators",
+        "explanation": "Juntaste los denominadores en vez de buscar uno común."
+      },
+      "B": {
+        "misconception": "ignored_common_denominator",
+        "explanation": "Restaste los de arriba y dejaste el primer denominador sin cambiar."
+      },
+      "D": {
+        "misconception": "subtracted_denominators",
+        "explanation": "Quitaste un denominador al otro en vez de encontrar el común."
+      }
+    }
+  }
+]

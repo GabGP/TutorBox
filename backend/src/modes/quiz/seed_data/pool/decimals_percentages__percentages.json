@@ -1,0 +1,1122 @@
+[
+  {
+    "id": "pool_decimals_percentages_percentages_001",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 99% de 100?",
+    "options": {
+      "A": "99",
+      "B": "9900",
+      "C": "1.01",
+      "D": "1"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_002",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 48% de 50?",
+    "options": {
+      "A": "2400",
+      "B": "24",
+      "C": "1.04",
+      "D": "2"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 50 por 48 sin dividir entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 50 entre 48 en vez de hallar esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 48 de 50 en lugar de calcular el porcentaje."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_003",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 67% de 300?",
+    "options": {
+      "A": "20100",
+      "B": "4.48",
+      "C": "201",
+      "D": "233"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_004",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 55% de 60?",
+    "options": {
+      "A": "3300",
+      "B": "1.09",
+      "C": "5",
+      "D": "33"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_005",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 62% de 150?",
+    "options": {
+      "A": "93",
+      "B": "2.42",
+      "C": "88",
+      "D": "9300"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 150 entre 62 en vez de hallar esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 62 de 150 en lugar de calcular el porcentaje."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 150 por 62 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_006",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 72% de 75?",
+    "options": {
+      "A": "1.04",
+      "B": "54",
+      "C": "3",
+      "D": "5400"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_007",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 26% de 50?",
+    "options": {
+      "A": "1.92",
+      "B": "24",
+      "C": "13",
+      "D": "1300"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_008",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 96% de 125?",
+    "options": {
+      "A": "1.3",
+      "B": "29",
+      "C": "12000",
+      "D": "120"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 125 entre 96 en vez de hallar esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 96 de 125 en lugar de calcular el porcentaje."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 125 por 96 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_009",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 85% de 120?",
+    "options": {
+      "A": "102",
+      "B": "35",
+      "C": "10200",
+      "D": "1.41"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_010",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 70% de 80?",
+    "options": {
+      "A": "10",
+      "B": "56",
+      "C": "5600",
+      "D": "1.14"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_011",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 4% de 50?",
+    "options": {
+      "A": "46",
+      "B": "200",
+      "C": "2",
+      "D": "12.5"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 4 de 50 en lugar de calcular el porcentaje."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 50 por 4 sin dividir entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 50 entre 4 en vez de hallar esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_012",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 5% de 60?",
+    "options": {
+      "A": "55",
+      "B": "300",
+      "C": "12",
+      "D": "3"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_013",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 44% de 50?",
+    "options": {
+      "A": "22",
+      "B": "2200",
+      "C": "1.14",
+      "D": "6"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_014",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 78% de 250?",
+    "options": {
+      "A": "19500",
+      "B": "195",
+      "C": "3.21",
+      "D": "172"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 250 por 78 sin dividir entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 250 entre 78 en vez de hallar esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 78 de 250 en lugar de calcular el porcentaje."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_015",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 16% de 50?",
+    "options": {
+      "A": "800",
+      "B": "3.12",
+      "C": "8",
+      "D": "34"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_016",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 2% de 50?",
+    "options": {
+      "A": "100",
+      "B": "25",
+      "C": "48",
+      "D": "1"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_017",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 24% de 50?",
+    "options": {
+      "A": "12",
+      "B": "2.08",
+      "C": "26",
+      "D": "1200"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 50 entre 24 en vez de hallar esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 24 de 50 en lugar de calcular el porcentaje."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 50 por 24 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_018",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 12% de 75?",
+    "options": {
+      "A": "6.25",
+      "B": "9",
+      "C": "63",
+      "D": "900"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_019",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 90% de 180?",
+    "options": {
+      "A": "2",
+      "B": "90",
+      "C": "162",
+      "D": "16200"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_020",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 45% de 60?",
+    "options": {
+      "A": "1.33",
+      "B": "15",
+      "C": "2700",
+      "D": "27"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 60 entre 45 en vez de hallar esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 45 de 60 en lugar de calcular el porcentaje."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 60 por 45 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_021",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 84% de 175?",
+    "options": {
+      "A": "147",
+      "B": "91",
+      "C": "14700",
+      "D": "2.08"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_022",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 32% de 50?",
+    "options": {
+      "A": "18",
+      "B": "16",
+      "C": "1600",
+      "D": "1.56"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_023",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 34% de 50?",
+    "options": {
+      "A": "16",
+      "B": "1700",
+      "C": "17",
+      "D": "1.47"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 34 de 50 en lugar de calcular el porcentaje."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 50 por 34 sin dividir entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 50 entre 34 en vez de hallar esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_024",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 92% de 225?",
+    "options": {
+      "A": "133",
+      "B": "20700",
+      "C": "2.45",
+      "D": "207"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_025",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 88% de 275?",
+    "options": {
+      "A": "242",
+      "B": "24200",
+      "C": "3.12",
+      "D": "187"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_026",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 68% de 75?",
+    "options": {
+      "A": "5100",
+      "B": "51",
+      "C": "1.1",
+      "D": "7"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 75 por 68 sin dividir entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 75 entre 68 en vez de hallar esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 68 de 75 en lugar de calcular el porcentaje."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_027",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 35% de 60?",
+    "options": {
+      "A": "2100",
+      "B": "1.71",
+      "C": "21",
+      "D": "25"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_028",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 22% de 50?",
+    "options": {
+      "A": "1100",
+      "B": "2.27",
+      "C": "28",
+      "D": "11"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_029",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 40% de 80?",
+    "options": {
+      "A": "32",
+      "B": "2",
+      "C": "40",
+      "D": "3200"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 80 entre 40 en vez de hallar esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 40 de 80 en lugar de calcular el porcentaje."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 80 por 40 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_030",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 80% de 90?",
+    "options": {
+      "A": "1.12",
+      "B": "72",
+      "C": "10",
+      "D": "7200"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_031",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 18% de 50?",
+    "options": {
+      "A": "2.78",
+      "B": "32",
+      "C": "9",
+      "D": "900"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "D": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_032",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 56% de 75?",
+    "options": {
+      "A": "1.34",
+      "B": "19",
+      "C": "4200",
+      "D": "42"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 75 entre 56 en vez de hallar esa parte de cien."
+      },
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 56 de 75 en lugar de calcular el porcentaje."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 75 por 56 sin dividir entre cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_033",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 46% de 50?",
+    "options": {
+      "A": "23",
+      "B": "4",
+      "C": "2300",
+      "D": "1.09"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_034",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 60% de 75?",
+    "options": {
+      "A": "15",
+      "B": "45",
+      "C": "4500",
+      "D": "1.25"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      },
+      "C": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_035",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 28% de 50?",
+    "options": {
+      "A": "22",
+      "B": "1400",
+      "C": "14",
+      "D": "1.79"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 28 de 50 en lugar de calcular el porcentaje."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 50 por 28 sin dividir entre cien."
+      },
+      "D": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 50 entre 28 en vez de hallar esa parte de cien."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_036",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 64% de 75?",
+    "options": {
+      "A": "11",
+      "B": "4800",
+      "C": "1.17",
+      "D": "48"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      },
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_037",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 6% de 50?",
+    "options": {
+      "A": "3",
+      "B": "300",
+      "C": "8.33",
+      "D": "44"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_038",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 15% de 60?",
+    "options": {
+      "A": "900",
+      "B": "9",
+      "C": "4",
+      "D": "45"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste 60 por 15 sin dividir entre cien."
+      },
+      "C": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste 60 entre 15 en vez de hallar esa parte de cien."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste 15 de 60 en lugar de calcular el porcentaje."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_039",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 38% de 50?",
+    "options": {
+      "A": "1900",
+      "B": "1.32",
+      "C": "19",
+      "D": "12"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Olvidaste que el porcentaje se divide entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Confundiste el porcentaje con una división."
+      },
+      "D": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Quitaste el número del porcentaje directamente."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_percentages_040",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "percentages",
+    "question_text": "¿Cuál es el 95% de 140?",
+    "options": {
+      "A": "13300",
+      "B": "1.47",
+      "C": "45",
+      "D": "133"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "multiplied_by_percentage_directly",
+        "explanation": "Multiplicaste los dos números y no dividiste entre cien."
+      },
+      "B": {
+        "misconception": "confused_fraction_with_percent",
+        "explanation": "Dividiste el número entre el porcentaje en lugar de calcular esa parte de cien."
+      },
+      "C": {
+        "misconception": "subtracted_percentage_as_raw_number",
+        "explanation": "Restaste el porcentaje como si fuera una cantidad normal."
+      }
+    }
+  }
+]

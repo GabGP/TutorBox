@@ -1,0 +1,758 @@
+[
+  {
+    "id": "pool_arithmetic_multiplication_division_001",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 36 * 7?",
+    "options": {
+      "A": "252",
+      "B": "212",
+      "C": "216",
+      "D": "210"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_carry",
+        "explanation": "Olvidaste sumar lo que llevabas al multiplicar las decenas."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Usaste la fila anterior de la tabla y multiplicaste por uno menos."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste solo las decenas y dejaste fuera las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_002",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 12 / 2?",
+    "options": {
+      "A": "24",
+      "B": "6",
+      "C": "5",
+      "D": "10"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 2 y te quedaste un número antes."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_003",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 60 / 5?",
+    "options": {
+      "A": "300",
+      "B": "11",
+      "C": "12",
+      "D": "55"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Hiciste una multiplicación en vez de la división."
+      },
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y el cociente te quedó uno menos."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Hiciste una sola resta en vez de completar la división."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_004",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 27 * 8?",
+    "options": {
+      "A": "166",
+      "B": "189",
+      "C": "160",
+      "D": "216"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_carry",
+        "explanation": "Olvidaste sumar lo que llevabas al multiplicar las decenas."
+      },
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Usaste la fila anterior de la tabla y multiplicaste por uno menos."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste solo las decenas y dejaste fuera las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_005",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 33 / 3?",
+    "options": {
+      "A": "11",
+      "B": "10",
+      "C": "30",
+      "D": "99"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 3 y te quedaste un número antes."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      },
+      "D": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_006",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 28 * 8?",
+    "options": {
+      "A": "196",
+      "B": "224",
+      "C": "160",
+      "D": "164"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y te faltó un grupo entero."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Te faltó multiplicar la parte de las unidades."
+      },
+      "D": {
+        "misconception": "forgot_carry",
+        "explanation": "Perdiste la decena que llevabas de las unidades a las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_007",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 20 / 2?",
+    "options": {
+      "A": "9",
+      "B": "18",
+      "C": "10",
+      "D": "40"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Confundiste la fila de la tabla y tomaste el cociente anterior."
+      },
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Restaste 2 una sola vez en lugar de repartir todo."
+      },
+      "D": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste 20 por 2 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_008",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 42 / 6?",
+    "options": {
+      "A": "6",
+      "B": "36",
+      "C": "252",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 6 y te quedaste un número antes."
+      },
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      },
+      "C": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_009",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 18 * 8?",
+    "options": {
+      "A": "144",
+      "B": "80",
+      "C": "84",
+      "D": "126"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Te faltó multiplicar la parte de las unidades."
+      },
+      "C": {
+        "misconception": "forgot_carry",
+        "explanation": "Perdiste la decena que llevabas de las unidades a las decenas."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y te faltó un grupo entero."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_010",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 30 / 3?",
+    "options": {
+      "A": "27",
+      "B": "10",
+      "C": "90",
+      "D": "9"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Restaste 3 una sola vez en lugar de repartir todo."
+      },
+      "C": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste 30 por 3 en vez de dividir."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Confundiste la fila de la tabla y tomaste el cociente anterior."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_011",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 14 * 9?",
+    "options": {
+      "A": "90",
+      "B": "96",
+      "C": "126",
+      "D": "112"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste las decenas de 14 pero no las unidades."
+      },
+      "B": {
+        "misconception": "forgot_carry",
+        "explanation": "Multiplicaste bien las unidades pero no sumaste la decena que llevabas."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Te equivocaste en la tabla del 9 y contaste un grupo de menos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_012",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 48 / 8?",
+    "options": {
+      "A": "40",
+      "B": "384",
+      "C": "5",
+      "D": "6"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Hiciste una sola resta en vez de completar la división."
+      },
+      "B": {
+        "misconception": "inverted_division",
+        "explanation": "Hiciste una multiplicación en vez de la división."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y el cociente te quedó uno menos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_013",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 34 * 6?",
+    "options": {
+      "A": "204",
+      "B": "184",
+      "C": "170",
+      "D": "180"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_carry",
+        "explanation": "Olvidaste sumar lo que llevabas al multiplicar las decenas."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Usaste la fila anterior de la tabla y multiplicaste por uno menos."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste solo las decenas y dejaste fuera las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_014",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 40 / 8?",
+    "options": {
+      "A": "320",
+      "B": "5",
+      "C": "4",
+      "D": "32"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 8 y te quedaste un número antes."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_015",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 24 * 4?",
+    "options": {
+      "A": "86",
+      "B": "72",
+      "C": "96",
+      "D": "80"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_carry",
+        "explanation": "Perdiste la decena que llevabas de las unidades a las decenas."
+      },
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y te faltó un grupo entero."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Te faltó multiplicar la parte de las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_016",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 50 / 5?",
+    "options": {
+      "A": "250",
+      "B": "9",
+      "C": "45",
+      "D": "10"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste 50 por 5 en vez de dividir."
+      },
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Confundiste la fila de la tabla y tomaste el cociente anterior."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Restaste 5 una sola vez en lugar de repartir todo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_017",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 23 * 5?",
+    "options": {
+      "A": "115",
+      "B": "92",
+      "C": "100",
+      "D": "105"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Te equivocaste en la tabla del 5 y contaste un grupo de menos."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste las decenas de 23 pero no las unidades."
+      },
+      "D": {
+        "misconception": "forgot_carry",
+        "explanation": "Multiplicaste bien las unidades pero no sumaste la decena que llevabas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_018",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 66 / 6?",
+    "options": {
+      "A": "10",
+      "B": "11",
+      "C": "60",
+      "D": "396"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y el cociente te quedó uno menos."
+      },
+      "C": {
+        "misconception": "remainder_ignored",
+        "explanation": "Hiciste una sola resta en vez de completar la división."
+      },
+      "D": {
+        "misconception": "inverted_division",
+        "explanation": "Hiciste una multiplicación en vez de la división."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_019",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 22 * 7?",
+    "options": {
+      "A": "132",
+      "B": "140",
+      "C": "154",
+      "D": "144"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Usaste la fila anterior de la tabla y multiplicaste por uno menos."
+      },
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste solo las decenas y dejaste fuera las unidades."
+      },
+      "D": {
+        "misconception": "forgot_carry",
+        "explanation": "Olvidaste sumar lo que llevabas al multiplicar las decenas."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_020",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 35 / 5?",
+    "options": {
+      "A": "6",
+      "B": "30",
+      "C": "175",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 5 y te quedaste un número antes."
+      },
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      },
+      "C": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_021",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 46 * 3?",
+    "options": {
+      "A": "138",
+      "B": "120",
+      "C": "128",
+      "D": "92"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "remainder_ignored",
+        "explanation": "Te faltó multiplicar la parte de las unidades."
+      },
+      "C": {
+        "misconception": "forgot_carry",
+        "explanation": "Perdiste la decena que llevabas de las unidades a las decenas."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y te faltó un grupo entero."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_022",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 15 / 3?",
+    "options": {
+      "A": "12",
+      "B": "5",
+      "C": "45",
+      "D": "4"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Restaste 3 una sola vez en lugar de repartir todo."
+      },
+      "C": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste 15 por 3 en vez de dividir."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Confundiste la fila de la tabla y tomaste el cociente anterior."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_023",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 17 * 8?",
+    "options": {
+      "A": "80",
+      "B": "86",
+      "C": "136",
+      "D": "119"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste las decenas de 17 pero no las unidades."
+      },
+      "B": {
+        "misconception": "forgot_carry",
+        "explanation": "Multiplicaste bien las unidades pero no sumaste la decena que llevabas."
+      },
+      "D": {
+        "misconception": "table_lookup_error",
+        "explanation": "Te equivocaste en la tabla del 8 y contaste un grupo de menos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_024",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 48 / 6?",
+    "options": {
+      "A": "42",
+      "B": "288",
+      "C": "7",
+      "D": "8"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "remainder_ignored",
+        "explanation": "Hiciste una sola resta en vez de completar la división."
+      },
+      "B": {
+        "misconception": "inverted_division",
+        "explanation": "Hiciste una multiplicación en vez de la división."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y el cociente te quedó uno menos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_025",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 39 * 7?",
+    "options": {
+      "A": "273",
+      "B": "213",
+      "C": "234",
+      "D": "210"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_carry",
+        "explanation": "Olvidaste sumar lo que llevabas al multiplicar las decenas."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Usaste la fila anterior de la tabla y multiplicaste por uno menos."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Multiplicaste solo las decenas y dejaste fuera las unidades."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_026",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 72 / 8?",
+    "options": {
+      "A": "576",
+      "B": "9",
+      "C": "8",
+      "D": "64"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Multiplicaste los dos números en lugar de repartir."
+      },
+      "C": {
+        "misconception": "table_lookup_error",
+        "explanation": "Buscaste en la tabla del 8 y te quedaste un número antes."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Quitaste el divisor una sola vez y no seguiste repartiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_multiplication_division_027",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "multiplication_division",
+    "question_text": "¿Cuánto es 36 / 3?",
+    "options": {
+      "A": "108",
+      "B": "11",
+      "C": "12",
+      "D": "33"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "inverted_division",
+        "explanation": "Hiciste una multiplicación en vez de la división."
+      },
+      "B": {
+        "misconception": "table_lookup_error",
+        "explanation": "Recordaste mal la tabla y el cociente te quedó uno menos."
+      },
+      "D": {
+        "misconception": "remainder_ignored",
+        "explanation": "Hiciste una sola resta en vez de completar la división."
+      }
+    }
+  }
+]

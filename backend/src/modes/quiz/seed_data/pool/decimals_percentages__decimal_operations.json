@@ -1,0 +1,1122 @@
+[
+  {
+    "id": "pool_decimals_percentages_decimal_operations_001",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 8.86 + 5.5?",
+    "options": {
+      "A": "14.36",
+      "B": "143.6",
+      "C": "13.91",
+      "D": "9.41"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_002",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 4.78 - 3.7?",
+    "options": {
+      "A": "10.8",
+      "B": "1.08",
+      "C": "1.71",
+      "D": "4.41"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_003",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.6 + 3.47?",
+    "options": {
+      "A": "110.7",
+      "B": "10.53",
+      "C": "11.07",
+      "D": "4.23"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_004",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 9.7 * 4?",
+    "options": {
+      "A": "388",
+      "B": "36.7",
+      "C": "3.88",
+      "D": "38.8"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_005",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 9.91 - 6.4?",
+    "options": {
+      "A": "3.51",
+      "B": "3.87",
+      "C": "9.27",
+      "D": "35.1"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_006",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 2.4 / 3?",
+    "options": {
+      "A": "2/3",
+      "B": "0.8",
+      "C": "0.08",
+      "D": "8"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_007",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.58 + 1.3?",
+    "options": {
+      "A": "8.61",
+      "B": "7.71",
+      "C": "8.88",
+      "D": "88.8"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_008",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 9.52 - 1.4?",
+    "options": {
+      "A": "8.48",
+      "B": "9.38",
+      "C": "81.2",
+      "D": "8.12"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_009",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.83 + 1.5?",
+    "options": {
+      "A": "8.33",
+      "B": "6.98",
+      "C": "83.3",
+      "D": "7.88"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_010",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.3 * 2?",
+    "options": {
+      "A": "1.46",
+      "B": "14.6",
+      "C": "146",
+      "D": "14.3"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_011",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.58 - 2.4?",
+    "options": {
+      "A": "5.34",
+      "B": "31.8",
+      "C": "3.18",
+      "D": "3.54"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_012",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.6 / 4?",
+    "options": {
+      "A": "0.14",
+      "B": "14",
+      "C": "1.25",
+      "D": "1.4"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_013",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 9.2 + 1.14?",
+    "options": {
+      "A": "10.34",
+      "B": "103.4",
+      "C": "10.16",
+      "D": "2.06"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_014",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.63 - 1.9?",
+    "options": {
+      "A": "57.3",
+      "B": "5.73",
+      "C": "6.54",
+      "D": "7.44"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_015",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 1.4 + 7.65?",
+    "options": {
+      "A": "90.5",
+      "B": "8.69",
+      "C": "9.05",
+      "D": "7.79"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_016",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.3 * 5?",
+    "options": {
+      "A": "315",
+      "B": "30.3",
+      "C": "3.15",
+      "D": "31.5"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_017",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.94 - 4.8?",
+    "options": {
+      "A": "1.14",
+      "B": "1.86",
+      "C": "5.46",
+      "D": "11.4"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_018",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.8 / 2?",
+    "options": {
+      "A": "2.5",
+      "B": "2.9",
+      "C": "0.29",
+      "D": "29"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_019",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 2.9 + 7.75?",
+    "options": {
+      "A": "9.84",
+      "B": "8.04",
+      "C": "10.65",
+      "D": "106.5"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_020",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.32 - 4.8?",
+    "options": {
+      "A": "2.24",
+      "B": "5.84",
+      "C": "15.2",
+      "D": "1.52"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_021",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.02 + 3.9?",
+    "options": {
+      "A": "8.92",
+      "B": "5.41",
+      "C": "89.2",
+      "D": "8.11"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_022",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 8.4 * 7?",
+    "options": {
+      "A": "5.88",
+      "B": "58.8",
+      "C": "588",
+      "D": "56.4"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_023",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.69 - 5.4?",
+    "options": {
+      "A": "6.15",
+      "B": "12.9",
+      "C": "1.29",
+      "D": "1.65"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_024",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 1.8 / 2?",
+    "options": {
+      "A": "0.09",
+      "B": "9",
+      "C": "0.5",
+      "D": "0.9"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_025",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.3 + 5.43?",
+    "options": {
+      "A": "11.73",
+      "B": "117.3",
+      "C": "11.46",
+      "D": "6.06"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_026",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 9.26 - 8.1?",
+    "options": {
+      "A": "11.6",
+      "B": "1.16",
+      "C": "1.25",
+      "D": "8.45"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_027",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 1.4 + 5.81?",
+    "options": {
+      "A": "72.1",
+      "B": "6.85",
+      "C": "7.21",
+      "D": "5.95"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_028",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.9 * 4?",
+    "options": {
+      "A": "276",
+      "B": "24.9",
+      "C": "2.76",
+      "D": "27.6"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_029",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 8.38 - 6.6?",
+    "options": {
+      "A": "1.78",
+      "B": "2.32",
+      "C": "7.72",
+      "D": "17.8"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_030",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.6 / 3?",
+    "options": {
+      "A": "2",
+      "B": "2.2",
+      "C": "0.22",
+      "D": "22"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_031",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 8.3 + 7.05?",
+    "options": {
+      "A": "15.08",
+      "B": "7.88",
+      "C": "15.35",
+      "D": "153.5"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      },
+      "D": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_032",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.94 - 1.8?",
+    "options": {
+      "A": "5.86",
+      "B": "6.76",
+      "C": "51.4",
+      "D": "5.14"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_033",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.4 + 7.62?",
+    "options": {
+      "A": "15.02",
+      "B": "8.36",
+      "C": "150.2",
+      "D": "14.66"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_034",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 1.8 * 4?",
+    "options": {
+      "A": "0.72",
+      "B": "7.2",
+      "C": "72",
+      "D": "4.8"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "C": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_035",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.61 - 1.9?",
+    "options": {
+      "A": "6.42",
+      "B": "47.1",
+      "C": "4.71",
+      "D": "5.52"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "D": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_036",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 5.4 / 3?",
+    "options": {
+      "A": "0.18",
+      "B": "18",
+      "C": "5/3",
+      "D": "1.8"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      },
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "No pusiste el punto decimal en el número final."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "No dividiste la parte decimal del número."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_037",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 2.61 + 7.5?",
+    "options": {
+      "A": "10.11",
+      "B": "101.1",
+      "C": "9.66",
+      "D": "3.36"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Corriste el punto decimal un lugar a la derecha."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste las cifras decimales como si fueran enteros sin fijarte en su valor posicional."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Alineaste los números a la derecha sin alinear el punto decimal."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_038",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 7.12 - 2.8?",
+    "options": {
+      "A": "43.2",
+      "B": "4.32",
+      "C": "5.04",
+      "D": "6.84"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Colocaste el punto decimal en el lugar equivocado."
+      },
+      "C": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Trataste las décimas y las centésimas como si valieran lo mismo."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Pusiste los números uno debajo del otro sin alinear los puntos."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_039",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 6.71 + 9.7?",
+    "options": {
+      "A": "164.1",
+      "B": "15.78",
+      "C": "16.41",
+      "D": "7.68"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Pusiste el punto una posición más a la derecha de lo debido."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Sumaste los decimales sin tener en cuenta cuántas cifras tenía cada uno."
+      },
+      "D": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Sumaste como enteros y luego colocaste el punto al final."
+      }
+    }
+  },
+  {
+    "id": "pool_decimals_percentages_decimal_operations_040",
+    "schema_version": "1.0.0",
+    "topic": "decimals_percentages",
+    "subconcept": "decimal_operations",
+    "question_text": "¿Cuánto es 1.6 * 8?",
+    "options": {
+      "A": "128",
+      "B": "8.6",
+      "C": "1.28",
+      "D": "12.8"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "misplaced_decimal_point",
+        "explanation": "Olvidaste colocar el punto decimal en el producto."
+      },
+      "B": {
+        "misconception": "ignored_decimal_places",
+        "explanation": "Multiplicaste solo la parte entera y copiaste los decimales sin multiplicar."
+      },
+      "C": {
+        "misconception": "added_without_aligning_decimal",
+        "explanation": "Contaste un lugar decimal de más al colocar el punto."
+      }
+    }
+  }
+]

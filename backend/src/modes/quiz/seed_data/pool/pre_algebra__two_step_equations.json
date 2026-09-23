@@ -1,0 +1,1122 @@
+[
+  {
+    "id": "pool_pre_algebra_two_step_equations_001",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x - 14 = 42?",
+    "options": {
+      "A": "8",
+      "B": "56",
+      "C": "49",
+      "D": "4"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_002",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x + 18 = 90?",
+    "options": {
+      "A": "72",
+      "B": "12",
+      "C": "66",
+      "D": "18"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste 18 y te detuviste sin dividir entre 6."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de restar 18, restaste 6 en vez de dividir."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Sumaste 18 en lugar de restarlo y luego dividiste."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_003",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x - 18 = 54?",
+    "options": {
+      "A": "72",
+      "B": "27",
+      "C": "12",
+      "D": "6"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después sumaste."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_004",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 5 = 30?",
+    "options": {
+      "A": "11",
+      "B": "30",
+      "C": "5",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_005",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x + 5 = 40?",
+    "options": {
+      "A": "7",
+      "B": "3",
+      "C": "30",
+      "D": "35"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 5 primero y luego restaste 5 completo."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de restar 5, restaste 5 en vez de dividir."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste 5 y te detuviste sin dividir entre 5."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_006",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 16 = 8?",
+    "options": {
+      "A": "20",
+      "B": "6",
+      "C": "-2",
+      "D": "24"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_007",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 4 = 24?",
+    "options": {
+      "A": "10",
+      "B": "5",
+      "C": "7",
+      "D": "28"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "B": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_008",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x + 4 = 32?",
+    "options": {
+      "A": "24",
+      "B": "9",
+      "C": "28",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de restar 4, restaste 4 en vez de dividir."
+      },
+      "B": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Sumaste 4 en lugar de restarlo y luego dividiste."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste 4 y te detuviste sin dividir entre 4."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_009",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x - 6 = 24?",
+    "options": {
+      "A": "5",
+      "B": "24",
+      "C": "30",
+      "D": "10"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después sumaste."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_010",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x + 6 = 36?",
+    "options": {
+      "A": "7",
+      "B": "5",
+      "C": "30",
+      "D": "0"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Sumaste el número suelto en vez de restarlo antes de dividir."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de restar el número suelto."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_011",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x - 6 = 18?",
+    "options": {
+      "A": "2",
+      "B": "9",
+      "C": "4",
+      "D": "18"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 6 en lugar de sumarlo y luego dividiste."
+      },
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 6 primero y luego sumaste 6 completo."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 6, restaste 6 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_012",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x - 30 = 12?",
+    "options": {
+      "A": "-3",
+      "B": "42",
+      "C": "36",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_013",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x + 8 = 32?",
+    "options": {
+      "A": "6",
+      "B": "24",
+      "C": "20",
+      "D": "10"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Sumaste el número suelto en vez de restarlo antes de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_014",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 10 = 25?",
+    "options": {
+      "A": "35",
+      "B": "7",
+      "C": "15",
+      "D": "30"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste 10 y te detuviste sin dividir entre 5."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 5 primero y luego sumaste 10 completo."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 10, restaste 5 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_015",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x - 14 = 63?",
+    "options": {
+      "A": "77",
+      "B": "70",
+      "C": "11",
+      "D": "7"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_016",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x - 14 = 35?",
+    "options": {
+      "A": "49",
+      "B": "19",
+      "C": "42",
+      "D": "7"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_017",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 10 = 35?",
+    "options": {
+      "A": "9",
+      "B": "40",
+      "C": "5",
+      "D": "17"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 10, restaste 5 en vez de dividir."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 10 en lugar de sumarlo y luego dividiste."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 5 primero y luego sumaste 10 completo."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_018",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x + 36 = 54?",
+    "options": {
+      "A": "12",
+      "B": "3",
+      "C": "15",
+      "D": "18"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_019",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x - 42 = 42?",
+    "options": {
+      "A": "48",
+      "B": "0",
+      "C": "12",
+      "D": "84"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "B": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_020",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 25 = 25?",
+    "options": {
+      "A": "30",
+      "B": "45",
+      "C": "50",
+      "D": "10"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 5 primero y luego sumaste 25 completo."
+      },
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 25, restaste 5 en vez de dividir."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste 25 y te detuviste sin dividir entre 5."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_021",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x + 10 = 55?",
+    "options": {
+      "A": "9",
+      "B": "40",
+      "C": "45",
+      "D": "1"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después restaste."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_022",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 4 = 28?",
+    "options": {
+      "A": "6",
+      "B": "8",
+      "C": "11",
+      "D": "28"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_023",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 10 = 5?",
+    "options": {
+      "A": "-1",
+      "B": "15",
+      "C": "3",
+      "D": "10"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 10 en lugar de sumarlo y luego dividiste."
+      },
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste 10 y te detuviste sin dividir entre 5."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 10, restaste 5 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_024",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x + 42 = 126?",
+    "options": {
+      "A": "24",
+      "B": "84",
+      "C": "77",
+      "D": "12"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_025",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 8 = 40?",
+    "options": {
+      "A": "12",
+      "B": "48",
+      "C": "18",
+      "D": "8"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_026",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 12 = 8?",
+    "options": {
+      "A": "20",
+      "B": "5",
+      "C": "16",
+      "D": "-1"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste 12 y te detuviste sin dividir entre 4."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 12, restaste 4 en vez de dividir."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 12 en lugar de sumarlo y luego dividiste."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_027",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x + 4 = 36?",
+    "options": {
+      "A": "32",
+      "B": "5",
+      "C": "8",
+      "D": "28"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después restaste."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_028",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x - 20 = 4?",
+    "options": {
+      "A": "24",
+      "B": "21",
+      "C": "-4",
+      "D": "6"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "B": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_029",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 2*x - 10 = 2?",
+    "options": {
+      "A": "6",
+      "B": "10",
+      "C": "-4",
+      "D": "11"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 10, restaste 2 en vez de dividir."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 10 en lugar de sumarlo y luego dividiste."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 2 primero y luego sumaste 10 completo."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_030",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x + 8 = 56?",
+    "options": {
+      "A": "44",
+      "B": "12",
+      "C": "16",
+      "D": "48"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_031",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 30 = 25?",
+    "options": {
+      "A": "35",
+      "B": "-1",
+      "C": "11",
+      "D": "55"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "B": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      },
+      "D": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_032",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 2*x + 4 = 8?",
+    "options": {
+      "A": "0",
+      "B": "6",
+      "C": "4",
+      "D": "2"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 2 primero y luego restaste 4 completo."
+      },
+      "B": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Sumaste 4 en lugar de restarlo y luego dividiste."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste 4 y te detuviste sin dividir entre 2."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_033",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 3*x - 6 = 27?",
+    "options": {
+      "A": "11",
+      "B": "30",
+      "C": "33",
+      "D": "15"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "C": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "D": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después sumaste."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_034",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 6*x - 36 = 18?",
+    "options": {
+      "A": "-3",
+      "B": "9",
+      "C": "39",
+      "D": "48"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_035",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 7*x - 7 = 42?",
+    "options": {
+      "A": "5",
+      "B": "49",
+      "C": "7",
+      "D": "42"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste 7 en lugar de sumarlo y luego dividiste."
+      },
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste 7 y te detuviste sin dividir entre 7."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de sumar 7, restaste 7 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_036",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 4*x + 20 = 44?",
+    "options": {
+      "A": "16",
+      "B": "24",
+      "C": "20",
+      "D": "6"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      },
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Hiciste el primer paso y olvidaste el segundo: dividir."
+      },
+      "C": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_037",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 5*x - 20 = 10?",
+    "options": {
+      "A": "6",
+      "B": "30",
+      "C": "22",
+      "D": "-2"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste antes de sumar el número que estaba restando."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_038",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 2*x + 10 = 22?",
+    "options": {
+      "A": "12",
+      "B": "6",
+      "C": "1",
+      "D": "10"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Restaste 10 y te detuviste sin dividir entre 2."
+      },
+      "C": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Dividiste entre 2 primero y luego restaste 10 completo."
+      },
+      "D": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Después de restar 10, restaste 2 en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_039",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 3*x - 3 = 33?",
+    "options": {
+      "A": "14",
+      "B": "33",
+      "C": "12",
+      "D": "10"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_before_subtracting",
+        "explanation": "Cambiaste el orden: dividiste y después sumaste."
+      },
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Trataste el número que multiplica como si estuviera sumando."
+      },
+      "D": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Pasaste el número al otro lado sin cambiarle el signo."
+      }
+    }
+  },
+  {
+    "id": "pool_pre_algebra_two_step_equations_040",
+    "schema_version": "1.0.0",
+    "topic": "pre_algebra",
+    "subconcept": "two_step_equations",
+    "question_text": "¿Cuál es el valor de x en: 3*x - 12 = 21?",
+    "options": {
+      "A": "33",
+      "B": "30",
+      "C": "3",
+      "D": "11"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "forgot_division",
+        "explanation": "Sumaste el número suelto pero olvidaste dividir entre el coeficiente."
+      },
+      "B": {
+        "misconception": "subtracted_instead_of_divided",
+        "explanation": "Restaste el coeficiente al final en vez de dividir entre él."
+      },
+      "C": {
+        "misconception": "sign_inversion_error",
+        "explanation": "Restaste el número suelto en vez de sumarlo para cancelar la resta."
+      }
+    }
+  }
+]

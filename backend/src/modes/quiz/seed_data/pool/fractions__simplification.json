@@ -1,0 +1,730 @@
+[
+  {
+    "id": "pool_fractions_simplification_001",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 20/36 simplificado?",
+    "options": {
+      "A": "5/9",
+      "B": "5/36",
+      "C": "9/17",
+      "D": "5/18"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_002",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 10/30 simplificado?",
+    "options": {
+      "A": "1/30",
+      "B": "1/3",
+      "C": "2/7",
+      "D": "1/15"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_003",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 9/18 simplificado?",
+    "options": {
+      "A": "1/18",
+      "B": "2/5",
+      "C": "1/2",
+      "D": "1/6"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_004",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 4/16 simplificado?",
+    "options": {
+      "A": "1/16",
+      "B": "1/7",
+      "C": "1/8",
+      "D": "1/4"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_005",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 12/18 simplificado?",
+    "options": {
+      "A": "2/3",
+      "B": "5/8",
+      "C": "2/9",
+      "D": "1/9"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_006",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 12/32 simplificado?",
+    "options": {
+      "A": "1/3",
+      "B": "3/8",
+      "C": "3/16",
+      "D": "3/32"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_007",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 20/28 simplificado?",
+    "options": {
+      "A": "9/13",
+      "B": "5/14",
+      "C": "5/7",
+      "D": "5/28"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_008",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 4/36 simplificado?",
+    "options": {
+      "A": "1/17",
+      "B": "1/18",
+      "C": "1/36",
+      "D": "1/9"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_009",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 20/32 simplificado?",
+    "options": {
+      "A": "5/8",
+      "B": "5/16",
+      "C": "5/32",
+      "D": "3/5"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_010",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 4/20 simplificado?",
+    "options": {
+      "A": "1/10",
+      "B": "1/5",
+      "C": "1/20",
+      "D": "1/9"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_011",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 18/27 simplificado?",
+    "options": {
+      "A": "2/9",
+      "B": "2/27",
+      "C": "2/3",
+      "D": "5/8"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_012",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 8/32 simplificado?",
+    "options": {
+      "A": "1/16",
+      "B": "1/32",
+      "C": "1/5",
+      "D": "1/4"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_013",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 16/36 simplificado?",
+    "options": {
+      "A": "4/9",
+      "B": "1/9",
+      "C": "7/17",
+      "D": "2/9"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_014",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 32/36 simplificado?",
+    "options": {
+      "A": "2/9",
+      "B": "8/9",
+      "C": "15/17",
+      "D": "4/9"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_015",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 8/24 simplificado?",
+    "options": {
+      "A": "1/24",
+      "B": "3/11",
+      "C": "1/3",
+      "D": "1/12"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_016",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 4/12 simplificado?",
+    "options": {
+      "A": "1/12",
+      "B": "1/5",
+      "C": "1/6",
+      "D": "1/3"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_017",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 16/28 simplificado?",
+    "options": {
+      "A": "4/7",
+      "B": "7/13",
+      "C": "2/7",
+      "D": "1/7"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_018",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 16/32 simplificado?",
+    "options": {
+      "A": "7/15",
+      "B": "1/2",
+      "C": "1/16",
+      "D": "1/32"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      },
+      "C": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_019",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 28/32 simplificado?",
+    "options": {
+      "A": "13/15",
+      "B": "7/16",
+      "C": "7/8",
+      "D": "7/32"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      },
+      "D": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_020",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 20/24 simplificado?",
+    "options": {
+      "A": "9/11",
+      "B": "5/12",
+      "C": "5/24",
+      "D": "5/6"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_021",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 12/16 simplificado?",
+    "options": {
+      "A": "3/4",
+      "B": "3/8",
+      "C": "3/16",
+      "D": "5/7"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_022",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 6/12 simplificado?",
+    "options": {
+      "A": "1/6",
+      "B": "1/2",
+      "C": "1/12",
+      "D": "2/5"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      },
+      "C": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_023",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 24/36 simplificado?",
+    "options": {
+      "A": "1/9",
+      "B": "1/18",
+      "C": "2/3",
+      "D": "11/17"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      },
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      },
+      "D": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_024",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 10/20 simplificado?",
+    "options": {
+      "A": "1/10",
+      "B": "1/20",
+      "C": "4/9",
+      "D": "1/2"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "partial_factor_division",
+        "explanation": "No dividiste las dos partes entre el mismo número."
+      },
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste el de arriba y olvidaste dividir el de abajo entre el mismo número."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Simplificaste restando en vez de dividiendo."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_025",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 18/36 simplificado?",
+    "options": {
+      "A": "1/2",
+      "B": "1/36",
+      "C": "8/17",
+      "D": "1/18"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Dividiste solo el numerador y dejaste el denominador igual."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Restaste la misma cantidad arriba y abajo en vez de dividir."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Dividiste el numerador y el denominador entre números diferentes."
+      }
+    }
+  },
+  {
+    "id": "pool_fractions_simplification_026",
+    "schema_version": "1.0.0",
+    "topic": "fractions",
+    "subconcept": "simplification",
+    "question_text": "¿Cuánto es 16/24 simplificado?",
+    "options": {
+      "A": "1/12",
+      "B": "2/3",
+      "C": "7/11",
+      "D": "1/6"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "divided_only_numerator",
+        "explanation": "Simplificaste arriba pero no abajo."
+      },
+      "C": {
+        "misconception": "subtracted_to_reduce",
+        "explanation": "Quitaste un número al numerador y al denominador en lugar de dividirlos."
+      },
+      "D": {
+        "misconception": "partial_factor_division",
+        "explanation": "Usaste un divisor distinto arriba y abajo."
+      }
+    }
+  }
+]

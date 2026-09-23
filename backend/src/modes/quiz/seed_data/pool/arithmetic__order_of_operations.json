@@ -1,0 +1,730 @@
+[
+  {
+    "id": "pool_arithmetic_order_of_operations_001",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 8 * (3 + 2) + 2 * 4?",
+    "options": {
+      "A": "48",
+      "B": "168",
+      "C": "224",
+      "D": "34"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_002",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (2 + 4) * 4 + 3 * 5?",
+    "options": {
+      "A": "135",
+      "B": "39",
+      "C": "210",
+      "D": "33"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_003",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (7 + 8) * 4 - 2 * 4?",
+    "options": {
+      "A": "232",
+      "B": "120",
+      "C": "52",
+      "D": "31"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_004",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 3 * 4 + (6 + 3) * 5?",
+    "options": {
+      "A": "105",
+      "B": "195",
+      "C": "33",
+      "D": "57"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_005",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 8 * (4 + 2) + 2 * 2?",
+    "options": {
+      "A": "52",
+      "B": "128",
+      "C": "38",
+      "D": "100"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_006",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * 8 + (5 + 2) * 2?",
+    "options": {
+      "A": "210",
+      "B": "70",
+      "C": "65",
+      "D": "126"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_007",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * (4 + 4) + 2 * 3?",
+    "options": {
+      "A": "210",
+      "B": "38",
+      "C": "62",
+      "D": "174"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_008",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (9 + 3) * 4 + 2 * 2?",
+    "options": {
+      "A": "144",
+      "B": "25",
+      "C": "100",
+      "D": "52"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_009",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 2 * (4 + 4) + 2 * 2?",
+    "options": {
+      "A": "20",
+      "B": "16",
+      "C": "36",
+      "D": "40"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_010",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 5 * 6 + (4 + 5) * 3?",
+    "options": {
+      "A": "49",
+      "B": "57",
+      "C": "117",
+      "D": "225"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_011",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * (2 + 3) + 6 * 3?",
+    "options": {
+      "A": "35",
+      "B": "123",
+      "C": "53",
+      "D": "231"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_012",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 4 * 2 + (3 + 3) * 4?",
+    "options": {
+      "A": "23",
+      "B": "56",
+      "C": "128",
+      "D": "32"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_013",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 3 * 3 + (6 + 6) * 4?",
+    "options": {
+      "A": "57",
+      "B": "84",
+      "C": "180",
+      "D": "39"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_014",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (2 + 4) * 4 + 4 * 3?",
+    "options": {
+      "A": "84",
+      "B": "36",
+      "C": "144",
+      "D": "30"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_015",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * 6 + (5 + 5) * 2?",
+    "options": {
+      "A": "104",
+      "B": "224",
+      "C": "62",
+      "D": "57"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_016",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 4 * 6 + (2 + 6) * 2?",
+    "options": {
+      "A": "64",
+      "B": "112",
+      "C": "38",
+      "D": "40"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_017",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 4 * (7 + 5) + 2 * 4?",
+    "options": {
+      "A": "56",
+      "B": "224",
+      "C": "41",
+      "D": "200"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_018",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 5 * (3 + 2) + 4 * 4?",
+    "options": {
+      "A": "180",
+      "B": "41",
+      "C": "33",
+      "D": "116"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      },
+      "C": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_019",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 6 * (8 + 3) + 6 * 2?",
+    "options": {
+      "A": "204",
+      "B": "63",
+      "C": "78",
+      "D": "144"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      },
+      "D": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_020",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 2 * (7 + 4) + 3 * 3?",
+    "options": {
+      "A": "84",
+      "B": "27",
+      "C": "75",
+      "D": "31"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_021",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * 8 + (2 + 5) * 2?",
+    "options": {
+      "A": "70",
+      "B": "68",
+      "C": "126",
+      "D": "210"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_022",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (3 + 4) * 5 - 4 * 4?",
+    "options": {
+      "A": "7",
+      "B": "19",
+      "C": "124",
+      "D": "28"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      },
+      "C": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_023",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 8 * 8 + (3 + 3) * 2?",
+    "options": {
+      "A": "73",
+      "B": "140",
+      "C": "76",
+      "D": "224"
+    },
+    "correct_option": "C",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      },
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      },
+      "D": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_024",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 7 * (5 + 4) + 3 * 2?",
+    "options": {
+      "A": "45",
+      "B": "132",
+      "C": "168",
+      "D": "69"
+    },
+    "correct_option": "D",
+    "distractors": {
+      "A": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Ignoraste el paréntesis y multiplicaste directo."
+      },
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Calculaste de corrido de izquierda a derecha en vez de multiplicar primero."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Resolviste las sumas y restas antes de los productos."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_025",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es (8 + 5) * 4 - 3 * 3?",
+    "options": {
+      "A": "43",
+      "B": "147",
+      "C": "39",
+      "D": "19"
+    },
+    "correct_option": "A",
+    "distractors": {
+      "B": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Hiciste las operaciones de izquierda a derecha sin respetar la jerarquía."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Sumaste y restaste primero y multiplicaste al final."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "Multiplicaste sin calcular primero lo que está dentro del paréntesis."
+      }
+    }
+  },
+  {
+    "id": "pool_arithmetic_order_of_operations_026",
+    "schema_version": "1.0.0",
+    "topic": "arithmetic",
+    "subconcept": "order_of_operations",
+    "question_text": "¿Cuánto es 8 * 3 + (3 + 3) * 2?",
+    "options": {
+      "A": "60",
+      "B": "36",
+      "C": "144",
+      "D": "33"
+    },
+    "correct_option": "B",
+    "distractors": {
+      "A": {
+        "misconception": "left_to_right_precedence",
+        "explanation": "Fuiste resolviendo en orden de lectura sin dar prioridad a las multiplicaciones."
+      },
+      "C": {
+        "misconception": "addition_before_multiplication",
+        "explanation": "Hiciste las sumas antes que las multiplicaciones."
+      },
+      "D": {
+        "misconception": "ignored_parentheses",
+        "explanation": "No resolviste el paréntesis antes de multiplicar."
+      }
+    }
+  }
+]
