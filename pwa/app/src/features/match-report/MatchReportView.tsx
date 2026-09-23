@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SessionReport } from '../session-engine/session.types';
 import { generateCsvDataUri } from './csvExport';
 import {
@@ -26,9 +26,9 @@ export const MatchReportView: React.FC<MatchReportViewProps> = ({
   report,
   history,
 }) => {
-  const hardest = getHardestQuestions(history, 3);
-  const repeatedErrors = getTopRepeatedErrors(history, 3);
-  const csvUri = generateCsvDataUri(history);
+  const hardest = useMemo(() => getHardestQuestions(history, 3), [history]);
+  const repeatedErrors = useMemo(() => getTopRepeatedErrors(history, 3), [history]);
+  const csvUri = useMemo(() => generateCsvDataUri(history), [history]);
 
   const avgText = report
     ? `${Math.round(report.average_accuracy_percentage)}%`
@@ -56,12 +56,12 @@ export const MatchReportView: React.FC<MatchReportViewProps> = ({
         </div>
 
         <div className={styles.cardWhite}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 14px' }}>
+          <h2 className={styles.sectionTitle}>
             Preguntas más difíciles
           </h2>
           <div className={styles.hard} id="hard">
             {hardest.length === 0 ? (
-              <div style={{ color: 'var(--mute)' }}>Sin preguntas respondidas.</div>
+              <div className={styles.emptyMuted}>Sin preguntas respondidas.</div>
             ) : (
               hardest.map((h) => {
                 const p = Math.round(h.tally.correct_percentage);
@@ -70,12 +70,12 @@ export const MatchReportView: React.FC<MatchReportViewProps> = ({
                   <div key={h.round_id} className={styles.hardItem}>
                     <div className={styles.hardHeader}>
                       <span>{h.text}</span>
-                      <b style={{ color: tone }}>{p}% acierto</b>
+                      <b className={styles.toneText} style={{ '--tone': tone } as React.CSSProperties}>{p}% acierto</b>
                     </div>
                     <div className={styles.track}>
                       <div
                         className={styles.trackFill}
-                        style={{ width: `${p}%`, background: tone }}
+                        style={{ '--progress': `${p}%`, '--tone': tone } as React.CSSProperties}
                       />
                     </div>
                   </div>

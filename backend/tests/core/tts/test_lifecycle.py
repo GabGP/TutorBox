@@ -117,3 +117,98 @@ def test_router_select_backend_with_explicit_engine_override() -> None:
     mock_piper.is_available.return_value = False
     with pytest.raises(TTSUnavailableError, match="Engine 'piper' is unavailable"):
         router.select_backend(lang="es", engine="piper")
+
+
+def test_router_preload_auto_fallback() -> None:
+    """Verifies router.preload falls back across auto-tier engines when primary fails."""
+    mock_sherpa = MagicMock()
+    mock_sherpa.engine_name = "sherpa"
+    mock_sherpa.is_available.return_value = True
+    mock_sherpa.preload.side_effect = RuntimeError("Sherpa preload failed")
+
+    mock_piper = MagicMock()
+    mock_piper.engine_name = "piper"
+    mock_piper.is_available.return_value = True
+    mock_piper.preload.return_value = 14.2
+
+    mock_espeak = MagicMock()
+    mock_espeak.engine_name = "espeak"
+    mock_espeak.is_available.return_value = True
+    mock_espeak.preload.return_value = 0.5
+
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = False
+
+    router = TTSRouter(
+        piper=mock_piper,
+        espeak=mock_espeak,
+        sherpa=mock_sherpa,
+        qwen=mock_qwen,
+    )
+    engine, load_ms = router.preload(engine="auto")
+    assert engine == "piper"
+    assert load_ms == 14.2
+    mock_sherpa.preload.assert_called_once()
+    mock_piper.preload.assert_called_once()
+
+
+def test_router_preload_auto_all_engines_fail() -> None:
+    """Verifies router.preload raises TTSUnavailableError when all auto engines fail."""
+    mock_piper = MagicMock()
+    mock_piper.engine_name = "piper"
+    mock_piper.is_available.return_value = True
+    mock_piper.preload.side_effect = RuntimeError("Piper failed")
+
+    mock_espeak = MagicMock()
+    mock_espeak.engine_name = "espeak"
+    mock_espeak.is_available.return_value = True
+    mock_espeak.preload.side_effect = RuntimeError("eSpeak failed")
+
+    mock_sherpa = MagicMock()
+    mock_sherpa.engine_name = "sherpa"
+    mock_sherpa.is_available.return_value = True
+    mock_sherpa.preload.side_effect = RuntimeError("Sherpa failed")
+
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = False
+
+    router = TTSRouter(
+        piper=mock_piper,
+        espeak=mock_espeak,
+        sherpa=mock_sherpa,
+        qwen=mock_qwen,
+    )
+    with pytest.raises(
+        TTSUnavailableError, match="All auto-tier TTS engines failed to preload"
+    ):
+        router.preload(engine="auto")
+
+
+def test_router_preload_auto_no_backends_available() -> None:
+    """Verifies router.preload raises TTSUnavailableError when no backends are available."""
+    mock_piper = MagicMock()
+    mock_piper.engine_name = "piper"
+    mock_piper.is_available.return_value = False
+
+    mock_espeak = MagicMock()
+    mock_espeak.engine_name = "espeak"
+    mock_espeak.is_available.return_value = False
+
+    mock_sherpa = MagicMock()
+    mock_sherpa.engine_name = "sherpa"
+    mock_sherpa.is_available.return_value = False
+
+    mock_qwen = MagicMock()
+    mock_qwen.engine_name = "qwen3-tts"
+    mock_qwen.is_available.return_value = False
+
+    router = TTSRouter(
+        piper=mock_piper,
+        espeak=mock_espeak,
+        sherpa=mock_sherpa,
+        qwen=mock_qwen,
+    )
+    with pytest.raises(TTSUnavailableError, match="No TTS engine available"):
+        router.preload(engine="auto")

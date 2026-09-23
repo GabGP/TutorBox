@@ -52,9 +52,9 @@ gantt
     Week 1 - Baseline, Auth & Devices (A & B) :done, w1, 2026-08-23, 2026-08-30
 
     section Classroom Quiz Subsystem
-    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :w2, 2026-08-30, 2026-09-06
+    Week 2 - Quiz Contract & Distractors (Pilot A / Copilot B) :done, w2, 2026-08-30, 2026-09-06
     Week 3 - Session Engine & Web Voting (Pilot B / Copilot A) :done, w3, 2026-09-06, 2026-09-13
-    Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B):done, w4, 2026-09-13, 2026-09-20
+    Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B) :done, w4, 2026-09-13, 2026-09-20
 
     section Socratic & Games Subsystems
     Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :active, w5, 2026-09-20, 2026-09-27
@@ -72,11 +72,11 @@ gantt
 ## <a id="3-weekly-milestone-summary-table"></a>3. Weekly Milestone Summary Table
 
 | Week | Milestone | Key Deliverables & Targets | Pilot / Copilot |
-| :---: | :--- | :--- | :--- | :---: |
+| :---: | :--- | :--- | :---: |
 | **1** ✅ | [Appliance Baseline & Storage](week-1-auth-storage.md) | Headless Jetson (RSS $\le 1.0$ GB) + isolated AP + SQLite auth (144 tests, 100% green) | A & B |
-| **2** ⏳ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
+| **2** ✅ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
-| **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, 4B RAM profile | **A** / B |
+| **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, phased 4.7 GB SLM / 3.3 GB TTS RAM profile | **A** / B |
 | **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
@@ -98,7 +98,7 @@ gantt
 
 ---
 
-### <a id="week-2"></a>⏳ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B)
+### <a id="week-2"></a>✅ Week 2 — Quiz Contract & Diagnostic Distractors (Pilot: A · Copilot: B — Pilot Delivered)
 * **Focus**: Establish the core data format uniting the quiz appliance and generate pedagogically valid questions with diagnostic error mapping.
 * **Student A (Pilot - Completed)**:
   * Formal JSON Schema specification for quiz questions (1 correct option + 3 diagnostic distractors, each mapping to a concrete conceptual misconception and primary-school explanation).
@@ -165,7 +165,6 @@ gantt
   * Text-to-audio synthesis latency $\le 3$ seconds (verified via `test_tts_benchmark.py`).
   * Updated RAM memory profile with co-resident TTS, SLM (`llama.cpp`), and FastAPI.
 * **Detailed Milestone Report**: [Week 4 Milestone Synthesis](week-4-voice-quiz.md).
-
 
 ---
 

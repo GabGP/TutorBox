@@ -1,0 +1,87 @@
+/* Shared floating sheet (IG-style bottom sheet on phone, centered dialog on desktop). */
+
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(6, 45, 63, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.18s ease;
+  overscroll-behavior: contain;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;
+  /* Narrow-dialog containment: descendants (e.g. form rows) respond to
+     the dialog width, not the viewport (see forms.module.css). */
+  container-type: inline-size;
+  background: var(--panel);
+  border-radius: 28px 28px 0 0;
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: sheetUp 0.32s cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  will-change: transform;
+}
+
+.sheetDragging {
+  animation: none;
+}
+
+.sheetGrip {
+  align-self: center;
+  padding: 10px 40px 6px;
+  margin-top: -10px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheetGrip:active {
+  cursor: grabbing;
+}
+
+.sheetHandle {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line3);
+  align-self: center;
+  margin-bottom: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(64px); opacity: 0.4; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes dialogIn {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Desktop: centered floating dialog instead of a bottom sheet */
+@media (min-width: 561px) {
+  .sheetOverlay {
+    align-items: center;
+    padding: 24px;
+  }
+  .sheet {
+    border-radius: 28px;
+    max-height: calc(100dvh - 48px);
+    box-shadow: 0 24px 64px -16px rgba(6, 45, 63, 0.45);
+    animation: dialogIn 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.1);
+  }
+}

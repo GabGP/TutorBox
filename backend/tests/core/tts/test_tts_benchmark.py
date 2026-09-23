@@ -1,7 +1,7 @@
 """Backend SLA gate for speech synthesis (fast, hermetic).
 
 Full comparative profiling (cold/warm, RSS, multi-engine sweep, WAV dumps)
-moved to benchmark/tts/ (metrics.py + ab.py). This file keeps the CI gate:
+moved to tools/benchmark/tts/ (metrics.py + ab.py). This file keeps the CI gate:
 synthesis wall-clock <= 3.0s on a mocked backend plus WAV sanity checks.
 """
 
@@ -11,6 +11,8 @@ import time
 import wave
 
 import pytest
+
+from core.tts.router import get_tts_router
 
 
 def _generate_test_wav(
@@ -46,8 +48,6 @@ def test_wav_fixture_metrics():
 def test_router_synthesis_sla_under_3_seconds(monkeypatch: pytest.MonkeyPatch):
     """Verifies router synthesis meets the <= 3.0s SLA ceiling (mocked backend)."""
     test_wav = _generate_test_wav(duration_seconds=3.0, sample_rate=22050, peak=20000)
-
-    from core.tts.router import get_tts_router
 
     router = get_tts_router()
     monkeypatch.setattr(

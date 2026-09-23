@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DisplayView } from '../pages/display/DisplayView';
 import { StudentView } from '../pages/student/StudentView';
 import { TeacherView } from '../pages/teacher/TeacherView';
+import { getPortal } from '../shared/routing/session';
 import { ErrorBoundary } from './ErrorBoundary';
 
 /**
@@ -20,10 +21,11 @@ export function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  const portal = getPortal(pathname);
   let view = <StudentView />;
-  if (pathname.includes('/maestro')) {
+  if (portal === 'teacher') {
     view = <TeacherView />;
-  } else if (pathname.includes('/pantalla')) {
+  } else if (portal === 'display') {
     view = <DisplayView />;
   }
 

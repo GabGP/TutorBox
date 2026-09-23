@@ -63,4 +63,31 @@ describe('ttsApi and speechApi client contracts', () => {
     expect(spy).toHaveBeenCalledWith('/session/session-123/speech?lang=quc');
     expect(res).toBe('blob:test');
   });
+
+  it('speechApi.getSpeechBlobUrl appends the saved voice', async () => {
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'es', engine: 'piper', voice: 'voz-x' })
+    );
+    const spy = vi.spyOn(httpClient, 'requestBlobUrl').mockResolvedValue('blob:test');
+
+    const res = await speechApi.getSpeechBlobUrl('session-123', 'es');
+    expect(spy).toHaveBeenCalledWith(
+      '/session/session-123/speech?lang=es&engine=piper&voice=voz-x'
+    );
+    expect(res).toBe('blob:test');
+    localStorage.removeItem('tb_voice');
+  });
+
+  it('speechApi.getSpeechBlobUrl ignores saved voice of another language', async () => {
+    localStorage.setItem(
+      'tb_voice',
+      JSON.stringify({ lang: 'quc', engine: 'piper', voice: 'voz-q' })
+    );
+    const spy = vi.spyOn(httpClient, 'requestBlobUrl').mockResolvedValue('blob:test');
+
+    await speechApi.getSpeechBlobUrl('session-123', 'es');
+    expect(spy).toHaveBeenCalledWith('/session/session-123/speech?lang=es');
+    localStorage.removeItem('tb_voice');
+  });
 });

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import styles from './ErrorBoundary.module.css';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -48,54 +49,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            padding: '20px',
-            textAlign: 'center',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            background: 'var(--panel, #f7fbfd)',
-            color: 'var(--ink, #131e23)',
-          }}
-        >
-          <div
-            style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '20px',
-              background: 'var(--bad, #b3261e)',
-              color: '#fff',
-              display: 'grid',
-              placeItems: 'center',
-              fontSize: '32px',
-              fontWeight: 700,
-              marginBottom: '16px',
-            }}
-          >
-            !
-          </div>
-          <h1 style={{ fontSize: '24px', margin: '0 0 8px' }}>Ocurrió un problema</h1>
-          <p style={{ color: 'var(--mute, #576b74)', margin: '0 0 24px', maxWidth: '400px' }}>
+        <div className={styles.fallback}>
+          <div className={styles.badge}>!</div>
+          <h1 className={styles.title}>Ocurrió un problema</h1>
+          <p className={styles.message}>
             Hubo un error inesperado al cargar la pantalla.
           </p>
           <button
             type="button"
             onClick={this.handleReset}
-            style={{
-              height: '48px',
-              padding: '0 24px',
-              borderRadius: '24px',
-              background: 'var(--p, #0b6e99)',
-              color: '#fff',
-              fontSize: '16px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            className={styles.retry}
           >
             Recargar la página
           </button>

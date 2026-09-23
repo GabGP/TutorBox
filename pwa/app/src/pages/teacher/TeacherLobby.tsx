@@ -3,6 +3,7 @@ import { GenerationProgress } from '../../features/question-generator/generator.
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
 import { RosterTable, RosterTableProps } from '../../features/roster/RosterTable';
 import { SessionModel } from '../../features/session-engine/session.types';
+import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherLobby.module.css';
 
 export interface TeacherLobbyProps {
@@ -23,54 +24,44 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
   rosterProps,
   hostAddress,
 }) => {
-  const failed = progress?.failed || 0;
+  return (
+    <div className={styles.stack} id="s-lobby">
+      {progress ? (
+        <QuestionGenerationProgress
+          progress={progress}
+          isComplete={Boolean(session)}
+        />
+      ) : (
+        <div className={styles.hero}>
+          <div>
+            <div className={styles.lbl} id="heroLbl">
+              PREGUNTAS LISTAS
+            </div>
+            <div className={styles.big} id="heroBig">
+              {session ? session.question_count : ''}
+            </div>
+          </div>
+          <div>
+            <div className={styles.lbl}>ENTRAN EN</div>
+            <div className={styles.addr} id="addr">
+              {hostAddress}
+            </div>
+          </div>
+        </div>
+      )}
 
-  if (progress && !session) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
-        <QuestionGenerationProgress progress={progress} />
-
+      {progress && (
         <div className={styles.connectionCard}>
           <span className={styles.connectionLabel}>ENTRAN EN</span>
           <span className={styles.connectionAddr} id="addr">
             {hostAddress}
           </span>
         </div>
+      )}
 
-        <RosterTable {...rosterProps} />
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} id="s-lobby">
-      <div className={styles.hero}>
-        <div>
-          <div className={styles.lbl} id="heroLbl">
-            PREGUNTAS LISTAS
-          </div>
-          <div className={styles.big} id="heroBig">
-            {session ? session.question_count : ''}
-          </div>
-        </div>
-        <div>
-          <div className={styles.lbl}>ENTRAN EN</div>
-          <div className={styles.addr} id="addr">
-            {hostAddress}
-          </div>
-        </div>
-      </div>
-
-      <p style={{ fontSize: '15px', color: 'var(--mute2)', margin: 0 }} id="genHelp">
+      <p className={utils.help} id="genHelp">
         Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.
       </p>
-
-      {failed > 0 && (
-        <div className="note" id="genNote">
-          {failed} pregunta(s) no salieron del modelo; el juego tendrá{' '}
-          {progress?.ids.length} preguntas.
-        </div>
-      )}
 
       <RosterTable {...rosterProps} />
     </div>

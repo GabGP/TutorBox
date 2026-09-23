@@ -1,0 +1,19 @@
+.toggle {
+  color: var(--p);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.blurb {
+  font-size: 13px;
+  color: var(--mute2);
+  margin: 8px 0;
+}
+
+.code {
+  white-space: pre-wrap;
+  font-size: 12px;
+  background: var(--chip);
+  border-radius: 16px;
+  padding: 12px;
+}

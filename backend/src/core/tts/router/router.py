@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from core.config import get_settings
 from core.tts.engines import (
     EspeakBackend,
     KokoroBackend,
@@ -10,7 +11,7 @@ from core.tts.engines import (
     SherpaBackend,
 )
 from core.tts.protocols import TTSBackend
-from core.tts.router.fallback import synthesize_with_fallback
+from core.tts.router.fallback import preload_with_fallback, synthesize_with_fallback
 from core.tts.router.selection import (
     get_engine_status,
     get_max_cache_entries,
@@ -69,6 +70,9 @@ class TTSRouter:
         self, engine: str | None = None, lang: str = "es", voice: str | None = None
     ) -> tuple[str, float]:
         """Preloads model weights for backend, returning (engine, load_ms)."""
+        target_engine = (engine or get_settings().tts.engine).lower()
+        if target_engine == "auto":
+            return preload_with_fallback(self._backends, lang=lang, voice=voice)
         backend = self.select_backend(lang=lang, engine=engine)
         return backend.engine_name, backend.preload(voice=voice or lang)
 
@@ -85,6 +89,10 @@ class TTSRouter:
             backend.unload()
         return engine or "all"
 
+    def loaded_engines(self) -> list[str]:
+        """Canonical names of backends with weights in memory (deduplicated)."""
+        return sorted({b.engine_name for b in self._backends.values() if b.is_loaded()})
+
     def status(self, engine: str | None = None, lang: str = "es") -> dict[str, Any]:
         """Returns the readiness and model identifier of the target engine."""
         return get_engine_status(self.select_backend(lang=lang, engine=engine))
@@ -95,16 +103,22 @@ class TTSRouter:
         lang: str = "es",
         voice: str | None = None,
         backend: str | None = None,
+        bypass_cache: bool = False,
     ) -> bytes:
-        """Synthesizes text into WAV bytes, leveraging in-memory LRU cache."""
+        """Synthesizes text into WAV bytes, leveraging in-memory LRU cache.
+
+        Preview callers pass bypass_cache so nondeterministic engines
+        always render fresh audio instead of a cached first take.
+        """
         cache_key = (
             (text, lang, voice or "")
             if not backend
             else (text, lang, voice or "", backend)
         )
-        cached = self._cache.get(cache_key)
-        if cached is not None:
-            return cached
+        if not bypass_cache:
+            cached = self._cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         target_backend = self.select_backend(lang=lang, engine=backend)
         audio = synthesize_with_fallback(
@@ -117,9 +131,10 @@ class TTSRouter:
             explicit_backend=bool(backend),
         )
 
-        if len(self._cache) >= get_max_cache_entries():
-            self._cache.pop(next(iter(self._cache)))
-        self._cache[cache_key] = audio
+        if not bypass_cache:
+            if len(self._cache) >= get_max_cache_entries():
+                self._cache.pop(next(iter(self._cache)))
+            self._cache[cache_key] = audio
         return audio
 
 

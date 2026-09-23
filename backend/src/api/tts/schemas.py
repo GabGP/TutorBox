@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 __all__ = [
     "TTSLoadRequest",
     "TTSLoadResponse",
+    "TTSPreviewRequest",
     "TTSStatusResponse",
     "TTSUnloadRequest",
     "TTSUnloadResponse",
@@ -50,6 +51,23 @@ class TTSUnloadResponse(BaseModel):
 
     engine: str
     loaded: bool = False
+
+
+class TTSPreviewRequest(BaseModel):
+    """Payload to synthesize a short voice sample for A/B listening."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    engine: str | None = Field(
+        default=None, description="Target engine (piper, espeak, etc.)"
+    )
+    lang: Literal["es", "quc"] = Field(default="es", description="Language code")
+    voice: str | None = Field(default=None, description="Specific voice identifier")
+    text: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Custom sample text (defaults per language)",
+    )
 
 
 class TTSStatusResponse(BaseModel):

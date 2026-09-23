@@ -33,7 +33,7 @@ os.environ.setdefault("PYTHONPYCACHEPREFIX", str(_PYCACHE_DIR))
 if getattr(sys, "pycache_prefix", None) is None:
     try:
         sys.pycache_prefix = str(_PYCACHE_DIR)
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
 # Console output tags and shared PWA messages (single source of truth for
@@ -110,9 +110,7 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
         [resolved_pnpm, "run", "build"], cwd=str(PWA_APP_DIR), check=False
     )
     if build_res.returncode != 0:
-        print(
-            f"{TAG_FAIL} PWA frontend build failed. Check compilation errors above."
-        )
+        print(f"{TAG_FAIL} PWA frontend build failed. Check compilation errors above.")
         _print_fail_fast_hint()
         return False
 
@@ -132,13 +130,28 @@ def resolve_llama_daemon() -> Path | None:
     return Path(which_daemon).resolve() if which_daemon else None
 
 
-def build_llama(force: bool = False) -> bool:
-    """Invokes scripts/build_llama_tts.py to compile and install the daemon binary."""
-    script = ROOT_DIR / "scripts" / "build_llama_tts.py"
+def resolve_python() -> str:
+    """Returns the virtualenv Python executable if available, else sys.executable."""
+    raw_venv = os.environ.get("UV_PROJECT_ENVIRONMENT")
+    venv_path = Path(raw_venv) if raw_venv else ROOT_DIR / ".cache" / "venv"
+    ext = ".exe" if os.name == "nt" else ""
+    for candidate in [
+        venv_path / "Scripts" / f"python{ext}",
+        venv_path / "bin" / f"python{ext}",
+    ]:
+        if candidate.is_file():
+            return str(candidate)
+    return sys.executable
+
+
+def build_llama(force: bool = False, python_bin: str | None = None) -> bool:
+    """Invokes tools/llama-tts-daemon/build.py to compile and install the daemon binary."""
+    script = ROOT_DIR / "tools" / "llama-tts-daemon" / "build.py"
     if not script.is_file():
         print(f"{TAG_FAIL} Build script not found at {script}")
         return False
-    cmd = [sys.executable, str(script)]
+    py_exec = python_bin or resolve_python()
+    cmd = [py_exec, str(script)]
     if force:
         cmd.append("--force")
     res = subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
@@ -183,7 +196,7 @@ def check_prerequisites() -> None:
         print(f"{TAG_OK} Found Qwen3-TTS daemon: {daemon_bin}")
     else:
         print(
-            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python scripts/build_llama_tts.py' or '--build-llama' to compile."
+            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python tools/llama-tts-daemon/build.py' or '--build-llama' to compile."
         )
 
     # 4. pnpm check
@@ -198,6 +211,42 @@ def check_prerequisites() -> None:
     else:
         print(f"{TAG_OK} Found frontend package manager: {pnpm_bin}")
 
+    # 5. Neural voice models check
+    missing_models = check_voice_models()
+    if missing_models:
+        print(f"{TAG_WARN} Missing neural voice models: {', '.join(missing_models)}.")
+        print(
+            "       Spoken feedback (>51% rule) will fall back to available engines or eSpeak-ng."
+        )
+        print(
+            "       To download models: ./run.py --download-models [all|qwen|kokoro|minimal]"
+        )
+    else:
+        print(
+            f"{TAG_OK} Found all neural voice models (Piper/Sherpa, Kokoro, Qwen3-TTS)"
+        )
+
+
+def check_voice_models(models_dir: Path | None = None) -> list[str]:
+    """Returns a list of missing neural voice engine names in the models directory."""
+    target_dir = models_dir or (ROOT_DIR / ".cache" / "models" / "tts")
+    piper_ok = (target_dir / "es_ES-sharvard-medium.onnx").is_file()
+    kokoro_ok = (target_dir / "kokoro-int8-multi-lang-v1_0" / "voices.bin").is_file()
+    qwen_ok = (
+        target_dir / "qwen" / "Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf"
+    ).is_file() and (
+        target_dir / "qwen" / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
+    ).is_file()
+
+    missing: list[str] = []
+    if not piper_ok:
+        missing.append("Piper/Sherpa")
+    if not kokoro_ok:
+        missing.append("Kokoro-82M")
+    if not qwen_ok:
+        missing.append("Qwen3-TTS")
+    return missing
+
 
 def resolve_uv() -> str:
     """Finds and returns the executable path for the uv package manager."""
@@ -211,6 +260,22 @@ def resolve_uv() -> str:
         if fallback.is_file() and os.access(fallback, os.X_OK):
             return str(fallback)
     return "uv"
+
+
+def sync_backend(uv_cmd: str | None = None) -> bool:
+    """Synchronizes backend dependencies with all extras into the target virtualenv."""
+    resolved_uv = uv_cmd or resolve_uv()
+    print(f"{TAG_BUILD} Synchronizing backend dependencies (uv sync --all-extras)...")
+    res = subprocess.run(
+        [resolved_uv, "sync", "--all-extras", "--directory", str(BACKEND_DIR)],
+        cwd=str(ROOT_DIR),
+        check=False,
+    )
+    if res.returncode != 0:
+        print(f"{TAG_FAIL} Failed to synchronize backend dependencies.")
+        return False
+    print(f"{TAG_OK} Backend dependencies successfully synchronized.")
+    return True
 
 
 def load_env(env_path: Path) -> None:
@@ -255,6 +320,11 @@ def main() -> None:
         "--no-build", action="store_true", help="Skip frontend PWA compilation"
     )
     parser.add_argument(
+        "--no-sync",
+        action="store_true",
+        help="Skip backend dependency synchronization (uv sync --all-extras)",
+    )
+    parser.add_argument(
         "--build-llama",
         action="store_true",
         help="Compile and install patched llama-tts daemon before launching",
@@ -263,6 +333,13 @@ def main() -> None:
         "--force-build-llama",
         action="store_true",
         help="Force clean re-clone and recompilation of llama-tts daemon",
+    )
+    parser.add_argument(
+        "--download-models",
+        nargs="?",
+        const="minimal",
+        choices=["minimal", "kokoro", "qwen", "all"],
+        help="Download voice models before launching (choices: minimal, kokoro, qwen, all; default: minimal)",
     )
     parser.add_argument(
         "--check-only", action="store_true", help="Check prerequisites and exit"
@@ -275,9 +352,37 @@ def main() -> None:
     check_prerequisites()
     print("--------------------------------------------------")
 
+    if args.check_only and not (
+        args.build_llama or args.force_build_llama or args.download_models
+    ):
+        return
+
+    uv_cmd = resolve_uv()
+    if not args.no_sync:
+        if not sync_backend(uv_cmd):
+            sys.exit(1)
+        print("--------------------------------------------------")
+
+    py_bin = resolve_python()
+
+    if args.download_models:
+        print(
+            f"{TAG_BUILD} Downloading voice models (target: {args.download_models})..."
+        )
+        dl_script = ROOT_DIR / "tools" / "download_models.py"
+        dl_res = subprocess.run(
+            [py_bin, str(dl_script), "--target", args.download_models],
+            cwd=str(ROOT_DIR),
+            check=False,
+        )
+        if dl_res.returncode != 0:
+            print(f"{TAG_FAIL} Failed to download voice models.")
+            sys.exit(1)
+        print("--------------------------------------------------")
+
     if args.build_llama or args.force_build_llama:
         print(f"{TAG_BUILD} Building Qwen3-TTS daemon binary...")
-        if not build_llama(force=args.force_build_llama):
+        if not build_llama(force=args.force_build_llama, python_bin=py_bin):
             print(f"{TAG_FAIL} Failed to build Qwen3-TTS daemon.")
             sys.exit(1)
         print("--------------------------------------------------")
@@ -289,7 +394,6 @@ def main() -> None:
         build_pwa()
         print("--------------------------------------------------")
 
-    uv_cmd = resolve_uv()
     cmd = [
         uv_cmd,
         "run",

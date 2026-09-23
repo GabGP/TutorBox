@@ -1,0 +1,65 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.sizeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--mute2);
+}
+
+.sizeLabel {
+  font-weight: 600;
+}
+
+.sizeSelect {
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.pageLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mute2);
+  min-width: 48px;
+  text-align: center;
+}
+
+.buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  transition: background 0.16s ease;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--tint);
+}
+
+.iconBtn:disabled {
+  opacity: 0.45;
+}

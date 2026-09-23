@@ -61,12 +61,72 @@
   background: #c2dbe6;
 }
 
+/* Squishy source switch (Generar / Banco segmented control) */
+.switchTrack {
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 4px;
+  border-radius: 32px;
+  background: var(--tint2);
+}
+
+.switchThumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(6, 45, 63, 0.25);
+  transition: transform 0.28s cubic-bezier(0.3, 1.4, 0.4, 1), width 0.2s ease;
+  pointer-events: none;
+}
+
+.switchOpt {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 52px;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mute2);
+  transition: transform 0.12s ease, color 0.2s ease;
+}
+
+.switchOpt:active {
+  transform: scale(0.9, 0.82);
+}
+
+.switchOptOn {
+  color: var(--tint-ink);
+}
+
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 20px var(--gut) 28px;
   gap: 20px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--mute2);
 }
 
 .footer {

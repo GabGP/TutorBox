@@ -1,5 +1,7 @@
 import React from 'react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { SpeechLanguage } from '../../features/speech/speech.types';
+import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
 
 export interface TeacherHeaderProps {
@@ -9,6 +11,7 @@ export interface TeacherHeaderProps {
   voiceLang: SpeechLanguage;
   onBack: () => void;
   onToggleVoice: () => void;
+  onOpenSettings?: () => void;
 }
 
 /**
@@ -25,6 +28,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   voiceLang,
   onBack,
   onToggleVoice,
+  onOpenSettings,
 }) => {
   return (
     <header className={styles.header}>
@@ -35,13 +39,13 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
         onClick={onBack}
         aria-label="Volver"
       >
-        ←
+        <ArrowLeft size={24} aria-hidden />
       </button>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '19px', fontWeight: 600 }} id="title">
+      <div className={utils.grow}>
+        <div className={styles.title} id="title">
           {title}
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--mute2)' }} id="subtitle">
+        <div className={styles.subtitle} id="subtitle">
           {subtitle}
         </div>
       </div>
@@ -52,6 +56,16 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       >
         {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
       </button>
+      {onOpenSettings && (
+        <button
+          id="settings"
+          onClick={onOpenSettings}
+          aria-label="Ajustes"
+          className={`${styles.voiceBtn} ${utils.rowInline}`}
+        >
+          <Settings size={18} aria-hidden />
+        </button>
+      )}
     </header>
   );
 };

@@ -34,7 +34,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
 
 ## <a id="1-migration-architecture--pragmas"></a>1. Migration Architecture & Pragmas
 
-TutorBox utilizes sequential idempotent SQL migration files executed automatically at application startup by `backend/src/db/migrations.py`.
+TutorBox utilizes sequential idempotent SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
 
 * **Storage Location**: `backend/migrations/<NNN>_<description>.sql`
 * **Version Registry**: Every applied migration is tracked in the `schema_migrations` table with its integer version and timestamp.
@@ -131,7 +131,7 @@ Follow these sequential steps when adding or modifying database schemas:
 3. **Validate Idempotency & Clean Bootstrap**:
    Run the migration unit test suite:
    ```bash
-   pytest backend/tests/db/test_migrations.py
+   pytest backend/tests/core/db/test_migrations.py
    ```
 4. **Update Documentation**:
    * Add the new migration entry to the changelog in this file ([`docs/database/migrations.md`](migrations.md)).

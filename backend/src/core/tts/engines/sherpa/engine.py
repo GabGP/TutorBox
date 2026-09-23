@@ -7,8 +7,8 @@ from typing import Any
 
 from core.config import get_settings
 from core.tts.constants import MILLISECONDS_PER_SECOND
-from core.tts.engines.provider import resolve_execution_provider
 from core.tts.engines.sherpa.models import resolve_sherpa_paths, samples_to_wav
+from core.tts.engines.sherpa.runtime import create_offline_tts, ensure_ort_dll_directory
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
 
@@ -61,51 +61,20 @@ class SherpaBackend:
             raise TTSUnavailableError("Speech synthesis is disabled.")
 
         try:
-            import sherpa_onnx
+            import sherpa_onnx  # noqa: F401
         except ImportError as err:
             raise TTSUnavailableError("sherpa-onnx runtime is not installed.") from err
 
+        ensure_ort_dll_directory()
         model_name = self._resolve_model(voice)
         model_path, tokens_path, data_dir = resolve_sherpa_paths(model_name)
-
-        vits_cfg = sherpa_onnx.OfflineTtsVitsModelConfig(
-            model=str(model_path),
-            tokens=str(tokens_path),
-            data_dir=str(data_dir),
-            length_scale=tts_cfg.piper_length_scale,
-            noise_scale=tts_cfg.piper_noise_scale,
-            noise_scale_w=tts_cfg.piper_noise_w_scale,
+        self._tts = create_offline_tts(
+            model_path=model_path,
+            tokens_path=tokens_path,
+            data_dir=data_dir,
+            tts_cfg=tts_cfg,
         )
-        provider = resolve_execution_provider(tts_cfg.sherpa_provider)
-        try:
-            model_config = sherpa_onnx.OfflineTtsModelConfig(
-                vits=vits_cfg,
-                num_threads=tts_cfg.sherpa_threads,
-                provider=provider,
-            )
-            self._tts = sherpa_onnx.OfflineTts(
-                sherpa_onnx.OfflineTtsConfig(model=model_config)
-            )
-            self._current_model = model_name
-        except Exception as err:
-            if provider == "cuda":
-                logger.info(
-                    "Sherpa CUDA init unavailable; falling back to CPU: %s", err
-                )
-                model_config = sherpa_onnx.OfflineTtsModelConfig(
-                    vits=vits_cfg,
-                    num_threads=tts_cfg.sherpa_threads,
-                    provider="cpu",
-                )
-                self._tts = sherpa_onnx.OfflineTts(
-                    sherpa_onnx.OfflineTtsConfig(model=model_config)
-                )
-                self._current_model = model_name
-            else:
-                raise TTSUnavailableError(
-                    f"Failed to initialize Sherpa-ONNX: {err}"
-                ) from err
-
+        self._current_model = model_name
         return (time.perf_counter() - start_time) * MILLISECONDS_PER_SECOND
 
     def unload(self) -> None:

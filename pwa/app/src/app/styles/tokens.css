@@ -36,25 +36,26 @@
 
   /* Accent & Shimmer Brand Tokens */
   --p-bright: #5BC0EB;
-  --shimmer-glow: rgba(91, 192, 235, 0.28);
-  --shimmer-core: rgba(255, 255, 255, 0.45);
+  --shimmer-glow: rgba(91, 192, 235, 0.45);
+  --shimmer-core: rgba(255, 255, 255, 0.75);
   --shimmer-track: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(91, 192, 235, 0.12) 20%,
-    var(--shimmer-glow) 40%,
+    rgba(91, 192, 235, 0.20) 25%,
+    var(--shimmer-glow) 42%,
     var(--shimmer-core) 50%,
-    var(--shimmer-glow) 60%,
-    rgba(91, 192, 235, 0.12) 80%,
+    var(--shimmer-glow) 58%,
+    rgba(91, 192, 235, 0.20) 75%,
     transparent 100%
   );
 
-  /* Animation Pacing & Easing Tokens */
-  --speed-stage: 5.5s;
-  --speed-shimmer: 5.5s;
+  /* Animation Pacing & Easing Tokens (Standardized 5s Harmonic Cycle) */
+  --speed-fast: 0.4s;
+  --speed-stage: 5s;
   --speed-orbit: 3.6s;
+  --speed-shimmer: 5s;
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-shimmer: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-shimmer: linear;
 }
 
 * {

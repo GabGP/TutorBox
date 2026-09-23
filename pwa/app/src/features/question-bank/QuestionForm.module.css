@@ -1,0 +1,214 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.input {
+  height: 44px;
+  border-radius: 14px;
+  font-size: 15px;
+  padding: 0 12px;
+  border: 2px solid var(--line3);
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.input:focus {
+  border-color: var(--p);
+}
+
+select.input {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 60px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+.grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.small {
+  flex: 0 0 60px;
+  min-width: 0;
+}
+
+.misc {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.explain {
+  flex: 2 1 180px;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.button {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border-radius: 22px;
+  padding: 0 16px;
+  background: var(--tint);
+  color: var(--p);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.16s ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--tint2);
+}
+
+/* Narrow sheet / phone: stack the misc + explanation pairs so the
+   long Spanish misconception labels never force a horizontal scroll. */
+@media (max-width: 560px) {
+  .row {
+    flex-wrap: wrap;
+  }
+  .misc,
+  .explain,
+  .grow {
+    flex: 1 1 100%;
+  }
+}
+
+/* Grouped sections: options with a visible correct-answer pick,
+   and per-distractor error blocks keyed by letter. */
+.group {
+  border: 1px solid var(--line2);
+  border-radius: 18px;
+  padding: 12px;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink2);
+  padding: 0 6px;
+}
+
+.hint {
+  font-weight: 500;
+  color: var(--mute2);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--line3);
+  border-radius: 14px;
+  padding: 6px 8px;
+  background: #fff;
+  min-width: 0;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.optionCorrect {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--ok);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.letter {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--ink2);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.optionCorrect .letter {
+  background: var(--ok);
+  color: #fff;
+}
+
+.correctBadge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ok);
+  flex: 0 0 auto;
+}
+
+.distractor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed var(--line3);
+  padding-top: 10px;
+}
+
+.distractor:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.distractorHead {
+  display: flex;
+  align-items: center;
+}
+
+.letterSm {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--chip);
+  color: var(--ink2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}

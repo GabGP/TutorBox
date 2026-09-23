@@ -18,8 +18,8 @@ describe('OptionTile Component', () => {
   });
 
   it('shows checkmark when isPicked is true', () => {
-    render(<OptionTile letter="A" text="Solución" isPicked />);
-    expect(screen.getByText('✓')).toBeInTheDocument();
+    const { container } = render(<OptionTile letter="A" text="Solución" isPicked />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
     expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
   });
 

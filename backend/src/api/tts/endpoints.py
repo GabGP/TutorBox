@@ -33,9 +33,18 @@ def load_tts_engine(
     payload: TTSLoadRequest,
     _ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
 ) -> TTSLoadResponse:
-    """Proactively preloads TTS voice weights to prepare for classroom speech."""
+    """Proactively preloads TTS voice weights to prepare for classroom speech.
+
+    Single-resident policy: engines already in memory that differ from the
+    resolved target are evicted first (unload also wipes the synthesis
+    cache), so a voice change never leaves stale weights or clips behind.
+    """
     tts_router = get_tts_router()
     try:
+        target = tts_router.select_backend(lang=payload.lang, engine=payload.engine)
+        for resident in tts_router.loaded_engines():
+            if resident != target.engine_name:
+                tts_router.unload(engine=resident)
         engine, load_ms = tts_router.preload(
             engine=payload.engine, lang=payload.lang, voice=payload.voice
         )

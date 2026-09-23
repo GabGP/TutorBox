@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { computeDisplayStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
+import { OPTION_LETTERS } from '../../shared/constants/options';
+import { getSessionQueryParamId, useHostAddress } from '../../shared/routing/session';
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
 import { TallyBars } from '../../shared/ui/TallyBars/TallyBars';
 import styles from './DisplayView.module.css';
-
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
 
 /**
  * HDMI Classroom Projector Display View.
@@ -17,26 +17,15 @@ const LETTERS = ['A', 'B', 'C', 'D'] as const;
  */
 export const DisplayView: React.FC = () => {
   const [lastSid, setLastSid] = useState<string | null>(null);
-  const targetSessionId = useMemo(
-    () =>
-      typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('s')
-        : null,
-    []
-  );
+  const targetSessionId = useMemo(() => getSessionQueryParamId(), []);
 
   const { session } = useSessionEngine({
     targetSessionId: targetSessionId || undefined,
     fallbackSessionId: lastSid,
   });
 
-  const [hostAddress, setHostAddress] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setHostAddress(`${window.location.host}/alumno`);
-    }
-  }, []);
+  const host = useHostAddress();
+  const hostAddress = host ? `${host}/alumno` : '';
 
   useEffect(() => {
     if (session?.id) {
@@ -84,7 +73,7 @@ export const DisplayView: React.FC = () => {
             {question.question_text}
           </div>
           <div className={styles.opts} id="opts">
-            {LETTERS.map((letter) => (
+            {OPTION_LETTERS.map((letter) => (
               <div
                 key={letter}
                 className={`${styles.opt} ${styles[`k_${letter}`]}`}

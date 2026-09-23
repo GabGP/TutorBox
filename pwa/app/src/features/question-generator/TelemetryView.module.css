@@ -1,0 +1,177 @@
+.headRow,
+.row,
+.rowBtn {
+  display: grid;
+  grid-template-columns:
+    28px minmax(0, 1.4fr) minmax(0, 1fr) minmax(112px, auto);
+  align-items: center;
+  width: 100%;
+}
+
+.headGrow {
+  flex: 1;
+}
+
+.headRight {
+  text-align: right;
+}
+
+.metricsRow {
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Skeleton sizing for the loading rows. */
+.skIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.skLine {
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.skSub70 {
+  height: 12px;
+  width: 70%;
+}
+
+.skSub60 {
+  height: 12px;
+  width: 60%;
+}
+
+.skSub80 {
+  height: 12px;
+  width: 80%;
+}
+
+.row {
+  padding: 10px 12px;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+/* Full-row tap target: table-row hover plus a subtle squishy pop on
+   press (transform never affects layout). */
+.rowBtn {
+  padding: 10px 12px;
+  min-height: 52px;
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition:
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.16s ease;
+}
+
+.rowBtn:hover {
+  background: var(--chip);
+}
+
+.rowBtn:active {
+  transform: scale(0.985);
+}
+
+.rowBtn:focus-visible {
+  outline: 3px solid var(--p);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rowBtn {
+    transition: none;
+  }
+  .rowBtn:active {
+    transform: none;
+  }
+}
+
+/* Phones: tighten the grid so narrow columns never squeeze each other. */
+@media (max-width: 560px) {
+  .headRow,
+  .row,
+  .rowBtn {
+    grid-template-columns:
+      24px minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(96px, auto);
+  }
+
+  .cell {
+    padding: 0 6px;
+  }
+}
+
+.cell {
+  min-width: 0;
+  padding: 0 10px;
+  overflow: hidden;
+}
+
+.cell:first-child {
+  padding-left: 0;
+}
+
+.cell + .cell {
+  border-left: 1px solid var(--line);
+}
+
+.status {
+  text-align: center;
+  font-weight: 700;
+  padding: 0;
+}
+
+.ok {
+  color: var(--good, #1a7f37);
+}
+
+.fail {
+  color: var(--bad-ink);
+}
+
+.primary {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secondary {
+  display: block;
+  font-size: 12px;
+  color: var(--mute2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.numeric .primary,
+.numeric .secondary,
+.numeric .tertiary {
+  text-align: right;
+}
+
+.tertiary {
+  display: block;
+  font-size: 11px;
+  color: var(--mute2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

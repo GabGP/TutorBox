@@ -1,8 +1,13 @@
 import React from 'react';
 import { MatchReportView } from '../../features/match-report/MatchReportView';
 import { QuestionCountPicker } from '../../features/question-generator/QuestionCountPicker';
-import { getTopicLabel, TopicSelector } from '../../features/question-generator/TopicSelector';
+import { TopicSelector } from '../../features/question-generator/TopicSelector';
+import { getTopicLabel } from '../../shared/taxonomy/labels';
+import { TelemetryView } from '../../features/question-generator/TelemetryView';
 import { RosterTableProps } from '../../features/roster/RosterTable';
+import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
+import { useHostAddress } from '../../shared/routing/session';
+import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel, SessionReport } from '../../features/session-engine/session.types';
 import { GenerationProgress, TopicModel } from '../../features/question-generator/generator.types';
@@ -11,26 +16,45 @@ import { TeacherLiveRounds } from './TeacherLiveRounds';
 import { TeacherLobby } from './TeacherLobby';
 import styles from './TeacherView.module.css';
 
-export interface TeacherMainContentProps {
-  step: string;
-  session: SessionModel | null;
-  currentRound?: RoundModel | null;
+/** Quiz-setup slice: topics, count, generation, bank source. */
+export interface QuizSetupProps {
   topics: TopicModel[];
   selectedTopic: string;
   count: number;
   genError?: string | null;
   progress: GenerationProgress | null;
-  rosterProps: RosterTableProps;
-  voiceDone: number;
-  voiceLang: SpeechLanguage;
-  speechState: SpeechState;
-  speechMessage: string;
-  report: SessionReport | null;
-  history: StoredRoundHistory[];
+  source: 'generate' | 'bank';
+  bankStep: React.ReactNode;
   onSelectTopic: (topic: string) => void;
   onChangeCount: (count: number) => void;
-  onPlaySpeech: () => void;
-  onSkipSpeech: () => void;
+  onSourceChange: (s: 'generate' | 'bank') => void;
+}
+
+/** Speech playback slice for live rounds. */
+export interface LiveVoiceProps {
+  done: number;
+  played: boolean;
+  lang: SpeechLanguage;
+  state: SpeechState;
+  message: string;
+  onPlay: () => void;
+  onSkip: () => void;
+}
+
+/** Post-match outcome slice. */
+export interface MatchOutcomeProps {
+  report: SessionReport | null;
+  history: StoredRoundHistory[];
+}
+
+export interface TeacherMainContentProps {
+  step: string;
+  session: SessionModel | null;
+  currentRound?: RoundModel | null;
+  quiz: QuizSetupProps;
+  roster: RosterTableProps;
+  voice: LiveVoiceProps;
+  outcome: MatchOutcomeProps;
 }
 
 /**
@@ -38,57 +62,60 @@ export interface TeacherMainContentProps {
  * Renders the active workspace screen: topic selector, question count picker,
  * pre-game lobby, live voting/reveal rounds, or end-of-game match report.
  *
- * @param {TeacherMainContentProps} props - Component props containing current step state and callbacks.
+ * @param {TeacherMainContentProps} props - Step state plus the quiz, roster,
+ * voice and outcome slices.
  * @returns {JSX.Element} The rendered main content panel.
  */
 export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   step,
   session,
   currentRound,
-  topics,
-  selectedTopic,
-  count,
-  genError,
-  progress,
-  rosterProps,
-  voiceDone,
-  voiceLang,
-  speechState,
-  speechMessage,
-  report,
-  history,
-  onSelectTopic,
-  onChangeCount,
-  onPlaySpeech,
-  onSkipSpeech,
+  quiz,
+  roster,
+  voice,
+  outcome,
 }) => {
+  const host = useHostAddress();
+  const hostAddress = host ? `${host}/alumno` : '';
   return (
     <main className={styles.mainContent}>
       {step === 'topic' && (
-        <section id="s-topic">
+        <section id="s-topic" className={styles.stack}>
+          <SourceSwitch
+            value={quiz.source}
+            onChange={quiz.onSourceChange}
+            options={QUESTION_SOURCE_OPTIONS}
+            ariaLabel="Origen de preguntas"
+          />
           <TopicSelector
-            topics={topics}
-            selectedTopic={selectedTopic}
-            onSelectTopic={onSelectTopic}
+            topics={quiz.topics}
+            selectedTopic={quiz.selectedTopic}
+            onSelectTopic={quiz.onSelectTopic}
           />
         </section>
       )}
-      {step === 'count' && (
-        <section id="s-count">
+      {step === 'count' && quiz.source === 'generate' && (
+        <section id="s-count" className={styles.stack}>
           <QuestionCountPicker
-            count={count}
-            topicLabel={getTopicLabel(selectedTopic)}
-            onChangeCount={onChangeCount}
-            errorNote={genError}
+            count={quiz.count}
+            topicLabel={getTopicLabel(quiz.selectedTopic)}
+            onChangeCount={quiz.onChangeCount}
+            errorNote={quiz.genError}
           />
+          <Collapsible title="Actividad de generación">
+            <TelemetryView />
+          </Collapsible>
         </section>
+      )}
+      {step === 'count' && quiz.source === 'bank' && (
+        <section id="s-count">{quiz.bankStep}</section>
       )}
       {step === 'lobby' && (
         <TeacherLobby
           session={session}
-          progress={progress}
-          hostAddress={typeof window !== 'undefined' ? `${window.location.host}/alumno` : ''}
-          rosterProps={rosterProps}
+          progress={quiz.progress}
+          hostAddress={hostAddress}
+          rosterProps={roster}
         />
       )}
       {(step === 'question' || step === 'reveal') && session && currentRound && (
@@ -96,17 +123,18 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           step={step}
           session={session}
           round={currentRound}
-          voiceDone={voiceDone}
-          voiceLang={voiceLang}
-          speechState={speechState}
-          speechMessage={speechMessage}
-          onPlaySpeech={onPlaySpeech}
-          onSkipSpeech={onSkipSpeech}
+          voiceDone={voice.done}
+          voicePlayed={voice.played}
+          voiceLang={voice.lang}
+          speechState={voice.state}
+          speechMessage={voice.message}
+          onPlaySpeech={voice.onPlay}
+          onSkipSpeech={voice.onSkip}
         />
       )}
       {step === 'stats' && (
         <section id="s-stats">
-          <MatchReportView report={report} history={history} />
+          <MatchReportView report={outcome.report} history={outcome.history} />
         </section>
       )}
     </main>

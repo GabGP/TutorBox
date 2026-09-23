@@ -85,6 +85,7 @@ Engineering schedule and weekly deliverables:
 * **[Week 1 Milestone Synthesis](milestones/week-1-auth-storage.md)**: Appliance baseline, SQLite storage, authentication, and security proofs.
 * **[Week 2 Milestone Tracking](milestones/week-2-quiz-contract.md)**: Quiz JSON Schema contract, SymPy validation, 32 diagnostic distractors, and question bank.
 * **[Week 3 Milestone Synthesis](milestones/week-3-session-engine.md)**: Real-time session engine, deterministic >51% Rule evaluator, first-press locking, and REST API.
+* **[Week 4 Milestone Synthesis](milestones/week-4-voice-quiz.md)**: Full Classroom Quiz with offline Spanish & Mayan voice, multi-tier TTS pipeline, oral math adaptation, and memory lifecycle profiling.
 
 ---
 

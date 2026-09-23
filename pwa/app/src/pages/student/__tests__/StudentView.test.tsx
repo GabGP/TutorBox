@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from '../../../features/auth/useAuth';
 import { useSessionEngine } from '../../../features/session-engine/useSessionEngine';
@@ -84,6 +84,34 @@ describe('StudentView Component', () => {
     expect(screen.getByText('Hola, carlos')).toBeInTheDocument();
     expect(screen.getByText('C')).toBeInTheDocument();
     expect(screen.getByText('Tu maestro está preparando el juego.')).toBeInTheDocument();
+  });
+
+  it('opens the account sheet when tapping the username', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 'u1', username: 'carlos', role: 'student' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useSessionEngine).mockReturnValue({
+      session: null,
+      error: null,
+      refresh: vi.fn(),
+      setSession: vi.fn(),
+    });
+
+    render(<StudentView />);
+    fireEvent.click(screen.getByRole('button', { name: 'carlos' }));
+    // HoldButtons render dual ink layers (base + clipped fill).
+    expect(screen.getAllByText('Cambiar mi nombre')).toHaveLength(2);
+    expect(screen.getAllByText('Cambiar PIN')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al juego' }));
+    expect(screen.getByText('Hola, carlos')).toBeInTheDocument();
   });
 
   it('renders play screen with question and option tiles when round is open', () => {

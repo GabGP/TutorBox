@@ -1,0 +1,69 @@
+.row {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.rowBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+}
+
+.rowBtn:hover {
+  background: var(--chip);
+}
+
+.rowIcon {
+  display: inline-flex;
+}
+
+.chev {
+  margin-left: auto;
+  color: var(--mute2);
+  font-size: 15px;
+  flex: 0 0 auto;
+  transition: transform 0.28s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.chevOpen {
+  transform: rotate(180deg);
+}
+
+/* Smooth expand/collapse: grid-rows animation instead of pop-in */
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.collapseOpen {
+  grid-template-rows: 1fr;
+}
+
+.collapse > .body {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.body {
+  padding: 4px 18px 18px;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.32s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.collapseOpen > .body {
+  opacity: 1;
+  transform: translateY(0);
+}

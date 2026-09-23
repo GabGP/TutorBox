@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from core.db.database import get_db
 from core.db.telemetry_repository import (
+    count_generation_logs,
     get_generation_summary_metrics,
     list_generation_logs,
 )
@@ -62,9 +63,15 @@ def get_generation_logs(
             limit=limit,
             offset=offset,
         )
+        total = count_generation_logs(
+            conn,
+            user_id=user_id,
+            topic=topic,
+            success=success,
+        )
     return GenerationLogsResponse(
         logs=[GenerationLogItem(**log) for log in logs],
-        total=len(logs),
+        total=total,
     )
 
 

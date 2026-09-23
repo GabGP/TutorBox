@@ -1,4 +1,6 @@
 import { requestApi, requestBlobUrl } from '../../shared/api/httpClient';
+import { toQuery } from '../../shared/api/query';
+import { storage } from '../../shared/lib/storage';
 import {
   SpeechLanguage,
   TTSLoadRequest,
@@ -17,9 +19,10 @@ export const ttsApi = {
    * Checks current memory residency and active model status.
    */
   async getStatus(engine?: string, lang: SpeechLanguage = 'es'): Promise<TTSStatusResponse> {
-    const params = new URLSearchParams({ lang });
-    if (engine) params.set('engine', engine);
-    return requestApi<TTSStatusResponse>('GET', `/tts/status?${params.toString()}`);
+    return requestApi<TTSStatusResponse>(
+      'GET',
+      `/tts/status${toQuery({ lang, engine })}`
+    );
   },
 
   /**
@@ -40,11 +43,11 @@ export const ttsApi = {
    * Lists available voices for the specified language and optional engine.
    */
   async getVoices(lang: SpeechLanguage = 'es', engine?: string): Promise<TTSVoiceItem[]> {
-    const params = new URLSearchParams({ lang });
-    if (engine) params.set('engine', engine);
-    return requestApi<TTSVoiceItem[]>('GET', `/tts/voices?${params.toString()}`);
+    return requestApi<TTSVoiceItem[]>('GET', `/tts/voices${toQuery({ lang, engine })}`);
   },
 };
+
+export { getSpeechVoiceKey } from '../../shared/lib/voicePreference';
 
 /**
  * API client contract for offline TTS speech audio stream retrieval.
@@ -52,12 +55,37 @@ export const ttsApi = {
 export const speechApi = {
   /**
    * Retrieves offline synthesized misconception WAV audio blob URL for the current round.
+   * Appends the teacher's saved voice (engine/voice) when it matches the
+   * language; otherwise the configured default engine speaks.
    *
    * @param {string} sessionId - Active session UUID.
    * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es' or 'quc').
    * @returns {Promise<string>} Blob URL ready for HTMLAudioElement playback.
    */
   async getSpeechBlobUrl(sessionId: string, language: SpeechLanguage = 'es'): Promise<string> {
-    return requestBlobUrl(`/session/${sessionId}/speech?lang=${language}`);
+    const pref = storage.getVoicePreference();
+    const suffix = toQuery({
+      lang: language,
+      engine: pref && (pref.lang || 'es') === language ? pref.engine : undefined,
+      voice: pref && (pref.lang || 'es') === language ? pref.voice : undefined,
+    });
+    return requestBlobUrl(`/session/${sessionId}/speech${suffix}`);
+  },
+
+  /**
+   * Synthesizes a short voice sample via `POST /tts/preview`.
+   * The server auto-loads the engine and unloads it afterwards when it
+   * was idle, so previews never leave weights in RAM.
+   */
+  async getPreviewBlobUrl(payload: {
+    lang?: SpeechLanguage;
+    engine?: string;
+    voice?: string;
+  }): Promise<string> {
+    return requestBlobUrl('/tts/preview', 'POST', {
+      lang: payload.lang || 'es',
+      engine: payload.engine,
+      voice: payload.voice,
+    });
   },
 };

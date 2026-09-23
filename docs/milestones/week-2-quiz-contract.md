@@ -42,7 +42,7 @@ This document summarizes the technical deliverables, architectural implementatio
    * Deterministic taxonomy & misconception whitelist guardrail (`taxonomy_validator.py`) strictly enforcing topic, subconcept, and distractor misconception membership before invoking symbolic evaluation.
    * Deterministic distractor explanation consistency validator (`distractor_consistency.py`, `distractor_patterns.py`) verifying that numbers calculated in pedagogical explanations match assigned option values, eliminating contradictory explanations and rejecting boilerplate option-letter references.
    * Deterministic deduplication & novelty gate (`deduplication.py`) comparing candidate questions against reference questions via text normalization and algebraic equation equivalence, rejecting duplicates and forcing question novelty.
-   * Hardware-agnostic shared LLM Client package (`src/llm/`) with abstract `LLMClient` protocol, `LocalSLMClient` (connecting to local `llama.cpp` OpenAI-compatible endpoint with configurable sampling temperature and structured `response_format`), and `MockLLMClient` (for CI/CD testing), ready for multi-mode reuse in Socratic Tutor (Week 5).
+   * Hardware-agnostic shared LLM Client package (`src/core/llm/`) with abstract `LLMClient` protocol, `LocalSLMClient` (connecting to local `llama.cpp` OpenAI-compatible endpoint with configurable sampling temperature and structured `response_format`), and `MockLLMClient` (for CI/CD testing), ready for multi-mode reuse in Socratic Tutor (Week 5).
    * Automated 5-stage validation pipeline (`generator.py`, `attempt_runner.py`) retrying up to a configurable retry limit with anti-anchoring feedback instructions (`prompt.py`) upon receiving malformed JSON, taxonomy mismatches, mathematical errors, distractor explanation contradictions, or duplicate seed questions, forcing recalculated solutions on revised candidate questions.
    * Anti-guessing option and misconception shuffler (`shuffler.py`) ensuring uniform random distribution of the correct answer across `{"A", "B", "C", "D"}` and random permutation of distractor misconception ordering while strictly preserving diagnostic bindings.
 3. **Universal Mathematical AST Engine (`math_engine`)**:
@@ -60,7 +60,7 @@ This document summarizes the technical deliverables, architectural implementatio
 
 **Interface Contracts Provided by Student A for Student B Extension:**
 
-* **`MathValidatorInterface`** (`backend/src/quiz/validation/validator.py`):
+* **`MathValidatorInterface`** (`backend/src/modes/quiz/validation/validator.py`):
   ```python
   class MathValidatorInterface(ABC):
       @abstractmethod
@@ -73,7 +73,7 @@ This document summarizes the technical deliverables, architectural implementatio
   * **Output**: `MathValidationResult(is_valid: bool, errors: list[str], details: dict)`.
   * **Baseline**: `SymPyMathValidator` already verifies computed solution truth, distractor non-equivalence, and duplicate/collision detection. Student B may subclass it or implement `MathValidatorInterface` directly.
 
-* **Math Engine Extension Points** (`backend/src/math_engine/parser.py`):
+* **Math Engine Extension Points** (`backend/src/core/math_engine/parser.py`):
   * `parse_option_expression(option_text: str) -> sp.Expr | None` — Parses an option value to a SymPy expression. Handles `÷`, `×`, Spanish decimal commas (`1,5`), colon division (`6:2`).
   * `are_values_equivalent(expr_a, expr_b) -> bool` — Numeric/symbolic equivalence via float comparison ($\epsilon < 10^{-6}$) with SymPy `simplify` fallback.
   * `extract_and_solve_problem(question_text: str) -> tuple[sp.Expr | None, str]` — Extracts and computes expected mathematical truth from question text. Returns `(solution, eval_mode)` where `eval_mode ∈ {percentage, equation, arithmetic, none}`.
@@ -83,9 +83,9 @@ This document summarizes the technical deliverables, architectural implementatio
 
 1. **20 Handwritten Golden Benchmark Tests**:
    * 20 challenging edge-case test cases covering arithmetic precedence ambiguities, unlike denominator fractions, and multi-step equations with fractions/negative numbers.
-   * Target file: `backend/tests/quiz/validation/test_golden_benchmarks.py`.
+   * Target file: `backend/tests/modes/quiz/validation/test_golden_benchmarks.py`.
 2. **Deep Symbolic Parser Extensions**:
-   * Symbolic parsing enhancements in `math_engine/parser.py` and/or `quiz/validation/validator.py` for complex primary-school expressions beyond the baseline coverage.
+   * Symbolic parsing enhancements in `core/math_engine/parser.py` and/or `modes/quiz/validation/validator.py` for complex primary-school expressions beyond the baseline coverage.
 3. **Pedagogical Distractor Quality Review**:
    * Human review of the 66-question seed bank and LLM-generated questions targeting $\ge 90\%$ pedagogical distractor validity.
 4. **Tuesday Jury Defense**: *"Diagnostic Distractors: Wrong answers are the pedagogical content"*

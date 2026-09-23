@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { OptionLetter } from '../../shared/constants/options';
 import { storage } from '../../shared/lib/storage';
-import { OptionLetter } from './voting.types';
 import { votingApi } from './votingApi';
 
 /**
@@ -23,6 +23,15 @@ export function useStudentVoting(
 
   const shownAtRef = useRef<number>(performance.now());
   const currentRoundRef = useRef<string | null>(roundId);
+
+  const persistVotes = useCallback(
+    (nextVotes: Record<string, OptionLetter>) => {
+      // Only called on paths where sessionId is already guarded non-null.
+      setVotes(nextVotes);
+      storage.setStudentVotes(sessionId as string, { votes: nextVotes, hits });
+    },
+    [sessionId, hits]
+  );
 
   // Sync stored votes and hits when session ID changes
   useEffect(() => {
@@ -69,24 +78,20 @@ export function useStudentVoting(
           response_time_ms: responseTimeMs,
         });
 
-        const newVotes = { ...votes, [roundId]: option };
-        setVotes(newVotes);
-        storage.setStudentVotes(sessionId, { votes: newVotes, hits });
+        persistVotes({ ...votes, [roundId]: option });
       } catch (err: unknown) {
         const e = err as { status?: number };
         if (e.status === 401 && onUnauthorized) {
           onUnauthorized();
         } else if (e.status === 409) {
           // 409 = already voted or window closed: record locally so the screen advances to sent
-          const newVotes = { ...votes, [roundId]: option };
-          setVotes(newVotes);
-          storage.setStudentVotes(sessionId, { votes: newVotes, hits });
+          persistVotes({ ...votes, [roundId]: option });
         }
       } finally {
         setPendingVote(null);
       }
     },
-    [sessionId, roundId, pendingVote, votes, hits, onUnauthorized]
+    [sessionId, roundId, pendingVote, votes, hits, persistVotes, onUnauthorized]
   );
 
   const recordHit = useCallback(
@@ -103,7 +108,11 @@ export function useStudentVoting(
   );
 
   const score = Object.values(hits).filter(Boolean).length;
-  const currentVote = (roundId && votes[roundId]) || pendingVote;
+  // Single cast at the source: the JSON-backed record may lack the key.
+  const roundVote = roundId
+    ? ((votes[roundId] as OptionLetter | undefined) ?? null)
+    : null;
+  const currentVote: OptionLetter | null = roundVote ?? pendingVote;
 
   return {
     votes,

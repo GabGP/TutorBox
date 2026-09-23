@@ -28,9 +28,11 @@ export function useSessionEngine({
   const [error, setError] = useState<ApiError | null>(null);
   const lastKnownIdRef = useRef<string | null>(targetSessionId || fallbackSessionId || null);
 
-  if (targetSessionId) {
-    lastKnownIdRef.current = targetSessionId;
-  }
+  useEffect(() => {
+    if (targetSessionId) {
+      lastKnownIdRef.current = targetSessionId;
+    }
+  }, [targetSessionId]);
 
   const pollOnce = useCallback(async () => {
     try {

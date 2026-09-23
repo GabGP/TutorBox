@@ -67,3 +67,63 @@ def test_fallback_raises_last_error_when_every_tier_fails():
             espeak,
             explicit_backend=False,
         )
+
+
+def test_fallback_ultimate_espeak_safety_net_succeeds():
+    """Verifies ultimate safety net synthesizes when espeak is omitted from backends dict."""
+    target = _backend("piper")
+    espeak = _backend("espeak")
+    target.synthesize.side_effect = RuntimeError("Piper crashed")
+    espeak.synthesize.return_value = b"ESPEAK_FALLBACK"
+
+    audio = synthesize_with_fallback(
+        {"piper": target},
+        target,
+        "Hola",
+        "es",
+        None,
+        espeak,
+        explicit_backend=False,
+    )
+    assert audio == b"ESPEAK_FALLBACK"
+
+
+def test_fallback_ultimate_espeak_safety_net_fails():
+    """Verifies ultimate safety net raises last error when espeak also fails."""
+    target = _backend("piper")
+    espeak = _backend("espeak")
+    target.synthesize.side_effect = RuntimeError("Piper crashed")
+    espeak.synthesize.side_effect = RuntimeError("eSpeak also crashed")
+
+    with pytest.raises(RuntimeError, match="eSpeak also crashed"):
+        synthesize_with_fallback(
+            {"piper": target},
+            target,
+            "Hola",
+            "es",
+            None,
+            espeak,
+            explicit_backend=False,
+        )
+
+
+def test_preload_with_fallback_success():
+    """Verifies preload_with_fallback tries candidates in order."""
+    from core.tts.router.fallback import preload_with_fallback
+
+    qwen = _backend("qwen3-tts")
+    qwen.preload.side_effect = RuntimeError("Qwen failed")
+    piper = _backend("piper")
+    piper.preload.return_value = 8.5
+
+    engine, load_ms = preload_with_fallback({"qwen3-tts": qwen, "piper": piper})
+    assert engine == "piper"
+    assert load_ms == 8.5
+
+
+def test_preload_with_fallback_no_backends():
+    """Verifies preload_with_fallback raises error when candidate list is empty."""
+    from core.tts.router.fallback import preload_with_fallback
+
+    with pytest.raises(TTSUnavailableError, match="No TTS engine available"):
+        preload_with_fallback({})

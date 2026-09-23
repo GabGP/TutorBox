@@ -147,3 +147,23 @@ def test_original_username_reusable_after_deletion(
     )
     assert signup_res.status_code == 201
     assert signup_res.json()["username"] == "student1"
+
+
+def test_cannot_delete_last_teacher(
+    staff_db, client: TestClient, admin_headers
+) -> None:
+    """Deleting the final teacher is rejected to avoid classroom lockout."""
+    _, conn = staff_db
+    teacher_id = get_user_id(conn, "teacher1")
+
+    res_last = client.delete(f"/api/v1/staff/users/{teacher_id}", headers=admin_headers)
+    assert res_last.status_code == 409
+
+    # A student still deletes fine.
+    student_id = get_user_id(conn, "student1")
+    assert (
+        client.delete(
+            f"/api/v1/staff/users/{student_id}", headers=admin_headers
+        ).status_code
+        == 200
+    )

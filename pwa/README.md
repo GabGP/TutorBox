@@ -22,7 +22,7 @@ backend session engine is the only source of truth and the pages poll it once pe
 
 | URL | Who | What it does |
 | :--- | :--- | :--- |
-| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline espeak-ng, Latin American Spanish). |
+| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /api/v1/quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline multi-tier TTS: Qwen3-TTS -> Sherpa -> Piper -> espeak-ng, Spanish). |
 | `/alumno/` | Students | **Opens by itself when a phone joins the `TutorBox` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
 | `/pantalla/` | HDMI classroom screen | Question + countdown + vote count, then the correct answer with the aggregate bars. Never per-student votes. |
 | `/` | — | Redirects to `/alumno/` (to `http://tutorbox/alumno/` when reached through any other name). |
@@ -45,14 +45,14 @@ served from the question bank.
 | Endpoint | Page |
 | :--- | :--- |
 | `GET /health` | teacher login indicator |
-| `POST /auth/login`, `POST /auth/logout`, `GET /users/me`, `PATCH /users/me/pin` | all logins, session restore, forced PIN rotation |
-| `POST /users/signup` | student "Crear cuenta" |
-| `GET /staff/users`, `POST /staff/users`, `POST /staff/users/{id}/reset-pin` | teacher roster |
-| `GET /quiz/topics`, `POST /quiz/generate` (`save_to_bank: true`), `GET /quiz/generation-metrics` | topic cards, question generation, ETA |
-| `POST /session`, `/start`, `/close`, `/reveal`, `/next`, `GET /session/{id}/report` | teacher match control |
-| `GET /session/{id}/speech?lang=es` | teacher device: espeak-ng (es-419) WAV read out loud when the >51% rule fires |
-| `GET /session/current`, `GET /session/{id}` | students and screen (polling), teacher (own match) |
-| `POST /session/{id}/vote` | student vote |
+| `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/pin` | all logins, session restore, forced PIN rotation |
+| `POST /api/v1/users/signup` | student "Crear cuenta" |
+| `GET /api/v1/staff/users`, `POST /api/v1/staff/users`, `POST /api/v1/staff/users/{id}/reset-pin` | teacher roster |
+| `GET /api/v1/quiz/topics`, `POST /api/v1/quiz/generate` (`save_to_bank: true`), `GET /api/v1/quiz/generation-metrics` | topic cards, question generation, ETA |
+| `POST /api/v1/session`, `/start`, `/close`, `/reveal`, `/next`, `GET /api/v1/session/{id}/report` | teacher match control |
+| `GET /api/v1/session/{id}/speech?lang=es` | teacher device: offline multi-tier TTS (Qwen3-TTS -> Sherpa -> Piper -> espeak-ng) WAV read out loud when the >51% rule fires |
+| `GET /api/v1/session/current`, `GET /api/v1/session/{id}` | students and screen (polling), teacher (own match) |
+| `POST /api/v1/session/{id}/vote` | student vote |
 
 Client-side only (per browser `localStorage`): the bearer token, the teacher's current session id and
 per-round reveal history (for the summary page), and each student's own votes/score. The ESP32

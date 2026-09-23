@@ -27,28 +27,27 @@ export const CountdownRing: React.FC<CountdownRingProps> = ({
   className = '',
   id,
 }) => {
-  if (remaining == null) {
-    return null;
-  }
-
-  const [localRemaining, setLocalRemaining] = useState<number>(remaining);
+  const [localRemaining, setLocalRemaining] = useState<number>(remaining ?? 0);
 
   useEffect(() => {
-    setLocalRemaining(remaining);
+    if (remaining != null) setLocalRemaining(remaining);
   }, [remaining]);
 
   useEffect(() => {
-    if (localRemaining <= 0) return;
-
+    if (remaining == null) return;
     const interval = setInterval(() => {
       setLocalRemaining((prev) => {
+        if (prev <= 0) return 0;
         const next = prev - 0.1;
         return next <= 0 ? 0 : next;
       });
     }, 100);
-
     return () => clearInterval(interval);
   }, [remaining]);
+
+  if (remaining == null) {
+    return null;
+  }
 
   const seconds = Math.ceil(localRemaining);
   const percentage =

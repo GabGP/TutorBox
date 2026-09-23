@@ -1,6 +1,8 @@
 export interface SubconceptModel {
   name: string;
   description?: string;
+  /** Diagnosed misconception slugs for this subconcept (from /quiz/topics). */
+  misconceptions?: string[];
 }
 
 export interface TopicModel {
@@ -14,6 +16,29 @@ export interface GenerationMetrics {
   topic: string;
   total_generated: number;
   avg_duration_ms: number;
+}
+
+export interface FullGenerationMetrics {
+  total_generations: number;
+  successful_generations: number;
+  failed_generations: number;
+  success_rate: number;
+  avg_attempts: number;
+  avg_duration_ms: number;
+}
+
+export interface GenerationLogItem {
+  id: number;
+  question_id?: string | null;
+  user_id: number;
+  topic: string;
+  subconcept?: string | null;
+  model_name: string;
+  attempts: number;
+  duration_ms: number;
+  success: boolean;
+  rejection_history: string[];
+  created_at?: string | null;
 }
 
 export interface GeneratedQuestion {
@@ -42,17 +67,4 @@ export interface GenerationProgress {
   statuses?: QuestionGenerationStatus[];
 }
 
-export const PROGRESS_ANIMATION = {
-  CYCLE_SPEED_SECONDS: 5.5,
-  ORBIT_SPEED_SECONDS: 3.6,
-  DEFAULT_QUESTION_ETA_SECONDS: 12,
-  MOBILE_PILL_COLS_MAX: 5,
-  DESKTOP_PILL_COLS_MAX: 10,
-} as const;
-
-export const PEDAGOGICAL_STAGES = [
-  '✍️ Redactando el enunciado del problema...',
-  '🎨 Diseñando opciones para dudas frecuentes...',
-  '📐 Comprobando la exactitud de los cálculos...',
-  '💾 Guardando en el banco del dispositivo...',
-] as const;
+export { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';

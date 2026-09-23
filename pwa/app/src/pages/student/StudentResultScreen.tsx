@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, Minus, X } from 'lucide-react';
 import { ConfettiCanvas } from '../../shared/ui/Confetti/ConfettiCanvas';
 import styles from './StudentResultScreen.module.css';
 
@@ -32,7 +33,7 @@ export const StudentResultScreen: React.FC<StudentResultScreenProps> = ({
     <section id="s-result" className={`${styles.section} ${styles.center}`}>
       <ConfettiCanvas active={isHit} />
       <div className={`${styles.glyph} ${isHit ? styles.glyphHit : ''}`} id="glyph">
-        {isHit ? '✓' : myVote ? '✕' : '–'}
+        {isHit ? <Check size={54} aria-hidden /> : myVote ? <X size={54} aria-hidden /> : <Minus size={54} aria-hidden />}
       </div>
       <h1 id="resultTitle">{isHit ? '¡Correcto!' : myVote ? 'Casi' : 'Sin respuesta'}</h1>
       <p id="resultBody">{isHit ? answer : `La respuesta era ${answer}`}</p>

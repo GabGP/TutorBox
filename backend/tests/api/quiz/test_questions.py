@@ -1,5 +1,7 @@
 """Tests for /api/v1/quiz/questions CRUD endpoints."""
 
+import copy
+
 from fastapi.testclient import TestClient
 
 from core.db.question_repository import create_question
@@ -230,3 +232,28 @@ def test_create_question_retrieval_failure_returns_500(
     res = client.post("/api/v1/quiz/questions", headers=teacher_headers, json=payload)
     assert res.status_code == 500
     assert "Failed to retrieve created question" in res.json()["detail"]
+
+
+def test_list_questions_orders_newest_first_on_ties(staff_db, client: TestClient):
+    """Same-second created_at ties order deterministically, newest first."""
+    _, conn = staff_db
+    first = copy.deepcopy(SAMPLE_QUESTION)
+    first.id = "q_order_first_01"
+    second = copy.deepcopy(SAMPLE_QUESTION)
+    second.id = "q_order_second_02"
+    create_question(conn, question=first, source="seed", sympy_verified=True)
+    create_question(conn, question=second, source="seed", sympy_verified=True)
+    conn.execute(
+        "UPDATE quiz_questions SET created_at = '2026-01-01 00:00:00' "
+        "WHERE id IN ('q_order_first_01', 'q_order_second_02')"
+    )
+    conn.commit()
+
+    teacher_headers = auth_headers(client, "teacher1", "1234")
+    res = client.get(
+        "/api/v1/quiz/questions?topic=arithmetic&limit=200&offset=0",
+        headers=teacher_headers,
+    )
+    assert res.status_code == 200
+    ids = [q["id"] for q in res.json()["questions"]]
+    assert ids.index("q_order_second_02") < ids.index("q_order_first_01")

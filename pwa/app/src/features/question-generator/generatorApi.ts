@@ -1,6 +1,9 @@
 import { requestApi } from '../../shared/api/httpClient';
+import { toQuery } from '../../shared/api/query';
 import {
+  FullGenerationMetrics,
   GenerateQuestionResponse,
+  GenerationLogItem,
   GenerationMetrics,
   TopicModel,
 } from './generator.types';
@@ -25,12 +28,46 @@ export const generatorApi = {
    * @returns {Promise<GenerationMetrics>} Generation duration and count telemetry.
    */
   async getMetrics(topic?: string): Promise<GenerationMetrics> {
-    const query = topic ? `?topic=${encodeURIComponent(topic)}` : '';
     return requestApi<GenerationMetrics>(
       'GET',
-      `/quiz/generation-metrics${query}`,
+      `/quiz/generation-metrics${toQuery({ topic })}`,
       undefined,
       true
+    );
+  },
+
+  /**
+   * Retrieves full telemetry metrics (reliability + latency) with filters.
+   */
+  async getFullMetrics(params?: {
+    topic?: string;
+    model_name?: string;
+  }): Promise<FullGenerationMetrics> {
+    return requestApi<FullGenerationMetrics>(
+      'GET',
+      `/quiz/generation-metrics${toQuery({ topic: params?.topic, model_name: params?.model_name })}`
+    );
+  },
+
+  /**
+   * Lists generation attempt logs via `GET /quiz/generation-logs`.
+   */
+  async getLogs(params?: {
+    topic?: string;
+    user_id?: number;
+    success?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ logs: GenerationLogItem[]; total: number }> {
+    return requestApi(
+      'GET',
+      `/quiz/generation-logs${toQuery({
+        topic: params?.topic,
+        user_id: params?.user_id,
+        success: params?.success,
+        limit: params?.limit ?? 20,
+        offset: params?.offset ?? 0,
+      })}`
     );
   },
 

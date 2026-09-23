@@ -1,4 +1,5 @@
 import { getErrorMessage } from './errorCatalog';
+import { storage } from '../lib/storage';
 
 export const API_BASE = '/api/v1';
 
@@ -18,6 +19,29 @@ export class ApiError extends Error {
 }
 
 /**
+ * Builds auth headers for a JSON or blob request from the stored token.
+ */
+function buildHeaders(body: unknown, json: boolean): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (json || body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const token = storage.getToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/** Throws a standardized ApiError for a non-OK fetch response. */
+async function throwForBadResponse(response: Response): Promise<never> {
+  const data = await response.json().catch(() => ({}));
+  const detail = (data as { detail?: string }).detail;
+  const message = getErrorMessage(response.status, detail);
+  throw new ApiError(message, response.status, detail);
+}
+
+/**
  * Executes a typed JSON REST API request against the TutorBox backend.
  * Automatically injects the stored Bearer auth token and standardizes error responses.
  *
@@ -34,14 +58,7 @@ export async function requestApi<T = unknown>(
   body?: unknown,
   auth = true
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = localStorage.getItem('tb_token');
-  if (auth && token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = auth ? buildHeaders(body, true) : { 'Content-Type': 'application/json' };
 
   let response: Response;
   try {
@@ -69,27 +86,30 @@ export async function requestApi<T = unknown>(
  * Fetches binary media (e.g. offline synthesized WAV audio) and creates a local Object URL.
  *
  * @param {string} path - Relative endpoint path under `/api/v1`.
+ * @param {string} [method] - HTTP method (defaults to 'GET').
+ * @param {unknown} [body] - Optional JSON payload (for POST previews).
  * @returns {Promise<string>} Local blob URL suitable for HTMLAudioElement playback.
  */
-export async function requestBlobUrl(path: string): Promise<string> {
-  const token = localStorage.getItem('tb_token');
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+export async function requestBlobUrl(
+  path: string,
+  method = 'GET',
+  body?: unknown
+): Promise<string> {
+  const headers = buildHeaders(body, false);
 
   let response: Response;
   try {
-    response = await fetch(API_BASE + path, { headers });
+    response = await fetch(API_BASE + path, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   } catch {
     throw new ApiError(getErrorMessage(0), 0);
   }
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const detail = (data as { detail?: string }).detail;
-    const message = getErrorMessage(response.status, detail);
-    throw new ApiError(message, response.status, detail);
+    await throwForBadResponse(response);
   }
 
   const blob = await response.blob();

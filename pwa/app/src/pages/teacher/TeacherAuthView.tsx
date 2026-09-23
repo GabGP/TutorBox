@@ -1,6 +1,6 @@
 import React from 'react';
+import { EntryForm } from '../../features/auth/EntryForm';
 import { ForcedPinModal } from '../../features/auth/ForcedPinModal';
-import { LoginForm } from '../../features/auth/LoginForm';
 import { ServerBadge } from '../../shared/ui/ServerBadge/ServerBadge';
 import styles from './TeacherView.module.css';
 
@@ -36,8 +36,9 @@ export const TeacherAuthView: React.FC<TeacherAuthViewProps> = ({
 
   return (
     <main className={styles.mainContent}>
-      <LoginForm
+      <EntryForm
         title="Panel del docente"
+        subtitle="Entran docentes y admins. Alumnos: usen /alumno/."
         onLogin={onLogin}
         externalError={roleError}
         headerExtra={<ServerBadge />}

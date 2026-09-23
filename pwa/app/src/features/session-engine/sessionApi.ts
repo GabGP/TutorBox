@@ -1,15 +1,8 @@
 import { requestApi } from '../../shared/api/httpClient';
+import { getSessionQueryParamId } from '../../shared/routing/session';
 import { SessionModel, SessionReport } from './session.types';
 
-/**
- * Extracts an optional pinned session UUID from the window query parameters (`?s=<uuid>`).
- *
- * @returns {string | null} The session ID query parameter value, or null if unpinned or in SSR.
- */
-export function getSessionQueryParamId(): string | null {
-  if (typeof window === 'undefined') return null;
-  return new URLSearchParams(window.location.search).get('s');
-}
+export { getSessionQueryParamId } from '../../shared/routing/session';
 
 /**
  * Builds the canonical API endpoint path for the active or pinned session.
@@ -77,10 +70,10 @@ export const sessionApi = {
    * Closes the active round's voting window via `POST /session/{id}/close`.
    *
    * @param {string} id - Session UUID.
-   * @returns {Promise<void>}
+   * @returns {Promise<SessionModel>} Updated session snapshot with round in closed state.
    */
-  async closeRound(id: string): Promise<void> {
-    await requestApi('POST', `/session/${id}/close`);
+  async closeRound(id: string): Promise<SessionModel> {
+    return requestApi<SessionModel>('POST', `/session/${id}/close`);
   },
 
   /**

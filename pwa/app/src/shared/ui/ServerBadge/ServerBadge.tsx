@@ -20,6 +20,7 @@ export const ServerBadge: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
+    // /health lives outside /api/v1 so it intentionally bypasses requestApi.
     fetch('/health')
       .then((r) => r.json())
       .then((h: HealthResponse) => {

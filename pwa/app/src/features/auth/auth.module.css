@@ -67,6 +67,51 @@
   line-height: 1.4;
 }
 
+.hint {
+  font-size: 13px;
+  color: var(--mute2);
+  line-height: 1.4;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mute2);
+}
+
+.profileRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 18px;
+  background: var(--tint2);
+  color: var(--tint-ink);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profileName {
+  font-size: 19px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileRole {
+  font-size: 13px;
+  color: var(--mute2);
+  font-weight: 500;
+}
+
 .submitBtn {
   height: 64px;
   padding: 0 18px;

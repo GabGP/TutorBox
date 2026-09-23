@@ -6,6 +6,7 @@ from pathlib import Path
 
 from core.config import PROJECT_ROOT, get_settings
 from core.tts.audio import samples_to_wav
+from core.tts.engines.sherpa.metadata import ensure_sherpa_model as _ensure_sherpa_model
 from core.tts.exceptions import TTSUnavailableError
 
 __all__ = ["resolve_sherpa_paths", "samples_to_wav"]
@@ -20,9 +21,11 @@ def _find_espeak_data(base_dir: Path) -> Path | None:
         PROJECT_ROOT / ".cache" / "models" / "tts" / "espeak-ng-data",
     ]
     try:
-        import piper
+        import importlib.util
 
-        candidates.append(Path(piper.__file__).parent / "espeak-ng-data")
+        spec = importlib.util.find_spec("piper")
+        if spec and spec.origin:
+            candidates.append(Path(spec.origin).parent / "espeak-ng-data")
     except (ImportError, AttributeError):
         pass
 
@@ -96,6 +99,7 @@ def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
             f"Sherpa model '{model_name}' was not found in search paths."
         )
 
+    resolved_model = _ensure_sherpa_model(resolved_model)
     tokens_path = _ensure_tokens_file(resolved_model)
     data_dir = _find_espeak_data(resolved_model.parent)
     if not data_dir:

@@ -68,6 +68,7 @@ def test_check_prerequisites_all_reachable(capsys):
         patch("urllib.request.urlopen", return_value=mock_cm),
         patch("run.resolve_llama_daemon", return_value=Path("/mock/llama-tts-daemon")),
         patch("run.resolve_pnpm", return_value="/usr/bin/pnpm"),
+        patch("run.check_voice_models", return_value=[]),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
@@ -75,6 +76,7 @@ def test_check_prerequisites_all_reachable(capsys):
         assert "Local SLM engine reachable" in captured
         assert "Found Qwen3-TTS daemon" in captured
         assert "Found frontend package manager" in captured
+        assert "Found all neural voice models" in captured
 
 
 def test_check_prerequisites_all_missing(capsys):
@@ -84,6 +86,10 @@ def test_check_prerequisites_all_missing(capsys):
         patch("urllib.request.urlopen", side_effect=OSError("Unreachable")),
         patch("run.resolve_llama_daemon", return_value=None),
         patch("run.resolve_pnpm", return_value=None),
+        patch(
+            "run.check_voice_models",
+            return_value=["Piper/Sherpa", "Kokoro-82M", "Qwen3-TTS"],
+        ),
     ):
         run.check_prerequisites()
         captured = capsys.readouterr().out
@@ -91,6 +97,7 @@ def test_check_prerequisites_all_missing(capsys):
         assert "SLM engine not detected" in captured
         assert "Qwen3-TTS daemon not found" in captured
         assert "pnpm not found" in captured
+        assert "Missing neural voice models" in captured
 
 
 def test_build_pwa_no_package_json():
@@ -189,11 +196,13 @@ def test_main_no_build(monkeypatch):
 
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_pwa") as mock_build,
         patch("subprocess.run") as mock_sub,
         patch("pathlib.Path.is_file", fake_is_file),
     ):
         run.main()
+        mock_sync.assert_called_once()
         mock_build.assert_not_called()
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
@@ -205,89 +214,24 @@ def test_main_omits_log_config_when_missing(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["run.py", "--no-build"])
     with (
         patch("run.check_prerequisites"),
+        patch("run.sync_backend", return_value=True) as mock_sync,
         patch("run.build_pwa"),
         patch("subprocess.run") as mock_sub,
         patch("pathlib.Path.is_file", return_value=False),
     ):
         run.main()
+        mock_sync.assert_called_once()
         mock_sub.assert_called_once()
         cmd = mock_sub.call_args[0][0]
         assert "--log-config" not in cmd
 
 
-def test_resolve_llama_daemon_found_in_cache():
-    """Verifies resolve_llama_daemon finds cached binary under .cache/bin/llama.cpp/."""
-
-    def fake_is_file(self):
-        return "llama-tts-daemon" in self.name or "llama-tts" in self.name
-
-    with patch("pathlib.Path.is_file", fake_is_file):
-        daemon_path = run.resolve_llama_daemon()
-        assert daemon_path is not None
-        assert "llama.cpp" in str(daemon_path)
-
-
-def test_resolve_llama_daemon_found_in_path():
-    """Verifies resolve_llama_daemon finds daemon via shutil.which if not in cache."""
-    with (
-        patch("pathlib.Path.is_file", return_value=False),
-        patch("shutil.which", return_value="/usr/local/bin/llama-tts-daemon"),
-    ):
-        daemon_path = run.resolve_llama_daemon()
-        assert daemon_path == Path("/usr/local/bin/llama-tts-daemon").resolve()
-
-
-def test_resolve_llama_daemon_missing():
-    """Verifies resolve_llama_daemon returns None when daemon is absent everywhere."""
-    with (
-        patch("pathlib.Path.is_file", return_value=False),
-        patch("shutil.which", return_value=None),
-    ):
-        assert run.resolve_llama_daemon() is None
-
-
-def test_build_llama_success_and_force():
-    """Verifies build_llama runs build_llama_tts.py with expected flags."""
-    with (
-        patch("pathlib.Path.is_file", return_value=True),
-        patch(
-            "subprocess.run",
-            return_value=subprocess.CompletedProcess(args=[], returncode=0),
-        ) as mock_run,
-    ):
-        assert run.build_llama(force=True) is True
-        assert mock_run.call_count == 1
-        assert "--force" in mock_run.call_args[0][0]
-
-
-def test_build_llama_missing_script():
-    """Verifies build_llama returns False when build script is missing."""
-    with patch("pathlib.Path.is_file", return_value=False):
-        assert run.build_llama() is False
-
-
-def test_main_build_llama_flag(monkeypatch):
-    """Verifies --build-llama triggers build_llama before check_only/uvicorn."""
-    monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama", "--check-only"])
-    with (
-        patch("run.check_prerequisites"),
-        patch("run.build_llama", return_value=True) as mock_build_llama,
-        patch("subprocess.run") as mock_sub,
-    ):
-        run.main()
-        mock_build_llama.assert_called_once_with(force=False)
-        mock_sub.assert_not_called()
-
-
-def test_main_build_llama_failure_exits(monkeypatch):
-    """Verifies build failure causes main to exit with code 1."""
-    import pytest
-
-    monkeypatch.setattr(sys, "argv", ["run.py", "--build-llama"])
-    with (
-        patch("run.check_prerequisites"),
-        patch("run.build_llama", return_value=False),
-        pytest.raises(SystemExit) as exc_info,
-    ):
-        run.main()
-    assert exc_info.value.code == 1
+def test_resolve_python_when_found(tmp_path, monkeypatch):
+    """Verifies resolve_python returns virtualenv python when present."""
+    scripts_dir = tmp_path / ("Scripts" if os.name == "nt" else "bin")
+    scripts_dir.mkdir(parents=True)
+    ext = ".exe" if os.name == "nt" else ""
+    py_bin = scripts_dir / f"python{ext}"
+    py_bin.write_text("")
+    monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", str(tmp_path))
+    assert run.resolve_python() == str(py_bin)

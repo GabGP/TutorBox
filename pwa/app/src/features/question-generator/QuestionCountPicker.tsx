@@ -1,4 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Minus, Plus } from 'lucide-react';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
+import { QUESTION_COUNT_MAX, QUESTION_COUNT_MIN } from './generator.constants';
 import styles from './generator.module.css';
 
 export interface QuestionCountPickerProps {
@@ -10,8 +14,10 @@ export interface QuestionCountPickerProps {
 
 /**
  * Question Count Picker component.
- * Allows teachers to increment/decrement the targeted question count (range 3–20)
- * with estimated duration calculations and selected topic confirmation.
+ * Allows teachers to increment/decrement the targeted question count
+ * (shared QUESTION_COUNT_MIN–MAX range) with estimated duration
+ * calculations and selected topic confirmation. Generation failures
+ * float as error toasts so the counter never shifts layout.
  *
  * @param {QuestionCountPickerProps} props - Component props controlling count, topic label, and callbacks.
  * @returns {JSX.Element} The rendered counter control panel.
@@ -23,17 +29,22 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
   errorNote,
 }) => {
   const estimatedMinutes = Math.max(2, Math.round(count * 0.6));
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+
+  useEffect(() => {
+    if (errorNote) pushToast({ message: errorNote, tone: 'error' });
+  }, [errorNote, pushToast]);
 
   const handleDecrement = () => {
-    onChangeCount(Math.max(3, count - 1));
+    onChangeCount(Math.max(QUESTION_COUNT_MIN, count - 1));
   };
 
   const handleIncrement = () => {
-    onChangeCount(Math.min(20, count + 1));
+    onChangeCount(Math.min(QUESTION_COUNT_MAX, count + 1));
   };
 
   return (
-    <div style={{ display: 'grid', gap: '16px' }}>
+    <div className={styles.stack}>
       <div className={styles.counter}>
         <div className={styles.num} id="count">
           {count}
@@ -48,7 +59,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
             aria-label="Una pregunta menos"
             onClick={handleDecrement}
           >
-            −
+            <Minus size={28} aria-hidden />
           </button>
           <button
             type="button"
@@ -57,7 +68,7 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
             aria-label="Una pregunta más"
             onClick={handleIncrement}
           >
-            +
+            <Plus size={28} aria-hidden />
           </button>
         </div>
       </div>
@@ -69,15 +80,10 @@ export const QuestionCountPicker: React.FC<QuestionCountPickerProps> = ({
         </div>
       </div>
 
-      <p style={{ fontSize: '15px', color: 'var(--mute2)', lineHeight: 1.5, margin: 0 }}>
+      <p className={styles.description}>
         El modelo local escribe cada pregunta y la revisa con matemáticas antes de usarla. Cada pregunta dura 20 segundos.
       </p>
-
-      {errorNote && (
-        <div className={styles.note} id="countNote">
-          {errorNote}
-        </div>
-      )}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </div>
   );
 };

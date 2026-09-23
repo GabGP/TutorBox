@@ -1,5 +1,6 @@
 import React from 'react';
-import { SpeechStatusBadge } from '../speech/SpeechStatusBadge';
+import { TriangleAlert } from 'lucide-react';
+import { PlayButton } from '../../shared/ui/PlayButton/PlayButton';
 import { SpeechLanguage, SpeechState } from '../speech/speech.types';
 import styles from './report.module.css';
 
@@ -11,7 +12,7 @@ export interface RemediationAlertProps {
   dominantOptionText: string;
   explanation: string;
   speechState: SpeechState;
-  speechMessage: string;
+  speechMessage?: string;
   voiceLang: SpeechLanguage;
   onPlay: () => void;
   onSkip: () => void;
@@ -19,11 +20,7 @@ export interface RemediationAlertProps {
 
 /**
  * Pedagogical Remediation Alert component.
- * Renders prominent visual and auditory remediation controls whenever a diagnostic distractor
- * exceeds the >51% threshold, providing audio synthesis triggers and pedagogical explanations.
- *
- * @param {RemediationAlertProps} props - Component props containing distractor stats, explanation, and audio state.
- * @returns {JSX.Element | null} The rendered remediation banner or null if threshold is not met.
+ * Displays diagnostic distractor error statistics, explanation, and interactive TTS audio controls.
  */
 export const RemediationAlert: React.FC<RemediationAlertProps> = ({
   shouldShow,
@@ -43,48 +40,64 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
   const defaultVoiceLabel =
     voiceLang === 'es' ? 'Escuchar en español' : "Escuchar en k'iche'";
 
-  const playLabel =
-    speechState === 'loading'
-      ? 'Preparando la voz…'
-      : speechState === 'playing'
-      ? 'Leyendo…'
-      : speechState === 'done'
-      ? 'Escuchar otra vez'
-      : defaultVoiceLabel;
-
-  const skipLabel =
-    speechState === 'loading' || speechState === 'playing' ? 'Detener' : 'Saltar';
-
   const isBusy = speechState === 'loading' || speechState === 'playing';
+
+  const handlePrimaryClick = () => {
+    if (isBusy) {
+      onSkip();
+    } else {
+      onPlay();
+    }
+  };
+
+  const speechPhase =
+    speechState === 'loading' || speechState === 'playing' || speechState === 'done'
+      ? speechState
+      : ('idle' as const);
 
   return (
     <div className={styles.alertLg} id="ralert">
+      <div className={styles.remediationTagRow}>
+        <span className={styles.remediationTag}><TriangleAlert size={13} aria-hidden /> Error conceptual mayoritario (&gt;51%)</span>
+      </div>
+
       <b id="ralertTitle">
         {dominantCount} de {totalVotes} ({Math.round(dominantPercentage)}%) eligieron {dominantOptionText}
       </b>
-      <div id="explain">{explanation}</div>
 
-      <SpeechStatusBadge state={speechState} message={speechMessage} />
+      <div id="explain" className={styles.explanationBox}>
+        {explanation}
+      </div>
 
       <div className={styles.btns}>
-        <button
-          type="button"
+        <PlayButton
+          phase={speechPhase}
+          onClick={handlePrimaryClick}
           id="play"
-          className={styles.playBtn}
-          onClick={onPlay}
-          disabled={isBusy}
-        >
-          {playLabel}
-        </button>
+          ariaLabel={
+            speechState === 'loading'
+              ? 'Preparando la voz, clic para cancelar'
+              : speechState === 'playing'
+              ? 'Leyendo explicación, clic para detener'
+              : defaultVoiceLabel
+          }
+          idleLabel={defaultVoiceLabel}
+          doneLabel="Escuchar otra vez"
+        />
         <button
           type="button"
           id="skip"
           className={styles.skipBtn}
           onClick={onSkip}
         >
-          {skipLabel}
+          {isBusy ? 'Detener' : 'Saltar'}
         </button>
       </div>
+      {speechMessage && (
+        <div id="speechState" role="status" aria-live="polite">
+          {speechMessage}
+        </div>
+      )}
     </div>
   );
 };

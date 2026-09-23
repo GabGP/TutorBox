@@ -101,4 +101,20 @@ export const authApi = {
     // The backend revokes the current session upon PIN change, so re-authenticate
     return authApi.login(username, newPin);
   },
+
+  /**
+   * Submits voluntary username change via `/users/me/username`.
+   * Requires current PIN verification. The backend revokes the caller's
+   * session, so callers must re-authenticate (same as PIN change).
+   * Blocked server-side while `must_change_pin` is pending.
+   */
+  async changeUsername(
+    currentPin: string,
+    newUsername: string
+  ): Promise<void> {
+    await requestApi('PATCH', '/users/me/username', {
+      current_pin: currentPin,
+      new_username: newUsername,
+    });
+  },
 };

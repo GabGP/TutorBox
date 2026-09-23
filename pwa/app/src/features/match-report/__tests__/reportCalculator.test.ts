@@ -71,10 +71,10 @@ describe('Match Report Calculator', () => {
   describe('getToneColor', () => {
     it('maps color tokens according to thresholds', () => {
       expect(getToneColor(39)).toBe('var(--bad)');
-      expect(getToneColor(40)).toBe('var(--C)');
-      expect(getToneColor(69)).toBe('var(--C)');
-      expect(getToneColor(70)).toBe('var(--D)');
-      expect(getToneColor(100)).toBe('var(--D)');
+      expect(getToneColor(40)).toBe('var(--warn)');
+      expect(getToneColor(69)).toBe('var(--warn)');
+      expect(getToneColor(70)).toBe('var(--ok)');
+      expect(getToneColor(100)).toBe('var(--ok)');
     });
   });
 });

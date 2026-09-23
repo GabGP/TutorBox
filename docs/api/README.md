@@ -49,11 +49,11 @@ The API specification is decomposed into cohesive domain modules:
 | :--- | :--- | :--- | :---: |
 | **System & Health** | **[system.md](system.md)** | `GET /health`<br>`GET /generate_204` and the other captive-portal probes | Public |
 | **Authentication & Users** | **[auth.md](auth.md)** | `POST /api/v1/auth/login`<br>`POST /api/v1/auth/logout`<br>`POST /api/v1/users/signup`<br>`GET /api/v1/users/me`<br>`PATCH /api/v1/users/me/pin`<br>`PATCH /api/v1/users/me/username` | Public,<br>Student,<br>Staff |
-| **Staff Administration** | **[staff.md](staff.md)** | `GET /api/v1/staff/users`<br>`POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
-| **Hardware Devices** | **[devices.md](devices.md)** | `GET /api/v1/staff/devices`<br>`POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
-| **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
+| **Staff Administration** | **[staff.md](staff.md)** | `GET/POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`PATCH /api/v1/staff/users/{id}/role`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
+| **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
+| **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`PUT /api/v1/quiz/questions/{id}`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
-| **TTS & LLM Lifecycle** | **[voice-feedback.md](../architecture/voice-feedback.md#9-phased-lifecycle-management-endpoints)** | `POST /api/v1/tts/load`<br>`POST /api/v1/tts/unload`<br>`GET /api/v1/tts/status`<br>`GET /api/v1/tts/voices`<br>`POST /api/v1/llm/load`<br>`POST /api/v1/llm/unload`<br>`GET /api/v1/llm/status` | Teacher,<br>Admin |
+| **TTS & LLM Lifecycle** | **[voice-feedback.md](../architecture/voice-feedback.md#9-phased-lifecycle-management-endpoints)** | `POST /api/v1/tts/load`<br>`POST /api/v1/tts/unload`<br>`GET /api/v1/tts/status`<br>`GET /api/v1/tts/voices`<br>`POST /api/v1/tts/preview`<br>`POST /api/v1/llm/load`<br>`POST /api/v1/llm/unload`<br>`GET /api/v1/llm/status` | Teacher,<br>Admin |
 
 ---
 
@@ -129,7 +129,9 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/quiz/questions` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/questions/{id}` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/questions` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
+| `/api/v1/quiz/questions/{id}` | `PUT` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/questions/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
+| `/api/v1/staff/users/{id}/role` | `PATCH` | ❌ | ❌ | ✅ (No admin) | ✅ (All) | **Yes (403)** | [staff.md](staff.md) |
 | `/api/v1/session` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
 | `/api/v1/session/current` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [sessions.md](sessions.md) |
@@ -139,6 +141,15 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/session/{id}/reveal` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}/next` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
 | `/api/v1/session/{id}/report` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
+| `/api/v1/session/{id}/speech` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [sessions.md](sessions.md) |
+| `/api/v1/tts/load` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/tts/unload` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/tts/status` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/tts/voices` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/tts/preview` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/llm/load` | `POST` | ❌ | ❌ | ❌ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/llm/unload` | `POST` | ❌ | ❌ | ❌ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
+| `/api/v1/llm/status` | `GET` | ❌ | ❌ | ❌ | ✅ | **Yes (403)** | [voice-feedback.md](../architecture/voice-feedback.md) |
 
 ---
 

@@ -1,165 +1,266 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
+import { getSpeechVoiceKey, speechApi } from './speechApi';
 import { SpeechLanguage, SpeechState } from './speech.types';
-import { speechApi } from './speechApi';
+import { useAudioPlayer } from './useAudioPlayer';
+import { useVoiceCache } from './useVoiceCache';
+
+export interface UseSpeechPlaybackReturn {
+  state: SpeechState;
+  message: string;
+  currentRound: number;
+  speak: (roundIndex: number) => Promise<void>;
+  prefetch: (roundIndex: number) => Promise<void>;
+  stopPlayback: () => void;
+}
+
+function waitForNextPaint(): Promise<void> {
+  if (typeof requestAnimationFrame === 'function') {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 /**
- * Custom React hook for controlling offline speech synthesis playback.
- * Fetches synthesized WAV audio blobs (`/session/{id}/speech`), manages HTMLAudioElement
- * playback state, handles autoplay policies, and caches audio blobs for instantaneous replay.
- *
- * @param {string | null} sessionId - Target session ID for speech synthesis retrieval.
- * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es' Spanish or 'quc' K'iche').
- * @returns {object} Speech playback state, user message, speak trigger, and stop method.
+ * Speech playback orchestration: voice-keyed blob cache (useVoiceCache) plus
+ * audio element control (useAudioPlayer), with run/generation tokens that
+ * invalidate stale fetches and plays. Pre-fetches WAV blobs on round close
+ * and bypasses mobile autoplay blocks.
  */
-export function useSpeechPlayback(sessionId: string | null, language: SpeechLanguage = 'es') {
+export function useSpeechPlayback(
+  sessionId: string | null,
+  language: SpeechLanguage = 'es'
+): UseSpeechPlaybackReturn {
   const [state, setState] = useState<SpeechState>('idle');
   const [message, setMessage] = useState('');
   const [currentRound, setCurrentRound] = useState<number>(-1);
 
-  const clipUrlRef = useRef<string | null>(null);
-  const activeRoundRef = useRef<number>(-1);
-  const cachedLangRef = useRef<SpeechLanguage>(language);
+  const activeVoiceKey = getSpeechVoiceKey(language);
+  const [prevVoiceKey, setPrevVoiceKey] = useState(activeVoiceKey);
+
+  const {
+    prefetch,
+    generation: cacheGeneration,
+    bumpGeneration,
+    keyMatches,
+    setKey,
+    peekUrl,
+    readCached,
+    store,
+    clearSlot,
+    drop,
+    release,
+    getInFlight,
+    clearInFlight,
+  } = useVoiceCache(sessionId, language);
+  const { stop: stopPlayer, play } = useAudioPlayer();
+  const activeRunRef = useRef(0);
+  // Tracks an in-progress run independently of rendered state, so a tap
+  // can never be swallowed by a stale `loading` closure nor start a
+  // duplicate fetch. Always released in `finally`.
+  const busyRef = useRef(false);
+  // Ref mirrors so speak/stopPlayback stay referentially stable instead of
+  // churning on every state transition.
+  const stateRef = useRef(state);
+  const currentRoundRef = useRef(currentRound);
+  useEffect(() => {
+    stateRef.current = state;
+    currentRoundRef.current = currentRound;
+  }, [state, currentRound]);
+
+  // Reset cached clip and preparation state when the saved voice changes.
+  // This must run before child reveal effects can autoplay after Settings
+  // closes; a passive effect lets autoplay race the old clip and skip the
+  // preparation state.
+  useLayoutEffect(() => {
+    if (prevVoiceKey !== activeVoiceKey) {
+      bumpGeneration();
+      activeRunRef.current += 1;
+      stopPlayer(peekUrl());
+      busyRef.current = false;
+      setPrevVoiceKey(activeVoiceKey);
+      setState('idle');
+      setMessage('');
+      drop();
+      setKey(activeVoiceKey);
+      clearInFlight();
+    }
+  }, [
+    activeVoiceKey,
+    prevVoiceKey,
+    bumpGeneration,
+    stopPlayer,
+    peekUrl,
+    drop,
+    setKey,
+    clearInFlight,
+  ]);
 
   const stopPlayback = useCallback(() => {
-    const player = getAudioPlayer();
-    stopAudio(player);
-    if (state === 'playing' || state === 'loading') {
+    activeRunRef.current += 1;
+    stopPlayer();
+    busyRef.current = false;
+    if (stateRef.current === 'playing' || stateRef.current === 'loading') {
       setState('idle');
       setMessage('');
     }
-  }, [state]);
+  }, [stopPlayer]);
+
+  const playCachedUrl = useCallback(
+    async (
+      playerEl: HTMLAudioElement,
+      url: string,
+      roundIndex: number,
+      isCurrent: () => boolean
+    ) => {
+      await play(playerEl, url, roundIndex, isCurrent, {
+        onPlaying: (idx) => {
+          setCurrentRound(idx);
+          setState('playing');
+          setMessage('Leyendo la explicación en voz alta…');
+        },
+        onDone: () => {
+          setState('done');
+          setMessage('Explicación leída.');
+        },
+        onError: () => {
+          setState('error');
+          setMessage('No se pudo reproducir el audio.');
+        },
+        onBlocked: () => {
+          setState('blocked');
+          setMessage('Toque “Escuchar” para reproducir la explicación.');
+        },
+      });
+    },
+    [play]
+  );
 
   const speak = useCallback(
     async (roundIndex: number) => {
       if (!sessionId) return;
+      const key = getSpeechVoiceKey(language);
+      if (busyRef.current) return;
       if (
-        state === 'loading' ||
-        (state === 'playing' && activeRoundRef.current === roundIndex && cachedLangRef.current === language)
+        stateRef.current === 'playing' &&
+        currentRoundRef.current === roundIndex &&
+        keyMatches(key)
       ) {
         return;
       }
-
-      const player = getAudioPlayer();
-
-      // If audio was already synthesized for this round and language, play immediately (synchronous in click event)
-      if (
-        activeRoundRef.current === roundIndex &&
-        cachedLangRef.current === language &&
-        clipUrlRef.current
-      ) {
-        player.pause();
-        player.src = clipUrlRef.current;
-        player.currentTime = 0;
-
-        player.onended = () => {
-          if (activeRoundRef.current === roundIndex) {
-            setState('done');
-            setMessage('Explicación leída.');
-          }
-        };
-
-        player.onerror = () => {
-          if (activeRoundRef.current === roundIndex) {
-            setState('error');
-            setMessage('No se pudo reproducir el audio.');
-          }
-        };
-
-        setState('playing');
-        setMessage('Leyendo la explicación en voz alta…');
-
-        try {
-          await player.play();
-        } catch {
-          setState('blocked');
-          setMessage('Toque “Escuchar” para reproducir la explicación.');
-        }
-        return;
-      }
-
-      // Purge prior blob if changing round or language
-      if (clipUrlRef.current) {
-        stopAudio(player, clipUrlRef.current);
-        clipUrlRef.current = null;
-      }
-
-      // Unlock audio synchronously inside active gesture
-      unlockAudio(player);
-
-      activeRoundRef.current = roundIndex;
-      cachedLangRef.current = language;
-      setCurrentRound(roundIndex);
-      setState('loading');
-      setMessage('Preparando la voz…');
-
-      let url: string;
+      busyRef.current = true;
+      const generation = cacheGeneration();
+      const runId = ++activeRunRef.current;
+      const isCurrent = () =>
+        cacheGeneration() === generation && activeRunRef.current === runId;
       try {
-        url = await speechApi.getSpeechBlobUrl(sessionId, language);
-      } catch (err: unknown) {
-        const e = err as { status?: number };
-        setState('error');
-        if (e.status === 503) {
-          setMessage(
-            language === 'quc'
-              ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
-              : 'Este aparato no tiene voz instalada (espeak-ng).'
+        const playerEl = getAudioPlayer();
+        if (!playerEl) return;
+        const cachedUrl = readCached(roundIndex, key);
+        if (cachedUrl) {
+          await playCachedUrl(playerEl, cachedUrl, roundIndex, isCurrent);
+          return;
+        }
+
+        const inFlight = getInFlight();
+        if (
+          inFlight?.roundIndex === roundIndex &&
+          inFlight.key === key &&
+          inFlight.generation === generation
+        ) {
+          setState('loading');
+          setMessage('Preparando la voz…');
+          await waitForNextPaint();
+          if (!isCurrent()) return;
+          try {
+            const inFlightUrl = await inFlight.promise;
+            if (!isCurrent()) {
+              URL.revokeObjectURL(inFlightUrl);
+              return;
+            }
+            await playCachedUrl(playerEl, inFlightUrl, roundIndex, isCurrent);
+            return;
+          } catch {
+            // Fall through to fresh fetch on error
+          }
+        }
+
+        const oldUrl = peekUrl();
+        if (oldUrl) {
+          stopAudio(playerEl, oldUrl);
+          clearSlot();
+        }
+        unlockAudio(playerEl);
+        setKey(key);
+        setState('loading');
+        setMessage('Preparando la voz…');
+        // Start the fetch synchronously so concurrent speak() calls dedupe
+        // onto it (via busyRef) and autoplay observes it in the same tick;
+        // the paint wait below only lets the 'loading' state flush first.
+        const pendingFetch = speechApi.getSpeechBlobUrl(sessionId, language);
+        await waitForNextPaint();
+        if (!isCurrent()) {
+          // Voice switched (or a newer run started) while preparing: drop
+          // the take and release its blob so stale audio never plays.
+          void pendingFetch.then(
+            (staleUrl) => URL.revokeObjectURL(staleUrl),
+            () => {}
           );
-        } else {
-          setMessage('No se pudo preparar la voz.');
+          return;
         }
-        return;
-      }
 
-      // If user moved to another round before download finished, discard URL
-      if (activeRoundRef.current !== roundIndex || cachedLangRef.current !== language) {
-        URL.revokeObjectURL(url);
-        return;
-      }
-
-      clipUrlRef.current = url;
-      player.src = url;
-
-      player.onended = () => {
-        if (activeRoundRef.current === roundIndex) {
-          setState('done');
-          setMessage('Explicación leída.');
-        }
-      };
-
-      player.onerror = () => {
-        if (activeRoundRef.current === roundIndex) {
+        let url: string;
+        try {
+          url = await pendingFetch;
+        } catch (err: unknown) {
+          if (!isCurrent()) return;
+          const e = err as { status?: number };
           setState('error');
-          setMessage('No se pudo reproducir el audio.');
+          setMessage(
+            e.status === 503
+              ? language === 'quc'
+                ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
+                : 'Este aparato no tiene voz instalada (espeak-ng).'
+              : 'No se pudo preparar la voz.'
+          );
+          return;
         }
-      };
 
-      setState('playing');
-      setMessage('Leyendo la explicación en voz alta…');
-
-      try {
-        await player.play();
-      } catch {
-        setState('blocked');
-        setMessage('Toque “Escuchar” para reproducir la explicación.');
+        if (!isCurrent()) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        store(roundIndex, key, url);
+        await playCachedUrl(playerEl, url, roundIndex, isCurrent);
+      } finally {
+        if (activeRunRef.current === runId) busyRef.current = false;
       }
     },
-    [sessionId, language, state]
+    [
+      sessionId,
+      language,
+      cacheGeneration,
+      keyMatches,
+      readCached,
+      getInFlight,
+      peekUrl,
+      clearSlot,
+      setKey,
+      store,
+      playCachedUrl,
+    ]
   );
 
   useEffect(() => {
     return () => {
-      const player = getAudioPlayer();
-      stopAudio(player, clipUrlRef.current);
-      clipUrlRef.current = null;
+      activeRunRef.current += 1;
+      busyRef.current = false;
+      stopPlayer(peekUrl());
+      release();
     };
+    // Stable callbacks + refs only; runs once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return {
-    state,
-    message,
-    currentRound,
-    speak,
-    stopPlayback,
-  };
+  return { state, message, currentRound, speak, prefetch, stopPlayback };
 }
