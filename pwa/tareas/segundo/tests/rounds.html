@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!-- Dev-only: every round of every lesson drawn at phone size, to check the art and layout at a
+     glance. Serve pwa/tareas/segundo (e.g. `npx serve .`) and open /tests/rounds.html
+     (?m=m4 shows one level only). Q'uq' stays silent here. -->
+<html lang="es-GT">
+<head>
+  <meta charset="UTF-8" />
+  <title>Todas las rondas</title>
+  <style>
+    @font-face { font-family: 'Nunito'; font-weight: 400 900; src: url('../public/fonts/nunito-latin.woff2') format('woff2'); }
+    body { margin: 0; padding: 8px; font-family: sans-serif; background: #333; color: #fff; }
+    h2 { font-size: 14px; margin: 12px 0 4px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .phone { width: 270px; height: 480px; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="out"></div>
+  <script type="module">
+    import { MODULES } from '../public/js/data/modules.js';
+    import audio from '../public/js/engine/audio.js';
+    audio.speak = () => {};
+    const only = new URLSearchParams(location.search).get('m');
+    const out = document.getElementById('out');
+    const all = [];
+    let n = 0;
+    for (const mod of MODULES.filter((m) => !only || m.id === only)) {
+      for (const lesson of mod.lessons) {
+        const Lesson = (await lesson.module()).default;
+        const rounds = Lesson.prototype.makeRounds.call(Object.create(Lesson.prototype)).length;
+        out.insertAdjacentHTML('beforeend', `<h2>${mod.id} · ${lesson.name} (${lesson.cnb})</h2><div class="row" id="r${n}"></div>`);
+        const row = document.getElementById(`r${n++}`);
+        for (let i = 0; i < rounds; i++) {
+          const id = `c${n}-${i}`;
+          row.insertAdjacentHTML('beforeend', `<div class="phone"><canvas id="${id}"></canvas></div>`);
+          const l = new Lesson(id, {});
+          l.setup();
+          l.round = i;
+          l._startRound();
+          all.push(l);
+        }
+      }
+    }
+    await document.fonts.ready;
+    // A resize (even the scrollbar appearing) clears every canvas, so draw again after it.
+    const draw = () => all.forEach((l) => l.render());
+    window.addEventListener('resize', draw);
+    draw();
+    document.title = 'listo';
+  </script>
+</body>
+</html>

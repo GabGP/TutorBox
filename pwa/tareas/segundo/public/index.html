@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es-GT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#2E7D32" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Q'uq' 2º" />
+  <meta name="description" content="Aprende matemáticas con Q'uq' el quetzal - App para niños de Guatemala" />
+  <title>Matemáticas 2º con Q'uq'</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen active">
+      <img class="loading-kuk" src="icons/quq.svg" alt="" />
+      <div class="loading-title">¡Segundo grado con Q'uq'!</div>
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+    </div>
+
+    <!-- Map Screen -->
+    <div id="map-screen" class="screen" role="main" aria-label="Mapa de aventura">
+    </div>
+
+    <!-- Lesson Screen -->
+    <div id="lesson-screen" class="screen" role="main" aria-label="Lección">
+    </div>
+
+    <!-- Profile Screen -->
+    <div id="profile-screen" class="screen" role="main" aria-label="Perfil">
+    </div>
+
+    <!-- Parent Screen -->
+    <div id="parent-screen" class="screen" role="main" aria-label="Panel de padres">
+    </div>
+
+  </div>
+
+  <!-- Main app entry point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

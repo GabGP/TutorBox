@@ -1,4 +1,4 @@
-"""Static apps checked into the repo (REPO_MOUNTS in src/main.py): Primero app and APK downloads."""
+"""Static apps checked into the repo (REPO_MOUNTS in src/main.py): grade apps and APK downloads."""
 
 import mimetypes
 
@@ -19,15 +19,16 @@ def captive_env(monkeypatch):
     clear_settings_cache()
 
 
-def test_primero_app_is_served_with_relative_assets(temp_db, client):
-    resp = client.get("/tareas/primero/")
+@pytest.mark.parametrize("grade", ["primero", "segundo"])
+def test_grade_app_is_served_with_relative_assets(temp_db, client, grade):
+    resp = client.get(f"/tareas/{grade}/")
 
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     # Relative paths are what let the same files work here, on Netlify and inside the APK.
     assert 'src="js/app.js"' in resp.text
-    assert client.get("/tareas/primero/js/app.js").status_code == 200
-    assert client.get("/tareas/primero/fonts/nunito-latin.woff2").status_code == 200
+    assert client.get(f"/tareas/{grade}/js/app.js").status_code == 200
+    assert client.get(f"/tareas/{grade}/fonts/nunito-latin.woff2").status_code == 200
 
 
 def test_downloads_page_is_served(temp_db, client):

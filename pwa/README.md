@@ -145,6 +145,7 @@ backend: plain static files, no build step.
 | Path | Served at | What it is |
 | :--- | :--- | :--- |
 | [`tareas/primero/`](tareas/primero/README.md) | `/tareas/primero/` | "Aprende Matemáticas con Q'uq'" — 1st-grade (Primero) CNB math, vanilla JS + Canvas. Played in the classroom browser. |
+| [`tareas/segundo/`](tareas/segundo/README.md) | `/tareas/segundo/` | "Matemáticas 2º con Q'uq'" — 2nd-grade (Segundo) CNB math, same engine and design; 7 levels, one per competencia. Browser only for now (no APK yet). |
 | [`tareas/android/`](tareas/android/README.md) | — | Android wrapper that packs `primero/public` into an offline APK (`gradlew publishApk`). |
 | `tareas/descargas/` | `/descargas/` | Family download page with install steps (Spanish) plus `primero.apk`. |
 | `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |

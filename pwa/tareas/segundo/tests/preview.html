@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- Dev-only: open one lesson straight away, skipping profile and map locks.
+     Serve pwa/tareas/segundo (e.g. `npx serve .`) and open
+     tests/preview.html?lesson=m4-aritmetica/numeros-mayas&round=2 -->
+<html lang="es-GT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vista previa de lección</title>
+  <style>
+    @font-face { font-family: 'Nunito'; font-weight: 400 900; src: url('../public/fonts/nunito-latin.woff2') format('woff2'); }
+    html, body { margin: 0; height: 100%; background: #222; }
+    #wrap { height: 100vh; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+  </style>
+</head>
+<body>
+  <div id="wrap"><canvas id="lesson-canvas"></canvas></div>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const name = params.get('lesson') || 'm4-aritmetica/numeros-mayas';
+    const { default: Lesson } = await import(`../public/js/lessons/${name}.js`);
+    const lesson = new Lesson('lesson-canvas', { onComplete: (stars) => { document.title = `estrellas: ${stars}`; } });
+    lesson.start();
+    // &round=N jumps straight to round N (0-based) of a choice lesson.
+    if (params.get('round') && lesson._startRound) { lesson.round = Number(params.get('round')); lesson._startRound(); }
+  </script>
+</body>
+</html>

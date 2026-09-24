@@ -37,11 +37,12 @@ CLIENT_MOUNTS = ("maestro", "alumno", "pantalla", "static")
 
 DEFAULT_CLIENT_DIR = (PROJECT_ROOT / ".cache" / "pwa" / "dist").resolve()
 
-# Static apps checked into the repo (no build step): the Primero math app for use in the
-# classroom browser, and the page where families download its Android APK to take home.
+# Static apps checked into the repo (no build step): one math app per grade (Primero, Segundo)
+# for the classroom browser, and the page where families download the Android APK to take home.
 # Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
 REPO_MOUNTS = {
     "tareas/primero": PROJECT_ROOT / "pwa" / "tareas" / "primero" / "public",
+    "tareas/segundo": PROJECT_ROOT / "pwa" / "tareas" / "segundo" / "public",
     "descargas": PROJECT_ROOT / "pwa" / "tareas" / "descargas",
 }
 # Without it the APK is served as text/plain and Android saves it as "primero.apk.txt".
