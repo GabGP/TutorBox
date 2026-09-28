@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mundo 3 · Mercado del pueblo -->
+  <path d="M15 30 Q32 3 49 30" fill="none" stroke="#8D5524" stroke-width="3.5"/>
+  <circle cx="21" cy="27" r="8" fill="#FB8C00"/>
+  <circle cx="34" cy="23" r="8" fill="#E53935"/>
+  <circle cx="45" cy="28" r="7" fill="#7CB342"/>
+  <path d="M7 31 H57 L50 57 H14 Z" fill="#C68642"/>
+  <path d="M10 39 H54 M12 47 H52" stroke="#8D5524" stroke-width="2"/>
+  <path d="M20 31 V57 M32 31 V57 M44 31 V57" stroke="#A56A33" stroke-width="1.5"/>
+</svg>

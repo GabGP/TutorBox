@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mundo 4 · Milpa de maíz -->
+  <path d="M32 60 V9" stroke="#558B2F" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 46 Q15 42 8 28 Q23 32 32 41 Z" fill="#7CB342"/>
+  <path d="M32 33 Q49 29 56 16 Q41 20 32 29 Z" fill="#8BC34A"/>
+  <path d="M32 20 Q24 16 22 7 Q29 11 32 16 Z" fill="#7CB342"/>
+  <ellipse cx="41" cy="45" rx="6" ry="12" fill="#FBC02D" transform="rotate(18 41 45)"/>
+  <path d="M38 40 l6 2 M37 45 l6 2 M36 50 l6 2" stroke="#F9A825" stroke-width="1.5"/>
+  <path d="M35 55 Q31 45 36 33" stroke="#AED581" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

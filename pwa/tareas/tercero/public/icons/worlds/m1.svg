@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mundo 2 · Tejido maya (güipil) -->
+  <rect x="9" y="7" width="46" height="50" rx="5" fill="#FFFFFF"/>
+  <rect x="9" y="13" width="46" height="6" fill="#E53935"/>
+  <rect x="9" y="45" width="46" height="6" fill="#E53935"/>
+  <path d="M13 32 l6 -8 6 8 -6 8z M26 32 l6 -8 6 8 -6 8z M39 32 l6 -8 6 8 -6 8z" fill="#6A1B9A"/>
+  <path d="M17 32 l2 -3 2 3 -2 3z M30 32 l2 -3 2 3 -2 3z M43 32 l2 -3 2 3 -2 3z" fill="#FDD835"/>
+  <path d="M9 22 H55 M9 42 H55" stroke="#1E88E5" stroke-width="1.5" stroke-dasharray="3 2"/>
+</svg>

@@ -19,7 +19,7 @@ def captive_env(monkeypatch):
     clear_settings_cache()
 
 
-@pytest.mark.parametrize("grade", ["primero", "segundo"])
+@pytest.mark.parametrize("grade", ["primero", "segundo", "tercero"])
 def test_grade_app_is_served_with_relative_assets(temp_db, client, grade):
     resp = client.get(f"/tareas/{grade}/")
 

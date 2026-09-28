@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mundo 7 · Lago de Atitlán y sus volcanes -->
+  <path d="M1 45 L16 20 L31 45 Z" fill="#5C6BC0"/>
+  <path d="M21 45 L38 13 L55 45 Z" fill="#3949AB"/>
+  <path d="M42 45 L52 28 L63 45 Z" fill="#7986CB"/>
+  <path d="M34 17 L38 13 L42 17 L38 16 Z" fill="#FFFFFF" opacity="0.8"/>
+  <rect x="1" y="44" width="62" height="17" rx="5" fill="#29B6F6"/>
+  <path d="M7 51 q4 -3 8 0 t8 0 M30 56 q4 -3 8 0 t8 0" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M40 49 H52 L49 53 H43 Z" fill="#8D6E63"/>
+</svg>
