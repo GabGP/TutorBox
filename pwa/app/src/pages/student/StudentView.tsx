@@ -14,6 +14,7 @@ import { MoodType, useBodyMood } from '../../shared/lib/useBodyMood';
 import utils from '../../shared/styles/utils.module.css';
 import { StudentModeCard } from '../../features/mode/ModeCards';
 import { useApplianceMode } from '../../features/mode/useApplianceMode';
+import { TutorChat } from '../../features/tutor/TutorChat';
 import { StudentScreens } from './StudentScreens';
 import styles from './StudentView.module.css';
 
@@ -76,7 +77,7 @@ export const StudentView: React.FC = () => {
   // Previously the dot was always green, even next to "Sin conexión".
   const connectionState: 'online' | 'idle' | 'offline' = !user
     ? 'offline'
-    : session
+    : session || mode === 'tutor'
       ? 'online'
       : 'idle';
   const dotClass =
@@ -87,7 +88,9 @@ export const StudentView: React.FC = () => {
         : styles.dotOffline;
   const dotLabel =
     connectionState === 'online'
-      ? 'Conectado a la sesión'
+      ? mode === 'tutor'
+        ? 'Conectado al tutor'
+        : 'Conectado a la sesión'
       : connectionState === 'idle'
         ? 'Esperando la sesión'
         : 'Sin conexión';
@@ -139,21 +142,30 @@ export const StudentView: React.FC = () => {
       );
     }
 
-    // No login needed to download the take-home app or read the tutor notice.
-    if (mode === 'tutor' || mode === 'apps') {
-      return <StudentModeCard mode={mode} />;
+    // No login needed to download the take-home app.
+    if (mode === 'apps') {
+      return <StudentModeCard />;
     }
 
     if (!user || ['teacher', 'admin'].includes(user.role)) {
+      const tutor = mode === 'tutor';
       return (
         <EntryForm
-          title="Entra al juego"
-          subtitle="Escribe tu usuario y tu PIN. Docentes: usen /maestro/."
+          title={tutor ? 'Entra al tutor' : 'Entra al juego'}
+          subtitle={
+            tutor
+              ? 'Escribe tu usuario y tu PIN para practicar matemáticas con el tutor.'
+              : 'Escribe tu usuario y tu PIN. Docentes: usen /maestro/.'
+          }
           allowSignup
           onLogin={login}
           onSignup={signupAndLogin}
         />
       );
+    }
+
+    if (mode === 'tutor') {
+      return <TutorChat username={user.username} />;
     }
 
     return (

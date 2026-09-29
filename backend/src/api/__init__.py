@@ -1,6 +1,6 @@
 """TutorBox API package."""
 
-from . import auth, captive, health, llm, quiz, session, staff, tts, users
+from . import auth, captive, health, llm, quiz, session, staff, tts, tutor, users
 from .router import api_v1_router, root_router
 
 __all__ = [
@@ -14,5 +14,6 @@ __all__ = [
     "session",
     "staff",
     "tts",
+    "tutor",
     "users",
 ]

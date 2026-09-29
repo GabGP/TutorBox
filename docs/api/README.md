@@ -7,7 +7,7 @@ Comprehensive technical specification, security architecture, and integration co
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Devices](devices.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md)
+📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Devices](devices.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md) • [Tutor](tutor.md)
 
 </div>
 
@@ -53,6 +53,7 @@ The API specification is decomposed into cohesive domain modules:
 | **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
 | **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`PUT /api/v1/quiz/questions/{id}`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
+| **Socratic Tutor (Mode 2)** | **[tutor.md](tutor.md)** | `POST /api/v1/tutor/message`<br>`POST /api/v1/tutor/reset`<br>`POST /api/v1/tutor/ping`<br>`GET /api/v1/tutor/students` | Student,<br>Teacher,<br>Admin |
 | **TTS & LLM Lifecycle** | **[voice-feedback.md](../architecture/voice-feedback.md#9-phased-lifecycle-management-endpoints)** | `POST /api/v1/tts/load`<br>`POST /api/v1/tts/unload`<br>`GET /api/v1/tts/status`<br>`GET /api/v1/tts/voices`<br>`POST /api/v1/tts/preview`<br>`POST /api/v1/llm/load`<br>`POST /api/v1/llm/unload`<br>`GET /api/v1/llm/status` | Teacher,<br>Admin |
 
 ---

@@ -56,12 +56,7 @@ describe('ModePicker', () => {
 
 describe('StudentModeCard', () => {
   it('sends take-home students to the download page', () => {
-    render(<StudentModeCard mode="apps" />);
+    render(<StudentModeCard />);
     expect(screen.getByRole('link', { name: 'Descargar la app' })).toHaveAttribute('href', '/descargas/');
-  });
-
-  it('tells students the tutor is coming soon', () => {
-    render(<StudentModeCard mode="tutor" />);
-    expect(screen.getByText('El tutor llega pronto')).toBeInTheDocument();
   });
 });

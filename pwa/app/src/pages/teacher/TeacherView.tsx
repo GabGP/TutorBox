@@ -11,6 +11,7 @@ import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
 import { TeacherModeNotice } from '../../features/mode/ModeCards';
 import { ModePicker } from '../../features/mode/ModePicker';
 import { useApplianceMode } from '../../features/mode/useApplianceMode';
+import { TutorRoster } from '../../features/tutor/TutorRoster';
 import { storage } from '../../shared/lib/storage';
 import { useHostAddress } from '../../shared/routing/session';
 import { TeacherAuthView } from './TeacherAuthView';
@@ -163,6 +164,7 @@ export const TeacherView: React.FC = () => {
       {mode !== 'quiz' ? (
         <main className={styles.mainContent}>
           <TeacherModeNotice mode={mode} host={host} />
+          {mode === 'tutor' && <TutorRoster host={host} />}
         </main>
       ) : (
         <>

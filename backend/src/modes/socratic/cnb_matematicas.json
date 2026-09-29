@@ -1,0 +1,151 @@
+{
+  "source": "pwa/tareas/cnb: CNB Guatemala, Nivel Primario, Área de Matemáticas, dosificación de 1.º a 5.º grado",
+  "note": "Topics are tried in order, so specific ones come before 'numeracion' and 'problemas'. Matched without accents and in lower case. 'stem*' matches by prefix; anything else must match a whole word or phrase. Everyday words (por, entre, más, día, cuarto, primo...) are left out on purpose: operations written in words are recognised by problems.py instead.",
+  "topics": [
+    {
+      "id": "numeracion_maya",
+      "title": "numeración maya",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["numeracion maya", "numeros mayas", "numero maya", "numerales mayas", "sistema maya", "vigesimal", "punto y barra", "puntos y barras", "cero maya"]
+    },
+    {
+      "id": "suma_resta",
+      "title": "suma y resta",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["suma*", "resta", "restas", "restar", "restando", "adicion*", "sustraccion*", "minuendo", "sustraendo", "calculo mental", "conmutativa", "asociativa", "elemento neutro"]
+    },
+    {
+      "id": "multiplicacion",
+      "title": "multiplicación y tablas",
+      "grades": [2, 3, 4, 5],
+      "keywords": ["multiplic*", "producto", "factor", "factores", "tabla del", "tablas de multiplicar", "distributiva", "doble", "triple"]
+    },
+    {
+      "id": "division",
+      "title": "división",
+      "grades": [3, 4, 5],
+      "keywords": ["divid*", "division*", "reparti*", "reparto", "cociente", "residuo", "dividendo", "divisor", "mitad"]
+    },
+    {
+      "id": "operaciones_combinadas",
+      "title": "operaciones combinadas y números que faltan",
+      "grades": [4, 5],
+      "keywords": ["jerarquia de operaciones", "operaciones combinadas", "parentesis", "corchete*", "operacion abierta", "incognita*", "numero que falta", "ecuacion*"]
+    },
+    {
+      "id": "potencias",
+      "title": "potencias",
+      "grades": [4],
+      "keywords": ["potencia*", "exponente*", "al cuadrado", "al cubo", "elevado a"]
+    },
+    {
+      "id": "divisibilidad",
+      "title": "múltiplos, divisores y números primos",
+      "grades": [5],
+      "keywords": ["multiplo*", "divisible*", "divisibilidad", "numero primo", "numeros primos", "numero compuesto", "numeros compuestos", "criba", "eratostenes", "mcm", "mcd", "minimo comun multiplo", "maximo comun divisor", "factores primos"]
+    },
+    {
+      "id": "fracciones",
+      "title": "fracciones",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["fraccion*", "fraccionario*", "numerador", "denominador", "un medio", "un tercio", "tercios", "un cuarto", "tres cuartos", "cuarta parte", "octavo*", "impropia*", "numero mixto", "numeros mixtos", "equivalente*", "simplific*", "amplific*", "homogenea*", "heterogenea*", "partes iguales"]
+    },
+    {
+      "id": "decimales",
+      "title": "números decimales",
+      "grades": [4, 5],
+      "keywords": ["decimal*", "decimo*", "centesimo*", "milesimo*", "punto decimal"]
+    },
+    {
+      "id": "razones_porcentajes",
+      "title": "razones, proporciones y porcentajes",
+      "grades": [4, 5],
+      "keywords": ["proporci*", "regla de tres", "porcentaje*", "por ciento", "descuento*", "recargo*", "iva"]
+    },
+    {
+      "id": "numeros_romanos",
+      "title": "números romanos",
+      "grades": [4, 5],
+      "keywords": ["numeros romanos", "numero romano", "numeracion romana"]
+    },
+    {
+      "id": "conjuntos",
+      "title": "conjuntos",
+      "grades": [1, 2, 3, 4],
+      "keywords": ["conjunto*", "subconjunto*", "interseccion", "union de conjuntos", "conjunto vacio", "conjunto unitario"]
+    },
+    {
+      "id": "patrones",
+      "title": "patrones y series",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["patron*", "serie numerica", "series numericas", "secuencia*", "sucesion*", "siguiente numero", "termino que falta", "regularidad*"]
+    },
+    {
+      "id": "ubicacion",
+      "title": "ubicación y plano cartesiano",
+      "grades": [1, 2, 3, 4],
+      "keywords": ["puntos cardinales", "plano cartesiano", "cuadrante", "par ordenado", "pares ordenados", "coordenada*", "desplazamiento*"]
+    },
+    {
+      "id": "geometria",
+      "title": "figuras, líneas y ángulos",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["figura*", "geometri*", "circulo*", "circunferencia*", "triangulo*", "cuadrado*", "rectangulo*", "cuadrilatero*", "paralelogramo*", "rombo*", "romboide*", "trapecio*", "trapezoide*", "poligono*", "lados", "vertice*", "angulo*", "transportador", "paralela*", "perpendicular*", "segmento*", "simetri*", "diametro", "equilatero*", "isosceles", "escaleno*"]
+    },
+    {
+      "id": "perimetro_area",
+      "title": "perímetro y área",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["perimetro*", "area", "areas", "superficie", "contorno", "metro cuadrado", "metros cuadrados", "centimetros cuadrados"]
+    },
+    {
+      "id": "solidos",
+      "title": "sólidos geométricos",
+      "grades": [2, 3, 4, 5],
+      "keywords": ["solido*", "cubo*", "prisma*", "piramide*", "cilindro*", "cono", "conos", "esfera*", "caras", "arista*", "poliedro*", "cuerpo geometrico", "cuerpos geometricos", "cuerpos redondos"]
+    },
+    {
+      "id": "medidas",
+      "title": "medidas de longitud, peso y capacidad",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["medir", "medida*", "medicion*", "longitud*", "distancia*", "metro", "metros", "centimetro*", "milimetro*", "kilometro*", "decimetro*", "pulgada*", "yarda*", "vara*", "geme", "brazada*", "cinta metrica", "peso", "onza*", "libra*", "arroba*", "quintal*", "gramo*", "kilogramo*", "kilo", "kilos", "tonelada*", "capacidad", "litro*", "mililitro*", "galon*", "tecomate*", "cubeta*", "manojo*", "temperatura", "centigrado*", "fahrenheit"]
+    },
+    {
+      "id": "tiempo",
+      "title": "reloj y calendarios (gregoriano y maya)",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["reloj*", "media hora", "cuarto de hora", "calendario*", "cholq'ij", "cholqij", "kumatzin", "decada*", "siglo*", "lustro*", "dias de la semana", "meses del ano"]
+    },
+    {
+      "id": "dinero",
+      "title": "dinero: quetzales y centavos",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["dinero", "quetzal*", "centavo*", "moneda*", "billete*", "precio*", "costo*", "vuelto", "presupuesto*", "ahorr*", "dolar*"]
+    },
+    {
+      "id": "estadistica",
+      "title": "datos, tablas y gráficas",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["dato", "datos", "tabla", "tablas", "grafica*", "pictograma*", "barras", "encuesta*", "frecuencia*", "promedio*", "media aritmetica", "mediana"]
+    },
+    {
+      "id": "probabilidad",
+      "title": "probabilidad",
+      "grades": [3, 4, 5],
+      "keywords": ["probab*", "azar", "dados", "moneda al aire", "ruleta*", "prediccion*", "casos favorables", "casos posibles"]
+    },
+    {
+      "id": "numeracion",
+      "title": "números: contar, leer, escribir, comparar y ordenar",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["numero*", "numeral*", "contar", "conteo", "contando", "cifra*", "digito*", "unidad*", "decena*", "centena*", "millar*", "millon*", "valor posicional", "valor relativo", "valor absoluto", "antecesor", "sucesor", "mayor que", "menor que", "recta numerica", "pares", "impares", "ordinal*", "descomposicion", "redonde*", "estimacion"]
+    },
+    {
+      "id": "problemas",
+      "title": "problemas con una o dos operaciones",
+      "grades": [1, 2, 3, 4, 5],
+      "keywords": ["operacion*", "calcul*", "resolver", "resuelve", "resultado", "cuanto*", "cuanta*", "matematica*", "ejercicio*", "ensayo y error"]
+    }
+  ],
+  "beyond_curriculum": ["derivada*", "integral", "integrales", "limite de", "logaritmo*", "trigonometri*", "seno", "coseno", "tangente", "matriz", "matrices", "vector", "vectores", "raiz cuadrada", "raices", "radical*", "cuadratica*", "ecuacion de segundo grado", "sistema de ecuaciones", "sistemas de ecuaciones", "polinomio*", "factoriza*", "funcion", "funciones", "exponencial*", "numeros negativos", "negativo", "negativos", "numeros complejos", "numeros imaginarios", "desviacion estandar", "varianza", "calculo diferencial", "algebra lineal", "pitagoras", "teorema*", "binomio*", "inecuacion*"]
+}

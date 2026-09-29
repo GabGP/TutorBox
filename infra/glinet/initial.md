@@ -167,7 +167,9 @@ uci set dhcp.@host[-1].mac='AA:BB:CC:DD:EE:FF'
 uci set dhcp.@host[-1].ip='192.168.8.2'
 uci set dhcp.@host[-1].dns='1'               # publish the name even before the lease is active
 
-# Catch-all DNS: every name resolves to the Jetson
+# Catch-all DNS: every name resolves to the Jetson. '/./' is the one that works on the
+# dnsmasq 2.86 in GL.iNet 4.3.x, which silently ignores '/#/' (§5b); '/#/' is kept for newer builds.
+uci add_list dhcp.@dnsmasq[0].address='/./192.168.8.2'
 uci add_list dhcp.@dnsmasq[0].address='/#/192.168.8.2'
 uci commit dhcp
 /etc/init.d/dnsmasq restart
@@ -179,7 +181,8 @@ domain to the Jetson too, so any address a student types lands on the PWA instea
 and, more importantly, the phones' connectivity probes reach the appliance (§5b).
 
 If the Jetson already holds a dynamic lease, renew it after the commit: on the Jetson,
-`sudo nmcli device reapply enP8p1s0` (or reboot), then confirm `ip -brief addr show enP8p1s0` shows `.2`.
+`sudo nmcli connection up "Wired connection 1"` (or reboot), then confirm `ip -brief addr show enP8p1s0`
+shows `.2`. `nmcli -t -f NAME,DEVICE connection show --active` lists the profile name if yours differs.
 
 ### <a id="5b-captive-portal"></a>5b. Captive portal — why the DNS block above is not optional
 
@@ -192,6 +195,11 @@ reports "no internet" — nothing opens.
 
 Mechanics worth knowing on the router side:
 
+- **GL.iNet 4.3.x ships dnsmasq 2.86, which silently ignores `address=/#/…`.** The rule shows up in
+  `uci show dhcp` and in `/var/etc/dnsmasq.conf.*`, yet lookups such as `captive.apple.com` come back
+  `REFUSED` and phones just report "no internet". `address=/./…` does the same job on 2.86 (verified on
+  the GL-AR300M16: it answers every name, bare ones like `tutorbox` included). Check the version with
+  `dnsmasq --version`; the block above sets both forms, so it works either way.
 - dnsmasq prefers the most specific `address=` entry, so GL.iNet's own `console.gl-inet.com` keeps
   pointing at the router.
 - The catch-all answers `A` queries only; `AAAA` gets no address, so probes stay on IPv4. Do not
@@ -323,7 +331,8 @@ passes only because no cable is attached proves nothing.
 - [ ] The joined phone receives an address in `192.168.8.100–159`: check *Clients* in the admin panel.
 - [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show enP8p1s0` on the Jetson.
 - [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://tutorbox`.
-- [ ] `nslookup captive.apple.com 192.168.8.1` answers `192.168.8.2` (catch-all active).
+- [ ] `nslookup captive.apple.com 192.168.8.1` answers `192.168.8.2` (catch-all active). `REFUSED`
+      means the `/./` line is missing ([§5b](#5b-captive-portal)).
 - [ ] From a laptop on the Wi-Fi: `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/hotspot-detect.html`
       returns `302` with `Location: http://tutorbox/alumno/`, while
       `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/api/v1/nope` returns `404`.

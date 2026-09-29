@@ -85,6 +85,7 @@ graph TD
 ### <a id="mode-2-socratic-tutor"></a>Mode 2: Socratic Tutor (Conversational Math Practice)
 * **Workflow**: Individual practice mode for students after class.
 * **Socratic Guardrails**: Uses SymPy to parse mathematical expressions and evaluate correctness. The SLM is mechanically blocked from delivering final solutions or worked answers via the deterministic hint escalation ladder ($0 \to 3$).
+* **Implementation**: a text-only chat on `/alumno/`, limited to the CNB mathematics of 1.º–5.º primaria. The DeepSeek-R1-Distill-Qwen-1.5B model only rewords the deterministic hint or explains a concept, and an output guard rejects any reply that states the answer, adds numbers, or is not plain Spanish ([Tutor API](../api/tutor.md#3-guardrails)).
 
 ---
 
@@ -113,7 +114,7 @@ polls it every 3 s:
 | Mode | Teacher (`/maestro/`) | Class screen (`/pantalla/`) | Student phone (`/alumno/`, opened by the captive portal) |
 | :--- | :--- | :--- | :--- |
 | `quiz` | Quiz setup and live rounds | Quiz idle / question / tally | Login, then the quiz |
-| `tutor` | Notice: tutor not ready yet (Week 5) | "El tutor llega pronto" | "El tutor llega pronto" card |
+| `tutor` | Where students join, and the live list of students using the tutor ([Tutor API](../api/tutor.md)) | "Practica con el tutor" + `tutorbox/alumno` | Login, then the Socratic math chat |
 | `apps` | Notice with the download address | Q'uq' + `tutorbox/descargas` | Download card for the take-home Primero app (Android APK) and a link to play it in the browser |
 
 The switch is refused (`409`) while a quiz round is live. Take-home mode is how mode 3 reaches

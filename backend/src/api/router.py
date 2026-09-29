@@ -11,6 +11,7 @@ from api.quiz import router as quiz_router
 from api.session import router as session_router
 from api.staff import router as staff_router
 from api.tts import router as tts_router
+from api.tutor import router as tutor_router
 from api.users import router as users_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
@@ -22,6 +23,7 @@ api_v1_router.include_router(session_router, prefix="/session")
 api_v1_router.include_router(tts_router, prefix="/tts")
 api_v1_router.include_router(llm_router, prefix="/llm")
 api_v1_router.include_router(mode_router, prefix="/mode")
+api_v1_router.include_router(tutor_router, prefix="/tutor")
 
 root_router = APIRouter()
 root_router.include_router(health_router)

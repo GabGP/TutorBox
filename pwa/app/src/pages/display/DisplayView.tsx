@@ -42,9 +42,11 @@ export const DisplayView: React.FC = () => {
       <div className={styles.displayShell}>
         <section id="s-mode" className={`${styles.section} ${styles.center}`}>
           <img src="/tareas/primero/icons/quq.svg" alt="" width={120} height={170} />
-          <div className={styles.h}>{apps ? "¡Llévate a Q'uq' a casa!" : 'El tutor llega pronto'}</div>
+          <div className={styles.h}>{apps ? "¡Llévate a Q'uq' a casa!" : 'Practica con el tutor'}</div>
           <div className={styles.sub}>
-            {apps ? 'En tu teléfono, abre esta dirección y descarga la app:' : 'Muy pronto vas a practicar con el tutor en tu teléfono.'}
+            {apps
+              ? 'En tu teléfono, abre esta dirección y descarga la app:'
+              : 'En tu teléfono, entra a esta dirección con tu usuario y PIN:'}
           </div>
           <div className={styles.count}>{host ? `${host}/${apps ? 'descargas' : 'alumno'}` : ''}</div>
         </section>

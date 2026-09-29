@@ -1,0 +1,11 @@
+{
+  "note": "Word lists for planner.py and guard.py, matched against accent-free lower-case tokens ('stem*' by prefix, 'a b' as a phrase).",
+  "english": ["the", "and", "you", "your", "what", "how", "is", "are", "let", "lets", "let's", "okay", "yes", "answer", "equally", "gets", "course", "step", "first", "then", "so", "this", "that", "with", "for", "of", "to", "it", "we", "can", "please", "sure", "number", "numbers", "sum", "add"],
+  "english_note": "Unambiguous English words the 1.5B model slips into Spanish replies; Spanish look-alikes (a, no, me, con) are deliberately absent.",
+  "rude": ["idiota", "estupido", "estupida", "tonto", "tonta", "pendejo", "pendeja", "mierda", "puta", "carajo", "joder", "verga", "maldito", "maldita"],
+  "role_words": ["pidele", "preguntale", "dile", "explicale", "el alumno", "al alumno", "el nino", "al nino", "la nina", "a la nina"],
+  "help": ["no se", "no lo se", "no entiendo", "ayuda", "ayudame", "pista", "no puedo", "no me sale", "explicame", "explica", "como", "por que", "que hago", "dificil", "otra vez", "sigue", "y ahora"],
+  "filler": ["es", "son", "creo", "que", "la", "el", "los", "las", "respuesta", "resultado", "seria", "da", "me", "sale", "igual", "a", "mi", "pienso", "yo", "tal", "vez", "entonces", "ya", "si", "ok", "listo", "en", "total"],
+  "question": ["cual", "cuales", "cuanto*", "cuanta*", "como", "donde", "significa", "explica*", "por que", "para que"],
+  "question_note": "A message that starts with 'que' ('¿qué es 3/4?') is also a question; planner.py checks that, since 'que es' mid-sentence ('creo que es 68') is an answer."
+}

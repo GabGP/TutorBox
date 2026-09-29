@@ -1,0 +1,202 @@
+/* Student chat: fills the phone below the header; only the message list scrolls. */
+.chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chatHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chatHead h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--line3);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--mute);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg);
+}
+
+.tutorBubble,
+.studentBubble {
+  margin: 0;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tutorBubble {
+  align-self: flex-start;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line2);
+  border-bottom-left-radius: 4px;
+}
+
+.studentBubble {
+  align-self: flex-end;
+  background: var(--p);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.thinking {
+  color: var(--mute);
+  font-style: italic;
+}
+
+.alert {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--bad-line);
+  border-radius: 12px;
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+  font-size: 0.85rem;
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--line3);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.composer input:focus {
+  outline: none;
+  border-color: var(--p);
+}
+
+.send {
+  flex: 0 0 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--p);
+  color: #fff;
+  cursor: pointer;
+}
+
+.send:disabled {
+  background: var(--p-soft);
+  cursor: default;
+}
+
+/* Teacher roster */
+.roster {
+  margin: 16px auto 0;
+  max-width: 560px;
+  width: 100%;
+  text-align: left;
+}
+
+.roster h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.count {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--mute);
+}
+
+.mute {
+  color: var(--mute);
+  font-size: 0.85rem;
+}
+
+.students {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.dotOn,
+.dotOff {
+  flex: 0 0 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+}
+
+.dotOn {
+  background: var(--D);
+}
+
+.dotOff {
+  background: #9aa9b2;
+}
+
+.work {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--ink2);
+}

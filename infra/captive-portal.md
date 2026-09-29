@@ -60,7 +60,7 @@ sequenceDiagram
     participant B as FastAPI :8000
     P->>R: DHCP → DNS = 192.168.8.1
     P->>R: A? captive.apple.com
-    R-->>P: 192.168.8.2 (address=/#/ catch-all)
+    R-->>P: 192.168.8.2 (address=/./ catch-all)
     P->>N: GET /hotspot-detect.html<br/>Host: captive.apple.com
     N->>B: proxy, Host preserved
     B-->>P: 302 Location: http://tutorbox/alumno/<br/>Cache-Control: no-store
@@ -135,7 +135,7 @@ two that used to be optional are now **required**:
 | Setting | Why the portal needs it |
 | :--- | :--- |
 | Static lease `192.168.8.2` with `name='tutorbox'` and `dns='1'` | The redirect target `http://tutorbox/alumno/` must resolve, and to a fixed address. |
-| Catch-all `address='/#/192.168.8.2'` | Probe names (`captive.apple.com`, …) must resolve *to the Jetson* rather than fail — a DNS failure means "no internet", not "sign-in page". |
+| Catch-all `address='/./192.168.8.2'` and `'/#/192.168.8.2'` (the dnsmasq 2.86 on GL.iNet 4.3.x only honours `/./`) | Probe names (`captive.apple.com`, …) must resolve *to the Jetson* rather than fail — a DNS failure means "no internet", not "sign-in page". |
 | `noresolv='1'`, no upstream (§7) | Keeps every lookup local; with the catch-all there is nothing to forward anyway. |
 
 Not used, on purpose:
@@ -166,9 +166,16 @@ Not used, on purpose:
 - **Auto-open needs a manual join on Android.** Auto-reconnects only show a notification.
 - **HTTPS probes cannot be intercepted** (Android also tries `https://www.google.com/generate_204`).
   They fail fast — nothing listens on `:443` — and do not prevent the HTTP-probe redirect.
-- **The catch-all affects the Jetson too.** Its wired NIC uses the router for DNS, so during
-  development with the home Wi-Fi uplink still up, public names may resolve to `192.168.8.2` depending
-  on interface priority. Expected offline; confusing on the bench.
+- **The catch-all affects the Jetson too.** Its wired NIC takes the router as a DNS server, and
+  systemd-resolved sends each lookup to every link and keeps the first answer. So on the bench, with
+  the home Wi-Fi uplink still up, public names such as `github.com` can resolve to `192.168.8.2`. Stop
+  the wired profile from using the router's DNS. This is safe to keep offline too, since nothing on
+  the Jetson needs the router's names (the kiosk opens `localhost`):
+
+  ```bash
+  sudo nmcli connection modify "Wired connection 1" ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes
+  sudo nmcli device reapply enP8p1s0
+  ```
 - **Cached probes.** Some phones cache a successful probe for minutes. When testing, *forget* the
   network and rejoin instead of toggling Wi-Fi.
 
