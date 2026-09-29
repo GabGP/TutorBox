@@ -35,7 +35,9 @@ def test_downloads_page_is_served(temp_db, client):
     resp = client.get("/descargas/")
 
     assert resp.status_code == 200
-    assert 'href="primero.apk"' in resp.text
+    for grade in ("primero", "segundo", "tercero"):  # the grade menu
+        assert f'href="{grade}.apk"' in resp.text
+        assert f'href="/tareas/{grade}/"' in resp.text
 
 
 def test_apk_is_served_as_an_android_package():

@@ -45,7 +45,7 @@ export const DisplayView: React.FC = () => {
           <div className={styles.h}>{apps ? "¡Llévate a Q'uq' a casa!" : 'Practica con el tutor'}</div>
           <div className={styles.sub}>
             {apps
-              ? 'En tu teléfono, abre esta dirección y descarga la app:'
+              ? 'En tu teléfono, abre esta dirección y descarga la app de tu grado:'
               : 'En tu teléfono, entra a esta dirección con tu usuario y PIN:'}
           </div>
           <div className={styles.count}>{host ? `${host}/${apps ? 'descargas' : 'alumno'}` : ''}</div>

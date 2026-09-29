@@ -115,7 +115,7 @@ polls it every 3 s:
 | :--- | :--- | :--- | :--- |
 | `quiz` | Quiz setup and live rounds | Quiz idle / question / tally | Login, then the quiz |
 | `tutor` | Where students join, and the live list of students using the tutor ([Tutor API](../api/tutor.md)) | "Practica con el tutor" + `tutorbox/alumno` | Login, then the Socratic math chat |
-| `apps` | Notice with the download address | Q'uq' + `tutorbox/descargas` | Download card for the take-home Primero app (Android APK) and a link to play it in the browser |
+| `apps` | Notice with the download address | Q'uq' + `tutorbox/descargas` | Grade menu (Primero, Segundo, Tercero): download that grade's Android APK or play it in the browser |
 
 The switch is refused (`409`) while a quiz round is live. Take-home mode is how mode 3 reaches
 families today: the grade-specific apps in [`pwa/tareas/`](../../pwa/README.md#3-tareas--take-home-math-apps-tareas)

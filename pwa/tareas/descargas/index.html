@@ -35,14 +35,28 @@
     header svg { width: 96px; height: 96px; }
     h1 { font-size: 1.7rem; font-weight: 900; margin: 8px 0 4px; }
     .lead { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+    h2.pick { text-align: center; margin-top: 0; }
+    .grades { display: flex; flex-direction: column; gap: 12px; }
+    .grade {
+      display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center;
+      background: var(--card); border-radius: 18px; padding: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    }
+    .grade:target { outline: 4px solid var(--green); }
+    .grade strong { display: block; font-size: 1.2rem; font-weight: 900; }
+    .grade .play { font-size: .9rem; }
+    .badge {
+      display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%;
+      background: var(--green); color: #fff; font-size: 1.35rem; font-weight: 900;
+    }
     .download {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      min-height: 64px; padding: 14px 20px; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      min-height: 56px; padding: 10px 14px; border-radius: 16px;
       background: var(--yellow); color: var(--ink); text-decoration: none;
-      font-size: 1.25rem; font-weight: 900; box-shadow: 0 5px 0 #C9A227;
+      font-size: 1.05rem; font-weight: 900; box-shadow: 0 5px 0 #C9A227;
     }
     .download:active { transform: translateY(3px); box-shadow: 0 2px 0 #C9A227; }
-    .download svg { width: 28px; height: 28px; flex: none; }
+    .download svg { width: 24px; height: 24px; flex: none; }
     .size { text-align: center; color: var(--muted); font-size: .9rem; margin: 8px 0 24px; }
     .missing {
       display: none; background: #FFF3E0; border-radius: 14px; padding: 14px;
@@ -90,21 +104,55 @@
     <p class="lead">Juega y aprende matemáticas en tu teléfono, <strong>sin internet</strong>.</p>
   </header>
 
+  <h2 class="pick">Elige tu grado</h2>
   <p class="missing" id="missing">
-    La app todavía no está lista en esta TutorBox. Pídele a tu maestra o maestro que la agregue.
+    Las apps todavía no están listas en esta TutorBox. Pídele a tu maestra o maestro que las agregue.
   </p>
 
-  <a class="download" id="download" href="primero.apk" download="QuqMatematicas.apk">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-    Descargar la app
-  </a>
-  <p class="size">Para teléfonos Android · menos de 1 MB</p>
+  <!-- One app per grade (pwa/tareas/android builds all three). A grade whose APK was not copied
+       here yet is hidden by the script at the end instead of ending in a 404. -->
+  <div class="grades">
+    <section class="grade" id="primero">
+      <span class="badge">1º</span>
+      <div>
+        <strong>Primero</strong>
+        <a class="play" href="/tareas/primero/">o juega en el navegador</a>
+      </div>
+      <a class="download" href="primero.apk" download="Quq-Primero.apk" aria-label="Descargar la app de Primero">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        Descargar
+      </a>
+    </section>
+    <section class="grade" id="segundo">
+      <span class="badge">2º</span>
+      <div>
+        <strong>Segundo</strong>
+        <a class="play" href="/tareas/segundo/">o juega en el navegador</a>
+      </div>
+      <a class="download" href="segundo.apk" download="Quq-Segundo.apk" aria-label="Descargar la app de Segundo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        Descargar
+      </a>
+    </section>
+    <section class="grade" id="tercero">
+      <span class="badge">3º</span>
+      <div>
+        <strong>Tercero</strong>
+        <a class="play" href="/tareas/tercero/">o juega en el navegador</a>
+      </div>
+      <a class="download" href="tercero.apk" download="Quq-Tercero.apk" aria-label="Descargar la app de Tercero">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        Descargar
+      </a>
+    </section>
+  </div>
+  <p class="size">Para teléfonos Android · menos de 1 MB cada una · puedes tener las tres</p>
 
   <h2>Cómo instalarla</h2>
   <ol>
     <li>
       <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="30" width="24" height="10" rx="5" fill="#FFD54F" /><circle cx="44" cy="44" r="6" fill="#FFB74D" opacity=".9" /></svg>
-      <p>Toca el botón amarillo <strong>Descargar la app</strong>.</p>
+      <p>Toca el botón amarillo <strong>Descargar</strong> de tu grado.</p>
     </li>
     <li>
       <!-- Chrome warns on every APK served over plain HTTP; the offline TutorBox cannot use HTTPS. -->
@@ -121,14 +169,14 @@
     </li>
     <li>
       <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="44" width="24" height="10" rx="5" fill="#2E7D32" /><circle cx="36" cy="26" r="9" fill="#7CC6E8" /><ellipse cx="36" cy="28" rx="4" ry="5" fill="#2E7D32" /></svg>
-      <p>Toca <strong>Instalar</strong> y después <strong>Abrir</strong>. ¡Busca a Q'uq' en tu pantalla de inicio!</p>
+      <p>Toca <strong>Instalar</strong> y después <strong>Abrir</strong>. Busca a <strong>Q'uq' 1º</strong>, <strong>2º</strong> o <strong>3º</strong> en tu pantalla de inicio.</p>
     </li>
   </ol>
 
   <h2>Bueno saber</h2>
   <div class="note">
     <strong>Funciona sin internet</strong>
-    Todas las lecciones vienen dentro de la app. Q'uq' habla con la voz del teléfono.
+    Todas las lecciones de tu grado vienen dentro de la app. Q'uq' habla con la voz del teléfono.
   </div>
   <div class="note">
     <strong>El progreso se guarda en el teléfono</strong>
@@ -141,18 +189,25 @@
   </div>
   <div class="note">
     <strong>¿Tienes iPhone?</strong>
-    La app es solo para Android. En la escuela puedes jugar desde el navegador en
-    <a class="play" href="/tareas/primero/">tutorbox/tareas/primero</a>.
+    Las apps son solo para Android. En la escuela puedes jugar desde el navegador: toca
+    <strong>o juega en el navegador</strong> junto a tu grado.
   </div>
 </main>
 <script>
-  // A parent should see a friendly message, not a raw 404, when the APK was not copied here yet.
-  fetch('primero.apk', { method: 'HEAD' })
-    .then((r) => { if (!r.ok) throw new Error(); })
-    .catch(() => {
-      document.getElementById('download').style.display = 'none';
-      document.getElementById('missing').style.display = 'block';
-    });
+  // A parent should see a friendly message, not a raw 404, when an APK was not copied here yet:
+  // hide that grade, and say so only if no grade is available at all.
+  const grades = ['primero', 'segundo', 'tercero'];
+  Promise.all(grades.map((grade) =>
+    fetch(grade + '.apk', { method: 'HEAD' })
+      .then((r) => r.ok)
+      .catch(() => false)
+      .then((ok) => {
+        if (!ok) document.getElementById(grade).style.display = 'none';
+        return ok;
+      })
+  )).then((available) => {
+    if (!available.some(Boolean)) document.getElementById('missing').style.display = 'block';
+  });
 </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Q\'uq\' Matemáticas</string>
+    <!-- Short: it must fit under the launcher icon next to 2º and 3º. -->
+    <string name="app_name">Q\'uq\' 1º</string>
 </resources>

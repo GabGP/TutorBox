@@ -145,10 +145,10 @@ backend: plain static files, no build step.
 | Path | Served at | What it is |
 | :--- | :--- | :--- |
 | [`tareas/primero/`](tareas/primero/README.md) | `/tareas/primero/` | "Aprende Matemáticas con Q'uq'" — 1st-grade (Primero) CNB math, vanilla JS + Canvas. Played in the classroom browser. |
-| [`tareas/segundo/`](tareas/segundo/README.md) | `/tareas/segundo/` | "Matemáticas 2º con Q'uq'" — 2nd-grade (Segundo) CNB math, same engine and design; 7 levels, one per competencia. Browser only for now (no APK yet). |
-| [`tareas/tercero/`](tareas/tercero/README.md) | `/tareas/tercero/` | "Matemáticas 3º con Q'uq'" — 3rd-grade (Tercero) CNB math, same engine and design; 7 levels, one per competencia. Browser only for now (no APK yet). |
-| [`tareas/android/`](tareas/android/README.md) | — | Android wrapper that packs `primero/public` into an offline APK (`gradlew publishApk`). |
-| `tareas/descargas/` | `/descargas/` | Family download page with install steps (Spanish) plus `primero.apk`. |
+| [`tareas/segundo/`](tareas/segundo/README.md) | `/tareas/segundo/` | "Matemáticas 2º con Q'uq'" — 2nd-grade (Segundo) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`segundo.apk`). |
+| [`tareas/tercero/`](tareas/tercero/README.md) | `/tareas/tercero/` | "Matemáticas 3º con Q'uq'" — 3rd-grade (Tercero) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`tercero.apk`). |
+| [`tareas/android/`](tareas/android/README.md) | — | Android wrapper: one product flavor per grade packs `primero/`, `segundo/` and `tercero/public` into three offline APKs (`gradlew publishApk`). |
+| `tareas/descargas/` | `/descargas/` | Family download page: pick your grade (Primero, Segundo, Tercero), install steps in Spanish, and the three APKs. A grade whose APK is missing is hidden. |
 | `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |
 
 **Why an APK and not an installable PWA:** browsers only run service workers (offline support) and

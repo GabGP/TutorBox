@@ -12,11 +12,30 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId 'org.tutorbox.primero'
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        // 2: one APK per grade; Primero's launcher label became "Q'uq' 1º".
+        versionCode 2
+        versionName '1.1'
+    }
+
+    // One APK per grade, from the same wrapper: each packs its own web app and has its own id, so a
+    // family can install Primero, Segundo and Tercero side by side. Primero keeps the id it shipped
+    // with, so copies already installed update in place. Labels: src/<grade>/res/values/strings.xml.
+    flavorDimensions 'grade'
+    productFlavors {
+        primero {
+            dimension 'grade'
+            applicationId 'org.tutorbox.primero'
+        }
+        segundo {
+            dimension 'grade'
+            applicationId 'org.tutorbox.segundo'
+        }
+        tercero {
+            dimension 'grade'
+            applicationId 'org.tutorbox.tercero'
+        }
     }
 
     compileOptions {
@@ -25,8 +44,10 @@ android {
     }
 
     sourceSets {
-        // The APK packs the web app as-is: no copy, no second source of truth.
-        main.assets.srcDirs = ['../../primero/public']
+        // Each APK packs its grade's web app as-is: no copy, no second source of truth.
+        primero.assets.srcDirs = ['../../primero/public']
+        segundo.assets.srcDirs = ['../../segundo/public']
+        tercero.assets.srcDirs = ['../../tercero/public']
     }
 
     androidResources {
@@ -56,10 +77,15 @@ android {
     }
 }
 
-// `gradlew publishApk`: build the release APK and put it where the Jetson serves /descargas/.
+// `gradlew publishApk`: build the three release APKs and put them where the Jetson serves
+// /descargas/ (primero.apk, segundo.apk, tercero.apk).
 tasks.register('publishApk', Copy) {
     dependsOn 'assembleRelease'
-    from(layout.buildDirectory.dir('outputs/apk/release')) { include '*.apk' }
+    ['primero', 'segundo', 'tercero'].each { grade ->
+        from(layout.buildDirectory.dir("outputs/apk/${grade}/release")) {
+            include '*.apk'
+            rename { "${grade}.apk" }
+        }
+    }
     into rootProject.file('../descargas')
-    rename { 'primero.apk' }
 }

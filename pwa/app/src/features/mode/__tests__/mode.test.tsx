@@ -55,8 +55,14 @@ describe('ModePicker', () => {
 });
 
 describe('StudentModeCard', () => {
-  it('sends take-home students to the download page', () => {
+  it('lets take-home students pick the app of their grade', () => {
     render(<StudentModeCard />);
-    expect(screen.getByRole('link', { name: 'Descargar la app' })).toHaveAttribute('href', '/descargas/');
+    expect(screen.getByRole('link', { name: 'Descargar 1º Primero' })).toHaveAttribute('href', '/descargas/#primero');
+    expect(screen.getByRole('link', { name: 'Descargar 2º Segundo' })).toHaveAttribute('href', '/descargas/#segundo');
+    expect(screen.getByRole('link', { name: 'Descargar 3º Tercero' })).toHaveAttribute('href', '/descargas/#tercero');
+    expect(screen.getByRole('link', { name: 'o juega Tercero en el navegador' })).toHaveAttribute(
+      'href',
+      '/tareas/tercero/'
+    );
   });
 });

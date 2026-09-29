@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Serves ORIGIN from the APK's assets (pwa/tareas/primero/public); nothing else loads. */
+    /** Serves ORIGIN from the APK's assets (pwa/tareas/<grade>/public); nothing else loads. */
     private class AssetClient extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
