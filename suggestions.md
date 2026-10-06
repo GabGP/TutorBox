@@ -23,7 +23,7 @@ The quality gate is genuinely green. The findings below are the things a green g
 | # | Severity | Finding | Effort |
 | :--- | :--- | :--- | :--- |
 | C1 | Critical | Unauthenticated `POST /api/v1/quiz/validate` feeds raw text to SymPy's `eval`-based parser **(proved)** — **FIXED** | 1 line now; ~20 lines root fix |
-| C2 | Critical | A 7-character tutor message (`9××9××9`) freezes the whole backend **(proved)** | ~10 lines |
+| C2 | Critical | A 7-character tutor message (`9××9××9`) freezes the whole backend **(proved)** — **FIXED** | ~10 lines |
 | H1 | High | Default teacher `teacher1` / `1234` is seeded and never forced to rotate | 1 line |
 | H2 | High | Bearer tokens stored in plaintext in two tables, and they never expire | ~5 lines |
 | H3 | High | Username-only lockout lets any student lock the teacher out; slow brute force still works | small |
@@ -70,7 +70,7 @@ Suggested order is at the end.
      - Blocked attribute navigation dots with regex `(?<!\d)\.(?!\d)`.
      - Parsed inputs strictly into Python AST with `ast.parse(normalized, mode="eval")` and walked the syntax tree using `_ast_to_sympy` without calling `eval()`.
      - Allowed only `ast.Constant` (integers and floats with `abs <= 10**9`), `ast.Name` (single ASCII letter), `ast.UnaryOp` (`+`, `-`), and `ast.BinOp` (`+`, `-`, `*`, `/`, `**`).
-     - Restricted powers (`ast.Pow`) to non-negative integer constant exponents in `0 <= exp <= 6`, rejecting unbounded power cascades and CPU exhaustion attacks.
+     - Restricted powers (`ast.Pow`) to non-negative integer constant exponents in `0 <= exp <= 6`, rejecting unbounded power cascades and CPU exhaustion attacks. (A power of a power still got through this check; closed under C2.)
      - Re-routed all parsing call sites (`parse_option_expression` and `evaluate_arithmetic_expression` in `parser.py`, and `parse_equation_components` in `equation_parser.py`) through `safe_parse`.
   3. **Adversarial & RBAC Test Suite:**
      - Created `backend/tests/core/math_engine/test_safe_parser.py` and updated `backend/tests/core/math_engine/test_parser.py` with adversarial payloads (`"().__class__.__mro__[1].__name__"`, `"__import__('os').system('id')"`, `"9**9**9"`, `"9××9××9"`, attribute dots, oversized inputs) confirming safe rejection without code execution.
@@ -87,6 +87,24 @@ Suggested order is at the end.
 - **Proof:** `find_problem("9××9××9")` had not returned after 15 s. A background thread got no CPU time during that window, because the big-integer power holds the GIL.
 - **Why it matters:** the backend runs a single worker (`infra/systemd/tutorbox-backend.service`), so every student, the classroom screen and the teacher stall together. Signup is open and the tutor only requires tutor mode, so any student can do this. The unauthenticated route in C1 reaches the same hang with `"9**9**9"` as an option.
 - **Fix:** C1's `safe_parse` (bounded exponents) covers both. The tutor never needs exponents, though: it only handles `+ − × ÷` and parentheses, which `ast` plus `fractions.Fraction` evaluates exactly without SymPy. A cheap extra guard is to reject any operator that appears twice in a row. Add the test `assert find_problem("9××9××9") is None` with a timeout.
+- **How it was fixed:**
+  1. **Reproduced first, and found two more ways in.** On the code after the C1 commit, three student messages got no answer in 25 s (child process, killed at the limit):
+     - `9××9××9` (7 characters), as described above.
+     - The same trick through the equation path: `x+` + eleven nested `(…××6)` + `=5` (60 characters). It got past C1's `safe_parse`, whose cap bounded each exponent (≤ 6) but not their product: eleven levels is 9 to the power 6¹¹.
+     - A degree-30 equation, `(x+1)××6×(x+2)××6×…×(x+5)××6=5` (46 characters), where `sp.solve` never finished.
+     - Without powers, the worst equations that fit the 60-character cap answered in 0.7–1.2 s including interpreter start (nine linear factors, `x` times itself 29 times, a chain of nine reciprocals), so powers were the whole problem.
+  2. **Operations no longer use an evaluator that knows powers (root cause):** new `backend/src/core/math_engine/exact_arithmetic.py` exposes `evaluate_exact(text) -> Fraction | None`.
+     - It walks Python's `ast` and evaluates only numbers, unary `+`/`-` and `+ - × ÷`, with `Fraction`s. Decimals stay exact (the digits as typed, not a float) and a division by zero gives `None`. `Pow`, `//`, `%`, names and calls are not in the allow-list, so `××` (which becomes `**` in Python) is simply not arithmetic.
+     - Before parsing it rejects any character outside `0-9`, whitespace and `+ - * / ( ) .` (so `1e999999999` cannot make `Fraction` build a gigantic number) and anything longer than `MAX_EXPRESSION_LENGTH` (100, shared with `safe_parse`). Leading zeros (`007 + 3`) are normalised, because SymPy used to accept them.
+     - `problems._evaluate` now calls it, and `modes/socratic/problems.py` no longer imports SymPy or `eval`-based parsing at all (148 → 139 lines, under the 150 ceiling).
+  3. **Equations:** `_equation` returns `None` for any equation containing `××`. The tutor has no powers, and `12 ÷ n = 3` and `2x + 4 = 12` still solve.
+  4. **Closed the gap C1 left in `safe_parse`** (shared with the quiz validator and LLM output): `safe_parser.py` rejects a power whose base contains another power ("Nested powers are not supported.") before evaluating anything. Separate powers (`x**2 + 3**2`) still work.
+  5. **Tests** (1193 → 1230 passing, 100 % statement coverage kept):
+     - `tests/core/math_engine/test_exact_arithmetic.py` (new): 16 exact cases (decimals, fractions, unary signs, leading zeros, a 19-digit decimal) and 16 inputs that must return `None` (`9××9××9`, `9**9**9`, `//`, `%`, divide by zero, names, calls, `1e999999999`, empty, too long).
+     - `test_safe_parser.py`: a power of a power is rejected at any depth, separate powers are still allowed.
+     - `test_problems.py`: four hostile messages join the "no solvable problem" list (the three above and `x + 3××2 = 11`), and `find_attempt("9××9 = 5")` is `None`.
+  6. **Verified:** `ruff check` and `ruff format --check` clean. The same probe on the fixed code returns `None` in under 1 s for all three messages, and decimals, fractions, `12 ÷ n = 3`, `2x + 4 = 12` and `007 + 3` still solve. `docs/api/tutor.md` now says the tutor computes exactly and lists the bound as a guardrail.
+  - **Limits:** there is no timeout test. If the fix regressed, the test run would hang instead of failing, because an in-process timer cannot run while a big-integer power holds the GIL. Equations still go through `sp.solve`, so staff or LLM text containing a flat high-degree polynomial (`(x+1)**6*(x+2)**6*…`) is bounded only by the 100-character cap, not by degree; checking the polynomial degree before `sp.solve` would close it.
 
 ---
 

@@ -81,7 +81,7 @@ flowchart LR
 ```
 
 The **planner** (deterministic) decides the pedagogy: it finds the problem in the message ("23 + 45",
-"7 por 8", "la mitad de 10", "20% de 50", "x + 5 = 12"), lets SymPy compute the answer, judges the
+"7 por 8", "la mitad de 10", "20% de 50", "x + 5 = 12"), computes the answer exactly, judges the
 child's answers and climbs the hint ladder (0 restate, 1 concept, 2 smaller step, 3 worked example with
 other numbers). The **model** only rewords the chosen hint, or explains a CNB concept in two sentences.
 
@@ -97,6 +97,7 @@ reasons first); the first one after Ollama unloads the model takes about 30 s.
 | :--- | :--- |
 | Text only | Data URIs, `<img>`/`<svg>` tags, Markdown images, links to image files and base64 blobs are refused (`backend` + the PWA blocks pasted/dropped files). |
 | CNB scope | Topics from `pwa/tareas/cnb` (1.º–5.º primaria) in `modes/socratic/cnb_matematicas.json`; later-grade math (derivadas, raíz cuadrada, negativos…) and non-math are refused with a pointer to what the tutor can do. |
+| Bounded math | Operations run on exact fractions with `+ − × ÷` only (`core/math_engine/exact_arithmetic.py`): powers, names and a doubled `××` (a power in Python) are not arithmetic, so no message can make the backend compute without end. Equations with `××` are refused; the rest go through `safe_parse`, which never accepts a power of a power. Expressions over 60 characters and numbers over 10⁹ are not evaluated. |
 | No answers | The reply may not contain an accepted answer, in digits or in Spanish words (`sesenta y ocho`). When rewording, it may not contain **any** number the hint did not have, so the model cannot compute for the child. |
 | Plain Spanish | Reasoning, LaTeX and Markdown are stripped (`\frac{1}{2}` → `1/2`); replies with English, other scripts, role-play labels, rude words or more than 320 chars are rejected. |
 | Faithful | A rewording keeps at least half of the hint's content words and its question; otherwise the hint is shown as is. |

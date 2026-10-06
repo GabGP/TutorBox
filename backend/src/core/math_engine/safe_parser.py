@@ -51,6 +51,11 @@ def _ast_to_sympy(node: ast.AST) -> sp.Expr:
         raise ValueError(f"Unsupported unary operator: {type(node.op).__name__}.")
 
     if isinstance(node, ast.BinOp):
+        if isinstance(node.op, ast.Pow) and any(
+            isinstance(inner, ast.Pow) for inner in ast.walk(node.left)
+        ):
+            # A power of a power multiplies exponents: MAX_EXPONENT no longer bounds it.
+            raise ValueError("Nested powers are not supported.")
         left = _ast_to_sympy(node.left)
         if isinstance(node.op, ast.Pow):
             if (

@@ -1,4 +1,4 @@
-"""Problems in children's messages, solved by SymPy (modes/socratic/problems.py)."""
+"""Problems in children's messages, solved exactly (modes/socratic/problems.py)."""
 
 from fractions import Fraction
 
@@ -66,6 +66,10 @@ def test_decimal_problems_remember_their_notation():
         "x - x = 3",  # no solution
         "x × x = 2",  # not a rational solution
         "x" + " + 1" * 20 + " = 50",
+        "9××9××9",  # Python would read ×× as a power: a tower that never ends
+        "x+" + "(" * 11 + "9" + "××6)" * 11 + "=5",  # the same through an equation
+        "×".join(f"(x+{k})××6" for k in range(1, 6)) + "=5",  # a degree-30 equation
+        "x + 3××2 = 11",  # the tutor has no powers
     ],
 )
 def test_messages_without_a_solvable_problem(message):
@@ -80,6 +84,7 @@ def test_find_attempt_reads_the_childs_result():
     assert find_attempt("3 × 4 = ?") is None  # no result given
     assert find_attempt("es 68") is None
     assert find_attempt("hola = 5") is None  # nothing to judge on the left
+    assert find_attempt("9××9 = 5") is None  # ×× is not a multiplication
 
 
 def test_accepted_answers_include_the_quotient_of_a_division_with_remainder():

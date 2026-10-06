@@ -62,6 +62,24 @@ def test_safe_parse_exponents():
         safe_parse("x**y")
 
 
+def test_safe_parse_rejects_nested_powers():
+    """A power of a power multiplies the exponents, so no depth of it is allowed."""
+    for nested in [
+        "(9**6)**6",
+        "((9**6)**6)**6",
+        "(2**3 + 1)**2",
+        "(x**2)**2",
+        "(" * 11 + "9" + "**6)" * 11,  # 9 to the power of 6**11
+    ]:
+        with pytest.raises(ValueError, match="Nested powers"):
+            safe_parse(nested)
+
+    # Separate powers add up instead of multiplying: still fine.
+    x = sp.Symbol("x")
+    assert safe_parse("x**2 + 3**2") == x**2 + 9
+    assert safe_parse("2**3 * 2**3") == sp.Integer(64)
+
+
 def test_safe_parse_rejects_rce_payloads():
     """Rejects Python attribute access, dunder methods, and function calls."""
     malicious_payloads = [

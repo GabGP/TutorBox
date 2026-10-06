@@ -1,4 +1,4 @@
-"""Finds the math problem in a child's message and lets SymPy compute its answer.
+"""Finds the math problem in a child's message and computes its answer exactly.
 
 Operations can be written with symbols or words ("7 por 8", "12 entre 4",
 "5 más 3"). A lone fraction such as 3/4 is a number, not a problem: a problem
@@ -9,10 +9,7 @@ import re
 from dataclasses import dataclass
 from fractions import Fraction
 
-import sympy as sp
-
-from core.math_engine import solve_linear_equation
-from core.math_engine.equation_parser import PARSE_ERRORS
+from core.math_engine import evaluate_exact, solve_linear_equation
 from modes.socratic.numbers import extract_numbers
 from modes.socratic.text import fold
 
@@ -103,6 +100,8 @@ def _equation(text: str) -> Problem | None:
     if match is None or len(match.group(0)) > _MAX_EXPRESSION_CHARS:
         return None
     shown = match.group(0).strip()
+    if "××" in shown:  # Python would read it as a power; the tutor has none
+        return None
     equation = _UNKNOWN.sub("x", shown).replace("×", "*").replace("÷", "/")
     solution = solve_linear_equation(equation)
     if solution is None or not solution.is_Rational:
@@ -127,15 +126,7 @@ def _evaluate(expression: str) -> Fraction | None:
     too_big = any(abs(n) > _MAX_OPERAND for n in extract_numbers(expression))
     if too_big or len(expression) > _MAX_EXPRESSION_CHARS:
         return None
-    try:
-        value = sp.sympify(
-            expression.replace("×", "*").replace("÷", "/"), rational=True
-        )
-    except PARSE_ERRORS:
-        return None
-    if not value.is_Rational:
-        return None
-    return Fraction(int(value.p), int(value.q))
+    return evaluate_exact(expression)
 
 
 def _classify(expression: str) -> tuple[str, tuple[int, ...], bool]:

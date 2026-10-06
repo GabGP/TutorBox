@@ -9,6 +9,7 @@ from core.math_engine.equation_parser import (
     EQUATION_PATTERN,
     parse_equation_components,
 )
+from core.math_engine.exact_arithmetic import evaluate_exact
 from core.math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
@@ -23,6 +24,7 @@ __all__ = [
     "EQUATION_PATTERN",
     "are_values_equivalent",
     "evaluate_arithmetic_expression",
+    "evaluate_exact",
     "evaluate_percentage_expression",
     "extract_and_solve_problem",
     "extract_linear_polynomial",
