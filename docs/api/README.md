@@ -123,7 +123,7 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/staff/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
-| `/api/v1/quiz/validate` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
+| `/api/v1/quiz/validate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/generate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/generation-logs` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
 | `/api/v1/quiz/generation-metrics` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |

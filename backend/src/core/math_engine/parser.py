@@ -7,6 +7,7 @@ from core.math_engine.equation_parser import (
     PARSE_ERRORS,
     parse_equation_components,
 )
+from core.math_engine.safe_parser import safe_parse
 
 FLOAT_TOLERANCE: float = 1e-6
 PERCENTAGE_BASE: float = 100.0
@@ -22,7 +23,7 @@ def parse_option_expression(option_text: str) -> sp.Expr | None:
     if equation_match := re.search(r"=\s*(-?\d+(?:/\d+)?(?:\.\d+)?)", normalized_text):
         normalized_text = equation_match.group(1)
     try:
-        return sp.parse_expr(normalized_text)
+        return safe_parse(normalized_text)
     except PARSE_ERRORS:
         return None
 
@@ -63,7 +64,7 @@ def evaluate_arithmetic_expression(question_text: str) -> sp.Expr | None:
             r"(\d)\s*([\(])", r"\1*\2", match.group(0).strip()
         )
         try:
-            evaluated_expr = sp.parse_expr(candidate_expression)
+            evaluated_expr = safe_parse(candidate_expression)
             if evaluated_expr is not None and not evaluated_expr.is_symbol:
                 return evaluated_expr
         except PARSE_ERRORS:

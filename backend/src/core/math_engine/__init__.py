@@ -17,6 +17,7 @@ from core.math_engine.parser import (
     parse_option_expression,
     solve_linear_equation,
 )
+from core.math_engine.safe_parser import safe_parse
 
 __all__ = [
     "EQUATION_PATTERN",
@@ -28,6 +29,7 @@ __all__ = [
     "is_two_step_linear",
     "parse_equation_components",
     "parse_option_expression",
+    "safe_parse",
     "solve_linear_equation",
     "validate_math_structure",
 ]

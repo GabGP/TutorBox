@@ -21,7 +21,7 @@ These endpoints govern the diagnostic question lifecycle: discovering curriculum
 | :--- | :--- | :---: | :--- |
 | `GET` | `/api/v1/quiz/topics` | Public | Retrieve full curriculum taxonomy and misconception codes |
 | `GET` | `/api/v1/quiz/schema` | Public | Canonical JSON Schema (Draft 2020-12) for diagnostic items |
-| `POST` | `/api/v1/quiz/validate` | Public | Deterministic SymPy math validation for question items |
+| `POST` | `/api/v1/quiz/validate` | Teacher, Admin | Deterministic SymPy math validation for question items |
 | `POST` | `/api/v1/quiz/generate` | Teacher, Admin | Generate new diagnostic question using local SLM with retries |
 | `GET` | `/api/v1/quiz/generation-logs` | Teacher, Admin | Query historical SLM generation telemetry and rejections |
 | `GET` | `/api/v1/quiz/generation-metrics` | Teacher, Admin | Aggregated SLM generation latency and reliability metrics |
@@ -146,7 +146,7 @@ Retrieve the canonical versioned JSON Schema (Draft 2020-12) for diagnostic quiz
 
 Execute deterministic SymPy validation on an arbitrary multiple-choice diagnostic item without persisting it.
 
-* **Authorization**: Public
+* **Authorization**: Teacher, Admin
 * **Request Body**:
   ```json
   {

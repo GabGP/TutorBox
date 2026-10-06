@@ -25,6 +25,10 @@ def test_parse_option_expression():
     # Invalid strings safely return None
     assert parse_option_expression("+++ * invalid") is None
     assert parse_option_expression("Propiedad Conmutativa") is None
+    assert parse_option_expression("().__class__.__mro__[1].__name__") is None
+    assert parse_option_expression("__import__('os').system('id')") is None
+    assert parse_option_expression("9**9**9") is None
+    assert parse_option_expression("9××9××9") is None
 
 
 def test_are_values_equivalent():

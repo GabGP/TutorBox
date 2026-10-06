@@ -10,6 +10,8 @@ from tokenize import TokenError
 
 import sympy as sp
 
+from core.math_engine.safe_parser import safe_parse
+
 PARSE_ERRORS: tuple[type[Exception], ...] = (
     sp.SympifyError,
     SyntaxError,
@@ -57,8 +59,8 @@ def parse_equation_components(
                 variable_match.group(0) if variable_match else "x"
             )
             try:
-                left_expr = sp.parse_expr(normalized_left)
-                right_expr = sp.parse_expr(normalized_right)
+                left_expr = safe_parse(normalized_left)
+                right_expr = safe_parse(normalized_right)
                 return left_expr, right_expr, variable_symbol
             except PARSE_ERRORS:
                 continue
