@@ -80,10 +80,13 @@ flowchart LR
     G -->|unsafe, slow or down| D
 ```
 
-The **planner** (deterministic) decides the pedagogy: it finds the problem in the message ("23 + 45",
-"7 por 8", "la mitad de 10", "20% de 50", "x + 5 = 12"), computes the answer exactly, judges the
-child's answers and climbs the hint ladder (0 restate, 1 concept, 2 smaller step, 3 worked example with
-other numbers). The **model** only rewords the chosen hint, or explains a CNB concept in two sentences.
+The **planner** (deterministic) decides the pedagogy: it reads number words as digits ("doscientos más
+cien" is 200 + 100), finds the problem in the message ("23 + 45", "7 por 8", "la mitad de 10",
+"20% de 50", "x + 5 = 12"), computes the answer exactly, judges the child's answers and climbs the hint
+ladder (0 restate, 1 concept, 2 smaller step, 3 worked example with other numbers). A wrong answer or a
+request for help moves one level up, never past 3. For an equation, level 2 names the first step to
+undo and level 3 solves a parallel equation (`2 × x + 1 = 7` when the child has `2x + 4 = 14`). The
+**model** only rewords the chosen hint, or explains a CNB concept in two sentences.
 
 Measured on the Jetson, the 1.5B distill asked to tutor freely invents dialogue turns and states the
 answer; asked to reword a given hint it stays close to it. Replies take about 5–15 s (the model always
@@ -97,11 +100,18 @@ reasons first); the first one after Ollama unloads the model takes about 30 s.
 | :--- | :--- |
 | Text only | Data URIs, `<img>`/`<svg>` tags, Markdown images, links to image files and base64 blobs are refused (`backend` + the PWA blocks pasted/dropped files). |
 | CNB scope | Topics from `pwa/tareas/cnb` (1.º–5.º primaria) in `modes/socratic/cnb_matematicas.json`; later-grade math (derivadas, raíz cuadrada, negativos…) and non-math are refused with a pointer to what the tutor can do. |
-| Bounded math | Operations run on exact fractions with `+ − × ÷` only (`core/math_engine/exact_arithmetic.py`): powers, names and a doubled `××` (a power in Python) are not arithmetic, so no message can make the backend compute without end. Equations with `××` are refused; the rest go through `safe_parse`, which never accepts a power of a power. Expressions over 60 characters and numbers over 10⁹ are not evaluated. |
-| No answers | The reply may not contain an accepted answer, in digits or in Spanish words (`sesenta y ocho`). When rewording, it may not contain **any** number the hint did not have, so the model cannot compute for the child. |
+| Bounded math | Operations run on exact fractions with `+ − × ÷` only (`core/math_engine/exact_arithmetic.py`): powers, names and a doubled `××` (a power in Python) are not arithmetic, so no message can make the backend compute without end. Equations with `××` are refused; the rest go through `safe_parse`, which never accepts a power of a power. Equations with a decimal (`x + 1 = 2.5`) are refused too, because the equation parser would read `= 2`. Expressions over 60 characters and numbers over 10⁹ are not evaluated. |
+| No answers | SymPy containment (`modes/socratic/containment.py`): until the child finds it, no reply may state an accepted answer outside the problem itself, whether in digits (`68`, `136/2`, `68.0`), in Spanish words (`sesenta y ocho`) or as an expression or assignment that SymPy evaluates to it (`x = 12 - 5`, `doce menos cinco`, `(14 - 4) ÷ 2`). Expressions are read with `safe_parse`; one longer than 100 characters is blocked unread. An explanation given mid-problem is checked against that problem. When rewording, the reply may not contain **any** number or calculation the hint did not have, so the model cannot compute for the child. The deterministic hints pass the same check. |
+| Fallback | A reply that fails any guard is replaced by the planner's deterministic text for that turn (the hint for the current level, or the fixed reply for a concept question), and the turn is logged with `containment_triggered` and the raw model output. |
 | Plain Spanish | Reasoning, LaTeX and Markdown are stripped (`\frac{1}{2}` → `1/2`); replies with English, other scripts, role-play labels, rude words or more than 320 chars are rejected. |
 | Faithful | A rewording keeps at least half of the hint's content words and its question; otherwise the hint is shown as is. |
 | Load | 2 replies generated at once (`TUTOR_MAX_CONCURRENT`); others wait up to 20 s, then get the deterministic hint. One turn at a time per login, 12 per minute. |
+
+CI proves these rules on every push. `tests/modes/socratic/test_containment_dialogues.py` runs 30 turns
+in which a model that complies answers 10 "dame la respuesta" probes, each in another form: all 10 are
+contained, and no answer reaches the child before the child finds it. `test_problem_bank.py` walks the
+48-problem labeled bank (`modes/socratic/problem_bank.json`) through SymPy, the ladder and the
+containment check ([Socratic Pedagogy §4](../architecture/socratic-pedagogy.md#4-implementation-in-mode-2)).
 
 ---
 

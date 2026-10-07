@@ -43,6 +43,18 @@ def test_asking_for_help_climbs_the_ladder():
     assert move.level == 2
 
 
+def test_a_problem_and_its_answer_in_words_are_read_as_numbers():
+    move, conversation = plan(Conversation(), "suma doscientos más cien")
+    assert (move.kind, move.problem.text, move.problem.target) == (
+        "hint",
+        "200 + 100",
+        300,
+    )
+
+    move, _ = plan(conversation, "trescientos")
+    assert move.kind == "praise"
+
+
 def test_an_attempt_with_equals_is_judged_on_its_own_problem():
     move, conversation = plan(Conversation(), "23 + 45 = 70")
     assert (move.kind, move.level, move.is_correct) == ("hint", 1, False)
@@ -95,6 +107,7 @@ def test_a_word_problem_asks_for_the_operation_then_for_the_work():
     ("question", "reply"),
     [
         ("¿qué es una fracción?", "creo que es 3/4"),
+        ("¿qué es una fracción?", "es una parte de la pizza"),
         ("¿cuántos lados tiene un triángulo?", "tiene tres"),
     ],
 )

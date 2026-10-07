@@ -70,6 +70,7 @@ def test_decimal_problems_remember_their_notation():
         "x+" + "(" * 11 + "9" + "××6)" * 11 + "=5",  # the same through an equation
         "×".join(f"(x+{k})××6" for k in range(1, 6)) + "=5",  # a degree-30 equation
         "x + 3××2 = 11",  # the tutor has no powers
+        "x + 1 = 2.5",  # SymPy's equation parser would read = 2 and answer 1
     ],
 )
 def test_messages_without_a_solvable_problem(message):

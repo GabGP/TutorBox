@@ -46,7 +46,7 @@ class SocraticTutor:
     def respond(self, key: str, message: str) -> TurnResult:
         move, conversation = plan(self._store.get(key), message)
         self._store.put(key, conversation)
-        reply, raw, used_model, contained = self._voice(move)
+        reply, raw, used_model, contained = self._voice(move, conversation.problem)
         return TurnResult(
             reply=reply,
             kind=move.kind,
@@ -63,8 +63,14 @@ class SocraticTutor:
         """Forgets the problem in progress (the chat's 'Empezar de nuevo')."""
         self._store.drop(key)
 
-    def _voice(self, move: Move) -> tuple[str, str | None, bool, bool]:
-        """(reply, raw model text, model reply used, containment triggered)."""
+    def _voice(
+        self, move: Move, active: Problem | None
+    ) -> tuple[str, str | None, bool, bool]:
+        """(reply, raw model text, model reply used, containment triggered).
+
+        `active` is the problem still in progress after this move: an explanation
+        given mid-problem must not leak its answer either.
+        """
         if move.llm == "none":
             return move.text, None, False, False
         if move.llm == "explain" and move.topic is not None:
@@ -75,7 +81,7 @@ class SocraticTutor:
         if raw is None:
             return move.text, None, False, False
         text = clean(raw)
-        issues = check(text, mode=move.llm, source=move.text, problem=move.problem)
+        issues = check(text, mode=move.llm, source=move.text, problem=active)
         if issues:
             logger.info("Tutor containment (%s): %r", ", ".join(issues), text[:120])
             return move.text, raw, False, True

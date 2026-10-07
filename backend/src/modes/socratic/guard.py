@@ -2,21 +2,23 @@
 
 `clean` removes the model's reasoning, LaTeX and Markdown so equations arrive as
 plain text. `check` rejects replies that are not Spanish, talk to the teacher
-instead of the child, contain rude words, reveal an accepted answer (in digits or
-in words) or, when rewording a hint, mention any number the hint did not have.
-That last rule is what makes rewording safe: the model can only move the hint's
-own numbers around, so it cannot compute anything for the child.
+instead of the child, contain rude words, give the answer away (containment.py:
+digits, words, or an expression SymPy evaluates to it) or, when rewording a hint,
+add a number or a calculation the hint did not have. That last rule is what makes
+rewording safe: the model can only move the hint's own numbers around, so it
+cannot compute anything for the child.
 """
 
 import re
 
+from modes.socratic.containment import expressions, leaks
 from modes.socratic.curriculum import load_curriculum
 from modes.socratic.lexicon import ENGLISH, ROLE_WORDS, RUDE
 from modes.socratic.numbers import extract_numbers
-from modes.socratic.problems import Problem, accepted_answers
-from modes.socratic.text import Folded, spanish_words
+from modes.socratic.problems import Problem
+from modes.socratic.text import Folded
 
-__all__ = ["MAX_REPLY_CHARS", "check", "clean", "leaks"]
+__all__ = ["MAX_REPLY_CHARS", "check", "clean"]
 
 MAX_REPLY_CHARS = 320
 
@@ -41,9 +43,10 @@ _OTHER_SCRIPT = re.compile(
 _ROLE_LABEL = re.compile(
     r"\b(?:ni[nñ]o|alumno|estudiante|tutor|t[uú])\s*:", re.IGNORECASE
 )
-# Shapes no Spanish word has: 'the', 'what', 'study', 'geometry', 'counting'.
+# Shapes no Spanish word has: 'the', 'what', 'study', 'geometry', 'counting'
+# ('deshacer' and the other des + h words are Spanish).
 _ENGLISH_SHAPE = re.compile(
-    r"\b[a-z]*(?:th|sh|wh|ck|ph|w)[a-z]*\b|\b[a-z]+(?:ing|(?<!s)tion|ly)\b"
+    r"\b[a-z]*(?:th|(?<!de)sh|wh|ck|ph|w)[a-z]*\b|\b[a-z]+(?:ing|(?<!s)tion|ly)\b"
     r"|\b[a-z]*[bcdfgjklmnpqrstvxz]y\b"
 )
 _REPEATED_MARK = re.compile(r"([¡!¿?.])\1+")
@@ -68,20 +71,6 @@ def clean(raw: str) -> str:
     while len(sentences) > 1 and len(" ".join(sentences)) > MAX_REPLY_CHARS:
         sentences.pop()
     return " ".join(sentences[:3])
-
-
-def leaks(text: str, problem: Problem) -> bool:
-    """True when the text states an accepted answer outside the problem itself."""
-    rest = text.replace(problem.text, " ")
-    answers = accepted_answers(problem)
-    if answers & set(extract_numbers(rest)):
-        return True
-    words = f" {' '.join(Folded.of(rest).tokens)} "
-    return any(
-        f" {spanish_words(answer.numerator)} " in words
-        for answer in answers
-        if answer.denominator == 1 and spanish_words(answer.numerator)
-    )
 
 
 def check(text: str, *, mode: str, source: str, problem: Problem | None) -> list[str]:
@@ -112,7 +101,7 @@ def check(text: str, *, mode: str, source: str, problem: Problem | None) -> list
         if failed
     ]
     if mode == "rewrite":
-        issues += _rewrite_issues(text, source)
+        issues += _rewrite_issues(text, source, problem)
     if mode == "explain" and not (
         load_curriculum().mentions_math(folded) or extract_numbers(text)
     ):
@@ -124,8 +113,10 @@ def _stems(text: str) -> set[str]:
     return {t[:4] for t in Folded.of(text).tokens if len(t) >= 4 and t.isalpha()}
 
 
-def _rewrite_issues(text: str, source: str) -> list[str]:
-    """A rewording keeps the hint's numbers, words and question; adds no number.
+def _rewrite_issues(text: str, source: str, problem: Problem | None) -> list[str]:
+    """A rewording keeps the hint's numbers, words and question; adds no number
+    and no calculation (a word problem's '12 - 5' has no target to leak, yet it
+    does the child's work).
 
     'Words' means at least half the hint's content-word stems: a 1.5B model
     sometimes returns fluent-looking nonsense ("Mano 23 y Mano 45") instead.
@@ -139,6 +130,8 @@ def _rewrite_issues(text: str, source: str) -> list[str]:
         Folded.of(text).number_words() <= Folded.of(source).number_words()
     ):
         issues.append("number")
+    if not expressions(text, problem) <= expressions(source, problem):
+        issues.append("expression")
     if not allowed <= said:
         issues.append("lost")
     if "?" in source and "?" not in text:

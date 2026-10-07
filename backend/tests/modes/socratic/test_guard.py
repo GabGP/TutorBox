@@ -1,9 +1,12 @@
 """Output guard: only safe, plain-text Spanish reaches the child (guard.py)."""
 
+from fractions import Fraction
+
 import pytest
 
-from modes.socratic.guard import MAX_REPLY_CHARS, check, clean, leaks
+from modes.socratic.guard import MAX_REPLY_CHARS, check, clean
 from modes.socratic.problems import find_problem
+from modes.socratic.replies import word_problem
 
 SUM = find_problem("23 + 45")
 HINT = "Empieza por las unidades: ¿cuánto es 3 + 5?"
@@ -38,16 +41,6 @@ def test_clean_keeps_at_most_three_short_sentences():
     assert text.count(".") == 3
 
 
-def test_leaks_catches_the_answer_in_digits_or_words():
-    assert leaks("La respuesta es 68.", SUM)
-    assert leaks("Es sesenta y ocho.", SUM)
-    assert not leaks("¿Cuánto es 23 + 45?", SUM)  # the problem itself is fine
-    assert leaks("12 ÷ 3 = 4, y ahora 16 ÷ 4", find_problem("16 entre 4"))
-    assert leaks("Es 1/2.", find_problem("1/4 + 1/4"))
-    assert not leaks("Tres cuartos es 3/4.", find_problem("1/4 + 1/4"))
-    assert not leaks("uno", find_problem("1,000,000 + 1"))  # no words for it
-
-
 def test_a_faithful_rewording_passes():
     text = "¡Empieza por las unidades! ¿Cuánto es 3 + 5?"
 
@@ -66,7 +59,9 @@ def test_a_faithful_rewording_passes():
         ("¿Cuánto es 3 + 5? " + "Piensa bien. " * 30, "long"),
         ("¿Cuánto es 3 + 5, tonto?", "rude"),
         ("¿Cuánto es 3 + 5? El total es 68.", "leak"),
+        ("¿Cuánto es 3 + 5? Son 60 + 8.", "leak"),
         ("¿Cuánto es 3 + 5 + 1?", "number"),
+        ("¿Cuánto es 3 + 5, o 5 + 3?", "expression"),
         ("¿Cuánto es 3 + 5? Son ocho.", "number"),
         ("¿Cuánto es 3 más cinco?", "lost"),
         ("Suma las unidades 3 y 5.", "no_question"),
@@ -75,6 +70,25 @@ def test_a_faithful_rewording_passes():
 )
 def test_unsafe_rewordings_are_rejected(text, issue):
     assert issue in check(text, mode="rewrite", source=HINT, problem=SUM)
+
+
+def test_spanish_des_h_words_are_not_english():
+    hint = (
+        "En x + 5 = 12 buscamos el número que falta. ¿Qué operación deshace lo "
+        "que le hicieron a ese número?"
+    )
+
+    assert (
+        check(hint, mode="rewrite", source=hint, problem=find_problem("x + 5 = 12"))
+        == []
+    )
+
+
+def test_a_rewording_may_not_do_the_childs_calculation():
+    source = word_problem([Fraction(5), Fraction(12)])  # no target to leak
+    text = source.replace("Escríbela", "Es 12 - 5. Escríbela")
+
+    assert check(text, mode="rewrite", source=source, problem=None) == ["expression"]
 
 
 def test_explanations_must_be_about_math_but_may_use_numbers():

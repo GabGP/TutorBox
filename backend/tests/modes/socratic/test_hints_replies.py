@@ -43,7 +43,7 @@ from modes.socratic.text import Folded
             3,
             (
                 "Mira este ejemplo: 12 + 15 = 27, porque juntamos 12 y 15. "
-                "Ahora intenta tú: ¿cuánto es 23 + 45?"
+                "Ahora te toca: ¿cuánto es 23 + 45?"
             ),
         ),
         (
@@ -51,7 +51,7 @@ from modes.socratic.text import Folded
             3,
             (
                 "Mira este ejemplo: 21 + 14 = 35, porque juntamos 21 y 14. "
-                "Ahora intenta tú: ¿cuánto es 12 + 15?"
+                "Ahora te toca: ¿cuánto es 12 + 15?"
             ),
         ),
         ("8 - 3", 0, "Vamos a pensar en 8 - 3. ¿Qué pasa cuando a 8 le quitas 3?"),
@@ -66,13 +66,15 @@ from modes.socratic.text import Folded
         ("8 - 3", 2, "Empieza en 8 y cuenta hacia atrás 3. ¿A qué número llegas?"),
         ("45 - 23", 2, "Empieza por las unidades: ¿cuánto es 5 - 3?"),
         (
-            "32 - 25",
+            "52 - 27",
             2,
             (
-                "Las unidades 2 son menos que 5: pide prestada una decena. "
-                "¿Cuánto es 12 - 5?"
+                "Las unidades 2 son menos que 7: pide prestada una decena. "
+                "¿Cuánto es 12 - 7?"
             ),
         ),
+        # 32 - 25 = 7: the units step 12 - 5 would be the whole answer
+        ("32 - 25", 2, "Cuenta desde 25 hasta llegar a 32. ¿Cuántos pasos das?"),
         (
             "7 por 8",
             0,
@@ -92,7 +94,7 @@ from modes.socratic.text import Folded
             3,
             (
                 "Mira este ejemplo: 3 × 4 es sumar 3, 4 veces: 3 + 3 + 3 + 3 = 12. "
-                "Ahora intenta tú: ¿cuánto es 7 × 8?"
+                "Ahora te toca: ¿cuánto es 7 × 8?"
             ),
         ),
         (
@@ -121,7 +123,7 @@ from modes.socratic.text import Folded
             3,
             (
                 "Mira este ejemplo: 10 ÷ 2 = 5, porque 2 × 5 = 10. "
-                "Ahora intenta tú: ¿cuánto es 17 ÷ 5?"
+                "Ahora te toca: ¿cuánto es 17 ÷ 5?"
             ),
         ),
         (
@@ -152,12 +154,12 @@ def test_operation_ladders(message, level, expected):
             2,
             "Resuelve primero una parte pequeña de 3 × 1. ¿Qué parte puedes hacer tú?",
         ),
-        (
-            "2x + 4 = 12",
+        (  # an equation shape with no worked example (equation_hints.py)
+            "3 × (x + 2) = 15",
             3,
             (
-                "Prueba con números más pequeños que se parezcan a 2x + 4 = 12 y luego "
-                "vuelve a tu problema. ¿Qué números usarías?"
+                "Prueba con números más pequeños que se parezcan a 3 × (x + 2) = 15 y "
+                "luego vuelve a tu problema. ¿Qué números usarías?"
             ),
         ),
         (

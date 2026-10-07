@@ -13,7 +13,7 @@ from modes.socratic import hints, replies
 from modes.socratic.curriculum import Topic, load_curriculum
 from modes.socratic.input_guard import check_input, clean_input
 from modes.socratic.lexicon import HELP
-from modes.socratic.numbers import extract_numbers
+from modes.socratic.numbers import digits_for_words, extract_numbers
 from modes.socratic.problems import (
     Problem,
     accepted_answers,
@@ -47,7 +47,7 @@ def plan(conversation: Conversation, message: str) -> tuple[Move, Conversation]:
     """The next move, and the conversation as it stands after it."""
     if (issue := check_input(message)) is not None:
         return Move("input", replies.INPUT[issue]), conversation
-    message = clean_input(message)
+    message = digits_for_words(clean_input(message))  # "doce más cinco" is 12 + 5
     folded = Folded.of(message)
     curriculum = load_curriculum()
     if curriculum.is_beyond(folded):

@@ -64,13 +64,12 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
-  - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Planned for Week 5 (mobile conversational math practice, Socratic hint ladders, SymPy containment).
+  - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Mobile conversational math practice: a deterministic dialogue planner with a bounded 4-tier hint ladder (0 → 3) for operations and one- and two-step equations, SymPy containment that replaces any model reply giving the answer away (digits, words, expressions or `x = …`) with the deterministic hint, and a 48-problem labeled bank validated in CI ([Tutor API](../docs/api/tutor.md)).
   - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: Planned for Week 6 (offline educational games, student error event ingestion, opportunistic AP sync).
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
-- **Socratic Tutor Engine (Week 5)**: Socratic hint-escalation state machine and SymPy math containment guardrail.
 - **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
@@ -264,7 +263,7 @@ backend/
 │   └── modes/         # TutorBox bounded appliance operating modes
 │       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
 │       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor
-│       ├── socratic/  # Mode 2: Socratic Math Practice Tutor (Week 5 stub)
+│       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank)
 │       └── games/     # Mode 3: Offline Primary Educational Games (Week 6 stub)
 ├── tests/             # Pytest test suite mirroring src/ (core/, modes/, api/) with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)

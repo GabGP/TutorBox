@@ -51,6 +51,19 @@ def test_a_leaking_model_reply_is_replaced_by_the_deterministic_hint():
     assert result.llm_raw == "¡Es 68! ¿Ves?"
 
 
+def test_an_explanation_mid_problem_may_not_leak_that_problems_answer():
+    tutor, _ = _tutor(
+        "¡Vamos! Queremos juntar 23 y 45. ¿Por dónde empiezas tú?",
+        "Un número es una cantidad, como 68. ¿Qué número ves tú?",
+    )
+    tutor.respond("login-1", "23 + 45")
+
+    result = tutor.respond("login-1", "¿qué es un número?")
+
+    assert result.kind == "explain"
+    assert result.containment_triggered and "68" not in result.reply
+
+
 def test_an_unreachable_model_falls_back_without_containment():
     tutor, _ = _tutor()  # no responses: the mock raises like a dead server
 

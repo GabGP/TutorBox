@@ -1,8 +1,7 @@
 """Finds the math problem in a child's message and computes its answer exactly.
 
-Operations can be written with symbols or words ("7 por 8", "12 entre 4",
-"5 más 3"). A lone fraction such as 3/4 is a number, not a problem: a problem
-needs +, -, × or ÷. The answer (target) is never shown until the child finds it.
+Operations can be written with symbols or words ("7 por 8", "12 entre 4"); a
+lone fraction such as 3/4 is a number, not a problem, which needs + - × or ÷.
 """
 
 import re
@@ -13,7 +12,15 @@ from core.math_engine import evaluate_exact, solve_linear_equation
 from modes.socratic.numbers import extract_numbers
 from modes.socratic.text import fold
 
-__all__ = ["Problem", "accepted_answers", "find_attempt", "find_problem", "normalize"]
+__all__ = [
+    "UNKNOWN",
+    "Problem",
+    "accepted_answers",
+    "find_attempt",
+    "find_problem",
+    "normalize",
+    "sympy_equation",
+]
 
 _MAX_EXPRESSION_CHARS = 60
 _MAX_OPERAND = 10**9
@@ -35,7 +42,7 @@ _BIG = re.compile(r"(?<![\d.])\d{4,}(?![\d.])")
 _OPERATION_NAMES = {"+": "suma", "-": "resta", "×": "multiplicacion", "÷": "division"}
 _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*de\s*(\d+(?:\.\d+)?)")
 # The unknown of a 4th/5th grade "operación abierta": __ × 32 = 192, x + 5 = 12.
-_UNKNOWN = re.compile(r"_+|□|\?|(?<![a-z])[xn](?![a-z])")
+UNKNOWN = re.compile(r"_+|□|\?|(?<![a-z])[xn](?![a-z])")
 _EQUATION = re.compile(
     r"(?<![a-z])[\d(_□?xn][\d\s+\-×÷/()._□?xn]*=\s*\d+(?:\.\d+)?(?![\d.])"
 )
@@ -80,16 +87,21 @@ def find_problem(message: str) -> Problem | None:
     if not equals:
         return _operation(text)
     asked = right.strip(" .¿")
-    if asked == "" or _UNKNOWN.fullmatch(asked) or not _UNKNOWN.search(left):
+    if asked == "" or UNKNOWN.fullmatch(asked) or not UNKNOWN.search(left):
         return _operation(left)  # "3 × 4 = ?" or "23 + 45 = 70": the left side
     return _equation(text)
+
+
+def sympy_equation(text: str) -> str:
+    """'__ × 32 = 192' as SymPy reads it: 'x * 32 = 192'."""
+    return UNKNOWN.sub("x", text).replace("×", "*").replace("÷", "/")
 
 
 def find_attempt(message: str) -> tuple[Problem, Fraction] | None:
     """'23 + 45 = 70': the child's own result for an operation, to be judged."""
     left, equals, right = normalize(message).partition("=")
     values = extract_numbers(right)
-    if not equals or len(values) != 1 or _UNKNOWN.search(left):
+    if not equals or len(values) != 1 or UNKNOWN.search(left):
         return None
     problem = _operation(left)
     return (problem, values[0]) if problem is not None else None
@@ -100,10 +112,9 @@ def _equation(text: str) -> Problem | None:
     if match is None or len(match.group(0)) > _MAX_EXPRESSION_CHARS:
         return None
     shown = match.group(0).strip()
-    if "××" in shown:  # Python would read it as a power; the tutor has none
-        return None
-    equation = _UNKNOWN.sub("x", shown).replace("×", "*").replace("÷", "/")
-    solution = solve_linear_equation(equation)
+    if "××" in shown or "." in shown:  # a power, or a decimal the equation
+        return None  # parser cuts short (x + 1 = 2.5 would be read as = 2)
+    solution = solve_linear_equation(sympy_equation(shown))
     if solution is None or not solution.is_Rational:
         return None
     return Problem(shown, Fraction(int(solution.p), int(solution.q)), "ecuacion")

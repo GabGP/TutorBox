@@ -4,7 +4,12 @@ from fractions import Fraction
 
 import pytest
 
-from modes.socratic.numbers import extract_numbers, format_value, to_fraction
+from modes.socratic.numbers import (
+    digits_for_words,
+    extract_numbers,
+    format_value,
+    to_fraction,
+)
 from modes.socratic.text import Folded, fold, spanish_words
 
 
@@ -69,6 +74,30 @@ def test_spanish_words(value, words):
 )
 def test_extract_numbers(text, values):
     assert extract_numbers(text) == values
+
+
+@pytest.mark.parametrize(
+    ("text", "digits"),
+    [
+        ("sesenta y ocho", "68"),
+        ("Dieciséis entre cuatro", "16 entre 4"),
+        ("suma doscientos treinta y siete más cuarenta", "suma 237 más 40"),
+        ("dos mil quinientos", "2500"),
+        ("dos y tres", "2 y 3"),  # two numbers
+        ("treinta dos", "30 2"),  # not one number in Spanish
+        ("cien por ciento", "100 por ciento"),  # a percentage, not 100 × 100
+        ("dame uno", "dame uno"),  # an article or a pronoun
+        ("una dosis", "una dosis"),
+    ],
+)
+def test_digits_for_words(text, digits):
+    assert digits_for_words(text) == digits
+
+
+def test_digits_for_words_reads_back_every_spanish_number():
+    values = [*range(2, 2000), *range(2000, 1_000_000, 997), 999_999]
+
+    assert [v for v in values if digits_for_words(spanish_words(v)) != str(v)] == []
 
 
 def test_to_fraction():
