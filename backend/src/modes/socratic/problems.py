@@ -25,10 +25,10 @@ __all__ = [
 _MAX_EXPRESSION_CHARS = 60
 _MAX_OPERAND = 10**9
 _OPERATORS = (
-    (re.compile(r"(?<=\d)\s*(?:multiplicado por|por|x|×|·|\*)\s*(?=\d)"), " × "),
-    (re.compile(r"(?<=\d)\s*(?:dividido (?:entre|por)|entre|÷)\s*(?=\d)"), " ÷ "),
-    (re.compile(r"(?<=\d)\s*(?:mas|\+)\s*(?=\d)"), " + "),
-    (re.compile(r"(?<=\d)\s*(?:menos|[-−–])\s*(?=\d)"), " - "),
+    (re.compile(r"(?<=[\d)])\s*(?:multiplicado por|por|x|×|·|\*)\s*(?=[\d(])"), " × "),
+    (re.compile(r"(?<=[\d)])\s*(?:dividido (?:entre|por)|entre|÷)\s*(?=[\d(])"), " ÷ "),
+    (re.compile(r"(?<=[\d)])\s*(?:mas|\+)\s*(?=[\d(])"), " + "),
+    (re.compile(r"(?<=[\d)])\s*(?:menos|[-−–])\s*(?=[\d(])"), " - "),
 )
 _WORDED = (  # "el doble de 8" is 8 × 2
     (re.compile(r"\b(?:el )?doble de (\d+)"), r"\1 × 2"),
@@ -44,7 +44,7 @@ _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*de\s*(\d+(?:\.\d+)?)")
 # The unknown of a 4th/5th grade "operación abierta": __ × 32 = 192, x + 5 = 12.
 UNKNOWN = re.compile(r"_+|□|\?|(?<![a-z])[xn](?![a-z])")
 _EQUATION = re.compile(
-    r"(?<![a-z])[\d(_□?xn][\d\s+\-×÷/()._□?xn]*=\s*\d+(?:\.\d+)?(?![\d.])"
+    r"(?<![a-z])-?[\d(_□?xn][\d\s+\-×÷/()._□?xn]*=\s*\d+(?:\.\d+)?(?![\d.])"
 )
 
 

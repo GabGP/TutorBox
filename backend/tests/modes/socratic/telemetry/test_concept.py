@@ -31,6 +31,7 @@ PROBLEM_CONCEPTS = [
     ),
     ("1/2 + 1/4", Concept("fractions", "addition_subtraction", "fracciones")),
     ("1/2 - 1/4", Concept("fractions", "addition_subtraction", "fracciones")),
+    ("(1/2)+1/4", Concept("fractions", "addition_subtraction", "fracciones")),
     ("1/2 × 3/4", Concept("fractions", "multiplication_division", "fracciones")),
     ("1/2 ÷ 3/4", Concept("fractions", "multiplication_division", "fracciones")),
     ("1/2 + 1/4 × 2", Concept("fractions", None, "fracciones")),

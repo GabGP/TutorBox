@@ -2,7 +2,8 @@
 
 import pytest
 
-from modes.socratic import replies
+from modes.socratic import hints, replies
+from modes.socratic.containment import leaks
 from modes.socratic.planner import MAX_LEVEL, plan
 from modes.socratic.state import Conversation
 
@@ -153,3 +154,26 @@ def test_the_value_the_child_typed_is_kept_on_judged_moves():
     started, _ = plan(Conversation(), "¿cuánto es 23 + 45?")
 
     assert (wrong.attempt, right.attempt, started.attempt) == (70, 68, None)
+
+
+def test_a_negative_answer_gets_the_negative_reply():
+    move, conversation = plan(Conversation(), "-x + 3 = 5")
+
+    assert (move.kind, move.llm) == ("negative", "none")
+    assert conversation == Conversation()
+
+
+def test_a_leading_minus_equation_climbs_to_level_3_without_the_answer():
+    conversation = _working_on("-3 + x = 5")
+    problem = conversation.problem
+
+    for level in range(MAX_LEVEL + 1):
+        assert not leaks(hints.hint(problem, level), problem)
+
+    for expected in (1, 2, MAX_LEVEL):
+        move, conversation = plan(conversation, "2")
+        assert (move.kind, move.level, move.is_correct) == ("hint", expected, False)
+        assert not leaks(move.text, problem)
+
+    move, _ = plan(conversation, "8")
+    assert move.kind == "praise"
