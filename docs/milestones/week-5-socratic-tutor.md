@@ -18,20 +18,21 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 
 * **Theme**: *"Socratic Tutoring with Mechanical Guarantees"*
-* **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) In Progress**
-* **Backend Test Suite**: **1544 / 1544 passing tests** (507 of them cover the tutor: `tests/modes/socratic/`, `tests/api/tutor/`, the turn-log repository and the tutor settings).
-* **Statement Coverage**: **100.00% statement coverage** across all 6,143 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
-* **Frontend Test Suite**: **298 / 298 passing tests** across 57 Vitest files, with `tsc -b --noEmit` reporting 0 errors.
+* **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) Telemetry Complete & Green, Device Evidence Pending**
+* **Backend Test Suite**: **1793 / 1793 passing tests** (748 of them cover the tutor: `tests/modes/socratic/`, `tests/api/tutor/`, the turn-log repository and the tutor settings).
+* **Statement Coverage**: **100.00% statement coverage** across all 6,379 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Frontend Test Suite**: **299 / 299 passing tests** across 57 Vitest files, with `tsc -b --noEmit` reporting 0 errors.
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
 * **Modularity Compliance**: **100% of production source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC**, strictly validated by `tests/test_modularity_policy.py` (largest tutor module: `modes/socratic/problems.py`, 150 lines).
 * **Acceptance Criteria Status**:
   * ✅ **30 dialogue turns, 10 adversarial probes, 0 solution leaks**: `test_containment_dialogues.py::test_thirty_turns_ten_probes_and_no_solution_before_the_child_finds_it`.
   * ✅ **Problem bank of $\ge 40$ validated questions in CI**: 48 labeled problems, each proven by SymPy in `test_problem_bank.py`.
-  * ⏳ **PWA tutor added to the home screen and functioning on the classroom network without internet**: amended from "installed and functioning offline on 3 test devices" (Section 2.B, work package 2). The chat client runs in the classroom browser; the device evidence is pending.
+  * ⏳ **PWA tutor added to the home screen and functioning on the classroom network without internet**: amended from "installed and functioning offline on 3 test devices" (Section 2.B, work package). The chat client runs in the classroom browser; the device evidence is pending.
 * **Key Milestone Artifacts**:
   * **Deterministic Dialogue State Machine**: `planner.py` chooses every pedagogical move without the model and climbs a bounded 4-tier hint ladder ($0 \to 3$).
   * **SymPy Containment Guardrail**: `containment.py` blocks any reply that states an accepted answer in digits, in Spanish words, or as an expression SymPy evaluates to it.
   * **Labeled Problem Bank**: 48 problems for 1.º–5.º primaria, labeled with the quiz's `CURRICULUM_TAXONOMY` topic and subconcept and with the CNB grade and topic.
+  * **Dialogue Turn Telemetry**: every turn in `turn_logs` carries the concept practised (quiz taxonomy pair and CNB topic), the scaffolding strategy applied and, on a wrong answer, the misconception behind it.
   * **Tutor REST API**: 4 endpoints under `/api/v1/tutor` with a per-login turn gate and a live roster for the teacher.
   * **Classroom Chat Client**: text-only tutor chat on `/alumno/` and a live student panel on `/maestro/`, both following the class mode the teacher picks.
 
@@ -99,25 +100,45 @@ This document summarizes the technical deliverables, architectural implementatio
       problem: Problem | None
       is_correct: bool | None
       topic_id: str | None
+      attempt: Fraction | None = None
   ```
-  * `kind` names the move (`hint`, `praise`, `explain`, `think`, `idea`, `word_problem`, `social`, `input`, `beyond`, `negative`, `off_topic`, `orphan`, `show_work`); `hint_level` is the ladder tier applied; `topic_id` is the CNB topic when one was explained.
-* **`TurnRecord` / `record_turn`** (`backend/src/core/db/turn_log_repository.py`): the single write path into `turn_logs`, called once per turn from `api/tutor/endpoints.py`.
+  * `kind` names the move (`hint`, `praise`, `explain`, `think`, `idea`, `word_problem`, `social`, `input`, `beyond`, `negative`, `off_topic`, `orphan`, `show_work`); `hint_level` is the ladder tier applied; `topic_id` is the CNB topic when one was explained; `attempt` is the value the child typed when an answer was judged, added this week for the error-type classifier.
+* **`TurnRecord` / `record_turn`** (`backend/src/core/db/turn_log_repository.py`): the single write path into `turn_logs`, called once per turn from `api/tutor/turn_logging.py`.
 * **Concept Labels** (`backend/src/modes/socratic/bank.py`): every bank problem carries the quiz's `CURRICULUM_TAXONOMY` topic and subconcept, the vocabulary the weekly report uses.
 * **`ConversationStore`** (`backend/src/modes/socratic/state.py`): `get`, `put` and `drop` by key. The key today is the login session id.
 
-**Work Packages** *[In Progress / Student B to complete]*:
+**Delivered Subsystems:**
 
-1. **Dialogue Turn Telemetry (concept, error type, scaffolding strategy)**:
-   * `turn_logs` has no column for any of the three. Concept and scaffolding strategy can be derived from `TurnResult`; no error-type classification exists yet.
-   * Target: a migration adding the columns, the repository and `_log_turn` mapping, and the [Dialogue Telemetry](../database/dialogue.md) specification, aligned with the shared concept taxonomy that Weeks 6 and 8 consume.
-2. **Home-Screen Installation & Device Evidence**:
+1. **Telemetry Storage Contract (`backend/migrations/012_add_turn_log_pedagogy.sql`, `backend/src/core/db/turn_log_repository.py`)**:
+   * Five nullable `TEXT` columns on `turn_logs` (`concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy`) and the index `idx_turn_logs_concept`.
+   * No `CHECK` constraints: the vocabularies live in code and tests ([Dialogue Telemetry §2.1](../database/dialogue.md#21-telemetry-label-vocabularies)), so the taxonomy can grow without a migration.
+2. **Concept Mapper (`backend/src/modes/socratic/telemetry/concept.py`)**:
+   * Maps the problem's operation to the quiz's `CURRICULUM_TAXONOMY` topic and subconcept and to its CNB topic. A concept question keeps its CNB topic even where the quiz taxonomy has no entry (geometry, time, money).
+   * All 48 problems of Student A's bank derive to the labels of their bank entry (`test_concept.py`).
+3. **Scaffolding Strategy Mapper (`telemetry/strategy.py`)**:
+   * Names what the tutor did: the four ladder rungs (`restate_goal`, `concept_clue`, `smaller_step`, `worked_example`), eight other strategies, and `other` for a move not named yet.
+   * A test scans `planner.py` for every move kind, so a new kind cannot go unnamed.
+4. **Error-Type Classifier (`telemetry/error_type.py`, `telemetry/error_rules_*.py`)**:
+   * Each rule predicts the value a child would type after one specific mistake. The first prediction equal to the answer names the error with a quiz-taxonomy misconception slug; otherwise the turn is `unclassified`.
+   * 16 slugs across addition and subtraction, times tables, division, order of operations, one- and two-step equations, percentages and fraction sums. Example: `2x + 4 = 14` answered with `10` is `forgot_division`.
+   * Reads the judged value from the new `attempt` field on `Move` and `TurnResult` (three lines each in Student A's `planner.py` and `engine.py`).
+5. **Wiring (`backend/src/api/tutor/turn_logging.py`)**:
+   * `build_turn_record` is pure and `log_turn` stores it. The labels come from the move the engine already chose, never from the model's text, and never change a reply.
+   * `test_turn_logging.py` drives a six-turn dialogue through `POST /api/v1/tutor/message` and reads the five columns back; `test_label_consistency.py` proves every misconception belongs to the concept of its problem.
+6. **Parser Corrections Found While Testing Telemetry (`backend/src/modes/socratic/problems.py`, Student A's module)**:
+   * An operator next to a parenthesis was dropped (`(2 + 3) por 4` was read as `(2 + 3)`), and a leading minus on an equation was lost (`-3 + x = 5` was solved as 2). Both are fixed in place.
+   * The containment guard shares the normalizer, so it now also blocks a reply such as `(14 - 4) entre 2` that works out the answer.
+
+**Work Package** *[In Progress / Student B to complete]*:
+
+1. **Home-Screen Installation & Device Evidence**:
    * Design decision (Pilot): the tutor gets no service worker and no install wrapper. Browsers run service workers and offer installation only in a secure context (HTTPS or `localhost`), and the appliance serves plain `http://tutorbox` ([PWA README §3](../../pwa/README.md#3-tareas--take-home-math-apps-tareas), [Captive Portal §6](../../infra/captive-portal.md#6-limitations--field-notes)). Every tutor reply also needs the appliance (the model and SymPy run there), so a copy installed for use away from the classroom would have nothing to do. The client students keep at home is the take-home app in `pwa/tareas/`, already installable offline as an Android APK.
    * Amended acceptance criterion: the tutor is added to the phone's home screen and works on the classroom network without internet. Away from the classroom network the page does not open.
    * Target: the procedure and result on an iPhone ("Add to Home Screen"), repeated on Android devices where available, recorded here and in the [PWA README](../../pwa/README.md).
 
 **Session State (kept as delivered):**
 
-* The login persists across visits: the Bearer token stays in `localStorage`, and the server keeps the problem in progress and the hint level under that same login session until the backend restarts.
+* The login persists across visits within a school day: the Bearer token stays in `localStorage` and the session expires 12 hours after login (`SESSION_TTL_HOURS`). Until then the server keeps the problem in progress and the hint level under that same login session, unless the backend restarts.
 * The visible chat history is kept in `sessionStorage` for the current tab, the scope Student A chose for the captive-portal sign-in window. No change is planned.
 
 ---
