@@ -18,7 +18,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
 - [2. Migration Changelog Overview](#2-migration-changelog-overview)
 - [3. Detailed Migration Specifications](#3-detailed-migration-specifications)
   - [001: Initial Baseline Schema](#001-initial-baseline-schema)
-  - [002: Role Check Constraints](#002-role-check-constraints)
+  - [002: User Role Column](#002-role-check-constraints)
   - [003: Foreign Key Lookup Indexes](#003-foreign-key-lookup-indexes)
   - [004: Forced PIN Rotation Flag](#004-forced-pin-rotation-flag)
   - [005: Soft-Deletion & Username Freeing](#005-soft-deletion--username-freeing)
@@ -27,6 +27,8 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [008: Diagnostic Question Bank](#008-diagnostic-question-bank)
   - [009: SLM Telemetry & Rejection History](#009-slm-telemetry--rejection-history)
   - [010: Quiz Sessions, Rounds & First-Press Voting](#010-quiz-sessions-rounds--first-press-voting)
+  - [011: Classroom Mode Switch](#011-classroom-mode-switch)
+  - [012: Turn Log Pedagogy Labels](#012-turn-log-pedagogy-labels)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -34,11 +36,11 @@ Comprehensive migration specifications, historical changelog, and execution proc
 
 ## <a id="1-migration-architecture--pragmas"></a>1. Migration Architecture & Pragmas
 
-TutorBox utilizes sequential idempotent SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
+TutorBox utilizes sequential SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
 
 * **Storage Location**: `backend/migrations/<NNN>_<description>.sql`
 * **Version Registry**: Every applied migration is tracked in the `schema_migrations` table with its integer version and timestamp.
-* **Idempotency Rule**: All migration files must be safe to execute multiple times (`CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`).
+* **Idempotency Rule**: Each migration is applied exactly once, tracked by version in `schema_migrations` (see `backend/src/core/db/migrations.py`). `CREATE TABLE` and `CREATE INDEX` statements still use `IF NOT EXISTS`, but `ALTER TABLE ... ADD COLUMN` migrations (`002`, `004`, `005`, `012`) have no `IF NOT EXISTS` form in SQLite, so they cannot be re-run by hand and rely on the version registry.
 * **Runtime Pragmas**:
   ```sql
   PRAGMA foreign_keys = ON;
@@ -52,7 +54,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 | Version | Migration File | Target Subsystem | Key Tables & Changes | Milestone |
 | :---: | :--- | :--- | :--- | :---: |
-| **001** | `001_initial_schema.sql` | Core Storage | `schema_migrations`, `users`, `sessions`, `turn_logs` | Week 1 |
+| **001** | `001_initial_schema.sql` | Core Storage | `users`, `sessions`, `turn_logs` | Week 1 |
 | **002** | `002_add_user_role.sql` | Security / RBAC | Adds `role` column (`student`, `teacher`, `admin`) to `users` | Week 1 |
 | **003** | `003_add_lookup_indexes.sql` | Performance | Adds `idx_sessions_user_id`, `idx_turn_logs_session_id` | Week 1 |
 | **004** | `004_add_must_change_pin.sql` | Security / PIN | Adds `must_change_pin` column to `users` | Week 1 |
@@ -71,11 +73,11 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 ### <a id="001-initial-baseline-schema"></a>001: Initial Baseline Schema
 * **File**: [`backend/migrations/001_initial_schema.sql`](../../backend/migrations/001_initial_schema.sql)
-* **Description**: Sets up tracking table `schema_migrations` and core entities: `users` (with bcrypt hash), `sessions` (UUIDv4 tokens), and `turn_logs` (student prompt and SymPy AST storage).
+* **Description**: Sets up core entities: `users` (with bcrypt hash), `sessions` (UUIDv4 tokens), and `turn_logs` (student prompt and SymPy AST storage). The `schema_migrations` tracking table is created by the runner in `backend/src/core/db/migrations.py`, not by this file.
 
-### <a id="002-role-check-constraints"></a>002: Role Check Constraints
+### <a id="002-role-check-constraints"></a>002: User Role Column
 * **File**: [`backend/migrations/002_add_user_role.sql`](../../backend/migrations/002_add_user_role.sql)
-* **Description**: Introduces the `role` column to `users` with check constraint `role IN ('student', 'teacher', 'admin')` defaulting to `'student'`.
+* **Description**: Introduces the `role` column to `users` as `TEXT NOT NULL DEFAULT 'student'`. The SQL has no `CHECK` constraint: the three roles (`student`, `teacher`, `admin`) are enforced by the application.
 
 ### <a id="003-foreign-key-lookup-indexes"></a>003: Foreign Key Lookup Indexes
 * **File**: [`backend/migrations/003_add_lookup_indexes.sql`](../../backend/migrations/003_add_lookup_indexes.sql)
@@ -101,7 +103,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 ### <a id="008-diagnostic-question-bank"></a>008: Diagnostic Question Bank
 * **File**: [`backend/migrations/008_add_quiz_questions.sql`](../../backend/migrations/008_add_quiz_questions.sql)
-* **Description**: Creates `quiz_questions` table storing question text, options JSON, correct answer, diagnostic distractors JSON (misconception slug + Spanish explanation), and SymPy verification status. Includes composite indexes `idx_quiz_questions_topic` and `idx_quiz_questions_created`.
+* **Description**: Creates `quiz_questions` table storing question text, options JSON, correct answer, diagnostic distractors JSON (misconception slug + Spanish explanation), and SymPy verification status. Includes the composite index `idx_quiz_questions_topic` and the single-column index `idx_quiz_questions_created`.
 
 ### <a id="009-slm-telemetry--rejection-history"></a>009: SLM Telemetry & Rejection History
 * **File**: [`backend/migrations/009_add_quiz_generation_logs.sql`](../../backend/migrations/009_add_quiz_generation_logs.sql)
@@ -110,13 +112,13 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 ### <a id="010-quiz-sessions-rounds--first-press-voting"></a>010: Quiz Sessions, Rounds & First-Press Voting
 * **File**: [`backend/migrations/010_add_quiz_sessions_and_votes.sql`](../../backend/migrations/010_add_quiz_sessions_and_votes.sql)
 * **Description**: Creates the real-time quiz session persistence layer:
-  * `quiz_sessions`: match metadata, topic, status (`lobby`, `active`, `completed`), duration.
+  * `quiz_sessions`: match metadata, topic, status (`lobby`, `active`, `completed`, `abandoned`).
   * `quiz_session_rounds`: individual question rounds, ordered round indexes, round status (`pending`, `open`, `closed`, `revealed`).
   * `quiz_session_votes`: individual student vote records with **strict database-level first-press lock enforcement** via:
     ```sql
     UNIQUE(round_id, student_id)
     ```
-  * Includes performance indexes: `idx_quiz_rounds_session_index`, `idx_quiz_votes_round_student`, `idx_quiz_votes_student`, `idx_quiz_votes_analytics`.
+  * Includes performance indexes: `idx_quiz_sessions_status`, `idx_quiz_rounds_session`, `idx_quiz_votes_round`, `idx_quiz_votes_student`, `idx_quiz_votes_analytics`.
 
 ### <a id="011-classroom-mode-switch"></a>011: Classroom Mode Switch
 * **File**: [`backend/migrations/011_add_appliance_mode.sql`](../../backend/migrations/011_add_appliance_mode.sql)
@@ -133,10 +135,11 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 Follow these sequential steps when adding or modifying database schemas:
 
 1. **Allocate Version Number**:
-   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `011_add_tts_cache.sql`).
+   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `013_add_tts_cache.sql`).
 2. **Author SQL Script**:
    * Write plain SQL using strict SQLite syntax.
    * Use `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`.
+   * `ALTER TABLE ... ADD COLUMN` has no `IF NOT EXISTS` form in SQLite, so those statements are not safe to re-run and rely on the version registry (see [§1](#1-migration-architecture--pragmas)).
    * Never execute destructive schema migrations without migration rollback scripts.
 3. **Validate Idempotency & Clean Bootstrap**:
    Run the migration unit test suite:
@@ -163,7 +166,7 @@ Follow these sequential steps when adding or modifying database schemas:
   ```
 * **Migration Table Reversion**: If a migration fails during application bootstrap, SQLite transactions roll back automatically. To manually revert a version entry during development:
   ```sql
-  DELETE FROM schema_migrations WHERE version = 10;
+  DELETE FROM schema_migrations WHERE version = 12;
   ```
 
 ---

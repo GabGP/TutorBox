@@ -37,9 +37,9 @@ Stores student and staff credentials, roles, and lifecycle states.
 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | — | Unique internal user identifier. |
 | `username` | `TEXT` | `UNIQUE NOT NULL` | — | User login handle (3–32 chars, `[A-Za-z0-9_.-]`). Anonymized to `deleted_user_{id}_{hex}` upon soft-deletion. |
 | `hashed_pin` | `TEXT` | `NOT NULL` | — | Bcrypt hash (`$2b$`) of the 4–8 digit PIN. Plaintext PINs are never stored. |
-| `role` | `TEXT` | `NOT NULL`, `CHECK(role IN ('student', 'teacher', 'admin'))` | `'student'` | Access role determining authorization boundaries. |
+| `role` | `TEXT` | `NOT NULL` | `'student'` | Access role determining authorization boundaries: `student`, `teacher` or `admin`, enforced by the application (the SQL has no `CHECK`). |
 | `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of account creation. |
-| `must_change_pin`| `INTEGER` | `NOT NULL`, `CHECK(must_change_pin IN (0, 1))` | `0` | Flag forcing PIN change on next login (`1` = change required). |
+| `must_change_pin`| `INTEGER` | `NOT NULL` | `0` | Flag forcing PIN change on next login (`1` = change required). |
 | `deleted_at` | `TIMESTAMP` | `NULL` | `NULL` | Timestamp of account soft-deletion (`NULL` for active accounts). |
 | `former_username`| `TEXT` | `NULL` | `NULL` | The username held prior to soft-deletion (for recovery / roster display). |
 
@@ -53,7 +53,7 @@ Tracks active and revoked bearer sessions.
 | `id` | `TEXT` | `PRIMARY KEY` | — | SHA-256 hex digest of the UUIDv4 Bearer token the client received; the token itself is never stored. Rows written before tokens were hashed hold the old token, which can no longer log in. |
 | `user_id` | `INTEGER` | `NOT NULL`, `FOREIGN KEY -> users(id) ON DELETE CASCADE` | — | Foreign key referencing account owner. |
 | `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of session creation; the session is refused 12 hours later (`SESSION_TTL_HOURS`). |
-| `is_active` | `INTEGER` | `CHECK(is_active IN (0, 1))` | `1` | `1` if session is active; `0` if revoked by logout, PIN change, reset, or deletion. |
+| `is_active` | `INTEGER` | — | `1` | `1` if session is active; `0` if revoked by logout, PIN change, reset, or deletion. |
 
 ---
 
