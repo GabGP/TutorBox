@@ -63,6 +63,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 | **009** | `009_add_quiz_generation_logs.sql` | AI Telemetry | Creates `quiz_generation_logs` for latency and retry metrics | Week 2 |
 | **010** | `010_add_quiz_sessions_and_votes.sql` | Session Engine | Creates `quiz_sessions`, `quiz_session_rounds`, `quiz_session_votes` | Week 3 |
 | **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
+| **012** | `012_add_turn_log_pedagogy.sql` | Dialogue Telemetry | Adds nullable `concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy` to `turn_logs` and creates `idx_turn_logs_concept` | Week 5 |
 
 ---
 
@@ -120,6 +121,10 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 ### <a id="011-classroom-mode-switch"></a>011: Classroom Mode Switch
 * **File**: [`backend/migrations/011_add_appliance_mode.sql`](../../backend/migrations/011_add_appliance_mode.sql)
 * **Description**: Creates `appliance_state`, a single-row table (`CHECK (id = 1)`) holding the classroom-wide mode (`quiz`, `tutor`, `apps`) the teacher picks from their phone, and seeds it with `quiz` via `INSERT OR IGNORE` so re-runs are harmless. See [core.md](core.md#table-appliance_state).
+
+### <a id="012-turn-log-pedagogy-labels"></a>012: Turn Log Pedagogy Labels
+* **File**: [`backend/migrations/012_add_turn_log_pedagogy.sql`](../../backend/migrations/012_add_turn_log_pedagogy.sql)
+* **Description**: Adds five nullable `TEXT` columns to `turn_logs` (`concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy`) with no default and no `CHECK` constraint, so the label vocabularies can grow in code without a migration. Creates `idx_turn_logs_concept ON turn_logs(concept_topic, concept_subconcept)`. See [dialogue.md](dialogue.md#21-telemetry-label-vocabularies).
 
 ---
 

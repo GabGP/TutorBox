@@ -19,6 +19,12 @@ class TurnRecord:
     target: str | None = None
     is_correct: bool | None = None
     llm_raw: str | None = None
+    # Pedagogy labels; their vocabularies are documented in docs/database/dialogue.md.
+    concept_topic: str | None = None
+    concept_subconcept: str | None = None
+    cnb_topic: str | None = None
+    error_type: str | None = None
+    scaffolding_strategy: str | None = None
 
 
 def record_turn(conn: sqlite3.Connection, record: TurnRecord) -> None:
@@ -26,8 +32,9 @@ def record_turn(conn: sqlite3.Connection, record: TurnRecord) -> None:
     conn.execute(
         "INSERT INTO turn_logs (session_id, user_input, sympy_evaluated_expression, "
         "sympy_target_result, sympy_is_correct, llm_raw_response, "
-        "containment_triggered, final_response, hint_level) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "containment_triggered, final_response, hint_level, concept_topic, "
+        "concept_subconcept, cnb_topic, error_type, scaffolding_strategy) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             record.session_id,
             record.user_input,
@@ -38,5 +45,10 @@ def record_turn(conn: sqlite3.Connection, record: TurnRecord) -> None:
             int(record.containment_triggered),
             record.final_response,
             record.hint_level,
+            record.concept_topic,
+            record.concept_subconcept,
+            record.cnb_topic,
+            record.error_type,
+            record.scaffolding_strategy,
         ),
     )

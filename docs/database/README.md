@@ -86,6 +86,11 @@ erDiagram
         INTEGER containment_triggered "1: Guardrail intervention | 0: Passed"
         TEXT final_response "Delivered response"
         INTEGER hint_level "0 to 3 escalation level"
+        TEXT concept_topic "Curriculum topic (CURRICULUM_TAXONOMY key)"
+        TEXT concept_subconcept "Curriculum subconcept (CURRICULUM_TAXONOMY key)"
+        TEXT cnb_topic "CNB topic id (cnb_matematicas.json)"
+        TEXT error_type "Misconception slug | unclassified | NULL"
+        TEXT scaffolding_strategy "Socratic scaffolding move"
         TIMESTAMP timestamp "DEFAULT CURRENT_TIMESTAMP"
     }
 
@@ -185,8 +190,8 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 | :--- | :--- | :--- | :--- |
 | **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
-| **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$) |
-| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `010+`)<br>• Idempotent SQL execution & rollback procedures |
+| **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$)<br>• Concept, error type and scaffolding strategy labels per turn |
+| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `012+`)<br>• Idempotent SQL execution & rollback procedures |
 
 ---
 
@@ -198,6 +203,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | :--- | :--- | :--- | :--- |
 | `idx_sessions_user_id` | `sessions` | `(user_id)` | Fast lookup of active sessions by user ID during auth and logout. |
 | `idx_turn_logs_session_id` | `turn_logs` | `(session_id)` | Fast lookup of dialogue history per student session. |
+| `idx_turn_logs_concept` | `turn_logs` | `(concept_topic, concept_subconcept)` | Fast aggregation of dialogue turns and error types per curriculum concept. |
 | `idx_audit_logs_actor` | `audit_logs` | `(actor_user_id)` | Fast filtering of audit logs by acting administrator/teacher. |
 | `idx_audit_logs_target` | `audit_logs` | `(target_user_id)` | Fast filtering of audit logs by target account. |
 | `idx_devices_assigned_user` | `devices` | `(assigned_user_id)` | Fast reverse-lookup of clicker assignment by student ID. |

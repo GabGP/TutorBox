@@ -16,6 +16,7 @@ Technical specification for conversational math dialogue turns, SymPy containmen
 ## Table of Contents
 - [1. Data Dictionary: `turn_logs`](#1-data-dictionary-turn_logs)
 - [2. Pedagogical Columns & Containment Invariants](#2-pedagogical-columns--containment-invariants)
+  - [2.1 Telemetry Label Vocabularies](#21-telemetry-label-vocabularies)
 - [Related Specifications](#related-specifications)
 
 ---
@@ -36,6 +37,11 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 | `containment_triggered` | `INTEGER` | `NOT NULL`, `CHECK(containment_triggered IN (0, 1))` | `0` | `1` if mathematical contradiction or answer leakage was intercepted. |
 | `final_response` | `TEXT` | `NOT NULL` | — | Final sanitized response delivered to the student. |
 | `hint_level` | `INTEGER` | `NOT NULL` | `0` | Socratic hint escalation level ($0$ to $3$). |
+| `concept_topic` | `TEXT` | `NULL` | `NULL` | Curriculum topic practised: a `CURRICULUM_TAXONOMY` key (e.g. `pre_algebra`). See [§2.1](#21-telemetry-label-vocabularies). |
+| `concept_subconcept` | `TEXT` | `NULL` | `NULL` | Curriculum subconcept paired with `concept_topic` (e.g. `two_step_equations`); may be `NULL` while the topic is set. See [§2.1](#21-telemetry-label-vocabularies). |
+| `cnb_topic` | `TEXT` | `NULL` | `NULL` | Topic id from `cnb_matematicas.json` (e.g. `fracciones`). See [§2.1](#21-telemetry-label-vocabularies). |
+| `error_type` | `TEXT` | `NULL` | `NULL` | Misconception slug (e.g. `forgot_division`) or `unclassified`; `NULL` unless the child's answer was wrong. See [§2.1](#21-telemetry-label-vocabularies). |
+| `scaffolding_strategy` | `TEXT` | `NULL` | `NULL` | Scaffolding move applied in the turn (e.g. `concept_clue`); set on every turn logged since migration 012. See [§2.1](#21-telemetry-label-vocabularies). |
 | `timestamp` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of interaction turn. |
 
 ---
@@ -45,6 +51,24 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 * **SymPy Math Containment**: When the local SLM hallucinates an incorrect arithmetic step or attempts to give away the direct answer, the containment guardrail intercepts the generation, logs `containment_triggered = 1`, and substitutes a pedagogically sound counter-question into `final_response`.
 * **Deterministic Hint Ladder**: Tracks student progression through the 4-level hint escalation ladder ($0$: Open question $\to$ $1$: Conceptual hint $\to$ $2$: Structural breakdown $\to$ $3$: Scaffolding step).
 * **Cascade Lifecycle**: Deleting a parent session cascades to purge associated turn logs, while soft-deleting an account preserves all dialogue history for longitudinal learning analytics.
+
+### <a id="21-telemetry-label-vocabularies"></a>2.1 Telemetry Label Vocabularies
+
+Migration [012](migrations.md#012-turn-log-pedagogy-labels) adds the five labels as free `TEXT` columns with no `CHECK` constraint. Each vocabulary below is enforced in code and validated by tests, so the taxonomy can grow without a migration.
+
+* **Concept**: `concept_topic` and `concept_subconcept` hold a pair from `CURRICULUM_TAXONOMY` ([`taxonomy.py`](../../backend/src/modes/quiz/contracts/taxonomy.py)), for example `pre_algebra` / `two_step_equations`. The subconcept is `NULL` when the turn does not single one out: a fraction problem that mixes additive and multiplicative signs, an equation that is not linear in its unknown, or a concept question about fractions in general. `cnb_topic` holds a topic id from [`cnb_matematicas.json`](../../backend/src/modes/socratic/cnb_matematicas.json) (for example `fracciones` or `geometria`); it is also set, with a `NULL` taxonomy pair, on concept questions about topics the quiz taxonomy lacks. All three are `NULL` on turns that are not about a problem or a topic.
+* **Scaffolding strategy** (set on every turn logged since migration 012): `restate_goal`, `concept_clue`, `smaller_step`, `worked_example` (hint ladder levels 0 to 3), `confirm_solution`, `concept_explanation`, `think_first`, `ask_for_operation`, `ask_to_show_work`, `acknowledge_idea`, `social`, `redirect`, and `other` for a move the telemetry does not name yet.
+* **Error type**: `NULL` unless the child's answer was wrong. Then it holds a misconception slug from `CURRICULUM_TAXONOMY` (for example `forgot_division` or `added_instead_of_subtracted`) when a deterministic rule recognizes the wrong value, and `unclassified` otherwise. Each rule predicts the value a child would type after one specific mistake, and the first prediction equal to the answer names the error:
+
+| Problem | Slugs the rules can assign |
+| :--- | :--- |
+| Addition and subtraction | `added_instead_of_subtracted`, `borrowing_error`, `alignment_error` |
+| Multiplication and division | `table_lookup_error`, `inverted_division` |
+| Combined operations | `ignored_parentheses`, `left_to_right_precedence` |
+| One-step equations | `wrong_inverse_operation` |
+| Two-step equations | `forgot_division`, `divided_before_subtracting`, `subtracted_instead_of_divided`, `sign_inversion_error` |
+| Percentages | `multiplied_by_percentage_directly`, `subtracted_percentage_as_raw_number` |
+| Fraction sums and differences | `added_denominators`, `subtracted_denominators` |
 
 ---
 
