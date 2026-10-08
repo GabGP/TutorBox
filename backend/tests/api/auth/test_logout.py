@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from core.db.database import get_db_connection
+from core.security.auth_session import token_digest
 
 
 def test_logout_success_deactivates_session(seeded_db, client: TestClient):
@@ -24,7 +25,9 @@ def test_logout_success_deactivates_session(seeded_db, client: TestClient):
     # Verify session is deactivated in DB
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT is_active FROM sessions WHERE id = ?", (session_id,))
+    cursor.execute(
+        "SELECT is_active FROM sessions WHERE id = ?", (token_digest(session_id),)
+    )
     row = cursor.fetchone()
     assert row is not None
     assert row["is_active"] == 0

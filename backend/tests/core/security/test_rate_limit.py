@@ -53,8 +53,8 @@ def test_rate_limiter_never_evicts_active_lockouts():
 
 def test_rate_limiter_sweeps_expired_lockouts_on_write(monkeypatch):
     """
-    Expired lockouts (and their counters) must be removed from internal state
-    by the next recorded failure.
+    Expired lockouts must be removed by the next recorded failure; their failure
+    counters stay, so the next lockout lasts longer.
     """
     import time
 
@@ -69,7 +69,31 @@ def test_rate_limiter_sweeps_expired_lockouts_on_write(monkeypatch):
 
     limiter.record_failure("other_user")
     assert "student1" not in limiter._lockout_until
-    assert "student1" not in limiter._failed_attempts
+    assert limiter._failed_attempts["student1"] == 1
+
+
+def test_each_lockout_in_a_row_lasts_twice_as_long(monkeypatch):
+    """Slow brute force: the wait doubles per lockout, up to 32 times the first."""
+    import time
+
+    now = [1000.0]
+    monkeypatch.setattr(time, "time", lambda: now[0])
+    limiter = InMemoryRateLimiter(max_attempts=2, lockout_seconds=10)
+    key = "teacher1@192.168.8.40"
+
+    waits = []
+    for _ in range(8):
+        limiter.record_failure(key)
+        assert limiter.record_failure(key) is True
+        waits.append(limiter._lockout_until[key] - now[0])
+        now[0] += waits[-1]  # the attacker waits it out
+        assert not limiter.is_locked_out(key)
+    assert waits == [10, 20, 40, 80, 160, 320, 320, 320]
+
+    limiter.record_success(key)  # a real login forgets the history
+    limiter.record_failure(key)
+    limiter.record_failure(key)
+    assert limiter._lockout_until[key] - now[0] == 10
 
 
 def test_sliding_window_limiter_enforces_limit_and_expires(monkeypatch):

@@ -119,6 +119,71 @@ def test_invalid_round_state_transitions_return_409(staff_db, client):
     assert closed_vote_resp.status_code == 409
 
 
+def test_next_only_moves_on_from_a_revealed_round(staff_db, client):
+    """A second tap on "Siguiente" cannot skip a question; bad states are 409."""
+    _, conn = staff_db
+    teacher = auth_headers(client, "teacher1")
+    qid = _seed_question(conn)
+    created = client.post(
+        "/api/v1/session",
+        json={
+            "title": "Doble toque",
+            "topic": "arithmetic",
+            "question_ids": [qid, qid],
+        },
+        headers=teacher,
+    )
+    sid = created.json()["id"]
+    next_url, reveal_url = (
+        f"/api/v1/session/{sid}/next",
+        f"/api/v1/session/{sid}/reveal",
+    )
+
+    assert client.post(next_url, headers=teacher).status_code == 409  # in the lobby
+    client.post(f"/api/v1/session/{sid}/start", headers=teacher)
+    assert client.post(next_url, headers=teacher).status_code == 409  # not revealed
+    client.post(reveal_url, headers=teacher)
+    assert client.post(next_url, headers=teacher).json()["current_round_index"] == 1
+    assert client.post(next_url, headers=teacher).status_code == 409  # the double tap
+    assert client.get(f"/api/v1/session/{sid}").json()["current_round_index"] == 1
+
+    client.post(reveal_url, headers=teacher)
+    assert client.post(next_url, headers=teacher).json()["status"] == "completed"
+    assert client.post(next_url, headers=teacher).status_code == 409  # after the end
+
+
+def test_a_round_opened_by_a_concurrent_request_is_409_not_500(staff_db, client):
+    _, conn = staff_db
+    teacher = auth_headers(client, "teacher1")
+    qid = _seed_question(conn)
+    created = client.post(
+        "/api/v1/session",
+        json={"title": "Carrera", "topic": "arithmetic", "question_ids": [qid, qid]},
+        headers=teacher,
+    )
+    sid = created.json()["id"]
+
+    def _open(index: int) -> None:  # what the request that won the race left behind
+        conn.execute(
+            "UPDATE quiz_session_rounds SET status = 'open' WHERE id = ?",
+            (f"{sid}_r{index}",),
+        )
+        conn.commit()
+
+    _open(0)
+    assert (
+        client.post(f"/api/v1/session/{sid}/start", headers=teacher).status_code == 409
+    )
+    conn.execute("UPDATE quiz_session_rounds SET status = 'pending'")
+    conn.commit()
+    client.post(f"/api/v1/session/{sid}/start", headers=teacher)
+    client.post(f"/api/v1/session/{sid}/reveal", headers=teacher)
+    _open(1)
+    assert (
+        client.post(f"/api/v1/session/{sid}/next", headers=teacher).status_code == 409
+    )
+
+
 def test_missing_active_round_returns_404(staff_db, client):
     _, conn = staff_db
     qid = _seed_question(conn)

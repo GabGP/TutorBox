@@ -74,14 +74,12 @@ def submit_vote(
             )
 
         try:
-            vote = engine.cast_vote(
+            vote = engine.cast_vote(  # the web transport: "web", no device
                 session_id,
                 current_round.id,
                 ctx.user_id,
                 payload.selected_option,
                 response_time_ms=payload.response_time_ms,
-                transport_type=payload.transport_type,
-                device_id=payload.device_id,
             )
             conn.commit()
         except VoteAlreadyCastError as err:

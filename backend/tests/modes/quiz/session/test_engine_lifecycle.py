@@ -149,7 +149,8 @@ def test_next_round_and_session_completion(session_db):
     conn, question_ids = session_db
     engine = QuizSessionEngine(conn)
     engine.create_session("s5", "Quiz 5", "arithmetic", question_ids)
-    engine.start_session("s5")
+    round_0 = engine.start_session("s5")
+    engine.reveal_round("s5", round_0.id)
 
     # Advance to round 1
     round_1 = engine.next_round("s5")
@@ -158,6 +159,7 @@ def test_next_round_and_session_completion(session_db):
     assert round_1.status == RoundStatus.OPEN.value
 
     # Advance past last round completes session
+    engine.reveal_round("s5", round_1.id)
     completed = engine.next_round("s5")
     assert completed is None
 
@@ -179,7 +181,8 @@ def test_event_listener_hook_dispatch(session_db):
     engine.cast_vote("s6", round_0.id, 20, "B")
     engine.close_round("s6", round_0.id)
     engine.reveal_round("s6", round_0.id)
-    engine.next_round("s6")
+    round_1 = engine.next_round("s6")
+    engine.reveal_round("s6", round_1.id)
     engine.next_round("s6")
 
     event_names = [event[0] for event in events]

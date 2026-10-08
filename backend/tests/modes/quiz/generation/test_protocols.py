@@ -1,5 +1,6 @@
 """Unit tests for topic-adaptive derivation protocols."""
 
+from core.math_engine import validate_math_structure
 from modes.quiz.generation.protocols import (
     _ARITHMETIC_PROTOCOL,
     _DECIMALS_PERCENTAGES_PROTOCOL,
@@ -9,6 +10,7 @@ from modes.quiz.generation.protocols import (
     _PRE_ALGEBRA_TWO_STEP_PROTOCOL,
     _UNIVERSAL_PROTOCOL,
     ONE_STEP_RECOVERY_INSTRUCTION,
+    TWO_STEP_RECOVERY_INSTRUCTION,
     get_derivation_protocol,
     get_structural_recovery_instruction,
 )
@@ -99,10 +101,21 @@ def test_get_structural_recovery_instruction_with_pedagogical_mismatch():
     assert "STRUCTURAL FIX" in res
 
 
-def test_get_structural_recovery_instruction_with_one_step_keyword():
-    errors = ["1-step equation expected"]
+def test_a_two_step_rejection_gets_the_two_step_fix():
+    # The real rejection says it "received a 1-step equation": not a one-step cue.
+    errors = validate_math_structure(
+        "x + 5 = 12", "pre_algebra", "two_step_equations", "equation"
+    )
     res = get_structural_recovery_instruction(errors)
-    assert ONE_STEP_RECOVERY_INSTRUCTION in res
+    assert res == f"\n{TWO_STEP_RECOVERY_INSTRUCTION}"
+    assert "NEVER write 2-step" not in res
+
+
+def test_other_mismatches_get_no_equation_fix():
+    errors = validate_math_structure(
+        "3 + 4", "arithmetic", "multiplication_division", "arithmetic"
+    )
+    assert errors and get_structural_recovery_instruction(errors) == ""
 
 
 def test_get_structural_recovery_instruction_unrelated_errors():

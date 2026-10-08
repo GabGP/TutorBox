@@ -50,9 +50,9 @@ Tracks active and revoked bearer sessions.
 
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `id` | `TEXT` | `PRIMARY KEY` | — | UUIDv4 string issued to client as Bearer token. |
+| `id` | `TEXT` | `PRIMARY KEY` | — | SHA-256 hex digest of the UUIDv4 Bearer token the client received; the token itself is never stored. Rows written before tokens were hashed hold the old token, which can no longer log in. |
 | `user_id` | `INTEGER` | `NOT NULL`, `FOREIGN KEY -> users(id) ON DELETE CASCADE` | — | Foreign key referencing account owner. |
-| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of session creation. |
+| `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of session creation; the session is refused 12 hours later (`SESSION_TTL_HOURS`). |
 | `is_active` | `INTEGER` | `CHECK(is_active IN (0, 1))` | `1` | `1` if session is active; `0` if revoked by logout, PIN change, reset, or deletion. |
 
 ---

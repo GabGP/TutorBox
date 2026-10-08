@@ -7,11 +7,13 @@ from .auth_session import (
     ensure_no_pending_rotation,
     get_current_session,
     require_roles,
+    token_digest,
 )
 from .rate_limit import (
     InMemoryRateLimiter,
     SlidingWindowLimiter,
     check_rate_limit,
+    login_key,
     login_rate_limiter,
     signup_rate_limiter,
 )
@@ -62,11 +64,13 @@ __all__ = [
     "generate_temporary_pin",
     "get_current_session",
     "hash_pin",
+    "login_key",
     "login_rate_limiter",
     "rate_limit",
     "require_roles",
     "session",
     "signup_rate_limiter",
+    "token_digest",
     "validation",
     "verify_pin",
 ]

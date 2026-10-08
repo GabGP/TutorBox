@@ -65,8 +65,8 @@ def start_session(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=str(err)
             ) from err
-        except InvalidSessionStateError as err:
-            raise HTTPException(
+        except (InvalidSessionStateError, InvalidRoundStateError) as err:
+            raise HTTPException(  # already started, or a concurrent start won
                 status_code=status.HTTP_409_CONFLICT, detail=str(err)
             ) from err
         return build_session_state(conn, session_id, engine)
@@ -126,5 +126,9 @@ def next_round(
         except SessionNotFoundError as err:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=str(err)
+            ) from err
+        except (InvalidSessionStateError, InvalidRoundStateError) as err:
+            raise HTTPException(  # a repeated tap, or one that lost a race
+                status_code=status.HTTP_409_CONFLICT, detail=str(err)
             ) from err
         return build_session_state(conn, session_id, engine)

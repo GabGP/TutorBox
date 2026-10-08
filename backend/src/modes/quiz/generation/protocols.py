@@ -126,9 +126,25 @@ ONE_STEP_RECOVERY_INSTRUCTION: str = (
 )
 
 
+TWO_STEP_RECOVERY_INSTRUCTION: str = (
+    "STRUCTURAL FIX: For 'two_step_equations', formulate ax + b = c with EXACTLY "
+    "2 operations, a not in {-1, 0, 1} and b != 0 (e.g. 2x + 6 = 10 or 3x - 4 = 11). "
+    "NEVER write 1-step equations like x + 5 = 12 or 3x = 15."
+)
+_RECOVERY_INSTRUCTIONS = {
+    "one_step_equations": ONE_STEP_RECOVERY_INSTRUCTION,
+    "two_step_equations": TWO_STEP_RECOVERY_INSTRUCTION,
+}
+
+
 def get_structural_recovery_instruction(errors: list[str]) -> str:
-    """Returns targeted structural recovery guidance if validation errors indicate mismatch."""
-    has_pedagogical_mismatch = any(
-        "Pedagogical mismatch" in err or "1-step equation" in err for err in errors
+    """The fix for each equation subconcept a validation error names.
+
+    Keyed on the subconcept, never on '1-step': the two-step rejection says it
+    "received a 1-step equation" and needs the opposite instruction.
+    """
+    return "".join(
+        f"\n{instruction}"
+        for subconcept, instruction in _RECOVERY_INSTRUCTIONS.items()
+        if any(f"'{subconcept}'" in error for error in errors)
     )
-    return f"\n{ONE_STEP_RECOVERY_INSTRUCTION}" if has_pedagogical_mismatch else ""

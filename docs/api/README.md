@@ -60,7 +60,9 @@ The API specification is decomposed into cohesive domain modules:
 
 ## <a id="3-authentication--session-flow"></a>3. Authentication & Session Flow
 
-TutorBox uses stateful **Bearer Session Tokens** stored in the local SQLite database.
+TutorBox uses stateful **Bearer Session Tokens**. The client keeps the token; the local SQLite database
+stores only its SHA-256 digest, so the `sessions` and `turn_logs` tables never hold a working token. A
+token stops working 12 hours after login, on logout, or on a PIN or username change.
 
 ```mermaid
 sequenceDiagram
@@ -71,16 +73,16 @@ sequenceDiagram
 
     Client->>API: POST /api/v1/auth/login {"username": "student1", "pin": "1234"}
     API->>DB: Query user & verify bcrypt hash
-    API->>DB: INSERT INTO sessions (id, user_id, is_active) VALUES (uuid, id, 1)
+    API->>DB: INSERT INTO sessions (id, user_id, is_active) VALUES (sha256(uuid), id, 1)
     API-->>Client: 200 OK {"session_id": "<uuid4>", "username": "student1", "must_change_pin": false}
 
     Note over Client,API: Subsequent requests include Bearer Header
     Client->>API: GET /api/v1/users/me (Authorization: Bearer <uuid4>)
-    API->>DB: Query sessions JOIN users WHERE id = uuid AND is_active = 1
+    API->>DB: Query sessions JOIN users WHERE id = sha256(uuid) AND is_active = 1 AND created in the last 12 h
     API-->>Client: 200 OK {"user_id": 1, "username": "student1", "role": "student", ...}
 
     Client->>API: POST /api/v1/auth/logout (Authorization: Bearer <uuid4>)
-    API->>DB: UPDATE sessions SET is_active = 0 WHERE id = uuid
+    API->>DB: UPDATE sessions SET is_active = 0 WHERE id = sha256(uuid)
     API-->>Client: 200 OK {"detail": "Logged out."}
 ```
 
@@ -171,7 +173,7 @@ To prevent timing attacks and enumeration of valid accounts, verification steps 
 
 ### <a id="c-rate-limiting-protection"></a>C. Rate Limiting Protection
 Two distinct in-memory rate limiters protect the edge appliance:
-1. **Credential Lockout Limiter**: Consecutive failed login attempts trigger progressive lockout (5 failed attempts = 60s cooldown).
+1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). nginx also allows login and signup 10 requests a minute per address.
 2. **Global Sliding Window Limiter**: Caps high-frequency public endpoints (e.g. signup) to prevent database flooding.
 
 ---

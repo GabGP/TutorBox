@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from typing import Annotated
 
@@ -12,12 +13,26 @@ logger = logging.getLogger(__name__)
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+# A login lasts one school day: a token copied from a shared tablet stops working
+# by the next morning. ponytail: fixed length, make it a SecurityConfig setting
+# if a school needs another one.
+SESSION_TTL_HOURS = 12
+
+
+def token_digest(token: str) -> str:
+    """What the database keeps for a bearer token: its SHA-256, never the token.
+
+    Tokens are random UUIDs (122 bits), so a fast hash suffices: a digest read
+    from the database cannot be turned back into a working token.
+    """
+    return hashlib.sha256(token.encode()).hexdigest()
+
 
 class AuthContext(BaseModel):
     user_id: int
     username: str
     role: str
-    session_id: str
+    session_id: str  # sessions.id, the token's digest: safe to store, unlike the token
     must_change_pin: bool
 
 
@@ -38,14 +53,16 @@ def get_current_session(
             detail="Invalid session token.",
         )
 
+    session_id = token_digest(token)
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT s.user_id, u.username, u.role, u.must_change_pin "
             "FROM sessions s "
             "JOIN users u ON u.id = s.user_id "
-            "WHERE s.id = ? AND s.is_active = 1 AND u.deleted_at IS NULL",
-            (token,),
+            "WHERE s.id = ? AND s.is_active = 1 AND u.deleted_at IS NULL "
+            "AND s.created_at > datetime('now', ?)",
+            (session_id, f"-{SESSION_TTL_HOURS} hours"),
         )
         row = cursor.fetchone()
 
@@ -59,7 +76,7 @@ def get_current_session(
         user_id=row["user_id"],
         username=row["username"],
         role=row["role"],
-        session_id=token,
+        session_id=session_id,
         must_change_pin=bool(row["must_change_pin"]),
     )
 

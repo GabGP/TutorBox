@@ -44,6 +44,29 @@ def test_current_is_public_and_picks_newest_open_session(staff_db, client):
     assert client.get("/api/v1/session/current").status_code == 404
 
 
+def test_a_web_vote_is_always_recorded_as_web(staff_db, client):
+    """A phone cannot pose as an ESP32 clicker, and a junk label is not a 500."""
+    _, conn = staff_db
+    session_id = _create(client, conn)
+    teacher = auth_headers(client, "teacher1")
+    client.post(f"/api/v1/session/{session_id}/start", headers=teacher)
+
+    for student, transport in (("student1", "hardware"), ("student2", "satellite")):
+        vote = client.post(
+            f"/api/v1/session/{session_id}/vote",
+            json={
+                "selected_option": "A",
+                "transport_type": transport,
+                "device_id": "X",
+            },
+            headers=auth_headers(client, student),
+        )
+        assert vote.status_code == 200
+
+    rows = conn.execute("SELECT transport_type, device_id FROM quiz_session_votes")
+    assert [tuple(row) for row in rows] == [("web", None), ("web", None)]
+
+
 def test_public_state_gates_question_and_result_by_phase(staff_db, client):
     _, conn = staff_db
     teacher = auth_headers(client, "teacher1")
