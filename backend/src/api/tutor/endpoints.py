@@ -19,11 +19,11 @@ from api.tutor.schemas import (
     TutorStudent,
 )
 from api.tutor.service import get_roster, get_turn_gate, get_tutor
+from api.tutor.turn_logging import log_turn
 from core.db.database import get_db
 from core.db.mode_repository import get_mode
-from core.db.turn_log_repository import TurnRecord, record_turn
 from core.security import AuthContext, require_roles
-from modes.socratic import SocraticTutor, TurnResult
+from modes.socratic import SocraticTutor
 
 __all__ = ["router"]
 
@@ -44,7 +44,7 @@ def send_message(
     _require_tutor_mode()
     with gate.turn(ctx.session_id):
         result = tutor.respond(ctx.session_id, payload.message)
-    _log_turn(ctx.session_id, payload.message, result)
+    log_turn(ctx.session_id, payload.message, result)
     if ctx.role == "student":
         problem = result.problem.text if result.problem else None
         solved = result.is_correct is True
@@ -92,21 +92,3 @@ def _require_tutor_mode() -> None:
                 detail="El tutor no está activo. Espera las instrucciones de tu "
                 "maestra o maestro.",
             )
-
-
-def _log_turn(session_id: str, message: str, result: TurnResult) -> None:
-    problem = result.problem
-    record = TurnRecord(
-        session_id=session_id,
-        user_input=message,
-        final_response=result.reply,
-        hint_level=result.hint_level,
-        containment_triggered=result.containment_triggered,
-        expression=problem.text if problem else None,
-        target=str(problem.target) if problem else None,
-        is_correct=result.is_correct,
-        llm_raw=result.llm_raw,
-    )
-    with get_db() as conn:
-        record_turn(conn, record)
-        conn.commit()

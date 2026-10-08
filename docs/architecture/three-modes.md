@@ -96,7 +96,7 @@ graph TD
 ---
 
 ## <a id="3-unified-error-taxonomy--weekly-reporting"></a>3. Unified Error Taxonomy & Weekly Reporting
-All three modes classify errors using a shared concept taxonomy (`topic`, `subconcept`, `misconception_type`). The weekly analytics engine computes:
+All three modes classify errors using a shared concept taxonomy (`topic`, `subconcept`, `misconception_type`). The Mode 2 tutor now labels each turn in `turn_logs` with the shared `topic` / `subconcept` of the concept it practises and, on a wrong answer, the misconception. The weekly analytics engine computes:
 1. Top 3 classroom-wide misconceptions requiring direct teacher review.
 2. Individual student risk scoring.
 3. Printable PDF / CSV report generated completely offline.

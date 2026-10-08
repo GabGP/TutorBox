@@ -62,7 +62,12 @@ GET /api/v1/tutor/students →
 
 Every turn is written to `turn_logs` ([dialogue.md](../database/dialogue.md)): the child's text, the
 SymPy expression and target, whether the answer was correct, the raw model output, whether
-containment replaced it, the final reply and the hint level.
+containment replaced it, the final reply and the hint level. Each row also carries three labels: the
+concept practised (`concept_topic`, `concept_subconcept` and the CNB topic `cnb_topic`), the
+scaffolding strategy applied and, on a wrong answer, the misconception behind it (`error_type`). The
+labels are computed in `backend/src/modes/socratic/telemetry/` and written by
+`backend/src/api/tutor/turn_logging.py`; their vocabularies are in
+[dialogue.md §2.1](../database/dialogue.md#21-telemetry-label-vocabularies).
 
 ---
 
