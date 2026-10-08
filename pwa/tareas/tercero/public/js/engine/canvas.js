@@ -272,4 +272,3 @@ export function drawChicken(ctx, x, y, size, color) {
   ctx.stroke();
   ctx.restore();
 }
-

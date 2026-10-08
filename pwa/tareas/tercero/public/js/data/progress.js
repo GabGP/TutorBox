@@ -172,4 +172,3 @@ export function clearProgress() {
   _cache = {};
   localStorage.removeItem(STORAGE_KEY);
 }
-

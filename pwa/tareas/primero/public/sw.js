@@ -110,4 +110,3 @@ async function cacheFirst(request) {
     return fallback || new Response('Offline', { status: 503 });
   }
 }
-
