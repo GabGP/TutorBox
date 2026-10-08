@@ -2,7 +2,7 @@ import logging
 import sqlite3
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from api.users.schemas import (
     ChangePinRequest,
@@ -17,6 +17,7 @@ from core.security import (
     ensure_no_pending_rotation,
     get_current_session,
     hash_pin,
+    login_key,
     login_rate_limiter,
     verify_pin,
 )
@@ -29,12 +30,14 @@ router = APIRouter()
 def _change_credential(
     ctx: AuthContext,
     payload: ChangeUsernameRequest | ChangePinRequest,
+    http: Request,
     *,
     kind: str,
 ) -> CredentialChangeResponse:
     logger.info("Credential change (%s) for user '%s'.", kind, ctx.username)
 
-    check_rate_limit(ctx.username)
+    limit_key = login_key(ctx.username, http)  # one guess budget with login
+    check_rate_limit(limit_key)
 
     with get_db() as conn:
         cursor = conn.cursor()
@@ -51,7 +54,7 @@ def _change_credential(
 
         # 1) Anti-oracle check ordering: verify current PIN FIRST
         if not verify_pin(payload.current_pin, user["hashed_pin"]):
-            login_rate_limiter.record_failure(ctx.username)
+            login_rate_limiter.record_failure(limit_key)
             logger.warning(
                 "Credential change failed (bad current PIN): %s", ctx.username
             )
@@ -59,7 +62,7 @@ def _change_credential(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid current PIN.",
             )
-        login_rate_limiter.record_success(ctx.username)
+        login_rate_limiter.record_success(limit_key)
 
         # 2) Compare new against current only AFTER successful PIN verification
         if kind == "pin":
@@ -118,20 +121,22 @@ def _change_credential(
 def change_username(
     payload: ChangeUsernameRequest,
     ctx: Annotated[AuthContext, Depends(ensure_no_pending_rotation)],
+    http: Request,
 ):
     """
     Update username. Requires current PIN verification. Invalidates caller's session.
     """
-    return _change_credential(ctx, payload, kind="username")
+    return _change_credential(ctx, payload, http, kind="username")
 
 
 @router.patch("/me/pin", response_model=CredentialChangeResponse)
 def change_pin(
     payload: ChangePinRequest,
     ctx: Annotated[AuthContext, Depends(get_current_session)],
+    http: Request,
 ):
     """
     Update PIN. Requires current PIN verification. Clears must_change_pin flag.
     Permitted during pending rotation (allowlist). Invalidates caller's session.
     """
-    return _change_credential(ctx, payload, kind="pin")
+    return _change_credential(ctx, payload, http, kind="pin")

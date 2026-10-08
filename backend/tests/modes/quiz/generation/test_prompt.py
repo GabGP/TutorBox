@@ -233,12 +233,17 @@ def test_feedback_prompt_with_pedagogical_mismatch_includes_recovery():
     assert "NEVER write 2-step equations" in feedback
 
 
-def test_feedback_prompt_with_one_step_keyword_includes_recovery():
-    base = "test prompt"
-    errors = ["Validator rejected: expected 1-step equation"]
-    feedback = build_feedback_prompt(base, errors)
-    assert "STRUCTURAL FIX" in feedback
-    assert "x + 5 = 12" in feedback
+def test_two_step_feedback_never_forbids_two_step_equations():
+    errors = [
+        (
+            "Pedagogical mismatch: subconcept 'two_step_equations' requires a 2-step "
+            "equation (ax + b = c with a not in {-1, 0, 1} and b != 0), but received "
+            "a 1-step equation."
+        )
+    ]
+    feedback = build_feedback_prompt("test prompt", errors)
+    assert "STRUCTURAL FIX: For 'two_step_equations'" in feedback
+    assert "NEVER write 2-step" not in feedback
 
 
 def test_feedback_prompt_without_structural_error_no_recovery():

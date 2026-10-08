@@ -13,6 +13,7 @@ from .rate_limit import (
     InMemoryRateLimiter,
     SlidingWindowLimiter,
     check_rate_limit,
+    login_key,
     login_rate_limiter,
     signup_rate_limiter,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "generate_temporary_pin",
     "get_current_session",
     "hash_pin",
+    "login_key",
     "login_rate_limiter",
     "rate_limit",
     "require_roles",

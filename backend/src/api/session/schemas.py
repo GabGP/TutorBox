@@ -15,11 +15,14 @@ class CreateSessionRequest(BaseModel):
 
 
 class CastVoteRequest(BaseModel):
-    """Payload for an individual student vote submission."""
+    """A student's vote from the web client.
+
+    The server records it as transport "web" with no device, so a phone cannot
+    pose as an ESP32 clicker; clickers vote through their own transport (Week 7).
+    Other fields a client sends, such as an old `transport_type`, are ignored.
+    """
 
     selected_option: str = Field(..., pattern=r"^[A-D]$")
-    transport_type: str = "web"
-    device_id: str | None = None
     response_time_ms: float | None = Field(default=None, ge=0.0)
 
 

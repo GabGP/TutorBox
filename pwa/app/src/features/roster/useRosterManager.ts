@@ -173,6 +173,7 @@ export function useRosterManager({ enabled = true }: UseRosterManagerOptions = {
     loading,
     pinNotice,
     toasts,
+    pushToast,
     dismissToast,
     loadStudents,
     loadUsers,

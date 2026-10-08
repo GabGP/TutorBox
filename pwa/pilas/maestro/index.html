@@ -282,6 +282,7 @@
   </main>
 
   <footer>
+    <div class="err" id="actErr" hidden></div>
     <div class="btns"><button id="secondary" class="btn outline" hidden>Inicio</button><button id="primary" class="btn p"></button></div>
     <div class="dots" id="dots"></div>
   </footer>
@@ -306,6 +307,7 @@ const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAI
 const player = new Audio();
 const tts = { round: -1, state: 'idle', msg: '' };
 let clipUrl = null;
+let busy = false; // the primary button's request is running: a second tap would skip a question
 let roster = [], history = [];
 const saveHist = () => localStorage.setItem('tb_hist_' + sid, JSON.stringify(history));
 const loadHist = () => { history = JSON.parse(localStorage.getItem('tb_hist_' + sid) || '[]'); };
@@ -406,6 +408,8 @@ $('secondary').onclick = async () => {
   render();
 };
 $('primary').onclick = async () => {
+  if (busy) return;
+  busy = true; $('primary').disabled = true; $('actErr').hidden = true;
   const step = stepOf();
   try {
     if (step === 'topic') wizard = 'count';
@@ -414,7 +418,11 @@ $('primary').onclick = async () => {
     else if (step === 'question') { unlockAudio(); await api('POST', `/session/${sid}/reveal`); S = await api('GET', `/session/${sid}`, undefined, false); }
     else if (step === 'reveal') { stopSpeech(); S = await api('POST', `/session/${sid}/next`); }
     else return $('secondary').onclick();
-  } catch (e) { if (e.status === 401) return toLogin(); }
+  } catch (e) {
+    if (e.status === 401) return toLogin();
+    $('actErr').textContent = 'No se pudo avanzar. Inténtalo otra vez.';
+    $('actErr').hidden = false;
+  } finally { busy = false; }
   render();
 };
 
@@ -482,7 +490,7 @@ function render() {
   $('voice').textContent = voice === 'es' ? 'Voz ES' : "Voz K'iche'";
   $('primary').textContent = { topic: 'Continuar', count: 'Crear las preguntas', lobby: gen && !S ? 'Creando preguntas…' : 'Comenzar el juego', question: r && r.status === 'closed' ? 'Ver resultado' : 'Terminar la pregunta', reveal: last ? 'Ver resultados' : 'Siguiente pregunta', stats: 'Nuevo juego' }[step] || '';
   $('primary').classList.toggle('ok', step === 'lobby');
-  $('primary').disabled = step === 'lobby' && !(S && S.status === 'lobby');
+  $('primary').disabled = busy || (step === 'lobby' && !(S && S.status === 'lobby'));
   $('secondary').hidden = !(step === 'stats' || step === 'topic' || step === 'lobby');
   $('secondary').textContent = { topic: 'Salir', lobby: 'Cancelar', stats: 'Inicio' }[step] || '';
   const idx = ['topic', 'count', 'lobby'].indexOf(step);

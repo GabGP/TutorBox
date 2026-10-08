@@ -173,7 +173,7 @@ To prevent timing attacks and enumeration of valid accounts, verification steps 
 
 ### <a id="c-rate-limiting-protection"></a>C. Rate Limiting Protection
 Two distinct in-memory rate limiters protect the edge appliance:
-1. **Credential Lockout Limiter**: Consecutive failed login attempts trigger progressive lockout (5 failed attempts = 60s cooldown).
+1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). nginx also allows login and signup 10 requests a minute per address.
 2. **Global Sliding Window Limiter**: Caps high-frequency public endpoints (e.g. signup) to prevent database flooding.
 
 ---

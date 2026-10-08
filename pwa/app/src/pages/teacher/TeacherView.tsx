@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../features/auth/useAuth';
 import { resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { BankPickStep } from './BankPickStep';
@@ -44,7 +44,7 @@ export const TeacherView: React.FC = () => {
   const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
   const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
     usePlayedRounds(coordinator.sid, voiceLang);
-  const { students, users, deleted, showDeleted, pinNotice, toasts, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
+  const { students, users, deleted, showDeleted, pinNotice, toasts, pushToast, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
   const creatableRoles =
@@ -113,10 +113,23 @@ export const TeacherView: React.FC = () => {
     }
   }, [curRound, speechState, stopPlayback]);
 
-  const handlePrimary = useCallback(() => {
+  // One primary action at a time: a second tap mid-request would skip a question.
+  const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const handlePrimary = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
     if (step === 'reveal') stopPlayback();
-    coordinator.advancePrimary();
-  }, [step, stopPlayback, coordinator]);
+    try {
+      await coordinator.advancePrimary();
+    } catch {
+      pushToast?.({ message: 'No se pudo avanzar. Inténtalo otra vez.', tone: 'error' });
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }, [step, stopPlayback, coordinator, pushToast]);
 
   const handleSecondary = useCallback(() => {
     stopPlayback();
@@ -218,7 +231,7 @@ export const TeacherView: React.FC = () => {
           <TeacherFooter
             primaryText={primaryText}
             secondaryText={secondaryText}
-            isPrimaryDisabled={vm.isPrimaryDisabled}
+            isPrimaryDisabled={vm.isPrimaryDisabled || busy}
             isLobbySuccess={vm.isLobbySuccess}
             wizardIndex={wizardIdx}
             onPrimary={handlePrimary}

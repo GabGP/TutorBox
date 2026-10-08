@@ -2,8 +2,6 @@ import logging
 import threading
 import time
 
-from fastapi import HTTPException, status
-
 from .config import (
     DEFAULT_LOCKOUT_DURATION_SECONDS,
     DEFAULT_MAX_ATTEMPTS,
@@ -18,10 +16,18 @@ logger = logging.getLogger(__name__)
 MAX_ATTEMPTS = DEFAULT_MAX_ATTEMPTS
 LOCKOUT_DURATION_SECONDS = DEFAULT_LOCKOUT_DURATION_SECONDS
 MAX_TRACKED_KEYS = DEFAULT_MAX_TRACKED_KEYS
+# Each lockout in a row lasts twice the one before, up to 32 times the first
+# (30 s ... 16 min): a slow brute force gets 5 tries per 16 minutes per key.
+# ponytail: fixed growth, make it a setting if a school needs another.
+MAX_DOUBLINGS = 5
 
 
 class InMemoryRateLimiter:
-    """Lightweight in-memory rate limiter for failed authentication attempts."""
+    """In-memory lockout for failed authentication attempts, per key.
+
+    Every max_attempts failures lock the key, each lockout twice as long as the
+    last; the count survives a lockout and only a success clears it.
+    """
 
     def __init__(
         self,
@@ -48,14 +54,13 @@ class InMemoryRateLimiter:
 
     def _evict_stale(self) -> None:
         """
-        Removes expired lockouts together with their failure counters.
-        Caller must hold self._lock.
+        Removes expired lockouts; their failure counters stay, so the next
+        lockout lasts longer. Caller must hold self._lock.
         """
         now = time.time()
         for key in list(self._lockout_until):
             if now >= self._lockout_until[key]:
                 del self._lockout_until[key]
-                self._failed_attempts.pop(key, None)
 
     def _enforce_cap(self) -> None:
         """
@@ -83,9 +88,8 @@ class InMemoryRateLimiter:
             if lockout_time is not None:
                 if now < lockout_time:
                     return True
-                # Lockout expired, reset counter and lockout
+                # Lockout over: the key may try again, its failures still count
                 del self._lockout_until[key]
-                self._failed_attempts.pop(key, None)
 
             return False
 
@@ -96,15 +100,18 @@ class InMemoryRateLimiter:
         """
         with self._lock:
             self._evict_stale()
-            self._failed_attempts[key] = self._failed_attempts.get(key, 0) + 1
-            locked_now = self._failed_attempts[key] >= self.max_attempts
+            failures = self._failed_attempts.get(key, 0) + 1
+            self._failed_attempts[key] = failures
+            locked_now = failures % self.max_attempts == 0
             if locked_now:
-                self._lockout_until[key] = time.time() + self.lockout_seconds
+                rounds = failures // self.max_attempts
+                seconds = self.lockout_seconds * 2 ** min(rounds - 1, MAX_DOUBLINGS)
+                self._lockout_until[key] = time.time() + seconds
                 logger.warning(
-                    "User '%s' exceeded max failed login attempts (%d). Locked out for %d seconds.",
+                    "Login key '%s' failed %d times. Locked out for %d seconds.",
                     key,
-                    self.max_attempts,
-                    self.lockout_seconds,
+                    failures,
+                    seconds,
                 )
             # Enforce the cap last so freshly locked-out keys are never evicted.
             self._enforce_cap()
@@ -126,21 +133,3 @@ class InMemoryRateLimiter:
         with self._lock:
             self._failed_attempts.clear()
             self._lockout_until.clear()
-
-
-# Default singleton instance for auth
-login_rate_limiter = InMemoryRateLimiter()
-
-
-def check_rate_limit(
-    username: str, limiter: InMemoryRateLimiter = login_rate_limiter
-) -> None:
-    """
-    Raises HTTP 429 Too Many Requests if the username is currently locked out.
-    """
-    if limiter.is_locked_out(username):
-        logger.warning("Blocked login attempt for locked out user '%s'.", username)
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many failed login attempts. Please try again later.",
-        )

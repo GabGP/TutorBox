@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from '../../../features/auth/useAuth';
 import { useRosterManager } from '../../../features/roster/useRosterManager';
@@ -22,6 +22,8 @@ vi.mock('../../../features/speech/useSpeechPlayback', () => ({
   useSpeechPlayback: vi.fn(),
 }));
 
+const pushToast = vi.fn();
+
 describe('TeacherView Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,6 +41,7 @@ describe('TeacherView Component', () => {
       loading: false,
       pinNotice: null,
       toasts: [],
+      pushToast,
       dismissToast: vi.fn(),
       loadStudents: vi.fn(),
       loadUsers: vi.fn(),
@@ -101,6 +104,59 @@ describe('TeacherView Component', () => {
 
     render(<TeacherView />);
     expect(screen.getByText('Panel del docente')).toBeInTheDocument();
+  });
+
+  it('runs one primary action at a time and reports one that fails', async () => {
+    let fail: (reason: Error) => void = () => {};
+    const advancePrimary = vi.fn(
+      () => new Promise<void>((_, reject) => { fail = reject; })
+    );
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 't1', username: 'profe', role: 'teacher' },
+      loading: false,
+      mustChangePin: false,
+      pendingPin: null,
+      login: vi.fn(),
+      signupAndLogin: vi.fn(),
+      handlePinChange: vi.fn(),
+      logout: vi.fn(),
+      restoreSession: vi.fn(),
+    });
+    vi.mocked(useTeacherCoordinator).mockReturnValue({
+      sid: null,
+      wizard: 'topic',
+      setWizard: vi.fn(),
+      topic: '',
+      setTopic: vi.fn(),
+      count: 10,
+      setCount: vi.fn(),
+      topics: [],
+      session: null,
+      progress: null,
+      isGenerating: false,
+      genError: null,
+      history: [],
+      report: null,
+      source: 'generate',
+      setSource: vi.fn(),
+      bankIds: [],
+      toggleBankId: vi.fn(),
+      ensureBankIds: vi.fn(),
+      pregenerate: vi.fn(),
+      advancePrimary,
+      resetSession: vi.fn(),
+    });
+
+    render(<TeacherView />);
+    const primary = screen.getByRole('button', { name: 'Continuar' });
+    fireEvent.click(primary);
+    fireEvent.click(primary); // a double tap: the first request is still running
+    expect(advancePrimary).toHaveBeenCalledTimes(1);
+    expect(primary).toBeDisabled();
+
+    await act(async () => fail(new Error('409')));
+    expect(pushToast).toHaveBeenCalledWith(expect.objectContaining({ tone: 'error' }));
+    expect(primary).not.toBeDisabled();
   });
 
   it('renders topic selector on step 1 and toggles language voice', () => {

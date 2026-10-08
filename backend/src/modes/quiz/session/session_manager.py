@@ -3,7 +3,7 @@
 import sqlite3
 import time
 
-from core.db.round_repository import create_quiz_round
+from core.db.round_repository import create_quiz_round, get_round_by_index
 from core.db.session_repository import (
     create_quiz_session,
     get_quiz_session,
@@ -13,7 +13,7 @@ from modes.quiz.session.exceptions import (
     InvalidSessionStateError,
     SessionNotFoundError,
 )
-from modes.quiz.session.models import QuizSessionRecord, SessionStatus
+from modes.quiz.session.models import QuizSessionRecord, RoundStatus, SessionStatus
 
 
 def initialize_quiz_session(
@@ -68,10 +68,19 @@ def activate_quiz_session(
 
 
 def advance_quiz_session(conn: sqlite3.Connection, session_id: str) -> int | None:
-    """Advances current round index or completes the session. Returns next index if any."""
+    """Advances current round index or completes the session. Returns next index if any.
+
+    Only from an active session whose current round is revealed, so a second tap
+    on "Siguiente" (or a /next in the lobby or after the end) cannot skip a question.
+    """
     session = get_quiz_session(conn, session_id)
     if session is None:
         raise SessionNotFoundError(session_id)
+    if session.status != SessionStatus.ACTIVE.value:
+        raise InvalidSessionStateError(f"Session '{session_id}' is not active.")
+    current = get_round_by_index(conn, session_id, session.current_round_index)
+    if current is None or current.status != RoundStatus.REVEALED.value:
+        raise InvalidSessionStateError("Reveal the current round before moving on.")
 
     next_index = session.current_round_index + 1
     if next_index < session.question_count:

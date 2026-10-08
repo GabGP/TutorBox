@@ -6,6 +6,7 @@ from core.db.database import get_db_connection
 from core.security.auth import hash_pin
 from core.security.auth_session import token_digest
 from core.security.rate_limit import LOCKOUT_DURATION_SECONDS
+from src.main import app
 
 
 def test_login_success(seeded_db, client: TestClient):
@@ -115,6 +116,22 @@ def test_login_rate_limiting_triggers_429(seeded_db, client: TestClient):
         "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
     )
     assert response.status_code == 429
+
+
+def test_a_lockout_holds_only_for_the_device_that_failed(seeded_db, client: TestClient):
+    """Wrong PINs typed on one phone must not lock the same name on another."""
+    for _ in range(5):
+        client.post("/api/v1/auth/login", json={"username": "student1", "pin": "9999"})
+    attacker = client.post(
+        "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+    )
+    assert attacker.status_code == 429
+
+    with TestClient(app, client=("192.168.8.77", 50000)) as owner_phone:
+        response = owner_phone.post(
+            "/api/v1/auth/login", json={"username": "student1", "pin": "1234"}
+        )
+    assert response.status_code == 200
 
 
 def test_login_rate_limiting_lockout_expires(

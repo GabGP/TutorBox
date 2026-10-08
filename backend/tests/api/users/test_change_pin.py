@@ -1,5 +1,5 @@
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from fastapi.testclient import TestClient
 
 from core.security.auth import hash_pin
@@ -218,10 +218,12 @@ def test_change_credential_missing_user(temp_db):
         session_id="00000000-0000-0000-0000-000000000000",
         must_change_pin=False,
     )
+    phone = Request({"type": "http", "client": ("192.168.8.40", 50000)})
     with pytest.raises(HTTPException) as exc:
         _change_credential(
             ctx,
             ChangePinRequest(current_pin="1234", new_pin="5678"),
+            phone,
             kind="pin",
         )
     assert exc.value.status_code == 401

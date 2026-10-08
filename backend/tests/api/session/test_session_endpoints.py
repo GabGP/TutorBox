@@ -234,7 +234,8 @@ def test_close_reveal_next_and_report_flow(staff_db, client):
     assert next_resp.status_code == 200
     assert next_resp.json()["current_round_index"] == 1
 
-    # Complete session
+    # Reveal the last round, then complete the session
+    client.post(f"/api/v1/session/{session_id}/reveal", headers=teacher_headers)
     final_next = client.post(
         f"/api/v1/session/{session_id}/next", headers=teacher_headers
     )

@@ -138,7 +138,7 @@ Transitions session state from `lobby` to `active` and opens the first question 
 * **Responses**:
   * `200 OK`: `SessionStateResponse` (status `active`, round 0 status `open`).
   * `404 Not Found`: Session or initial round not found.
-  * `409 Conflict`: Session is not in `lobby` state.
+  * `409 Conflict`: Session is not in `lobby` state, or a concurrent start already opened its first round.
 
 ---
 
@@ -153,11 +153,12 @@ Ingests a student vote. Enforces **first-press locking** at both engine and data
   ```json
   {
     "selected_option": "B",
-    "transport_type": "web",
-    "device_id": null,
     "response_time_ms": 1450.0
   }
   ```
+  The server records every vote from this endpoint as transport `web` with no device; a
+  `transport_type` or `device_id` a client still sends is ignored, so a phone cannot pose as an
+  ESP32 clicker. Clickers vote through their own transport (Week 7).
 * **Responses**:
   * `200 OK`:
     ```json
@@ -231,7 +232,7 @@ $$\text{trigger\_audio} \iff \exists d \in \text{Distractors} : \frac{\text{vote
 
 ### <a id="post-session-next"></a>`POST /api/v1/session/{session_id}/next`
 
-Advances the session to the next question round, or marks the match as `completed` if the final question has concluded.
+Advances the session to the next question round, or marks the match as `completed` if the final question has concluded. Only an `active` session whose current round is `revealed` moves on, so a second tap on "Siguiente" cannot skip a question.
 
 * **Authorization**: Teacher, Admin
 * **Path Parameters**:
@@ -239,6 +240,7 @@ Advances the session to the next question round, or marks the match as `complete
 * **Responses**:
   * `200 OK`: `SessionStateResponse` with incremented `current_round_index` and round status `open`, or session status `completed`.
   * `404 Not Found`: Session not found.
+  * `409 Conflict`: Session not `active` (still in the lobby or already finished), current round not yet `revealed` (a repeated tap), or a concurrent request already opened the next round.
 
 ---
 

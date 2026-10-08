@@ -26,10 +26,10 @@ The quality gate is genuinely green. The findings below are the things a green g
 | C2 | Critical | A 7-character tutor message (`9××9××9`) freezes the whole backend **(proved)** — **FIXED** | ~10 lines |
 | H1 | High | Default teacher `teacher1` / `1234` is seeded and never forced to rotate | 1 line |
 | H2 | High | Bearer tokens stored in plaintext in two tables, and they never expire — **FIXED** | ~5 lines |
-| H3 | High | Username-only lockout lets any student lock the teacher out; slow brute force still works | small |
-| H4 | High | `/session/{id}/next` has no state guard: a double-tap skips a question | ~10 lines |
-| H5 | High | Retry feedback tells the model the *opposite* for two-step equations | ~3 lines |
-| H6 | High | Client-controlled `transport_type` and `device_id` on votes; a bad value returns 500 | ~3 lines |
+| H3 | High | Username-only lockout lets any student lock the teacher out; slow brute force still works — **FIXED** | small |
+| H4 | High | `/session/{id}/next` has no state guard: a double-tap skips a question — **FIXED** | ~10 lines |
+| H5 | High | Retry feedback tells the model the *opposite* for two-step equations — **FIXED** | ~3 lines |
+| H6 | High | Client-controlled `transport_type` and `device_id` on votes; a bad value returns 500 — **FIXED** | ~3 lines |
 | M1–M14 | Medium | Ignored config, mixed timezones, TTS races, ONNX re-parse per request, unseeded question pool, … | small each |
 | S1–S10 | Simplify | Two parallel clients, three copies of the grade-app engine, config declared 5×, dead code | delete-heavy |
 
@@ -154,6 +154,21 @@ Suggested order is at the end.
   - Grow the lockout exponentially after repeated lockouts.
   - Add nginx `limit_req` on `/api/v1/auth/` and `/api/v1/users/signup`, which needs no code.
   - Consider 6-digit PINs for staff roles.
+- **How it was fixed:**
+  1. **Lockout per name and device.** `login_key(username, request)` in the new `core/security/rate_limit/login_guard.py` builds `name@address` (e.g. `teacher1@192.168.8.40`).
+     - Login and both credential changes use it, so wrong current PINs on `/users/me/pin` still share one guess budget with login.
+     - A student's 5 wrong PINs now lock only `teacher1` on that student's phone; the teacher keeps logging in from their own device.
+     - This works on the appliance: nginx proxies to `127.0.0.1`, so uvicorn trusts the `X-Forwarded-For` it appends, and phones share the Jetson's bridge (`br-lan`, no NAT), so every phone has its own address.
+  2. **Exponential growth.** The failure count now survives a lockout, and only a successful login clears it. Every further 5 failures lock for twice as long: 30 s, 60 s, 120 s … up to 32× the first, 16 min (`MAX_DOUBLINGS = 5` in `lockout.py`). A slow brute force from one device needs about 11 days on average for a 4-digit PIN, 22 at worst; before, it was about 8 hours.
+  3. **nginx throttle.** `infra/nginx/tutorbox.conf` adds `limit_req` on `/api/v1/auth/login` and `/api/v1/users/signup`: 10 requests a minute per address after a burst of 10, answered with 429. The shared proxy settings moved to the `server` level. **Not validated here** (no nginx on this machine): run `sudo nginx -t` on the Jetson before reloading.
+  4. **Usernames: accepted as public.** Signup's 409 already reveals them, so login does not add a dummy bcrypt check, which would cost CPU for every unknown name without closing the oracle. It still answers the same 401 to both. This is documented in `docs/api/auth.md`.
+  5. **Module ceiling.** `lockout.py` would have passed 150 lines, so the login singleton, `check_rate_limit` and `login_key` moved to `login_guard.py`. The package exports are unchanged, so callers and the test fixture that clears the limiter keep working.
+  6. **Tests:**
+     - the waits double and cap at 10, 20, 40, 80, 160, 320, 320 s, and a success resets them;
+     - an expired lockout keeps its failure count;
+     - a lockout on one device leaves the same name free on another (a second `TestClient` with another client address);
+     - wrong PINs in the PIN-change form still lock login on the same device.
+  - **Not done:** 6-digit PINs for staff, a policy decision for the team. The 16-minute cap is a constant, not a setting.
 
 ### H4. `/next` has no state guard, so a double-tap skips a question
 
@@ -168,12 +183,28 @@ Suggested order is at the end.
 - **Fix:**
   - Require `status == "active"` and the current round `revealed` in `advance_quiz_session`, raising `InvalidSessionStateError`. Map it, and `InvalidRoundStateError`, to 409.
   - In the clients, add a busy flag and surface errors in a toast.
+- **How it was fixed:**
+  1. **Backend (root cause).** `advance_quiz_session` moves on only from an `active` session whose current round is `revealed`; otherwise it raises `InvalidSessionStateError`.
+     - A second tap now finds the next round `open` and is refused.
+     - `/next` maps `InvalidSessionStateError` and `InvalidRoundStateError` to 409, and `/start` maps `InvalidRoundStateError` (a concurrent start) to 409 instead of 500.
+     - Both teacher clients only call `/next` after a reveal, so normal use is unchanged.
+  2. **Clients.** Each ignores taps while a request runs, keeps the button disabled, and shows the failure.
+     - Pilas `maestro/index.html`: a `busy` flag, cleared in a `finally`; non-401 errors show "No se pudo avanzar. Inténtalo otra vez." in a footer line.
+     - React `TeacherView`: a ref guard, so two taps in the same frame cannot both pass, plus a `busy` state that disables the button. It awaits `advancePrimary`, and errors become an error toast through `useRosterManager`'s toast queue, which now also returns `pushToast`.
+  3. **Tests.**
+     - API: `/next` in the lobby gives 409, on an unrevealed round 409, a double tap after a reveal advances once, after the end 409; both races (`/start` and `/next` finding their round already open) give 409, not 500.
+     - Three existing tests advanced past rounds they never revealed; they now reveal first, as the clients do.
+     - React: one action at a time, and a toast on failure. The full React suite passes (299 tests) and `tsc` is clean. The Pilas script passes `node --check`.
 
 ### H5. Retry feedback contradicts the two-step requirement
 
 - **Where:** `backend/src/modes/quiz/generation/protocols.py:122-134` appends *"NEVER write 2-step equations like 2x + 6 = 10"* for **any** error containing "Pedagogical mismatch" or "1-step equation". That includes the two-step rejection itself (`core/math_engine/ast_algebra.py:53-59`: "requires a 2-step equation … but received a 1-step equation") and every arithmetic, fraction and percentage mismatch.
 - **Effect:** each retry for `two_step_equations` pushes the model further from the target.
 - **Fix:** emit the one-step instruction only when the error names `one_step_equations` and add the symmetric two-step hint. Alternatively, drop it, since the error text is already explicit. Add a one-line test that the two-step feedback does not contain "NEVER write 2-step".
+- **How it was fixed:** `get_structural_recovery_instruction` (`modes/quiz/generation/protocols.py`) now keys on the subconcept the error names (`'one_step_equations'` or `'two_step_equations'`), never on the words "1-step".
+  - A new `TWO_STEP_RECOVERY_INSTRUCTION` asks for `ax + b = c` with exactly 2 operations.
+  - Arithmetic, fraction and percentage mismatches get no equation instruction, since their message is already explicit.
+  - Tests: the real two-step rejection from `validate_math_structure` gets exactly the two-step fix and never "NEVER write 2-step"; an arithmetic mismatch gets none. The test built on a made-up "1-step equation expected" error, which encoded the bug, was replaced.
 
 ### H6. Vote transport is client-declared
 
@@ -183,6 +214,11 @@ Suggested order is at the end.
   - `core/db/vote_repository.py:47-54` only translates UNIQUE violations, so this surfaces as a 500.
   - Any student can label a phone vote as `hardware` with any device id, which pollutes the W7 and W8 analytics.
 - **Fix:** have the web vote endpoint set `transport_type="web"` itself and ignore `device_id`. The W7 hardware transport should authenticate devices on its own path. If the fields must stay, use `Literal[...]` and the existing `DeviceIdField`.
+- **How it was fixed:** `CastVoteRequest` no longer has `transport_type` or `device_id`, so the web endpoint records every vote as `web` with no device.
+  - The schema ignores unknown fields, so the Pilas and React clients, which still send `transport_type: 'web'`, keep working unchanged.
+  - A junk label can no longer reach the database CHECK, so there is no 500.
+  - The Week 7 clicker transport calls the engine from its own authenticated path.
+  - Tests: votes labelled `hardware` (with a device id) or `satellite` are stored as `("web", None)` with 200. The concurrency test no longer labels five phones as clickers.
 
 ---
 

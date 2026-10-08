@@ -120,7 +120,7 @@ def _seed_five_questions(conn: sqlite3.Connection) -> list[str]:
 
 
 def test_fifteen_concurrent_clients_five_question_match(staff_db, client: TestClient):
-    """Simulates 15 simultaneous clients (web and hardware) across 5 rounds with 0 lost votes."""
+    """Simulates 15 simultaneous web clients across 5 rounds with 0 lost votes."""
     _, conn = staff_db
     question_ids = _seed_five_questions(conn)
     usernames = _seed_concurrency_roster(conn, student_count=15)
@@ -150,13 +150,8 @@ def test_fifteen_concurrent_clients_five_question_match(staff_db, client: TestCl
 
         def _cast_client_vote(worker_index: int) -> int:
             token = student_tokens[worker_index]
-            is_hardware = worker_index >= 10
             payload = {
                 "selected_option": "A" if worker_index % 2 == 0 else "B",
-                "transport_type": "hardware" if is_hardware else "web",
-                "device_id": f"ESP32-DEVICE-{worker_index:02d}"
-                if is_hardware
-                else None,
                 "response_time_ms": 500.0 + worker_index * 25.0,
             }
             response = client.post(
