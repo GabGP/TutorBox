@@ -251,3 +251,6 @@ pnpm-debug.log*
 # Benchmark evaluation artifacts
 tools/benchmark/**/results/
 benchmark/**/results/
+
+# Git Bash (MSYS2) crash dumps, written when bash.exe crashes in a directory
+*.stackdump
