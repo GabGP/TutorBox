@@ -27,7 +27,7 @@ Stores telemetry and pedagogical interaction history per educational dialogue tu
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | — | Unique telemetry turn record ID. |
-| `session_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> sessions(id) ON DELETE CASCADE` | — | Foreign key referencing the originating dialogue session. |
+| `session_id` | `TEXT` | `NOT NULL`, `FOREIGN KEY -> sessions(id) ON DELETE CASCADE` | — | Foreign key referencing the originating login session: its `sessions.id`, the token's SHA-256 digest, never the token itself. |
 | `user_input` | `TEXT` | `NOT NULL` | — | The student's raw text or multiple-choice input. |
 | `sympy_evaluated_expression` | `TEXT` | `NULL` | `NULL` | Canonical AST representation parsed and evaluated by SymPy. |
 | `sympy_target_result` | `TEXT` | `NULL` | `NULL` | Target pedagogical expected result. |

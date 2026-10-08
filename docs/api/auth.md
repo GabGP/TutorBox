@@ -32,7 +32,7 @@ These endpoints manage user onboarding, session authentication, profile retrieva
 
 ### <a id="post-auth-login"></a>`POST /api/v1/auth/login`
 
-Authenticates a user using their username and 4–8 digit PIN. On success, issues a UUIDv4 session token persisted to the SQLite `sessions` table.
+Authenticates a user using their username and 4–8 digit PIN. On success, issues a UUIDv4 session token. The SQLite `sessions` table stores only the token's SHA-256 digest (`core/security/auth_session.py::token_digest`), so the database never holds a working token. The token is valid for 12 hours (`SESSION_TTL_HOURS`), until logout, or until a PIN or username change; after that every protected route answers `401 Invalid or expired session.`
 
 * **Authorization**: Public
 * **Bootstrap account**: on startup the backend seeds one teacher (`SEED_TEACHER_USERNAME` / `SEED_TEACHER_PIN`, default `teacher1` / `1234`) if that username does not exist, so a fresh appliance can host quizzes. Change the PIN before deployment or set `SEED_TEACHER_PIN=` to disable.

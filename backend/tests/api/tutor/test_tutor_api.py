@@ -6,6 +6,7 @@ from api.tutor.gate import TurnGate
 from api.tutor.roster import TutorRoster
 from api.tutor.service import get_roster, get_turn_gate, get_tutor
 from core.llm import MockLLMClient
+from core.security import token_digest
 from modes.socratic import ConversationStore, SocraticTutor, TutorGateway
 from src.main import app
 from tests.conftest import auth_headers
@@ -81,6 +82,9 @@ def test_a_student_chats_and_every_turn_is_logged(
         ("70", "68", 0, 1),
         ("68", "68", 1, 0),
     ]
+    token = headers["Authorization"].removeprefix("Bearer ")
+    logged = {row[0] for row in conn.execute("SELECT session_id FROM turn_logs")}
+    assert logged == {token_digest(token)}  # the session's digest, never the token
 
 
 def test_the_teacher_sees_who_is_using_the_tutor(

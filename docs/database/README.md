@@ -69,7 +69,7 @@ erDiagram
     }
 
     sessions {
-        TEXT id PK "UUIDv4 Bearer Token"
+        TEXT id PK "SHA-256 of the Bearer Token"
         INTEGER user_id FK "REFERENCES users(id) ON DELETE CASCADE"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
         INTEGER is_active "1: Active | 0: Inactive"

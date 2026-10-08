@@ -7,6 +7,7 @@ from .auth_session import (
     ensure_no_pending_rotation,
     get_current_session,
     require_roles,
+    token_digest,
 )
 from .rate_limit import (
     InMemoryRateLimiter,
@@ -67,6 +68,7 @@ __all__ = [
     "require_roles",
     "session",
     "signup_rate_limiter",
+    "token_digest",
     "validation",
     "verify_pin",
 ]

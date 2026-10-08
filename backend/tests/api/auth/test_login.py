@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from core.db.database import get_db_connection
 from core.security.auth import hash_pin
+from core.security.auth_session import token_digest
 from core.security.rate_limit import LOCKOUT_DURATION_SECONDS
 
 
@@ -59,12 +60,15 @@ def test_login_creates_database_session(seeded_db, client: TestClient):
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, user_id, is_active FROM sessions WHERE id = ?", (session_id,)
+        "SELECT id, user_id, is_active FROM sessions WHERE id = ?",
+        (token_digest(session_id),),
     )
     session = cursor.fetchone()
     assert session is not None
-    assert session["id"] == session_id
     assert session["is_active"] == 1
+    # The database keeps the token's digest only, never the token itself
+    cursor.execute("SELECT COUNT(*) FROM sessions WHERE id = ?", (session_id,))
+    assert cursor.fetchone()[0] == 0
     conn.close()
 
 

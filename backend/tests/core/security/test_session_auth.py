@@ -7,10 +7,12 @@ from fastapi.testclient import TestClient
 from core.db.database import get_db_connection
 from core.security.auth import hash_pin
 from core.security.auth_session import (
+    SESSION_TTL_HOURS,
     AuthContext,
     ensure_no_pending_rotation,
     get_current_session,
     require_roles,
+    token_digest,
 )
 
 # Sample FastAPI app to test session dependencies in isolation
@@ -57,8 +59,9 @@ def _seed_user_and_session(
     is_active: int = 1,
     deleted: bool = False,
     must_change_pin: int = 0,
+    age_hours: int = 0,
 ) -> tuple[int, str]:
-    """Helper to seed a user and return (user_id, session_id)."""
+    """Seeds a user and a session `age_hours` old; returns (user_id, bearer token)."""
     conn = get_db_connection(db_path)
     try:
         cursor = conn.cursor()
@@ -71,13 +74,14 @@ def _seed_user_and_session(
         )
         user_id = cursor.lastrowid
         assert user_id is not None
-        session_id = str(uuid.uuid4())
+        token = str(uuid.uuid4())
         cursor.execute(
-            "INSERT INTO sessions (id, user_id, is_active) VALUES (?, ?, ?)",
-            (session_id, user_id, is_active),
+            "INSERT INTO sessions (id, user_id, is_active, created_at) "
+            "VALUES (?, ?, ?, datetime('now', ?))",
+            (token_digest(token), user_id, is_active, f"-{age_hours} hours"),
         )
         conn.commit()
-        return user_id, session_id
+        return user_id, token
     finally:
         conn.close()
 
@@ -155,8 +159,46 @@ def test_valid_active_session_resolves_context(temp_db):
     assert data["user_id"] == user_id
     assert data["username"] == "student_valid"
     assert data["role"] == "student"
-    assert data["session_id"] == session_id
+    assert data["session_id"] == token_digest(session_id)  # never the token itself
     assert data["must_change_pin"] is False
+
+
+def test_a_session_expires_one_school_day_after_login(temp_db):
+    db_path, _ = temp_db
+    client = TestClient(sample_app)
+    _, today = _seed_user_and_session(db_path, "today", age_hours=SESSION_TTL_HOURS - 1)
+    _, yesterday = _seed_user_and_session(
+        db_path, "yesterday", age_hours=SESSION_TTL_HOURS + 1
+    )
+
+    ok = client.get("/test-session", headers={"Authorization": f"Bearer {today}"})
+    assert ok.status_code == status.HTTP_200_OK
+    response = client.get(
+        "/test-session", headers={"Authorization": f"Bearer {yesterday}"}
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Invalid or expired session."
+
+
+def test_a_token_stored_in_plaintext_no_longer_authenticates(temp_db):
+    """Rows written before tokens were hashed hold the token itself: dead now."""
+    db_path, _ = temp_db
+    client = TestClient(sample_app)
+    user_id, _ = _seed_user_and_session(db_path, "legacy_user")
+    legacy_token = str(uuid.uuid4())
+    conn = get_db_connection(db_path)
+    try:
+        conn.execute(
+            "INSERT INTO sessions (id, user_id) VALUES (?, ?)", (legacy_token, user_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    response = client.get(
+        "/test-session", headers={"Authorization": f"Bearer {legacy_token}"}
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_require_roles_allows_matching_role(temp_db):

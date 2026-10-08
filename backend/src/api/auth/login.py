@@ -8,6 +8,7 @@ from core.db.database import get_db
 from core.security import (
     check_rate_limit,
     login_rate_limiter,
+    token_digest,
     verify_pin,
 )
 
@@ -58,17 +59,17 @@ def login(request: LoginRequest):
 
         login_rate_limiter.record_success(request.username)
 
-        # Create active session
-        session_id = str(uuid.uuid4())
+        # Create the session: the client gets the token, the database its digest
+        token = str(uuid.uuid4())
         cursor.execute(
             "INSERT INTO sessions (id, user_id, is_active) VALUES (?, ?, 1)",
-            (session_id, user_id),
+            (token_digest(token), user_id),
         )
         conn.commit()
 
     logger.info("Login successful for user '%s'.", username)
     return LoginResponse(
-        session_id=session_id,
+        session_id=token,
         username=username,
         must_change_pin=bool(user["must_change_pin"]),
     )

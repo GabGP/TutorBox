@@ -25,7 +25,7 @@ The quality gate is genuinely green. The findings below are the things a green g
 | C1 | Critical | Unauthenticated `POST /api/v1/quiz/validate` feeds raw text to SymPy's `eval`-based parser **(proved)** — **FIXED** | 1 line now; ~20 lines root fix |
 | C2 | Critical | A 7-character tutor message (`9××9××9`) freezes the whole backend **(proved)** — **FIXED** | ~10 lines |
 | H1 | High | Default teacher `teacher1` / `1234` is seeded and never forced to rotate | 1 line |
-| H2 | High | Bearer tokens stored in plaintext in two tables, and they never expire | ~5 lines |
+| H2 | High | Bearer tokens stored in plaintext in two tables, and they never expire — **FIXED** | ~5 lines |
 | H3 | High | Username-only lockout lets any student lock the teacher out; slow brute force still works | small |
 | H4 | High | `/session/{id}/next` has no state guard: a double-tap skips a question | ~10 lines |
 | H5 | High | Retry feedback tells the model the *opposite* for two-step equations | ~3 lines |
@@ -127,6 +127,20 @@ Suggested order is at the end.
 - **Fix:**
   - Store `hashlib.sha256(token.encode()).hexdigest()` at login and in the lookup and deactivate queries (about 3 lines). Use the same hash in `turn_logs` so the foreign key stays valid.
   - Add `AND s.created_at > datetime('now', '-12 hours')` (or a setting) to the lookup.
+- **How it was fixed:**
+  1. **Hashed once, in the function every request goes through.** `core/security/auth_session.py` adds `token_digest(token)`, the SHA-256 hex of the token. A fast hash is enough because tokens are random UUIDs (122 bits). `get_current_session` looks up `sessions.id = token_digest(bearer)` and returns that digest as `AuthContext.session_id`.
+     - Logout, PIN and username changes, and the tutor (`turn_logs.session_id`, plus its per-login turn gate and conversation keys) all use `ctx.session_id`. They now store and compare the digest without any change of their own, so the `turn_logs` foreign key stays valid.
+     - `api/auth/login.py` stores the digest and returns the token to the client once. No table, log or in-memory key keeps the token after the request that carries it.
+  2. **Expiry.** The lookup also requires `s.created_at > datetime('now', '-12 hours')`. `SESSION_TTL_HOURS = 12` covers one school day. It is a constant rather than a setting, because `core/config/models.py` is already at the 150-line ceiling and no school has asked for another length. An expired session gets the existing `401 Invalid or expired session.`
+  3. **Existing rows: no migration.** Rows written before the fix keep their old UUID in `sessions.id` and `turn_logs.session_id`, but those can no longer log in: a 36-character UUID never equals a 64-character digest. Deleting them would cascade-delete their tutor turns (`ON DELETE CASCADE`). Everyone logs in once more after the upgrade.
+  4. **Tests** (1544 → 1546 passing, 100% statement coverage):
+     - login stores the digest, and the raw token appears nowhere in `sessions`;
+     - logout deactivates the digest's row, and `AuthContext.session_id` is the digest;
+     - a session 11 hours old works and one 13 hours old gets 401;
+     - a token stored in plaintext (an old row) no longer authenticates;
+     - tutor turns log the digest, never the token.
+  5. **Verified:** `ruff check` and `ruff format --check` clean, 1546 passed, coverage 100%.
+  - **Limits:** the 12 hours count from login, not from the last request, so a student who logs in at 7:00 must log in again at 19:00 even while active. The old plaintext UUIDs stay in the two tables, unusable.
 
 ### H3. The lockout is a classroom DoS, and still allows slow brute force
 
