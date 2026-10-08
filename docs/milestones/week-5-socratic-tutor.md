@@ -27,7 +27,7 @@ This document summarizes the technical deliverables, architectural implementatio
 * **Acceptance Criteria Status**:
   * ✅ **30 dialogue turns, 10 adversarial probes, 0 solution leaks**: `test_containment_dialogues.py::test_thirty_turns_ten_probes_and_no_solution_before_the_child_finds_it`.
   * ✅ **Problem bank of $\ge 40$ validated questions in CI**: 48 labeled problems, each proven by SymPy in `test_problem_bank.py`.
-  * ⏳ **PWA tutor installed and functioning offline on 3 test devices**: the chat client runs in the classroom browser; the offline shell, the install path and the device evidence are pending (Section 2.B).
+  * ⏳ **PWA tutor added to the home screen and functioning on the classroom network without internet**: amended from "installed and functioning offline on 3 test devices" (Section 2.B, work package 2). The chat client runs in the classroom browser; the device evidence is pending.
 * **Key Milestone Artifacts**:
   * **Deterministic Dialogue State Machine**: `planner.py` chooses every pedagogical move without the model and climbs a bounded 4-tier hint ladder ($0 \to 3$).
   * **SymPy Containment Guardrail**: `containment.py` blocks any reply that states an accepted answer in digits, in Spanish words, or as an expression SymPy evaluates to it.
@@ -107,19 +107,18 @@ This document summarizes the technical deliverables, architectural implementatio
 
 **Work Packages** *[In Progress / Student B to complete]*:
 
-1. **Installable Offline Tutor Client**:
-   * `pwa/app/` has no service worker, so the client does not load without the appliance and offers no offline shell.
-   * Constraint: browsers run service workers and offer installation only in a secure context (HTTPS or `localhost`), and the appliance serves plain `http://tutorbox` ([PWA README §3](../../pwa/README.md#3-tareas--take-home-math-apps-tareas), [Captive Portal §6](../../infra/captive-portal.md#6-limitations--field-notes)). The take-home apps solved the same constraint with an Android APK wrapper. The install path for the tutor is the Pilot's open design decision.
-   * The manifest ships SVG icons only; raster 192/512 px icons are pending verification on the test devices.
-2. **Persistent Session State Across Visits**:
-   * The chat history is kept in `sessionStorage`, so it ends with the tab.
-   * The problem in progress and the hint level live in memory, keyed by the login session id: a new login or a backend restart starts the conversation over.
-   * The captive-portal sign-in browser keeps its own storage, so a student who later opens the normal browser logs in again.
-3. **Dialogue Turn Telemetry (concept, error type, scaffolding strategy)**:
+1. **Dialogue Turn Telemetry (concept, error type, scaffolding strategy)**:
    * `turn_logs` has no column for any of the three. Concept and scaffolding strategy can be derived from `TurnResult`; no error-type classification exists yet.
-   * Target: a migration adding the three columns, the repository and `_log_turn` mapping, and the [Dialogue Telemetry](../database/dialogue.md) specification, aligned with the shared concept taxonomy that Weeks 6 and 8 consume.
-4. **Device Acceptance Evidence**:
-   * The tutor installed and functioning offline on 3 test devices, with the procedure and results recorded here.
+   * Target: a migration adding the columns, the repository and `_log_turn` mapping, and the [Dialogue Telemetry](../database/dialogue.md) specification, aligned with the shared concept taxonomy that Weeks 6 and 8 consume.
+2. **Home-Screen Installation & Device Evidence**:
+   * Design decision (Pilot): the tutor gets no service worker and no install wrapper. Browsers run service workers and offer installation only in a secure context (HTTPS or `localhost`), and the appliance serves plain `http://tutorbox` ([PWA README §3](../../pwa/README.md#3-tareas--take-home-math-apps-tareas), [Captive Portal §6](../../infra/captive-portal.md#6-limitations--field-notes)). Every tutor reply also needs the appliance (the model and SymPy run there), so a copy installed for use away from the classroom would have nothing to do. The client students keep at home is the take-home app in `pwa/tareas/`, already installable offline as an Android APK.
+   * Amended acceptance criterion: the tutor is added to the phone's home screen and works on the classroom network without internet. Away from the classroom network the page does not open.
+   * Target: the procedure and result on an iPhone ("Add to Home Screen"), repeated on Android devices where available, recorded here and in the [PWA README](../../pwa/README.md).
+
+**Session State (kept as delivered):**
+
+* The login persists across visits: the Bearer token stays in `localStorage`, and the server keeps the problem in progress and the hint level under that same login session until the backend restarts.
+* The visible chat history is kept in `sessionStorage` for the current tab, the scope Student A chose for the captive-portal sign-in window. No change is planned.
 
 ---
 

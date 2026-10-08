@@ -183,7 +183,7 @@ gantt
   3. Architectural differences between Quiz mode and Tutor mode.
 * **Acceptance Criteria & Deliverables**:
   * Automated test suite of 30 dialogue turns including 10 adversarial "give me the answer" probes resulting in 0 solution leaks.
-  * PWA tutor successfully installed and functioning offline on 3 test devices.
+  * PWA tutor added to the home screen and functioning on the classroom network without internet (amended from "installed and functioning offline on 3 test devices": the appliance serves plain HTTP, see the [Week 5 tracking](week-5-socratic-tutor.md)).
   * Problem bank of $\ge 40$ validated questions in CI.
 * **Detailed Milestone Tracking**: [Week 5 Milestone Tracking](week-5-socratic-tutor.md).
 
