@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md)
+📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md) • [Week 5 Milestone](week-5-socratic-tutor.md)
 
 </div>
 
@@ -77,7 +77,7 @@ gantt
 | **2** ✅ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, phased 4.7 GB SLM / 3.3 GB TTS RAM profile | **A** / B |
-| **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
+| **5** ⏳ | [Socratic Tutor Mode](week-5-socratic-tutor.md) | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
 | **8** ⏳ | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
@@ -168,7 +168,7 @@ gantt
 
 ---
 
-### <a id="week-5"></a>⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
+### <a id="week-5"></a>⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A — Copilot Delivered)
 * **Focus**: Launch Mode 2 (Conversational Math Practice) reusing the local inference backend.
 * **Student B (Pilot)**:
   * Installable offline PWA tutor client with student login and persistent session state across visits.
@@ -185,6 +185,7 @@ gantt
   * Automated test suite of 30 dialogue turns including 10 adversarial "give me the answer" probes resulting in 0 solution leaks.
   * PWA tutor successfully installed and functioning offline on 3 test devices.
   * Problem bank of $\ge 40$ validated questions in CI.
+* **Detailed Milestone Tracking**: [Week 5 Milestone Tracking](week-5-socratic-tutor.md).
 
 ---
 
