@@ -143,3 +143,13 @@ def test_concept_questions(message, kind, llm, topic_id):
 
     assert (move.kind, move.llm, move.topic.id) == (kind, llm, topic_id)
     assert move.question == (message if kind == "explain" else "")
+
+
+def test_the_value_the_child_typed_is_kept_on_judged_moves():
+    conversation = _working_on("23 + 45")
+
+    wrong, conversation = plan(conversation, "70")
+    right, _ = plan(conversation, "68")
+    started, _ = plan(Conversation(), "¿cuánto es 23 + 45?")
+
+    assert (wrong.attempt, right.attempt, started.attempt) == (70, 68, None)

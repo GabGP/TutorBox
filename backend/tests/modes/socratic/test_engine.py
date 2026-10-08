@@ -107,6 +107,15 @@ def test_state_is_kept_per_login_and_reset_forgets_it():
     assert tutor.respond("b", "68").kind == "orphan"
 
 
+def test_the_turn_result_carries_the_value_the_child_typed():
+    tutor, _ = _tutor("x")
+    tutor.respond("a", "23 + 45")
+
+    assert tutor.respond("a", "70").attempt == 70
+    assert tutor.respond("a", "68").attempt == 68
+    assert tutor.respond("b", "7 por 8").attempt is None
+
+
 class _SlowClient(LLMClient):
     """Holds its slot until released, like a long generation."""
 

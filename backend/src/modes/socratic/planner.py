@@ -41,6 +41,7 @@ class Move:
     is_correct: bool | None = None
     topic: Topic | None = None
     question: str = ""
+    attempt: Fraction | None = None  # the value the child typed, when it was judged
 
 
 def plan(conversation: Conversation, message: str) -> tuple[Move, Conversation]:
@@ -99,13 +100,13 @@ def _judge(problem: Problem, value: Fraction, level: int) -> tuple[Move, Convers
     if value in accepted_answers(problem):
         praise = replies.praise(problem)
         move = Move("praise", praise, problem=problem, level=level, is_correct=True)
-        return move, Conversation()
+        return replace(move, attempt=value), Conversation()
     level = min(level + 1, MAX_LEVEL)
     text = f"Todavía no. {hints.hint(problem, level)}"
     move = Move(
         "hint", text, llm="rewrite", problem=problem, level=level, is_correct=False
     )
-    return move, Conversation(problem, level)
+    return replace(move, attempt=value), Conversation(problem, level)
 
 
 def _next_hint(

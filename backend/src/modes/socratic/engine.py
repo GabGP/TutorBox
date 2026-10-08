@@ -8,6 +8,7 @@ the turn records that containment was triggered.
 
 import logging
 from dataclasses import dataclass
+from fractions import Fraction
 
 from modes.socratic.gateway import TutorGateway
 from modes.socratic.guard import check, clean
@@ -34,6 +35,7 @@ class TurnResult:
     problem: Problem | None
     is_correct: bool | None
     topic_id: str | None
+    attempt: Fraction | None = None
 
 
 class SocraticTutor:
@@ -57,6 +59,7 @@ class SocraticTutor:
             problem=move.problem,
             is_correct=move.is_correct,
             topic_id=move.topic.id if move.topic else None,
+            attempt=move.attempt,
         )
 
     def reset(self, key: str) -> None:
