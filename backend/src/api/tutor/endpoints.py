@@ -17,6 +17,7 @@ from api.tutor.schemas import (
     TutorRosterResponse,
     TutorStatusResponse,
     TutorStudent,
+    TutorSummaryResponse,
 )
 from api.tutor.service import get_roster, get_turn_gate, get_tutor
 from api.tutor.turn_logging import log_turn
@@ -82,6 +83,18 @@ def list_students(_ctx: Staff, roster: Roster) -> TutorRosterResponse:
     """Students using the tutor: connected ones first, then the last 30 minutes."""
     students = [TutorStudent.model_validate(row) for row in roster.snapshot()]
     return TutorRosterResponse(students=students)
+
+
+@router.get("/summary", response_model=TutorSummaryResponse)
+def summary(roster: Roster) -> TutorSummaryResponse:
+    """Totals for the classroom screen, which has no login: counts only, no names."""
+    rows = roster.snapshot()
+    online = [row for row in rows if row["online"]]
+    return TutorSummaryResponse(
+        online=len(online),
+        solved=sum(int(row["solved"]) for row in rows),
+        need_help=sum(1 for row in online if row["problem"] and row["hint_level"] == 3),
+    )
 
 
 def _require_tutor_mode() -> None:

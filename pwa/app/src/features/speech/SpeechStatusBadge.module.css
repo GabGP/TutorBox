@@ -6,23 +6,23 @@
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 600;
-  background: var(--chip, #f1f6f9);
-  border: 1px solid var(--line, #e4edf2);
-  color: var(--mute, #4e5c63);
+  background: var(--chip, #eff5f1);
+  border: 1px solid var(--line, #dce8e0);
+  color: var(--mute, #4d5d55);
   transition: all 0.25s ease;
 }
 
 .loading {
   background: var(--tint, #d9ecf5);
-  border-color: var(--p-soft, #a9c3cf);
-  color: var(--p, #0b6e99);
+  border-color: var(--p-soft, #9ed5b3);
+  color: var(--p, #1f3e33);
 }
 
 .playing {
-  background: rgba(91, 192, 235, 0.15);
-  border-color: var(--p-bright, #5bc0eb);
-  color: var(--p, #0b6e99);
-  box-shadow: 0 0 12px rgba(91, 192, 235, 0.25);
+  background: rgba(158, 213, 179, 0.15);
+  border-color: var(--p-bright, #9ed5b3);
+  color: var(--p, #1f3e33);
+  box-shadow: 0 0 12px rgba(158, 213, 179, 0.25);
 }
 
 .done {
@@ -49,8 +49,8 @@
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(11, 110, 153, 0.2);
-  border-top-color: var(--p, #0b6e99);
+  border: 2px solid rgba(31, 62, 51, 0.2);
+  border-top-color: var(--p, #1f3e33);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -64,7 +64,7 @@
 
 .bar {
   width: 3px;
-  background: var(--p, #0b6e99);
+  background: var(--p, #1f3e33);
   border-radius: 2px;
   animation: equalize 1s ease-in-out infinite alternate;
 }

@@ -1,7 +1,7 @@
 .card {
   border-radius: 28px;
-  background: var(--panel, #f7fbfd);
-  border: 1px solid var(--line, #e4edf2);
+  background: var(--panel, #fbfdfc);
+  border: 1px solid var(--line, #dce8e0);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid var(--line3, #c9dbe4);
+  border: 2px solid var(--line3, #c3d6ca);
   opacity: 0.6;
 }
 
@@ -38,8 +38,8 @@
   inset: 0;
   border-radius: 50%;
   border: 2px solid transparent;
-  border-top-color: var(--p, #0b6e99);
-  border-right-color: var(--p-soft, #a9c3cf);
+  border-top-color: var(--p, #1f3e33);
+  border-right-color: var(--p-soft, #9ed5b3);
   animation: spinOrbit var(--speed-orbit, 4s) linear infinite;
 }
 
@@ -52,8 +52,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--tint, #e7f1f6);
-  color: var(--p, #0b6e99);
+  background: var(--tint, #eaf5ee);
+  color: var(--p, #1f3e33);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,8 +87,8 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
-  background: var(--chip, #f1f6f9);
-  color: var(--mute, #4e5c63);
+  background: var(--chip, #eff5f1);
+  color: var(--mute, #4d5d55);
 }
 
 .title {
@@ -111,8 +111,8 @@
   font-size: 13px;
 }
 
-.questionCounter { color: var(--mute, #4e5c63); }
-.percentText { font-weight: 700; color: var(--p, #0b6e99); }
+.questionCounter { color: var(--mute, #4d5d55); }
+.percentText { font-weight: 700; color: var(--p, #1f3e33); }
 
 .stageCaption {
   min-height: 20px;
@@ -127,7 +127,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--mute2, #55636a);
+  color: var(--mute2, #536259);
   animation: fadeInCaption var(--speed-fast, 0.4s) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
@@ -169,8 +169,8 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-.pillPending { background: var(--line, #e4edf2); color: var(--mute, #4e5c63); }
-.pillActive { background: var(--p, #0b6e99); color: #ffffff; }
+.pillPending { background: var(--line, #dce8e0); color: var(--mute, #4d5d55); }
+.pillActive { background: var(--p, #1f3e33); color: #ffffff; }
 .pillDone { background: var(--ok-bg, #d7ead9); color: var(--ok, #14532b); }
 .pillFailed {
   background: var(--bad-bg, #ffe9e7);
@@ -185,9 +185,9 @@
   flex-wrap: wrap;
   gap: 8px;
   font-size: 12px;
-  color: var(--mute2, #55636a);
+  color: var(--mute2, #536259);
   padding-top: 4px;
-  border-top: 1px dashed var(--line, #e4edf2);
+  border-top: 1px dashed var(--line, #dce8e0);
 }
 
 .timerBadge,
@@ -195,7 +195,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--chip, #f1f6f9);
+  background: var(--chip, #eff5f1);
   padding: 4px 8px;
   border-radius: 6px;
 }

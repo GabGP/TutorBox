@@ -1,11 +1,11 @@
 .shiny {
   background: linear-gradient(
     90deg,
-    var(--ink, #131e23) 0%,
-    var(--ink, #131e23) 38%,
-    var(--p-bright, #5bc0eb) 50%,
-    var(--ink, #131e23) 62%,
-    var(--ink, #131e23) 100%
+    var(--ink, #16241e) 0%,
+    var(--ink, #16241e) 38%,
+    var(--p-bright, #9ed5b3) 50%,
+    var(--ink, #16241e) 62%,
+    var(--ink, #16241e) 100%
   );
   background-size: 200% 100%;
   background-repeat: repeat-x;

@@ -46,41 +46,127 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--bg);
+  border-radius: 22px;
+  background: #fff;
 }
 
 .tutorBubble,
 .studentBubble {
   margin: 0;
-  max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  line-height: 1.4;
+  max-width: 86%;
+  padding: 11px 14px;
+  border-radius: 18px;
+  line-height: 1.42;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .tutorBubble {
   align-self: flex-start;
-  background: var(--panel);
+  background: var(--tint);
   color: var(--ink);
-  border: 1px solid var(--line2);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 6px;
 }
 
 .studentBubble {
   align-self: flex-end;
   background: var(--p);
   color: #fff;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 6px;
+}
+
+/* A hint above level 0: its "Pista N de 3" tag sits on top of the bubble. */
+.hint {
+  align-self: flex-start;
+  max-width: 86%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.hint .tutorBubble {
+  max-width: 100%;
+}
+
+.hintTag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--p-soft);
+  color: var(--p);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* The child solved it: the one accent bubble of the chat (text on --accent is --accent-ink). */
+.praiseBubble {
+  align-self: flex-start;
+  max-width: 86%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 18px 18px 18px 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.praiseBubble svg {
+  flex: 0 0 18px;
+  margin-top: 2px;
+}
+
+.praiseBubble p {
+  margin: 0;
+  line-height: 1.42;
+  font-weight: 500;
 }
 
 .thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--mute);
-  font-style: italic;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--p);
+  animation: dot 1.2s ease-in-out infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    animation: none;
+  }
 }
 
 .alert {
@@ -129,6 +215,7 @@
 
 .send:disabled {
   background: var(--p-soft);
+  color: var(--p);
   cursor: default;
 }
 
@@ -173,10 +260,33 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.studentBody {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Last hint and still connected: accent row, accent-ink text (6.7:1). */
+.needsHelp {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.needsHelp .mute,
+.needsHelp .work {
+  color: var(--accent-ink);
+}
+
+.helpTag {
+  float: right;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .dotOn,
@@ -188,11 +298,12 @@
 }
 
 .dotOn {
-  background: var(--D);
+  background: var(--p);
 }
 
 .dotOff {
-  background: #9aa9b2;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px #7d8c84;
 }
 
 .work {

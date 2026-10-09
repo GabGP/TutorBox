@@ -37,8 +37,8 @@
 
 .connectionCard {
   border-radius: 16px;
-  background: var(--tint, #e7f1f6);
-  border: 1px solid var(--line3, #c9dbe4);
+  background: var(--tint, #eaf5ee);
+  border: 1px solid var(--line3, #c3d6ca);
   padding: 14px 20px;
   display: flex;
   align-items: center;
@@ -51,13 +51,13 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: var(--p, #0b6e99);
+  color: var(--p, #1f3e33);
 }
 
 .connectionAddr {
   font-size: 16px;
   font-weight: 700;
-  color: var(--ink, #131e23);
+  color: var(--ink, #16241e);
   word-break: break-all;
 }
 

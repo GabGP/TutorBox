@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApplianceMode } from '../../features/mode/useApplianceMode';
+import { TutorWall } from '../../features/tutor/TutorWall';
 import { computeDisplayStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
 import { OPTION_LETTERS } from '../../shared/constants/options';
@@ -35,20 +36,24 @@ export const DisplayView: React.FC = () => {
     }
   }, [session?.id]);
 
-  // Tutor and take-home modes: the wall screen tells the class where to go on their phones.
-  if (mode === 'tutor' || mode === 'apps') {
-    const apps = mode === 'apps';
+  // Tutor mode: where to join and live class totals (features/tutor/TutorWall).
+  if (mode === 'tutor') {
+    return (
+      <div className={styles.displayShell}>
+        <TutorWall host={host} />
+      </div>
+    );
+  }
+
+  // Take-home mode: the wall screen tells the class where to download the apps.
+  if (mode === 'apps') {
     return (
       <div className={styles.displayShell}>
         <section id="s-mode" className={`${styles.section} ${styles.center}`}>
           <img src="/tareas/primero/icons/quq.svg" alt="" width={120} height={170} />
-          <div className={styles.h}>{apps ? "¡Llévate a Q'uq' a casa!" : 'Practica con el tutor'}</div>
-          <div className={styles.sub}>
-            {apps
-              ? 'En tu teléfono, abre esta dirección y descarga la app de tu grado:'
-              : 'En tu teléfono, entra a esta dirección con tu usuario y PIN:'}
-          </div>
-          <div className={styles.count}>{host ? `${host}/${apps ? 'descargas' : 'alumno'}` : ''}</div>
+          <div className={styles.h}>¡Llévate a Q'uq' a casa!</div>
+          <div className={styles.sub}>En tu teléfono, abre esta dirección y descarga la app de tu grado:</div>
+          <div className={styles.count}>{host ? `${host}/descargas` : ''}</div>
         </section>
       </div>
     );
@@ -63,7 +68,9 @@ export const DisplayView: React.FC = () => {
     <div className={styles.displayShell}>
       {step === 'idle' && (
         <section id="s-idle" className={`${styles.section} ${styles.center}`}>
-          <div className={styles.logo}>T</div>
+          <div className={styles.logo} aria-hidden>
+            <i />
+          </div>
           <div className={styles.h}>Utz'tutor está listo</div>
           <div className={styles.sub} id="idleSub">
             {session

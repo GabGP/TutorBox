@@ -18,7 +18,7 @@ describe('PWA document meta (P0-1)', () => {
 
   it('declares theme-color, description and manifest entry', () => {
     const html = readAppFile('index.html');
-    expect(html).toMatch(/name="theme-color" content="#0B6E99"/);
+    expect(html).toMatch(/name="theme-color" content="#1F3E33"/);
     expect(html).toMatch(/name="description"/);
     expect(html).toMatch(/rel="manifest" href="\/static\/manifest\.webmanifest"/);
     expect(html).toMatch(/rel="icon".*\/static\/favicon\.svg/);
@@ -32,7 +32,7 @@ describe('PWA document meta (P0-1)', () => {
     expect(manifest.name).toBe("Utz'tutor");
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('/alumno/');
-    expect(manifest.theme_color).toBe('#0B6E99');
+    expect(manifest.theme_color).toBe('#1F3E33');
     expect(Array.isArray(manifest.icons)).toBe(true);
     expect(manifest.icons.length).toBeGreaterThan(0);
     for (const icon of manifest.icons) {
