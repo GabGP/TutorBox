@@ -15,11 +15,12 @@ class CreateSessionRequest(BaseModel):
 
 
 class CastVoteRequest(BaseModel):
-    """A student's vote from the web client.
+    """A student's vote, from a phone or from an ESP32 clicker.
 
-    The server records it as transport "web" with no device, so a phone cannot
-    pose as an ESP32 clicker; clickers vote through their own transport (Week 7).
-    Other fields a client sends, such as an old `transport_type`, are ignored.
+    The server labels the vote from the caller's session: `hardware` with the
+    clicker's id when the token was issued to a clicker, otherwise `web`. The body
+    cannot choose the label; other fields a client sends, such as `transport_type`
+    or `device_id`, are ignored.
     """
 
     selected_option: str = Field(..., pattern=r"^[A-D]$")

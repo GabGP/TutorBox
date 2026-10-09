@@ -34,6 +34,8 @@ class AuthContext(BaseModel):
     role: str
     session_id: str  # sessions.id, the token's digest: safe to store, unlike the token
     must_change_pin: bool
+    # The clicker this session was issued to; None for a login from a phone or browser.
+    device_id: str | None = None
 
 
 def get_current_session(
@@ -57,7 +59,7 @@ def get_current_session(
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT s.user_id, u.username, u.role, u.must_change_pin "
+            "SELECT s.user_id, s.device_id, u.username, u.role, u.must_change_pin "
             "FROM sessions s "
             "JOIN users u ON u.id = s.user_id "
             "WHERE s.id = ? AND s.is_active = 1 AND u.deleted_at IS NULL "
@@ -78,6 +80,7 @@ def get_current_session(
         role=row["role"],
         session_id=session_id,
         must_change_pin=bool(row["must_change_pin"]),
+        device_id=row["device_id"],
     )
 
 

@@ -11,6 +11,7 @@ from api.session.schemas import (
     VoteResponse,
 )
 from api.session.state_builder import build_session_state
+from api.session.transport import resolve_vote_transport
 from core.db.database import get_db
 from core.db.round_repository import get_round_by_index
 from core.db.session_repository import get_current_quiz_session, get_quiz_session
@@ -73,13 +74,16 @@ def submit_vote(
                 detail="Active round not found.",
             )
 
+        origin = resolve_vote_transport(ctx)
         try:
-            vote = engine.cast_vote(  # the web transport: "web", no device
+            vote = engine.cast_vote(  # the label comes from the caller's session
                 session_id,
                 current_round.id,
                 ctx.user_id,
                 payload.selected_option,
                 response_time_ms=payload.response_time_ms,
+                transport_type=origin.transport_type,
+                device_id=origin.device_id,
             )
             conn.commit()
         except VoteAlreadyCastError as err:
