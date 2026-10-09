@@ -19,8 +19,8 @@ This document tracks the technical deliverables, architectural implementations, 
 
 * **Theme**: *"One More Transport: Integrating hardware without redesigning the system"*
 * **Status**: **Copilot (Student A) Backend Complete & Green · Pilot (Student B) Firmware, Provisioner and Assembly Not Started**
-* **Backend Test Suite**: **2125 / 2125 passing tests** (79 new this week: 19 in `tests/core/db/`, 19 in `tests/api/staff/`, 23 test cases in `tests/api/devices/`, 12 for the vote label in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`).
-* **Statement Coverage**: **100.00% statement coverage** across all 6,710 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Backend Test Suite**: **2141 / 2141 passing tests** (95 new this week: 19 in `tests/core/db/`, 19 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`).
+* **Statement Coverage**: **100.00% statement coverage** across all 6,716 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
 * **Modularity Compliance**: production modules are held to the 150-line ceiling by `tests/test_modularity_policy.py`. The largest new production module is `backend/src/api/devices/auth.py` (104 lines).
 * **Acceptance Criteria Status**:
@@ -29,6 +29,7 @@ This document tracks the technical deliverables, architectural implementations, 
 * **Key Milestone Artifacts**:
   * **Clicker Secret**: `POST /api/v1/staff/devices/{device_id}/secret` issues a 32-character secret once. Only its SHA-256 digest is stored ([Devices API](../api/devices.md#post-staff-devices-secret)).
   * **Device Authentication**: `POST /api/v1/devices/auth` trades the secret for a bearer session of the assigned student, with its own lockout ([Devices API](../api/devices.md#post-devices-auth)).
+  * **Token Scope**: a clicker's token can vote and nothing else. Every other endpoint refuses it with `403 "Clicker sessions can only vote."` ([Devices API](../api/devices.md#post-devices-auth)).
   * **Vote Label**: each vote is labelled `hardware` with the clicker's id, or `web`, from the caller's session. The request body cannot choose the label ([Sessions API](../api/sessions.md#post-session-vote)).
   * **Migration `015`**: three nullable columns and the partial index `idx_sessions_device_id` ([Migrations](../database/migrations.md#015-clicker-secret-and-session-device)).
   * **Revocation**: a clicker's sessions end when it is unassigned, reassigned, deleted, or given a new secret ([Clicker Token Revocation](../api/devices.md#clicker-token-revocation)).
@@ -44,7 +45,8 @@ This document tracks the technical deliverables, architectural implementations, 
 1. **The server labels each vote from the session.** A clicker votes on the shared `POST /api/v1/session/{session_id}/vote` endpoint, not on a separate transport. The first design sent `transport_type` and `device_id` in the body, which let any client claim any label. Both fields are now ignored. A token issued to a clicker records `hardware` with that clicker's id, and any other token records `web`. The label follows the token, and the token follows the staff assignment.
 2. **The secret is stored as a SHA-256 digest.** The secret is 128 random bits, so a fast hash is enough, the same reasoning the code gives for bearer tokens. The public device endpoint would otherwise run bcrypt on every request.
 3. **One live token per clicker.** A new authentication revokes the clicker's earlier sessions, so the clicker holds one token at a time.
-4. **No separate driver class.** The roadmap item "backend `VoteTransport` driver" is built as the label in decision 1. The session engine has no hardware-specific code. The seam is the wire contract, as [Clicker Transport §5](../architecture/esp32-clicker-transport.md#5-abstract-votetransport-architecture-week-3--week-7-bridge) describes.
+4. **A clicker's token can only vote.** The token votes as the assigned student, but it is not a login. `get_current_session`, which every endpoint depends on directly or through `require_roles`, refuses a session that was issued to a clicker. Only the vote endpoint asks for `get_voter_session`, which accepts it. The refusal is the default, so an endpoint added later refuses clickers without any extra code. A secret read out of a clicker's flash memory, or a token captured on the classroom Wi-Fi, therefore gives nothing but the votes that clicker could already cast.
+5. **No separate driver class.** The roadmap item "backend `VoteTransport` driver" is built as the label in decision 1. The session engine has no hardware-specific code. The seam is the wire contract, as [Clicker Transport §5](../architecture/esp32-clicker-transport.md#5-abstract-votetransport-architecture-week-3--week-7-bridge) describes.
 
 **Delivered Subsystems:**
 
@@ -62,18 +64,23 @@ This document tracks the technical deliverables, architectural implementations, 
    * `AuthContext` carries the `device_id` of the session it was issued to. `resolve_vote_transport` turns that into the label.
    * `CastVoteRequest` no longer has `transport_type` or `device_id`. A client that still sends them is not refused, and the fields are ignored.
    * The session engine in `backend/src/modes/quiz/session/` was not changed.
-5. **Revocation (`backend/src/api/staff/device_pairing.py`, `devices.py`, `device_repository.py`)**:
+5. **Token Scope (`backend/src/core/security/auth_session.py`, `backend/src/api/session/participant.py`)**:
+   * `get_voter_session` resolves any live session. `get_current_session` calls it and answers `403 "Clicker sessions can only vote."` when the session has a `device_id`. `submit_vote` is the only endpoint that depends on `get_voter_session`.
+   * A revoked or expired clicker token still gets `401`, so the firmware's rule (on `401`, authenticate again) is unchanged.
+   * `POST /api/v1/games/events` takes an optional login and never refuses a batch. Events sent with a clicker's token are stored with no student, like events sent with an expired login.
+6. **Revocation (`backend/src/api/staff/device_pairing.py`, `devices.py`, `device_repository.py`)**:
    * A clicker's sessions end when it is unassigned, when it is assigned to a different student, when its student moves to another clicker, when it is deleted, and when it is given a new secret. Assigning the same student to the same clicker again revokes nothing. These events never end a phone login.
-6. **Verification (`backend/tests/`)**:
+7. **Verification (`backend/tests/`)**:
    * `tests/core/db/test_device_repository.py` (14 tests) and `test_device_secret_migration_015.py` (5 tests): the repository functions, the new columns and index, and inserts that do not name the new columns.
    * `tests/api/staff/test_device_secret.py` (12 tests) and `test_device_revocation.py` (7 tests): the secret contract, the audit row, the log, and each revocation case.
    * `tests/api/devices/test_device_auth.py` and `test_device_auth_lockout.py`: the status codes and their detail strings, the anti-oracle symmetry, one live token, the lockout, and the log. The malformed-body test runs seven cases.
-   * `tests/api/session/test_session_hardware_vote.py` (8 tests), `test_transport.py` (2) and `tests/core/security/test_auth_session_device.py` (2): the label on each path, the first-press lock across transports, and a revoked clicker's vote.
+   * `tests/api/devices/test_device_token_scope.py` (12 test cases): a clicker's token is refused with `403` on the profile, the PIN change, the username change, logout, the three student tutor endpoints and a staff endpoint; the refused logout leaves the token able to vote; the refused PIN change leaves the PIN as it was; game events carry no student; and a phone login of the same student is still accepted.
+   * `tests/api/session/test_session_hardware_vote.py` (8 tests), `test_transport.py` (2) and `tests/core/security/test_auth_session_device.py` (6): the label on each path, the first-press lock across transports, a revoked clicker's vote, and which of the three session dependencies accept a clicker's session.
+   * The revocation rules and the token scope were checked by breaking each rule in the source and running these tests: ten deliberate breakages, each caught by at least one test.
    * Fleet, in CI: `tests/api/session/test_session_fleet_hardware.py` (6 tests, helpers in `fleet_support.py`) runs 15 simulated clickers and 15 phones through the real endpoints (register, assign, secret, authenticate, vote). Five rounds of 30 simultaneous votes store 150 rows, 75 `hardware` and 75 `web`, with none lost. The other tests cover 15 clickers pressing twice at once (one vote each), an unassigned clicker that stops voting while the other 14 continue, a reassigned clicker that votes as its new student after authenticating again, and the >51% rule with mixed transports (16 of 30 on one distractor speaks, 15 of 30 stays silent).
 
 **Known Limits:**
 
-* A clicker's token is an ordinary student token. Every endpoint that accepts a student's token accepts the clicker's too, not only the vote endpoint.
 * A student's own PIN or username change ends only the session it was made from, so a clicker's token keeps working after a phone change. A staff PIN reset ends it.
 * The vote endpoint does not check a pending PIN rotation, as before this week. A student with a pending rotation can vote from a clicker or a phone.
 * A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
@@ -88,6 +95,7 @@ This document tracks the technical deliverables, architectural implementations, 
 | `POST /api/v1/devices/auth` | `{"device_id": "...", "secret": "<32 lowercase hex>"}` | `200`: `{session_id, username, device_id}`. Keep `session_id` in RAM and send it as `Authorization: Bearer`. `401 "Invalid device credentials."`: the secret is wrong or was replaced; provision again. `403 "Device is not assigned to any student."`: wait and authenticate again (the design retries every 30 s). `429`: locked out; wait. By default the lockout starts at 30 s and doubles up to 16 min. `422`: malformed packet. |
 | `GET /api/v1/session/current` | none | `200`: the live match and its open round. `404 "No active session."`: no match yet. |
 | `POST /api/v1/session/{session_id}/vote` (`session_id` from `GET /api/v1/session/current`) | `{"selected_option": "A"–"D"}`, optional `response_time_ms` | `200`: the vote is recorded. `401 "Invalid or expired session."`: authenticate again, once, then vote again. `409`: already voted in this round, or the round is not open. This is final; do not retry. `422`: the option is not `A` to `D`. `404`: the session or round is not found. |
+| Any other endpoint, with the clicker's token | any | `403 "Clicker sessions can only vote."` Only the vote endpoint accepts the token. `GET /api/v1/session/current` is public and needs no token. |
 
 The LED patterns are the ones in [Clicker Transport §6](../architecture/esp32-clicker-transport.md#6-visual-feedback--dual-led-state-machines) and [Clicker Protocol §3](../architecture/esp32-protocol.md#3-end-to-end-flow). This milestone does not change them.
 
@@ -129,5 +137,5 @@ The LED patterns are the ones in [Clicker Transport §6](../architecture/esp32-c
    * When the teacher unassigns or reassigns a clicker, its next vote is refused and it shows the red pattern. Giving it to another student needs no Bluetooth step: the clicker authenticates again with the secret it already holds and votes as the new student. Only a new secret or a deleted clicker needs provisioning again.
    * The first press locks per student per round across transports. A child who votes on a clicker and then on a phone gets `409`.
 4. **Known limits, stated before the jury asks**:
-   * A clicker's token is a full student token, and the vote endpoint does not check a pending PIN rotation.
+   * A clicker's token can only vote, so a secret copied out of a clicker gives nothing but that clicker's votes. The vote endpoint does not check a pending PIN rotation.
    * The lockout counters are in memory.

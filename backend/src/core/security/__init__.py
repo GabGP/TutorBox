@@ -6,6 +6,7 @@ from .auth_session import (
     AuthContext,
     ensure_no_pending_rotation,
     get_current_session,
+    get_voter_session,
     require_roles,
     token_digest,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "ensure_no_pending_rotation",
     "generate_temporary_pin",
     "get_current_session",
+    "get_voter_session",
     "hash_pin",
     "login_key",
     "login_rate_limiter",

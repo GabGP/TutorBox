@@ -15,7 +15,7 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 
 ## Endpoint Overview
 
-These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. A clicker proves itself with a secret that staff issue to it, and trades that secret for a login session of its assigned student at the public `POST /api/v1/devices/auth` endpoint.
+These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
@@ -25,7 +25,7 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 | `POST` | `/api/v1/staff/devices/{device_id}/unassign` | Teacher, Admin | Unpair a physical clicker from any student |
 | `POST` | `/api/v1/staff/devices/{device_id}/secret` | Teacher, Admin | Issue a new secret for a clicker; its active sessions are revoked |
 | `DELETE` | `/api/v1/staff/devices/{device_id}` | Teacher, Admin | Remove a clicker identifier from the fleet |
-| `POST` | `/api/v1/devices/auth` | Public | Trade a clicker's secret for a login session of its assigned student |
+| `POST` | `/api/v1/devices/auth` | Public | Trade a clicker's secret for a vote-only session of its assigned student |
 
 ---
 
@@ -181,7 +181,7 @@ Issues a new secret for a physical clicker. The clicker sends this secret to `PO
 
 ### <a id="post-devices-auth"></a>`POST /api/v1/devices/auth`
 
-A clicker has no PIN. It trades its secret for a login session of the student it is assigned to. The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
+A clicker has no PIN. It trades its secret for a session of the student it is assigned to. The session can only vote (see **Voting only** below). The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
 
 * **Authorization**: Public
 * **Request Body**:
@@ -202,7 +202,7 @@ A clicker has no PIN. It trades its secret for a login session of the student it
       "device_id": "ESP32-A4CF12"
     }
     ```
-    `session_id` is a bearer token of the assigned student, sent as `Authorization: Bearer <session_id>`. The database keeps only its digest.
+    `session_id` is a bearer token that votes as the assigned student, sent as `Authorization: Bearer <session_id>`. The database keeps only its digest.
   * `401 Unauthorized`: `"Invalid device credentials."` An unknown device, a device that has no secret, and a wrong secret all get this same response.
   * `403 Forbidden`: `"Device is not assigned to any student."` The secret is right, but the clicker is unassigned or its student's account is deleted. This is not counted as a failed attempt, so a clicker waiting for the teacher can retry.
   * `422 Unprocessable Entity`: the body breaks the rules above. The response lists each invalid field and repeats the value sent, as FastAPI does by default (login does the same for a malformed PIN).
@@ -211,7 +211,7 @@ A clicker has no PIN. It trades its secret for a login session of the student it
   * **Lockout**: each wrong secret counts against the key `device:<device_id>@<address>`, where `<address>` is the client address, as for login. After `AUTH_MAX_ATTEMPTS` wrong secrets (5 in `.env.example`) the key is locked for `AUTH_LOCKOUT_SECONDS` (30 in `.env.example`). Each later lockout lasts twice as long as the one before, up to 16 minutes. A locked device gets `429` even with the right secret. A successful authentication clears the count. The key never shares a lockout with a username. The counters are kept in memory, so a backend restart clears them.
   * **One live token**: a successful authentication revokes the clicker's earlier sessions, so a clicker holds one token at a time.
   * **Expiry**: the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`), like any login. The clicker authenticates again when a vote returns `401`.
-  * **Full student session**: the token is an ordinary student session. Every endpoint that accepts a student's token accepts it.
+  * **Voting only**: the token is accepted by `POST /api/v1/session/{session_id}/vote` and by no other endpoint. Everywhere else it gets `403 Forbidden` with `"Clicker sessions can only vote."`: the profile, the PIN and username changes, logout, the tutor and every staff endpoint. A revoked or expired token gets `401` first, as on the vote endpoint. `POST /api/v1/games/events`, which takes an optional login and never refuses a batch, stores events sent with a clicker's token with no student. The rule is the default in `get_current_session` (`backend/src/core/security/auth_session.py`), so an endpoint added later refuses clickers unless it asks for `get_voter_session`.
   * The vote endpoint labels a vote cast with this token as `hardware`, with the clicker's `device_id`. See [Sessions API](sessions.md#post-session-vote).
   * Neither the secret nor the token is written to the logs.
 

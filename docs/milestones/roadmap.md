@@ -224,7 +224,7 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Live 10-question match conducted with $\ge 10$ physical ESP32 clickers with 0 lost votes.
   * Fleet benchmark report detailing connection limits and packet latency.
-* **Current State (2026-10-09)**: the backend half is built and green: migration `015`, the clicker secret (`POST /api/v1/staff/devices/{device_id}/secret`), device authentication (`POST /api/v1/devices/auth`), and the vote label taken from the session. Firmware, the BLE provisioner and the physical batch are not started. Both acceptance criteria are pending hardware: the fleet test in CI is simulated, and the real-device match and the latency benchmark are not done.
+* **Current State (2026-10-09)**: the backend half is built and green: migration `015`, the clicker secret (`POST /api/v1/staff/devices/{device_id}/secret`), device authentication (`POST /api/v1/devices/auth`) issuing a token that can only vote, and the vote label taken from the session. Firmware, the BLE provisioner and the physical batch are not started. Both acceptance criteria are pending hardware: the fleet test in CI is simulated, and the real-device match and the latency benchmark are not done.
 * **Detailed Milestone Tracking**: [Week 7 Milestone Tracking](week-7-esp32-clickers.md).
 
 ---

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from core.db.device_repository import create_device_session
 from core.security import token_digest
+from tests.api.clicker_support import clicker_token_is_live
 from tests.conftest import auth_headers, get_user_id
 
 CLICKER_ID = "ESP32-A4CF12"
@@ -178,11 +179,11 @@ def test_issuing_secret_revokes_clicker_token_but_keeps_phone_login(staff_db, cl
     assign_clicker(client, teacher_headers, student_id)
     clicker_headers = issue_clicker_token(conn, student_id)
     phone_headers = auth_headers(client, "student1")
-    assert me_status(client, clicker_headers) == 200
+    assert clicker_token_is_live(client, clicker_headers)
 
     assert client.post(SECRET_URL, headers=teacher_headers).status_code == 200
 
-    assert me_status(client, clicker_headers) == 401
+    assert not clicker_token_is_live(client, clicker_headers)
     assert me_status(client, phone_headers) == 200
 
 

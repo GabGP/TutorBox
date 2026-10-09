@@ -63,7 +63,7 @@ The API specification is decomposed into cohesive domain modules:
 
 TutorBox uses stateful **Bearer Session Tokens**. The client keeps the token; the local SQLite database
 stores only its SHA-256 digest, so the `sessions` and `turn_logs` tables never hold a working token. A
-token stops working 12 hours after login, on logout, or on a PIN or username change. A clicker's token also stops when staff unassign or delete the clicker, assign it to another student, or issue it a new secret ([Clicker Token Revocation](devices.md#clicker-token-revocation)).
+token stops working 12 hours after login, on logout, or on a PIN or username change. A clicker's token also stops when staff unassign or delete the clicker, assign it to another student, or issue it a new secret ([Clicker Token Revocation](devices.md#clicker-token-revocation)). A clicker's token is accepted only by the vote endpoint; every other endpoint answers `403` with `"Clicker sessions can only vote."` ([Devices API](devices.md#post-devices-auth)).
 
 ```mermaid
 sequenceDiagram

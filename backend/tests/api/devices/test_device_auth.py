@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from core.db.device_repository import store_device_secret
 from core.security import token_digest
+from tests.api.clicker_support import clicker_token_is_live
 from tests.conftest import auth_headers, get_user_id
 
 AUTH_URL = "/api/v1/devices/auth"
@@ -40,8 +41,8 @@ def post_auth(client: TestClient, device_id: str, secret: str):
     return client.post(AUTH_URL, json={"device_id": device_id, "secret": secret})
 
 
-def read_profile(client: TestClient, token: str):
-    return client.get(PROFILE_URL, headers={"Authorization": f"Bearer {token}"})
+def bearer(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
 
 
 def test_right_secret_returns_session_for_the_assigned_student(staff_db, client):
@@ -57,15 +58,12 @@ def test_right_secret_returns_session_for_the_assigned_student(staff_db, client)
     assert body["device_id"] == DEVICE_ID
 
 
-def test_issued_token_reads_the_assigned_students_profile(staff_db, client):
+def test_issued_token_is_accepted_by_the_vote_endpoint(staff_db, client):
     _, conn = staff_db
     seed_clicker(conn, DEVICE_ID, get_user_id(conn, "student1"))
     token = post_auth(client, DEVICE_ID, SECRET).json()["session_id"]
 
-    response = read_profile(client, token)
-
-    assert response.status_code == 200
-    assert response.json()["username"] == "student1"
+    assert clicker_token_is_live(client, bearer(token))
 
 
 def test_session_row_keeps_digest_student_and_clicker_but_not_token(staff_db, client):
@@ -196,8 +194,8 @@ def test_second_authentication_ends_the_first_token(staff_db, client):
     first = post_auth(client, DEVICE_ID, SECRET).json()["session_id"]
     second = post_auth(client, DEVICE_ID, SECRET).json()["session_id"]
 
-    assert read_profile(client, first).status_code == 401
-    assert read_profile(client, second).status_code == 200
+    assert not clicker_token_is_live(client, bearer(first))
+    assert clicker_token_is_live(client, bearer(second))
 
 
 def test_phone_login_of_the_same_student_survives_clicker_authentication(

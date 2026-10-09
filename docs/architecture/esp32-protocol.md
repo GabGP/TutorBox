@@ -221,6 +221,7 @@ Rules that follow from this:
 - Credentials go **only** to devices with `assigned_user_id` set — the teacher's assignment *is* the trust decision, and it is already an audited staff action.
 - The device secret is stored as a **SHA-256 digest**, the way bearer tokens are stored, not with bcrypt like PINs. It is 128 random bits, so a fast hash is enough, and the public `POST /api/v1/devices/auth` must not run bcrypt on every request. It is shown exactly once, to the provisioner, which forwards it over the encrypted BLE link. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
 - The student bearer token obtained with the secret lives **only in clicker RAM**; a reboot re-authenticates.
+- That token can **only vote** (§6.6). A secret dumped from a clicker's flash, or a token captured on the classroom Wi-Fi, casts the votes that clicker could already cast and opens nothing else of the student's account.
 - Unassigning, reassigning or deleting a clicker, and issuing it a new secret, revokes its active sessions at once (§6.4). A clicker taken away from a child gets `401` on its next vote, and `403` when it authenticates again.
 - Rotating the classroom passphrase invalidates every clicker; re-provision the fleet (a minute per 10 clickers at the desk). Plan it with the router change, not after.
 - Later hardening, not needed for the capstone: ESP32 NVS encryption + flash encryption (someone with physical access and a USB cable can otherwise dump the passphrase), and app-layer AES-GCM of the packet with a fleet key burned at flashing time — which reintroduces the flashing step this design removes, so weigh it honestly.
@@ -238,6 +239,7 @@ Built in Week 7 by Student A, backend only. The code is in `backend/migrations/0
 3. **The vote label comes from the session, not from the body.** The design sent `transport_type: "hardware"` and `device_id` in the vote body. A code review fix (H6 in `suggestions.md`) removed both fields from the request. The server now labels each vote from the caller's session row, so a phone cannot pose as a clicker. The firmware may still send the two fields; the server ignores them.
 4. **Device sessions are stored as digests and expire.** The design said device authentication inserts the session "the same as login" and did not cover expiry. As built, the row holds `token_digest(token)` in `sessions.id`, as login does, and the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`). The token itself is never written to the database.
 5. **The lockout key is per device and address.** The key is `device:<device_id>@<address>`, so a clicker never shares a lockout with a username.
+6. **A clicker's token can only vote.** The design gave the clicker "a student bearer token" and did not say what else that token could do. As built, every endpoint except the vote endpoint refuses a session issued to a clicker (§6.6).
 
 ### 6.1 Migration `015_add_device_secret.sql`
 
@@ -297,16 +299,24 @@ Phone and browser sessions (`device_id` NULL) do not match the query. The studen
 
 ### 6.5 Vote label
 
-`api/session/transport.py::resolve_vote_transport` reads the caller's `AuthContext`. `get_current_session` now loads `sessions.device_id` into `AuthContext.device_id`. A token with a device id votes as `hardware` with that id; any other token votes as `web` with no device. `submit_vote` passes the two values to `QuizSessionEngine.cast_vote`, which already took them. The first-press lock is per student per round across transports: after a clicker vote, a phone vote from the same student in the same round gets `409`.
+`api/session/transport.py::resolve_vote_transport` reads the caller's `AuthContext`. `get_voter_session` loads `sessions.device_id` into `AuthContext.device_id`. A token with a device id votes as `hardware` with that id; any other token votes as `web` with no device. `submit_vote` passes the two values to `QuizSessionEngine.cast_vote`, which already took them. The first-press lock is per student per round across transports: after a clicker vote, a phone vote from the same student in the same round gets `409`.
 
-### 6.6 Configuration (not built)
+### 6.6 Token scope
+
+A clicker's token votes as its student, but it is not a login. `core/security/auth_session.py` has two dependencies:
+
+- `get_voter_session` resolves any live session, a person's or a clicker's. Only `submit_vote` depends on it.
+- `get_current_session` calls it and answers `403 "Clicker sessions can only vote."` when the session has a `device_id`. Every other endpoint depends on it, directly or through `ensure_no_pending_rotation` and `require_roles`.
+
+The refusal is the default: an endpoint added later refuses clickers unless it asks for `get_voter_session`. A revoked or expired token gets `401` before the scope is checked, so the firmware still reads `401` as "authenticate again". `POST /api/v1/games/events` reads an optional login and never refuses a batch; with a clicker's token it stores the events with no student. `GET /api/v1/session/current` is public, so the clicker's two runtime calls (§8) are unaffected. Tests: `backend/tests/api/devices/test_device_token_scope.py` and `backend/tests/core/security/test_auth_session_device.py`.
+
+### 6.7 Configuration (not built)
 
 The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) are not in `.env.example`. They belong with the provisioner (Student B). The lockout values come from the existing `AUTH_MAX_ATTEMPTS` and `AUTH_LOCKOUT_SECONDS`.
 
-### 6.7 Known limits
+### 6.8 Known limits
 
-- A clicker's token is an ordinary student session. Every endpoint that accepts a student's token accepts it, not only the vote endpoint.
-- The vote endpoint does not check a pending PIN rotation, because it uses `get_current_session`. A student with a pending rotation can vote from a clicker or a phone.
+- The vote endpoint does not check a pending PIN rotation, because it uses `get_voter_session` and not `ensure_no_pending_rotation`. A student with a pending rotation can vote from a clicker or a phone.
 - A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
 - The lockout counters are in memory, so a backend restart clears them.
 - The fleet test in CI is simulated. The latency and connection-limit benchmark on real ESP32 devices is not done.

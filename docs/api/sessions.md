@@ -162,6 +162,7 @@ Ingests a student vote. Enforces **first-press locking** at both engine and data
   login, records it as `web` with no device. A `transport_type` or `device_id` in the body is
   ignored, so a phone cannot pose as a clicker. Clickers vote on this same endpoint, with the
   token that device authentication gave them. A clicker whose token was revoked gets `401`.
+  This is the only endpoint that accepts a clicker's token.
 * **Responses**:
   * `200 OK`:
     ```json

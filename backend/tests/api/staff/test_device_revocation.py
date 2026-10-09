@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from core.db.device_repository import create_device_session
 from core.security import token_digest
+from tests.api.clicker_support import clicker_token_is_live
 from tests.conftest import auth_headers, get_user_id
 
 ME_URL = "/api/v1/users/me"
@@ -51,14 +52,14 @@ def test_unassigning_clicker_revokes_its_token(staff_db, client):
     register_clicker(client, teacher_headers, CLICKER_A)
     assign_clicker(client, teacher_headers, CLICKER_A, student_id)
     clicker_headers = issue_clicker_token(conn, student_id, CLICKER_A)
-    assert me_status(client, clicker_headers) == 200
+    assert clicker_token_is_live(client, clicker_headers)
 
     response = client.post(
         f"/api/v1/staff/devices/{CLICKER_A}/unassign", headers=teacher_headers
     )
 
     assert response.status_code == 200
-    assert me_status(client, clicker_headers) == 401
+    assert not clicker_token_is_live(client, clicker_headers)
 
 
 def test_unassigning_clicker_keeps_student_phone_login(staff_db, client):
@@ -89,7 +90,7 @@ def test_assigning_clicker_to_another_student_revokes_previous_students_token(
 
     assign_clicker(client, teacher_headers, CLICKER_A, student2_id)
 
-    assert me_status(client, previous_holder_headers) == 401
+    assert not clicker_token_is_live(client, previous_holder_headers)
 
 
 def test_moving_student_to_another_clicker_revokes_token_of_previous_clicker(
@@ -106,7 +107,7 @@ def test_moving_student_to_another_clicker_revokes_token_of_previous_clicker(
 
     assign_clicker(client, teacher_headers, CLICKER_B, student_id)
 
-    assert me_status(client, old_clicker_headers) == 401
+    assert not clicker_token_is_live(client, old_clicker_headers)
 
 
 def test_reassigning_same_student_to_same_clicker_keeps_token(staff_db, client):
@@ -120,7 +121,7 @@ def test_reassigning_same_student_to_same_clicker_keeps_token(staff_db, client):
 
     assign_clicker(client, teacher_headers, CLICKER_A, student_id)
 
-    assert me_status(client, clicker_headers) == 200
+    assert clicker_token_is_live(client, clicker_headers)
 
 
 def test_deleting_clicker_revokes_its_token(staff_db, client):
@@ -137,7 +138,7 @@ def test_deleting_clicker_revokes_its_token(staff_db, client):
     )
 
     assert response.status_code == 200
-    assert me_status(client, clicker_headers) == 401
+    assert not clicker_token_is_live(client, clicker_headers)
 
 
 def test_unassigning_one_clicker_keeps_another_clickers_token(staff_db, client):
@@ -155,5 +156,5 @@ def test_unassigning_one_clicker_keeps_another_clickers_token(staff_db, client):
 
     client.post(f"/api/v1/staff/devices/{CLICKER_A}/unassign", headers=teacher_headers)
 
-    assert me_status(client, unassigned_headers) == 401
-    assert me_status(client, other_headers) == 200
+    assert not clicker_token_is_live(client, unassigned_headers)
+    assert clicker_token_is_live(client, other_headers)

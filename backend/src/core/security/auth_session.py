@@ -18,6 +18,8 @@ bearer_scheme = HTTPBearer(auto_error=False)
 # if a school needs another one.
 SESSION_TTL_HOURS = 12
 
+CLICKER_SCOPE_DETAIL = "Clicker sessions can only vote."
+
 
 def token_digest(token: str) -> str:
     """What the database keeps for a bearer token: its SHA-256, never the token.
@@ -38,9 +40,10 @@ class AuthContext(BaseModel):
     device_id: str | None = None
 
 
-def get_current_session(
+def get_voter_session(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> AuthContext:
+    """Any live session: a person's login or a clicker's. Only voting asks for this."""
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -82,6 +85,23 @@ def get_current_session(
         must_change_pin=bool(row["must_change_pin"]),
         device_id=row["device_id"],
     )
+
+
+def get_current_session(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+) -> AuthContext:
+    """A person's login. A clicker's session is refused: a clicker can only vote.
+
+    Every endpoint depends on this one, directly or through require_roles, so a new
+    endpoint refuses clickers unless it asks for get_voter_session instead.
+    """
+    ctx = get_voter_session(credentials)
+    if ctx.device_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=CLICKER_SCOPE_DETAIL,
+        )
+    return ctx
 
 
 def ensure_no_pending_rotation(
