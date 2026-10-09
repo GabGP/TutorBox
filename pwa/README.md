@@ -56,8 +56,9 @@ served from the question bank.
 
 Client-side only (per browser `localStorage`): the bearer token, the teacher's current session id and
 per-round reveal history (for the summary page), and each student's own votes/score. The ESP32
-clicker transport (Week 7) is not part of Pilas; the vote endpoint already accepts
-`transport_type: "hardware"`.
+clicker transport (Week 7) is not part of Pilas. A clicker votes on the same vote endpoint, and
+the server labels its vote `hardware` from the clicker's session; a `transport_type` sent in the
+body is ignored.
 
 ---
 
