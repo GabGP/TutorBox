@@ -87,6 +87,7 @@ Engineering schedule and weekly deliverables:
 * **[Week 3 Milestone Synthesis](milestones/week-3-session-engine.md)**: Real-time session engine, deterministic >51% Rule evaluator, first-press locking, and REST API.
 * **[Week 4 Milestone Synthesis](milestones/week-4-voice-quiz.md)**: Full Classroom Quiz with offline Spanish & Mayan voice, multi-tier TTS pipeline, oral math adaptation, and memory lifecycle profiling.
 * **[Week 5 Milestone Tracking](milestones/week-5-socratic-tutor.md)**: Socratic dialogue engine, SymPy answer containment, 48-problem bank, dialogue turn telemetry, and the tutor client's home-screen evidence.
+* **[Week 6 Milestone Tracking](milestones/week-6-games-sync.md)**: Grade apps hosted from the appliance, and how game error ingestion, normalization and deduplicated sync fit them (not started)
 
 ---
 

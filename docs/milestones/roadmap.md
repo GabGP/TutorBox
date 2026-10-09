@@ -5,7 +5,7 @@
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md) • [Week 5 Milestone](week-5-socratic-tutor.md)
+📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md) • [Week 5 Milestone](week-5-socratic-tutor.md) • [Week 6 Milestone](week-6-games-sync.md)
 
 </div>
 
@@ -78,7 +78,7 @@ gantt
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, phased 4.7 GB SLM / 3.3 GB TTS RAM profile | **A** / B |
 | **5** ✅ | [Socratic Tutor Mode](week-5-socratic-tutor.md) | Socratic dialogue state machine + SymPy containment (0 direct solutions) + turn telemetry + home-screen tutor client | **B** / A |
-| **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
+| **6** ⏳ | [Offline Games & Log Sync](week-6-games-sync.md) | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
 | **8** ⏳ | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
 | **9** ⏳ | Concurrency & Full System Stress | Combined load (30 quiz + 10 tutor + games) + 2h stable soak test without OOM/throttling | **B** / A |
@@ -204,6 +204,8 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Games playable completely offline from the appliance on 3 client devices.
   * Disconnection sync test: play offline, reconnect to AP, verify 100% of error events ingested with 0 duplicates.
+* **Current State (2026-10-08)**: the games are hosted as the grade apps in `pwa/tareas/`; ingestion, the client queue and the sync are not started, and how they fit the games as built is an open decision.
+* **Detailed Milestone Tracking**: [Week 6 Milestone Tracking](week-6-games-sync.md).
 
 ---
 
