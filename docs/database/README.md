@@ -67,6 +67,8 @@ erDiagram
         TEXT device_id PK "Hardware clicker ID (e.g. '1', 'ESP32_01')"
         INTEGER assigned_user_id UK "REFERENCES users(id) ON DELETE SET NULL"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+        TEXT secret_hash "SHA-256 of the clicker secret, NULL until issued"
+        TIMESTAMP secret_issued_at "NULL until a secret is issued"
     }
 
     sessions {
@@ -74,6 +76,7 @@ erDiagram
         INTEGER user_id FK "REFERENCES users(id) ON DELETE CASCADE"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
         INTEGER is_active "1: Active | 0: Inactive"
+        TEXT device_id "Clicker the session was issued to, NULL for phone logins (no FK)"
     }
 
     turn_logs {
@@ -210,11 +213,11 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 
 | Subsystem Domain | Specification Document | Included Tables | Core Policies & Invariants |
 | :--- | :--- | :--- | :--- |
-| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
+| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion<br>• Clicker sessions revoked on unassign, reassign, delete and new secret |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
 | **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$)<br>• Concept, error type and scaffolding strategy labels per turn |
 | **Mode 3: Offline Games** | **[games.md](games.md)** | `game_events` | • One row per answer tapped, stored once per client event id (`UNIQUE(client_event_id)`)<br>• CNB topic and quiz taxonomy labels per event, and the misconception when the game names it<br>• Events survive the deletion of their student |
-| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `014+`)<br>• Idempotent SQL execution & rollback procedures |
+| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `015`)<br>• Idempotent SQL execution & rollback procedures |
 
 ---
 
@@ -225,6 +228,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | Index Name | Target Table | Target Columns | Purpose |
 | :--- | :--- | :--- | :--- |
 | `idx_sessions_user_id` | `sessions` | `(user_id)` | Fast lookup of active sessions by user ID during auth and logout. |
+| `idx_sessions_device_id` | `sessions` | `(device_id)` where `device_id IS NOT NULL` | Lookup of the sessions issued to one clicker, used when they are revoked. |
 | `idx_turn_logs_session_id` | `turn_logs` | `(session_id)` | Fast lookup of dialogue history per student session. |
 | `idx_turn_logs_concept` | `turn_logs` | `(concept_topic, concept_subconcept)` | Fast aggregation of dialogue turns and error types per curriculum concept. |
 | `idx_game_events_concept` | `game_events` | `(concept_topic, concept_subconcept)` | Fast aggregation of game answers per curriculum concept and taxonomy pair. |

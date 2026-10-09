@@ -50,7 +50,7 @@ The API specification is decomposed into cohesive domain modules:
 | **System & Health** | **[system.md](system.md)** | `GET /health`<br>`GET /generate_204` and the other captive-portal probes<br>`GET/PUT /api/v1/mode` | Public,<br>Teacher,<br>Admin |
 | **Authentication & Users** | **[auth.md](auth.md)** | `POST /api/v1/auth/login`<br>`POST /api/v1/auth/logout`<br>`POST /api/v1/users/signup`<br>`GET /api/v1/users/me`<br>`PATCH /api/v1/users/me/pin`<br>`PATCH /api/v1/users/me/username` | Public,<br>Student,<br>Staff |
 | **Staff Administration** | **[staff.md](staff.md)** | `GET/POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`PATCH /api/v1/staff/users/{id}/role`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
-| **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
+| **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`POST /api/v1/staff/devices/{id}/secret`<br>`DELETE /api/v1/staff/devices/{id}`<br>`POST /api/v1/devices/auth` | Public,<br>Teacher,<br>Admin |
 | **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`PUT /api/v1/quiz/questions/{id}`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **Socratic Tutor (Mode 2)** | **[tutor.md](tutor.md)** | `POST /api/v1/tutor/message`<br>`POST /api/v1/tutor/reset`<br>`POST /api/v1/tutor/ping`<br>`GET /api/v1/tutor/students` | Student,<br>Teacher,<br>Admin |
@@ -63,7 +63,7 @@ The API specification is decomposed into cohesive domain modules:
 
 TutorBox uses stateful **Bearer Session Tokens**. The client keeps the token; the local SQLite database
 stores only its SHA-256 digest, so the `sessions` and `turn_logs` tables never hold a working token. A
-token stops working 12 hours after login, on logout, or on a PIN or username change.
+token stops working 12 hours after login, on logout, or on a PIN or username change. A clicker's token also stops when staff unassign or delete the clicker, assign it to another student, or issue it a new secret ([Clicker Token Revocation](devices.md#clicker-token-revocation)).
 
 ```mermaid
 sequenceDiagram
@@ -124,6 +124,8 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/staff/devices/{id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/staff/devices/{id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/staff/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
+| `/api/v1/staff/devices/{id}/secret` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
+| `/api/v1/devices/auth` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) | [devices.md](devices.md) |
 | `/api/v1/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/validate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |
@@ -174,7 +176,7 @@ To prevent timing attacks and enumeration of valid accounts, verification steps 
 
 ### <a id="c-rate-limiting-protection"></a>C. Rate Limiting Protection
 Two distinct in-memory rate limiters protect the edge appliance:
-1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). nginx also allows login and signup 10 requests a minute per address, and game event batches 30 a minute per address ([Games API §8](games.md#8-limits)).
+1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). Device authentication uses the same limiter under the key `device:<device_id>@<address>` ([Devices API](devices.md#post-devices-auth)). nginx also allows login and signup 10 requests a minute per address, and game event batches 30 a minute per address ([Games API §8](games.md#8-limits)).
 2. **Global Sliding Window Limiter**: Caps high-frequency public endpoints (e.g. signup) to prevent database flooding.
 
 ---

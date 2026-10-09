@@ -31,6 +31,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [012: Turn Log Pedagogy Labels](#012-turn-log-pedagogy-labels)
   - [013: Game Events](#013-game-events)
   - [014: Game Event Misconception](#014-game-event-misconception)
+  - [015: Clicker Secret & Session Device](#015-clicker-secret-and-session-device)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -42,7 +43,7 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 
 * **Storage Location**: `backend/migrations/<NNN>_<description>.sql`
 * **Version Registry**: Every applied migration is tracked in the `schema_migrations` table with its integer version and timestamp.
-* **Idempotency Rule**: Each migration is applied exactly once, tracked by version in `schema_migrations` (see `backend/src/core/db/migrations.py`). `CREATE TABLE` and `CREATE INDEX` statements still use `IF NOT EXISTS`, but `ALTER TABLE ... ADD COLUMN` migrations (`002`, `004`, `005`, `012`) have no `IF NOT EXISTS` form in SQLite, so they cannot be re-run by hand and rely on the version registry.
+* **Idempotency Rule**: Each migration is applied exactly once, tracked by version in `schema_migrations` (see `backend/src/core/db/migrations.py`). `CREATE TABLE` and `CREATE INDEX` statements still use `IF NOT EXISTS`, but `ALTER TABLE ... ADD COLUMN` migrations (`002`, `004`, `005`, `012`, `014`, `015`) have no `IF NOT EXISTS` form in SQLite, so they cannot be re-run by hand and rely on the version registry.
 * **Runtime Pragmas**:
   ```sql
   PRAGMA foreign_keys = ON;
@@ -70,6 +71,7 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 | **012** | `012_add_turn_log_pedagogy.sql` | Dialogue Telemetry | Adds nullable `concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy` to `turn_logs` and creates `idx_turn_logs_concept` | Week 5 |
 | **013** | `013_add_game_events.sql` | Games Telemetry | Creates `game_events` (one row per answer tapped, `UNIQUE(client_event_id)`) and `idx_game_events_concept` | Week 6 |
 | **014** | `014_add_game_event_misconception.sql` | Games Telemetry | Adds nullable `misconception` to `game_events` | Week 6 |
+| **015** | `015_add_device_secret.sql` | Hardware Clickers | Adds nullable `secret_hash` and `secret_issued_at` to `devices`, nullable `device_id` to `sessions`, and creates partial index `idx_sessions_device_id` | Week 7 |
 
 ---
 
@@ -139,6 +141,10 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 ### <a id="014-game-event-misconception"></a>014: Game Event Misconception
 * **File**: [`backend/migrations/014_add_game_event_misconception.sql`](../../backend/migrations/014_add_game_event_misconception.sql)
 * **Description**: Adds the nullable `TEXT` column `misconception` to `game_events`, with no default and no `CHECK` constraint, as in 012. It holds the mistake behind a wrong answer as the game names it. See [games.md](games.md#2-invariants).
+
+### <a id="015-clicker-secret-and-session-device"></a>015: Clicker Secret & Session Device
+* **File**: [`backend/migrations/015_add_device_secret.sql`](../../backend/migrations/015_add_device_secret.sql)
+* **Description**: Adds three nullable columns: `devices.secret_hash TEXT` (the SHA-256 digest of the clicker's secret, never the secret), `devices.secret_issued_at TIMESTAMP`, and `sessions.device_id TEXT` (the clicker a login session was issued to; `NULL` for a phone or browser login). Creates the partial index `idx_sessions_device_id ON sessions(device_id) WHERE device_id IS NOT NULL`. `sessions.device_id` has no foreign key. Rows that exist before the migration get `NULL` in all three columns. See [core.md](core.md#d-clicker-token-revocation).
 
 ---
 

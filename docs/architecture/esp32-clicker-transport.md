@@ -163,7 +163,7 @@ sequenceDiagram
     participant Screen as Classroom HDMI Display
 
     Note over Teacher,DB: Step 1: Teacher Pairing (In-Band Auth)
-    Teacher->>API: POST /api/v1/devices/1/assign {"user_id": 12} (Bearer Token)
+    Teacher->>API: POST /api/v1/staff/devices/1/assign {"user_id": 12} (Bearer Token)
     API->>DB: UPDATE devices SET assigned_user_id = 12 WHERE device_id = '1'
     API-->>Teacher: 200 OK {"device_id": "1", "assigned_user_id": 12, "assigned_username": "juan_p"}
 
@@ -172,10 +172,11 @@ sequenceDiagram
     API->>Screen: Render Question & A-D Options on HDMI Display (/pantalla/)
     Student->>ESP32: Presses Button 'B'
     ESP32->>ESP32: Vote LED = BLINK YELLOW (TX in-flight)
-    ESP32->>API: POST /api/v1/session/{id}/vote {"selected_option": "B", "transport_type": "hardware", "device_id": "1", "response_time_ms": 1200.0}
-    API->>DB: INSERT INTO quiz_session_votes (round_id, student_id, selected_option, ...)
-    Note over API: Enforces first-press lock (UNIQUE round_id, student_id); maps device_id '1' -> student_id 12
-    API-->>ESP32: 200 OK {"status": "recorded", "selected_option": "B"}
+    ESP32->>API: POST /api/v1/session/{id}/vote {"selected_option": "B", "response_time_ms": 1200.0} (clicker token)
+    API->>DB: INSERT INTO quiz_session_votes (round_id, student_id, selected_option, transport_type, device_id, ...)
+    Note over API: The token labels the vote as hardware, device '1', student 12. transport_type and device_id in the body, if sent, are ignored
+    Note over API: Enforces first-press lock (UNIQUE round_id, student_id)
+    API-->>ESP32: 200 OK {"vote_id": "...", "selected_option": "B", "student_id": 12, ...}
     ESP32->>ESP32: Vote LED = SOLID GREEN (1.5s)
     API->>Screen: Update live aggregate turnout count
     API->>Teacher: Live turnout update on /maestro/ console
@@ -222,7 +223,7 @@ classDiagram
 > **Architectural Decision (Week 3 Evaluation): Wire Protocol Seam vs. In-Process OOP Abstraction**
 > While early design diagrams envisioned an in-memory Python class hierarchy (`VoteTransport` OOP interface), distributed heterogeneous clients (ESP32 microcontrollers running embedded C++ and student smartphones running JavaScript PWA) operate over physical network boundaries and cannot share an in-memory Python runtime.
 >
-> Therefore, the **Wire Protocol contract (`POST /api/v1/session/{id}/vote`)** serves as the true hardware-agnostic transport layer. The payload accepts `"transport_type": "web" | "hardware" | "mock"` alongside optional `"device_id"`, decoupling client implementations from server state without artificial in-process OOP boilerplate.
+> Therefore, the **Wire Protocol contract (`POST /api/v1/session/{id}/vote`)** serves as the true hardware-agnostic transport layer. The server does not read `transport_type` or `device_id` from the payload: it labels each vote from the caller's session, as `hardware` with the clicker's id for a clicker's token and as `web` otherwise. Clients therefore cannot choose their transport, and no in-process OOP boilerplate is needed to keep client implementations apart from server state.
 >
 > This architecture is formally validated in Week 3 via an automated 15-client concurrent test match (`test_session_concurrency.py`), proving 100% first-press lock enforcement and 0 lost votes under simultaneous mixed web and hardware traffic. See [ESP32 Clicker Protocol](esp32-protocol.md) for the complete provisioning and HTTP voting flow.
 
@@ -238,7 +239,7 @@ The clicker incorporates two separate visual indicators: a **Primary RGB Vote LE
 | **Idle / Standby** | `OFF` | Continuous | Waiting for student button press. |
 | **Transmitting** | 🟡 **Blinking Yellow** (100ms) | Until HTTP response | Button pressed, transmitting packet. |
 | **Vote Confirmed** | 🟢 **Solid Green** | 1.5 seconds | Server returned `200 OK` (`{"status": "recorded"}`). |
-| **Error / Rejected** | 🔴 **Blinking Red** (3x 150ms) | ~1.0 second | Server returned `403` (unassigned), `409` (voting closed), or network timeout. |
+| **Error / Rejected** | 🔴 **Blinking Red** (3x 150ms) | ~1.0 second | Server returned `401` (session revoked, see §8.3), `409` (voting closed or already voted), or network timeout. |
 
 ### B. Secondary Status LED (Wi-Fi & Power Diagnostics)
 | State | LED Color / Pattern | Duration | Condition |
@@ -296,7 +297,7 @@ In the Teacher Device Management view (`GET /devices`), the teacher sees a live 
 * First press locks: a student can only submit one vote per question round. Any second press in the same round is rejected with `409 Conflict` at the engine level and via `UNIQUE(round_id, student_id)` at the database layer. Firmware must treat `409` as final (red blink) and not retry as an update.
 
 ### 3. Unassigned Clicker Defense
-* If an unassigned clicker sends a vote, the backend rejects with `403 Forbidden` (`{"detail": "Device is not assigned to any student."}`). The clicker blinks red 3 times to prompt the student to notify the teacher.
+* Unassigning a clicker revokes its session. Its next vote is rejected with `401 Unauthorized` (`{"detail": "Invalid or expired session."}`). When the clicker authenticates again, `POST /api/v1/devices/auth` answers `403 Forbidden` (`{"detail": "Device is not assigned to any student."}`), and the clicker blinks red 3 times to prompt the student to notify the teacher. See [Clicker Token Revocation](../api/devices.md#clicker-token-revocation).
 
 ### 4. Router AP Capacity & Connection Budget
 * The **GL-AR300M16 router** handles up to 30 simultaneous 802.11 b/g/n Wi-Fi stations on the 2.4GHz band.

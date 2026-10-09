@@ -23,6 +23,7 @@ Technical specification for student and staff credentials, bearer sessions, ESP3
   - [A. Soft-Deletion & Username Freeing](#a-soft-deletion--username-freeing)
   - [B. Last-Admin Guard](#b-last-admin-guard)
   - [C. Device Unlinking on Deletion](#c-device-unlinking-on-deletion)
+  - [D. Clicker Token Revocation](#d-clicker-token-revocation)
 - [Related Specifications](#related-specifications)
 
 ---
@@ -53,7 +54,8 @@ Tracks active and revoked bearer sessions.
 | `id` | `TEXT` | `PRIMARY KEY` | — | SHA-256 hex digest of the UUIDv4 Bearer token the client received; the token itself is never stored. Rows written before tokens were hashed hold the old token, which can no longer log in. |
 | `user_id` | `INTEGER` | `NOT NULL`, `FOREIGN KEY -> users(id) ON DELETE CASCADE` | — | Foreign key referencing account owner. |
 | `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp of session creation; the session is refused 12 hours later (`SESSION_TTL_HOURS`). |
-| `is_active` | `INTEGER` | — | `1` | `1` if session is active; `0` if revoked by logout, PIN change, reset, or deletion. |
+| `is_active` | `INTEGER` | — | `1` | `1` if session is active; `0` if revoked by logout, a PIN or username change of that session, a staff PIN reset, account deletion, or clicker revocation ([§2.D](#d-clicker-token-revocation)). |
+| `device_id` | `TEXT` | `NULL` | `NULL` | The clicker a session was issued to by `POST /api/v1/devices/auth` (migration `015`); `NULL` for a phone or browser login. Partially indexed by `idx_sessions_device_id` (`WHERE device_id IS NOT NULL`). No foreign key: the id stays on the row if the clicker is deleted. |
 
 ---
 
@@ -65,6 +67,8 @@ Registry of physical ESP32 clickers and active 1:1 classroom pairings to student
 | `device_id` | `TEXT` | `PRIMARY KEY` | — | Unique hardware clicker identifier (1–32 chars, e.g. `'1'`, `'ESP32_01'`). |
 | `assigned_user_id` | `INTEGER` | `UNIQUE`, `FOREIGN KEY -> users(id) ON DELETE SET NULL` | `NULL` | Currently linked student account ID (`NULL` when unassigned). |
 | `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp when clicker was registered into the fleet. |
+| `secret_hash` | `TEXT` | `NULL` | `NULL` | SHA-256 hex digest of the clicker's current secret (migration `015`). The secret itself is never stored. `NULL` until a secret is issued. |
+| `secret_issued_at` | `TIMESTAMP` | `NULL` | `NULL` | UTC timestamp when the current secret was issued. |
 
 ---
 
@@ -91,6 +95,7 @@ Append-only audit trail recording sensitive operational, staff, and hardware pai
 * `device_assigned`: Clicker linked to student.
 * `device_unassigned`: Clicker unlinked from student.
 * `device_deleted`: Clicker removed from fleet.
+* `device_secret_issued`: New secret issued for a clicker (`POST /api/v1/staff/devices/{device_id}/secret`); its target is the student assigned at that moment, if any.
 * `mode_changed`: Teacher switched the classroom mode (`PUT /api/v1/mode`).
 
 ---
@@ -125,6 +130,9 @@ The application enforces that the appliance must never lose its final administra
 
 ### <a id="c-device-unlinking-on-deletion"></a>C. Device Unlinking on Deletion
 When an account is deleted or soft-deleted, any associated hardware clicker has `assigned_user_id` set to `NULL`, automatically freeing the device for reassignment to another student.
+
+### <a id="d-clicker-token-revocation"></a>D. Clicker Token Revocation
+The sessions issued to a clicker (`sessions.device_id` equal to its id, `is_active = 1`) are set to `is_active = 0` when the clicker is unassigned, assigned to a different student, deleted, or given a new secret. They are also revoked when its student is moved to another clicker, for the clicker the student left. Assigning the same student to the same clicker again changes nothing. These events never change a phone or browser session. A deleted student's sessions, a clicker's included, end with the account (§2.A).
 
 ---
 

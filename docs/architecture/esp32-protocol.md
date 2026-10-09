@@ -14,7 +14,7 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 ---
 
 > [!NOTE]
-> **Design document for Week 7 (ESP32 Hardware Clickers).** Nothing in this page is implemented yet.
+> **Design document for Week 7 (ESP32 Hardware Clickers).** The backend half is built (Student A): migration `015`, `POST /api/v1/staff/devices/{device_id}/secret`, `POST /api/v1/devices/auth`, and the vote label taken from the session. [§6](#6-backend-additions) describes it as built, and the [Devices API](../api/devices.md) is the reference. The firmware (§8) and the Jetson provisioner (§4, §7) are not started (Student B) and remain design.
 > It replaces the "factory flashing" strategy in [ESP32 Clicker Transport §3](esp32-clicker-transport.md#3-wi-fi-ap-association--provisioning-mechanisms)
 > with provisioning over Bluetooth from the appliance; hardware, LED tables and the `VoteTransport`
 > principle from that document still apply and are not repeated here.
@@ -46,7 +46,7 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 | What is in "the packet"? | SSID, WPA2 passphrase, the API base URL, the clicker's `device_id`, and a **device secret** (see below). ~200 bytes of JSON, read from one encrypted GATT characteristic. |
 | Why a device secret? | Voting requires a student bearer token (`POST /api/v1/session/{id}/vote`). A clicker has no PIN, so it exchanges its secret for a token of the student the teacher assigned to it — over Wi-Fi, every boot. Re-assigning the clicker to another child tomorrow needs **no Bluetooth step**. |
 | How often does provisioning happen? | Once per clicker, and again only if the router passphrase changes. Not per class, not per student. |
-| After provisioning? | Pure Wi-Fi + HTTP. The clicker polls `GET /api/v1/session/current` and votes exactly like a phone (`transport_type: "hardware"`). Host page and HDMI screen need no changes. |
+| After provisioning? | Pure Wi-Fi + HTTP. The clicker polls `GET /api/v1/session/current` and votes on the same endpoint as a phone. The server labels the vote `hardware`, with the clicker's `device_id`, from the clicker's session token; the body needs only `selected_option`. Host page and HDMI screen need no changes. |
 
 ```mermaid
 sequenceDiagram
@@ -71,7 +71,8 @@ sequenceDiagram
         ESP->>API: GET /session/current
     end
     Kid->>ESP: presses B
-    ESP->>API: POST /session/{id}/vote {selected_option:"B", transport_type:"hardware", device_id}
+    ESP->>API: POST /session/{id}/vote {selected_option:"B"}
+    Note over ESP,API: transport_type and device_id, if sent, are ignored, the token labels the vote
     API-->>ESP: 200 → green LED (409 → red: already voted / window closed)
 ```
 
@@ -94,9 +95,9 @@ sequenceDiagram
 
 ### Backend
 - `devices` table + `/api/v1/staff/devices*` already exist ([Devices API](../api/devices.md)); `device_id` must match `^[A-Za-z0-9_.-]{1,32}$` (`backend/src/core/security/validation.py`).
-- `POST /api/v1/session/{id}/vote` already accepts `transport_type: "hardware"` and `device_id`, and enforces **first-press locking** (`UNIQUE(round_id, student_id)` → `409`). The older spec's "change your mind within the window" is **not** how the engine behaves; the firmware must treat 409 as final.
+- `POST /api/v1/session/{id}/vote` labels every vote from the caller's session: `hardware` with the clicker's `device_id` for a clicker's token, `web` otherwise. It ignores `transport_type` and `device_id` in the body, and enforces **first-press locking** (`UNIQUE(round_id, student_id)` → `409`) across phones and clickers. The older spec's "change your mind within the window" is **not** how the engine behaves; the firmware must treat 409 as final.
 - `GET /api/v1/session/current` (public) returns the live match and its open round; the clicker needs no session id.
-- Missing today and specified in §6: a way for a *device* to obtain a student bearer token.
+- Built in Week 7 (§6): a way for a *device* to obtain a student bearer token, `POST /api/v1/devices/auth`.
 
 ---
 
@@ -218,63 +219,97 @@ The radio being always on is only a problem if it hands out something valuable t
 
 Rules that follow from this:
 - Credentials go **only** to devices with `assigned_user_id` set — the teacher's assignment *is* the trust decision, and it is already an audited staff action.
-- The device secret is stored **hashed** (bcrypt, like PINs) and shown exactly once, to the provisioner, which forwards it over the encrypted BLE link. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
+- The device secret is stored as a **SHA-256 digest**, the way bearer tokens are stored, not with bcrypt like PINs. It is 128 random bits, so a fast hash is enough, and the public `POST /api/v1/devices/auth` must not run bcrypt on every request. It is shown exactly once, to the provisioner, which forwards it over the encrypted BLE link. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
 - The student bearer token obtained with the secret lives **only in clicker RAM**; a reboot re-authenticates.
-- `POST /staff/devices/{id}/unassign` revokes the device's active sessions immediately (§6.4), so a clicker taken away from a child stops voting as that child within one poll.
+- Unassigning, reassigning or deleting a clicker, and issuing it a new secret, revokes its active sessions at once (§6.4). A clicker taken away from a child gets `401` on its next vote, and `403` when it authenticates again.
 - Rotating the classroom passphrase invalidates every clicker; re-provision the fleet (a minute per 10 clickers at the desk). Plan it with the router change, not after.
 - Later hardening, not needed for the capstone: ESP32 NVS encryption + flash encryption (someone with physical access and a USB cable can otherwise dump the passphrase), and app-layer AES-GCM of the packet with a fleet key burned at flashing time — which reintroduces the flashing step this design removes, so weigh it honestly.
 
 ---
 
-## <a id="6-backend-additions"></a>6. Backend Additions
+## <a id="6-backend-additions"></a>6. Backend Additions (as built)
 
-Everything a clicker needs from the API except one thing exists. Four small changes, all in Week 7, all following patterns already in the codebase.
+Built in Week 7 by Student A, backend only. The code is in `backend/migrations/015_add_device_secret.sql`, `backend/src/core/db/device_repository.py`, `backend/src/api/staff/device_secret.py`, `backend/src/api/devices/` (`auth.py`, `schemas.py`) and `backend/src/api/session/transport.py`. The endpoint reference is [Devices API](../api/devices.md); the vote is described in [Sessions API](../api/sessions.md#post-session-vote). The session engine in `backend/src/modes/quiz/session/` did not change.
 
-### 6.1 Migration `011_add_device_secret.sql`
+### What changed from the first design, and why
+
+1. **Migration `015`, not `011`.** Migrations `011` to `014` were already taken. The three columns are the ones the design asked for.
+2. **The secret is stored as a SHA-256 digest, not bcrypt.** The secret is 128 random bits, so a fast hash is enough: this is the reasoning `auth_session.py` gives for bearer tokens. A public endpoint also does not run bcrypt on every request.
+3. **The vote label comes from the session, not from the body.** The design sent `transport_type: "hardware"` and `device_id` in the vote body. A code review fix (H6 in `suggestions.md`) removed both fields from the request. The server now labels each vote from the caller's session row, so a phone cannot pose as a clicker. The firmware may still send the two fields; the server ignores them.
+4. **Device sessions are stored as digests and expire.** The design said device authentication inserts the session "the same as login" and did not cover expiry. As built, the row holds `token_digest(token)` in `sessions.id`, as login does, and the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`). The token itself is never written to the database.
+5. **The lockout key is per device and address.** The key is `device:<device_id>@<address>`, so a clicker never shares a lockout with a username.
+
+### 6.1 Migration `015_add_device_secret.sql`
+
 ```sql
--- 011_add_device_secret.sql
--- Device secret for hardware clicker authentication, and the device a session was issued to.
-ALTER TABLE devices ADD COLUMN secret_hash TEXT NULL;
-ALTER TABLE devices ADD COLUMN secret_issued_at TIMESTAMP NULL;
-ALTER TABLE sessions ADD COLUMN device_id TEXT NULL;
-```
-Same shape as `004_add_must_change_pin.sql`; add the migration test and the `docs/database` entry as usual.
+-- 015_add_device_secret.sql
+-- Week 7: the secret an ESP32 clicker proves itself with, and the clicker a login session was issued to.
+-- secret_hash is the SHA-256 of the secret, never the secret. All three columns are nullable.
 
-### 6.2 `POST /api/v1/staff/devices/{device_id}/secret` — teacher / admin
-Issues (or rotates) the secret. Called by the provisioner during every provisioning.
+ALTER TABLE devices ADD COLUMN secret_hash TEXT;
+ALTER TABLE devices ADD COLUMN secret_issued_at TIMESTAMP;
+ALTER TABLE sessions ADD COLUMN device_id TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_sessions_device_id ON sessions(device_id) WHERE device_id IS NOT NULL;
+```
+
+The columns are nullable with no default, so rows that exist before the migration keep `NULL`. `sessions.device_id` has no foreign key: a session keeps its clicker id after the clicker is deleted. Tests: `backend/tests/core/db/test_device_secret_migration_015.py`.
+
+### 6.2 `POST /api/v1/staff/devices/{device_id}/secret`, teacher / admin
+
+Issues a new secret. The design has the provisioner call it on every provisioning (§7.2). Reference: [Devices API](../api/devices.md#post-staff-devices-secret).
+
 ```json
 {"device_id": "ESP32-A4CF12", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
 ```
-- `secrets.token_hex(16)`; store `hash_pin(secret)` (`backend/src/core/security/auth.py` — bcrypt, 32 chars is well inside bcrypt's limit); `record_audit(action="device_secret_issued")`. The plaintext is returned exactly once.
-- `404` unknown device. No role difference between teacher and admin.
 
-### 6.3 `POST /api/v1/devices/auth` — public, rate-limited
-Exchanges the secret for a bearer session of the assigned student.
+- `secrets.token_hex(16)` gives 32 lowercase hex characters. `devices.secret_hash` gets `token_digest(secret)`, the SHA-256 of the secret, and `devices.secret_issued_at` gets the time. The plaintext is returned once.
+- The clicker's active sessions are revoked (§6.4).
+- `record_audit(action="device_secret_issued")`, with the assigned student as the target when there is one.
+- `404` with `"Device not found."` for an unknown device. Teacher and admin are treated the same.
+
+### 6.3 `POST /api/v1/devices/auth`, public and rate-limited
+
+Trades the secret for a bearer session of the assigned student. Code: `backend/src/api/devices/auth.py` and `schemas.py`, mounted at `/api/v1/devices` in `api/router.py`. Reference: [Devices API](../api/devices.md#post-devices-auth).
+
 ```json
 {"device_id": "ESP32-A4CF12", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
 ```
 ```json
 {"session_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", "username": "ana", "device_id": "ESP32-A4CF12"}
 ```
-- `check_rate_limit(device_id)` + `login_rate_limiter.record_failure/success` exactly like `api/auth/login.py`, so a secret cannot be brute-forced faster than a PIN.
-- `401` for unknown device **or** wrong secret (single message, same as login's anti-oracle symmetry); `403 "Device is not assigned to any student."` for a valid secret on an unassigned device (the clicker shows the "tell the teacher" pattern); `422` on regex failure.
-- On success: the same `INSERT INTO sessions (id, user_id, is_active)` as login, plus `device_id`. The resulting `AuthContext` is the student's, so `POST /session/{id}/vote` records `student_id = assigned_user_id` with `transport_type="hardware"` and the `device_id` — nothing in the session engine changes. This is the `VoteTransport` seam in practice.
-- Lives in a new `api/devices/` package (`auth.py`, `schemas.py`), mounted at `/api/v1/devices` in `api/router.py` — keeps `api/staff/` teacher-only and each module under the 150-line ceiling.
 
-### 6.4 Revocation on unassign
-`api/staff/device_pairing.py::unassign_device` additionally runs
-`UPDATE sessions SET is_active = 0 WHERE device_id = ? AND is_active = 1`. Assigning a device to a different student should do the same for the previous assignment.
+- **Responses**: `200` with the body above. `401 "Invalid device credentials."` for an unknown device, a device with no secret, or a wrong secret, all the same. `403 "Device is not assigned to any student."` for the right secret on an unassigned device or on a deleted student's account; this is not counted as a failure. `422` for a malformed body. `429` while the key is locked.
+- **Lockout**: the same limiter as login (`check_rate_limit` and `login_rate_limiter`) on the key `device:<device_id>@<address>`. After `AUTH_MAX_ATTEMPTS` wrong secrets (5 by default) the key is locked for `AUTH_LOCKOUT_SECONDS` (30 by default). Each later lockout lasts twice as long, up to 16 minutes. A right secret clears the count.
+- **Session**: `create_device_session` inserts the session with `device_id` set, for the assigned student. The `AuthContext` is the student's, so the vote is recorded with `student_id = assigned_user_id`. The session engine is unchanged.
+- **One live token**: before it inserts a new session, the endpoint revokes the clicker's earlier sessions, so the clicker holds one token at a time. The token expires after `SESSION_TTL_HOURS` (12), like any login.
 
-### 6.5 Configuration
-Entries in `.env.example`, read only by the provisioner (§7):
-```
-PROVISIONER_USERNAME=provisioner      # admin account created once with POST /staff/users
-PROVISIONER_PIN=
-CLICKER_WIFI_SSID=TutorBox
-CLICKER_WIFI_PSK=
-CLICKER_API_BASE=http://192.168.8.2/api/v1
-```
-The provisioner logs in with `POST /auth/login` at start-up and re-logs on any `401`, exactly as the old Pilas server did with the teacher account.
+### 6.4 Revocation
+
+The clicker's active sessions (`sessions.device_id` equal to its id, `is_active = 1`) are set to `is_active = 0` by `revoke_device_sessions` in four places:
+
+- `api/staff/device_pairing.py::unassign_device`: on every unassignment.
+- `api/staff/device_pairing.py::assign_device`: when the clicker's student changes, and for the clicker that the student is moved away from. Assigning the same student to the same clicker again revokes nothing.
+- `api/staff/devices.py::delete_device`: before the clicker row is deleted.
+- `api/staff/device_secret.py`: when a new secret is issued.
+
+Phone and browser sessions (`device_id` NULL) do not match the query. The student-level view, which includes a staff PIN reset and an account deletion, is in [Clicker Token Revocation](../api/devices.md#clicker-token-revocation).
+
+### 6.5 Vote label
+
+`api/session/transport.py::resolve_vote_transport` reads the caller's `AuthContext`. `get_current_session` now loads `sessions.device_id` into `AuthContext.device_id`. A token with a device id votes as `hardware` with that id; any other token votes as `web` with no device. `submit_vote` passes the two values to `QuizSessionEngine.cast_vote`, which already took them. The first-press lock is per student per round across transports: after a clicker vote, a phone vote from the same student in the same round gets `409`.
+
+### 6.6 Configuration (not built)
+
+The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) are not in `.env.example`. They belong with the provisioner (Student B). The lockout values come from the existing `AUTH_MAX_ATTEMPTS` and `AUTH_LOCKOUT_SECONDS`.
+
+### 6.7 Known limits
+
+- A clicker's token is an ordinary student session. Every endpoint that accepts a student's token accepts it, not only the vote endpoint.
+- The vote endpoint does not check a pending PIN rotation, because it uses `get_current_session`. A student with a pending rotation can vote from a clicker or a phone.
+- A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
+- The lockout counters are in memory, so a backend restart clears them.
+- The fleet test in CI is simulated. The latency and connection-limit benchmark on real ESP32 devices is not done.
 
 ---
 
@@ -469,6 +504,7 @@ void vote(char option) {
 }
 ```
 Details worth keeping in mind:
+- The vote body in the sketch still sends `transport_type` and `device_id`. The server ignores both, because it labels the vote from the token, so the firmware can drop them.
 - `WiFi.setSleep(true)` (modem sleep) roughly halves idle current; polling once a second still works.
 - `response_time_ms` is measured from the moment the clicker *saw* the round open, which is up to one poll interval late — good enough for the weekly report, and the same bias as the phones.
 - 30 clickers × 1 poll/s ≈ 30 req/s on `/session/current`: four cheap SQLite reads each, well within the Jetson's budget. If it ever isn't, the upgrade path is one SSE endpoint the clicker subscribes to; the firmware loop above changes only where `armed` is set.
@@ -501,7 +537,10 @@ Details worth keeping in mind:
 | Read returns 20 bytes / truncated JSON | MTU not negotiated and long reads disabled | Request MTU 256 before the read; keep the packet ≤ 512 B |
 | `status: busy` in a loop | A previous provisioning never wrote `result` | Slot expires after 10 s; check provisioner log |
 | Joins Wi-Fi, then vote LED red every 10 s | Device unassigned (403) | Teacher assigns a student in the roster; clicker re-auths within 30 s |
-| Every vote 401 | Secret rotated by another provisioning, or session revoked on unassign | Re-provision (hold A 3 s) |
+| Every vote 401 | The session was revoked (unassign, reassign, delete or a new secret), or it is older than 12 hours | Authenticate again with `POST /api/v1/devices/auth`. If that answers `401`, the secret changed: re-provision (hold A 3 s) |
+| Auth answers `401` | Secret not issued, replaced by another provisioning, or the device id is unknown | Re-provision (hold A 3 s) |
+| Auth answers `429` | Five wrong secrets from this device at this address (30 s, doubling to 16 min) | Wait. The lockout is in memory, so a backend restart clears it |
+| Auth answers `422` | Secret or device id has the wrong shape (the secret is 32 lowercase hex characters) | Packet or NVS bug: check the value the clicker sends |
 | Every vote 409 | Already voted this round / window closed | Expected; first press locks |
 | Nothing joins after a router change | Passphrase rotated | Re-provision the fleet |
 | Some clickers get no IP | DHCP pool exhausted | Widen the pool (`infra/glinet/initial.md` §5) |
@@ -522,11 +561,11 @@ Details worth keeping in mind:
 
 In the order each piece unblocks the next:
 
-1. **Backend (Copilot A, ~1 day)** — migration 011, `api/devices/auth.py` + schemas, `staff/devices/{id}/secret`, revocation in `unassign`/`assign`, `.env.example` entries, tests (`tests/api/devices/`, migration test), `docs/api/devices.md` + `docs/database`. Testable with `curl` before any hardware exists.
-2. **Provisioner (Pilot B, ~1 day)** — `infra/provisioner/` script + systemd unit + `--dry-run`; verified with a phone BLE scanner app and the checklist above.
-3. **Firmware (Pilot B, ~2 days)** — provisioning routine, NVS, runtime loop, LED mapping; one clicker end-to-end against the real backend.
-4. **Fleet test (both, ½ day)** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable).
-5. **Pilas roster** — optional: show `GET /staff/devices` (device, assigned student, `secret_issued_at`) with assign/unassign buttons on `/maestro/`, so the "unregistered → assign → press again" loop never needs Swagger.
+1. **Backend (Copilot A): done in Week 7** — migration `015`, `api/devices/auth.py` + schemas, `staff/devices/{id}/secret`, revocation in `unassign`/`assign`/`delete`, the vote label, tests (`tests/api/devices/`, `tests/api/staff/`, `tests/api/session/`, `tests/core/`), `docs/api/devices.md` and `docs/database`. The `.env.example` entries were left for the provisioner. Testable with `curl` before any hardware exists.
+2. **Provisioner (Pilot B, ~1 day): not started** — `infra/provisioner/` script + systemd unit + `--dry-run`; verified with a phone BLE scanner app and the checklist above.
+3. **Firmware (Pilot B, ~2 days): not started** — provisioning routine, NVS, runtime loop, LED mapping; one clicker end-to-end against the real backend.
+4. **Fleet test (both, ½ day): simulated in CI, not on hardware** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable). The CI test has no radio. The real-device part is not started.
+5. **Pilas roster** — optional: show `GET /staff/devices` (device, assigned student; `secret_issued_at` is not in the list response yet) with assign/unassign buttons on `/maestro/`, so the "unregistered → assign → press again" loop never needs Swagger.
 
 ---
 

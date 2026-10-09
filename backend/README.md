@@ -46,7 +46,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ## <a id="1-components--architecture"></a>1. Components & Architecture
 
 - **FastAPI Core Application**:
-  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
+  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, physical ESP32 clicker fleet management (`api/staff/`), and the clicker login (`api/devices/`: `POST /api/v1/devices/auth`).
   - OpenAPI automated documentation generator (`/docs` and `/openapi.json`).
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
@@ -56,7 +56,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Platform Infrastructure (`core/`)**:
   - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`, `TTSConfig`, `CaptivePortalConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
-  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, generation telemetry, and game events.
+  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, generation telemetry, game events, and clicker credentials (`device_repository.py`: the secret digest and the sessions issued to a clicker).
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
@@ -71,7 +71,7 @@ The following items are planned deliverables across upcoming milestone phases:
 
 - **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
 - **Offline Games Ingestion (Week 6)**: The appliance side is built (`POST /api/v1/games/events` and its staff summary, see [Games API](../docs/api/games.md)). The client queue that sends the events, with opportunistic synchronization on AP reconnection, is not.
-- **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
+- **ESP32 Hardware Clickers (Week 7)**: The backend half is built: migration `015`, the clicker secret (`POST /api/v1/staff/devices/{device_id}/secret`), device authentication (`POST /api/v1/devices/auth`), and the vote label taken from the caller's session, with no separate driver class ([Devices API](../docs/api/devices.md)). Physical firmware, the BLE provisioner and the button and LED work are not started.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
@@ -251,10 +251,10 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, games, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, devices, games, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
-│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event), migrations & audit
+│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event, clicker device), migrations & audit
 │   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   │   ├── logging/   # Unified application & access log formatting with captive probe filtering
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver

@@ -23,7 +23,7 @@ These endpoints coordinate real-time classroom quiz matches: teacher match initi
 | `GET` | `/api/v1/session/current` | Public | Newest lobby/active session, so classroom clients join without an id |
 | `GET` | `/api/v1/session/{session_id}` | Public | Public session status, active countdown, and phase-gated question/result |
 | `POST` | `/api/v1/session/{session_id}/start` | Teacher, Admin | Open first round and start voting countdown |
-| `POST` | `/api/v1/session/{session_id}/vote` | Student, Staff | Ingest student vote with first-press locking |
+| `POST` | `/api/v1/session/{session_id}/vote` | Student, Staff | Ingest a student's vote from a phone or an ESP32 clicker, with first-press locking |
 | `POST` | `/api/v1/session/{session_id}/close` | Teacher, Admin | Close the active voting window |
 | `POST` | `/api/v1/session/{session_id}/reveal` | Teacher, Admin | Aggregate votes and evaluate >51% Rule |
 | `POST` | `/api/v1/session/{session_id}/next` | Teacher, Admin | Advance to next round or complete match |
@@ -156,9 +156,12 @@ Ingests a student vote. Enforces **first-press locking** at both engine and data
     "response_time_ms": 1450.0
   }
   ```
-  The server records every vote from this endpoint as transport `web` with no device; a
-  `transport_type` or `device_id` a client still sends is ignored, so a phone cannot pose as an
-  ESP32 clicker. Clickers vote through their own transport (Week 7).
+  The server labels each vote from the caller's session, never from the body. A token issued to
+  an ESP32 clicker by [`POST /api/v1/devices/auth`](devices.md#post-devices-auth) records the vote
+  as transport `hardware` with that clicker's `device_id`. Any other token, a phone or browser
+  login, records it as `web` with no device. A `transport_type` or `device_id` in the body is
+  ignored, so a phone cannot pose as a clicker. Clickers vote on this same endpoint, with the
+  token that device authentication gave them. A clicker whose token was revoked gets `401`.
 * **Responses**:
   * `200 OK`:
     ```json
@@ -172,8 +175,9 @@ Ingests a student vote. Enforces **first-press locking** at both engine and data
     }
     ```
   * `400 Bad Request`: Invalid option (not `"A"`, `"B"`, `"C"`, or `"D"`).
+  * `401 Unauthorized`: Missing, invalid, expired or revoked session token.
   * `404 Not Found`: Session or active round not found.
-  * `409 Conflict`: First-press lock violation (student already voted in this round) or round not in `open` state.
+  * `409 Conflict`: First-press lock violation (student already voted in this round, from a phone or a clicker) or round not in `open` state.
   * `422 Unprocessable Content`: Input validation error.
 
 ---
