@@ -11,10 +11,12 @@ from pydantic import (
     field_validator,
 )
 
-__all__ = ["CLIENT_ID_PATTERN", "GameEvent"]
+__all__ = ["CLIENT_ID_PATTERN", "MISCONCEPTION_PATTERN", "GameEvent"]
 
 # Ids are generated on the phone: 16 to 64 URL-safe characters.
 CLIENT_ID_PATTERN = r"^[A-Za-z0-9_-]{16,64}$"
+# Same shape as the misconception slugs of the quiz taxonomy, e.g. "borrowing_error".
+MISCONCEPTION_PATTERN = r"^[a-z][a-z0-9_]{1,63}$"
 
 
 class GameEvent(BaseModel):
@@ -32,6 +34,8 @@ class GameEvent(BaseModel):
     answer: str | None = Field(default=None, max_length=64)
     expected: str | None = Field(default=None, max_length=64)
     app_version: str | None = Field(default=None, max_length=16)
+    # The mistake a wrong choice stands for, as the app tags it: a snake_case slug.
+    misconception: str | None = Field(default=None, pattern=MISCONCEPTION_PATTERN)
 
     @field_validator("occurred_at")
     @classmethod

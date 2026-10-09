@@ -25,6 +25,7 @@ class GameEventRecord:
     cnb_topic: str | None = None
     concept_topic: str | None = None
     concept_subconcept: str | None = None
+    misconception: str | None = None
 
 
 def insert_game_event(conn: sqlite3.Connection, record: GameEventRecord) -> bool:
@@ -35,8 +36,8 @@ def insert_game_event(conn: sqlite3.Connection, record: GameEventRecord) -> bool
     cursor = conn.execute(
         "INSERT INTO game_events (client_event_id, install_id, grade, lesson_id, "
         "round_index, attempt, is_correct, occurred_at, student_id, answer, expected, "
-        "app_version, cnb_topic, concept_topic, concept_subconcept) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "app_version, cnb_topic, concept_topic, concept_subconcept, misconception) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
         "ON CONFLICT(client_event_id) DO NOTHING",
         (
             record.client_event_id,
@@ -54,6 +55,7 @@ def insert_game_event(conn: sqlite3.Connection, record: GameEventRecord) -> bool
             record.cnb_topic,
             record.concept_topic,
             record.concept_subconcept,
+            record.misconception,
         ),
     )
     return cursor.rowcount == 1

@@ -47,6 +47,7 @@ def test_insert_game_event_stores_every_column(seeded_db):
             cnb_topic="suma_resta",
             concept_topic="arithmetic",
             concept_subconcept="addition_subtraction",
+            misconception="borrowing_error",
         ),
     )
     conn.commit()
@@ -54,7 +55,7 @@ def test_insert_game_event_stores_every_column(seeded_db):
     row = conn.execute(
         "SELECT client_event_id, install_id, grade, lesson_id, round_index, attempt, "
         "is_correct, occurred_at, student_id, answer, expected, app_version, "
-        "cnb_topic, concept_topic, concept_subconcept FROM game_events"
+        "cnb_topic, concept_topic, concept_subconcept, misconception FROM game_events"
     ).fetchone()
     assert tuple(row) == (
         "evt-0000000000000002",
@@ -72,6 +73,7 @@ def test_insert_game_event_stores_every_column(seeded_db):
         "suma_resta",
         "arithmetic",
         "addition_subtraction",
+        "borrowing_error",
     )
 
 

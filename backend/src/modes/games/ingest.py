@@ -60,6 +60,8 @@ def _ingest_one_event(
         cnb_topic=labels.cnb_topic,
         concept_topic=labels.concept_topic,
         concept_subconcept=labels.concept_subconcept,
+        # A right answer has no mistake behind it, whatever the app sent.
+        misconception=None if event.is_correct else event.misconception,
     )
     return ACCEPTED if insert_game_event(conn, record) else DUPLICATE
 

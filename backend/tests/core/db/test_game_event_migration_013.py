@@ -104,10 +104,11 @@ def insert_game_event_row(conn, **overrides):
     )
 
 
-def test_migration_013_creates_game_events_with_seventeen_columns(fresh_db):
+def test_migration_013_creates_game_events_with_its_seventeen_columns(fresh_db):
     conn, _ = fresh_db
     columns = game_events_columns_by_name(conn)
-    assert set(columns) == GAME_EVENT_COLUMNS
+    # A later migration may add columns (014 adds misconception).
+    assert set(columns) >= GAME_EVENT_COLUMNS
 
 
 def test_migration_013_marks_required_columns_not_null_and_optional_nullable(fresh_db):

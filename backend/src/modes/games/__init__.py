@@ -5,7 +5,7 @@ reaches the appliance. This package validates each event, names what its lesson
 practises and stores it once.
 """
 
-from modes.games.events import CLIENT_ID_PATTERN, GameEvent
+from modes.games.events import CLIENT_ID_PATTERN, MISCONCEPTION_PATTERN, GameEvent
 from modes.games.ingest import ACCEPTED, DUPLICATE, REJECTED, ingest_events
 from modes.games.labels import GameLabels, labels_for, load_lesson_topics
 
@@ -13,6 +13,7 @@ __all__ = [
     "ACCEPTED",
     "CLIENT_ID_PATTERN",
     "DUPLICATE",
+    "MISCONCEPTION_PATTERN",
     "REJECTED",
     "GameEvent",
     "GameLabels",
