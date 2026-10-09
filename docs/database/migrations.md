@@ -29,6 +29,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [010: Quiz Sessions, Rounds & First-Press Voting](#010-quiz-sessions-rounds--first-press-voting)
   - [011: Classroom Mode Switch](#011-classroom-mode-switch)
   - [012: Turn Log Pedagogy Labels](#012-turn-log-pedagogy-labels)
+  - [013: Game Events](#013-game-events)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -66,6 +67,7 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 | **010** | `010_add_quiz_sessions_and_votes.sql` | Session Engine | Creates `quiz_sessions`, `quiz_session_rounds`, `quiz_session_votes` | Week 3 |
 | **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
 | **012** | `012_add_turn_log_pedagogy.sql` | Dialogue Telemetry | Adds nullable `concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy` to `turn_logs` and creates `idx_turn_logs_concept` | Week 5 |
+| **013** | `013_add_game_events.sql` | Games Telemetry | Creates `game_events` (one row per answer tapped, `UNIQUE(client_event_id)`) and `idx_game_events_concept` | Week 6 |
 
 ---
 
@@ -128,6 +130,10 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 * **File**: [`backend/migrations/012_add_turn_log_pedagogy.sql`](../../backend/migrations/012_add_turn_log_pedagogy.sql)
 * **Description**: Adds five nullable `TEXT` columns to `turn_logs` (`concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy`) with no default and no `CHECK` constraint, so the label vocabularies can grow in code without a migration. Creates `idx_turn_logs_concept ON turn_logs(concept_topic, concept_subconcept)`. See [dialogue.md](dialogue.md#21-telemetry-label-vocabularies).
 
+### <a id="013-game-events"></a>013: Game Events
+* **File**: [`backend/migrations/013_add_game_events.sql`](../../backend/migrations/013_add_game_events.sql)
+* **Description**: Creates `game_events`, one row per answer tapped in a grade app, and the index `idx_game_events_concept ON game_events(concept_topic, concept_subconcept)`. The `client_event_id` column is `UNIQUE`, so a repeated delivery is stored once. The three label columns have no `CHECK` constraint, as in 012, and `student_id` becomes `NULL` when its user row is deleted. See [games.md](games.md).
+
 ---
 
 ## <a id="4-migration-workflow--verification-runbook"></a>4. Migration Workflow & Verification Runbook
@@ -135,7 +141,7 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 Follow these sequential steps when adding or modifying database schemas:
 
 1. **Allocate Version Number**:
-   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `013_add_tts_cache.sql`).
+   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `014_add_tts_cache.sql`).
 2. **Author SQL Script**:
    * Write plain SQL using strict SQLite syntax.
    * Use `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`.

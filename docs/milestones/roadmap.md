@@ -204,7 +204,7 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Games playable completely offline from the appliance on 3 client devices.
   * Disconnection sync test: play offline, reconnect to AP, verify 100% of error events ingested with 0 duplicates.
-* **Current State (2026-10-08)**: the games are hosted as the grade apps in `pwa/tareas/`; ingestion, the client queue and the sync are not started, and how they fit the games as built is an open decision.
+* **Current State (2026-10-08)**: the games are hosted as the grade apps in `pwa/tareas/`, and the appliance ingests, labels and deduplicates their events (`POST /api/v1/games/events`). The client queue in the games is not started, so the sync test on devices is pending; sync from the take-home APK is out of scope by decision.
 * **Detailed Milestone Tracking**: [Week 6 Milestone Tracking](week-6-games-sync.md).
 
 ---

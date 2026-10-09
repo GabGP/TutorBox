@@ -7,7 +7,7 @@ Technical specification, Entity-Relationship model, and indexing architecture fo
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Database Hub** • **Modular Schemas:** [Core Schema](core.md) • [Quiz Schema](quiz.md) • [Dialogue Telemetry](dialogue.md) • [Migrations](migrations.md)
+📍 [Docs](../README.md) › **Database Hub** • **Modular Schemas:** [Core Schema](core.md) • [Quiz Schema](quiz.md) • [Dialogue Telemetry](dialogue.md) • [Game Events](games.md) • [Migrations](migrations.md)
 
 </div>
 
@@ -34,7 +34,7 @@ PRAGMA journal_mode = WAL;
 PRAGMA busy_timeout = 5000;
 ```
 
-* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`, `devices -> users`, `quiz_generation_logs -> users / quiz_questions`).
+* **`foreign_keys = ON`**: Enforces strict referential integrity across related tables (`sessions -> users`, `turn_logs -> sessions`, `devices -> users`, `quiz_generation_logs -> users / quiz_questions`, `game_events -> users`).
 * **`journal_mode = WAL`**: Write-Ahead Logging allows simultaneous non-blocking concurrent readers while a write transaction is committed.
 * **`busy_timeout = 5000`**: Sets a 5-second lock acquisition timeout to prevent immediate busy errors under concurrent student load.
 
@@ -49,6 +49,7 @@ erDiagram
     users ||--o{ quiz_generation_logs : "initiates"
     quiz_questions ||--o{ quiz_generation_logs : "records"
     sessions ||--o{ turn_logs : "records"
+    users ||--o{ game_events : "plays"
     users ||--o{ audit_logs : "actor / target"
 
     users {
@@ -92,6 +93,26 @@ erDiagram
         TEXT error_type "Misconception slug | unclassified | NULL"
         TEXT scaffolding_strategy "Socratic scaffolding move"
         TIMESTAMP timestamp "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    game_events {
+        INTEGER id PK "AUTOINCREMENT"
+        TEXT client_event_id UK "Answer id from the phone: a repeat is stored once"
+        TEXT install_id "Random id of the phone or browser"
+        INTEGER student_id FK "REFERENCES users(id) ON DELETE SET NULL"
+        TEXT grade "Grade app: primero | segundo | tercero"
+        TEXT lesson_id "Lesson id in the app registry"
+        INTEGER round_index "Round index, 0 to 999 via the API"
+        INTEGER attempt "Tap number in the round, 1 is the first"
+        INTEGER is_correct "1: Right | 0: Wrong"
+        TEXT answer "Answer tapped, max 64 characters"
+        TEXT expected "Right answer, max 64 characters"
+        TEXT app_version "App version, max 16 characters"
+        TEXT occurred_at "UTC time of the tap, phone clock"
+        TIMESTAMP received_at "DEFAULT CURRENT_TIMESTAMP: appliance clock"
+        TEXT cnb_topic "CNB topic id (cnb_matematicas.json)"
+        TEXT concept_topic "Curriculum topic (CURRICULUM_TAXONOMY key)"
+        TEXT concept_subconcept "Curriculum subconcept (CURRICULUM_TAXONOMY key)"
     }
 
     quiz_questions {
@@ -191,7 +212,8 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 | **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
 | **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$)<br>• Concept, error type and scaffolding strategy labels per turn |
-| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `012+`)<br>• Idempotent SQL execution & rollback procedures |
+| **Mode 3: Offline Games** | **[games.md](games.md)** | `game_events` | • One row per answer tapped, stored once per client event id (`UNIQUE(client_event_id)`)<br>• CNB topic and quiz taxonomy labels per event<br>• Events survive the deletion of their student |
+| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `013+`)<br>• Idempotent SQL execution & rollback procedures |
 
 ---
 
@@ -204,6 +226,7 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 | `idx_sessions_user_id` | `sessions` | `(user_id)` | Fast lookup of active sessions by user ID during auth and logout. |
 | `idx_turn_logs_session_id` | `turn_logs` | `(session_id)` | Fast lookup of dialogue history per student session. |
 | `idx_turn_logs_concept` | `turn_logs` | `(concept_topic, concept_subconcept)` | Fast aggregation of dialogue turns and error types per curriculum concept. |
+| `idx_game_events_concept` | `game_events` | `(concept_topic, concept_subconcept)` | Fast aggregation of game answers per curriculum concept and taxonomy pair. |
 | `idx_audit_logs_actor` | `audit_logs` | `(actor_user_id)` | Fast filtering of audit logs by acting administrator/teacher. |
 | `idx_audit_logs_target` | `audit_logs` | `(target_user_id)` | Fast filtering of audit logs by target account. |
 | `idx_devices_assigned_user` | `devices` | `(assigned_user_id)` | Fast reverse-lookup of clicker assignment by student ID. |
@@ -225,5 +248,6 @@ To ensure sub-millisecond query execution on edge NVMe/eMMC storage, the schema 
 * **[Core Identity & Fleet Schema](core.md)**: Explore user credentials, sessions, and device pairing.
 * **[Classroom Quiz Schema](quiz.md)**: Explore question banks, generation telemetry, and session matches.
 * **[Socratic Dialogue Schema](dialogue.md)**: Explore math AST and hint telemetry.
+* **[Game Events Schema](games.md)**: Explore game answer telemetry and its concept labels.
 * **[Migrations Playbook](migrations.md)**: Review database migration history and authoring runbooks.
 * **[REST API Specifications](../api/README.md)**: Explore API routes interacting with the storage engine.

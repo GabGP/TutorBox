@@ -90,13 +90,13 @@ graph TD
 ---
 
 ### <a id="mode-3-offline-primary-games"></a>Mode 3: Offline Primary Games (Educational Games)
-* **Workflow**: Local mirror of `primariaconk.uk` hosted on the appliance without CDN dependencies.
-* **Opportunistic Sync**: Logs gameplay errors locally on the student device and synchronizes deduplicated events whenever the device reconnects to the classroom AP.
+* **Workflow**: One math app per grade (Primero, Segundo, Tercero) in `pwa/tareas/`, served by the appliance at `/tareas/<grade>/` without CDN dependencies and taken home as an offline Android APK ([§4](#4-choosing-the-mode)). The roadmap names them `primariaconk.uk`.
+* **Opportunistic Sync**: The appliance receives one event per answer tapped at `POST /api/v1/games/events`, labels it with the concept its lesson practises and stores each client event id once, so a phone can resend what it could not confirm ([Games API](../api/games.md)). The queue in the games that sends the events is not built yet, and the APK sends nothing by design ([Week 6 tracking](../milestones/week-6-games-sync.md)).
 
 ---
 
 ## <a id="3-unified-error-taxonomy--weekly-reporting"></a>3. Unified Error Taxonomy & Weekly Reporting
-All three modes classify errors using a shared concept taxonomy (`topic`, `subconcept`, `misconception_type`). The Mode 2 tutor now labels each turn in `turn_logs` with the shared `topic` / `subconcept` of the concept it practises and, on a wrong answer, the misconception. The weekly analytics engine computes:
+All three modes classify errors using a shared concept taxonomy (`topic`, `subconcept`, `misconception_type`). The Mode 2 tutor now labels each turn in `turn_logs` with the shared `topic` / `subconcept` of the concept it practises and, on a wrong answer, the misconception. Mode 3 events in `game_events` carry the same `topic` / `subconcept` pair and CNB topic, without a misconception. The weekly analytics engine computes:
 1. Top 3 classroom-wide misconceptions requiring direct teacher review.
 2. Individual student risk scoring.
 3. Printable PDF / CSV report generated completely offline.

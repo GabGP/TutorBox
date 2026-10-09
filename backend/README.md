@@ -56,7 +56,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Platform Infrastructure (`core/`)**:
   - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`, `TTSConfig`, `CaptivePortalConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
-  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, and generation telemetry.
+  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, generation telemetry, and game events.
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
@@ -65,12 +65,12 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
   - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Mobile conversational math practice: a deterministic dialogue planner with a bounded 4-tier hint ladder (0 → 3) for operations and one- and two-step equations, SymPy containment that replaces any model reply giving the answer away (digits, words, expressions or `x = …`) with the deterministic hint, turn telemetry labels (concept, CNB topic, scaffolding strategy and, on a wrong answer, the misconception) in `turn_logs`, and a 48-problem labeled bank validated in CI ([Tutor API](../docs/api/tutor.md)).
-  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: Planned for Week 6 (offline educational games, student error event ingestion, opportunistic AP sync).
+  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: The appliance receives one event per answer tapped at `POST /api/v1/games/events`, labels it with its CNB topic and quiz taxonomy pair, and stores each client event id once ([Games API](../docs/api/games.md)). The queue in the games that will send the events is not built yet.
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
-- **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
+- **Offline Games Ingestion (Week 6)**: The appliance side is built (`POST /api/v1/games/events`, see [Games API](../docs/api/games.md)). The client queue that sends the events, with opportunistic synchronization on AP reconnection, is not.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
@@ -251,10 +251,10 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, games, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
-│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry), migrations & audit
+│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event), migrations & audit
 │   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   │   ├── logging/   # Unified application & access log formatting with captive probe filtering
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
@@ -264,7 +264,7 @@ backend/
 │       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
 │       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor
 │       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank, turn telemetry labels)
-│       └── games/     # Mode 3: Offline Primary Educational Games (Week 6 stub)
+│       └── games/     # Mode 3: game event validation, concept labels, ingestion
 ├── tests/             # Pytest test suite mirroring src/ (core/, modes/, api/) with 100% coverage
 ├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
 └── README.md          # Backend developer documentation and local setup guide
