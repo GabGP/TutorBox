@@ -13,8 +13,8 @@ export type TeacherStep =
   | 'stats';
 
 export const TEACHER_STEP_TITLES: Record<TeacherStep, [string, string]> = {
-  login: ['TutorBox', 'Iniciar sesión'],
-  pin: ['TutorBox', 'PIN nuevo'],
+  login: ["Utz'tutor", 'Iniciar sesión'],
+  pin: ["Utz'tutor", 'PIN nuevo'],
   topic: ['Paso 1 de 3', 'Elegir tema'],
   count: ['Paso 2 de 3', 'Número de preguntas'],
   lobby: ['Paso 3 de 3', 'Preparar el juego'],

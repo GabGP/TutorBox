@@ -1,4 +1,4 @@
-"""Centralized configuration package for TutorBox."""
+"""Centralized configuration package for Utz'tutor."""
 
 from core.config.captive_settings import build_captive_portal_config
 from core.config.constants import (

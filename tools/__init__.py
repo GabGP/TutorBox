@@ -1,1 +1,1 @@
-"""TutorBox offline developer tools and benchmark harnesses."""
+"""Utz'tutor offline developer tools and benchmark harnesses."""

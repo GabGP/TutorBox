@@ -64,7 +64,7 @@ export const DisplayView: React.FC = () => {
       {step === 'idle' && (
         <section id="s-idle" className={`${styles.section} ${styles.center}`}>
           <div className={styles.logo}>T</div>
-          <div className={styles.h}>TutorBox está listo</div>
+          <div className={styles.h}>Utz'tutor está listo</div>
           <div className={styles.sub} id="idleSub">
             {session
               ? 'El docente está preparando el juego'

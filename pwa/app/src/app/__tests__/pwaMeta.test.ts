@@ -29,7 +29,7 @@ describe('PWA document meta (P0-1)', () => {
     const manifestPath = resolve(APP_ROOT, 'public/static/manifest.webmanifest');
     expect(existsSync(manifestPath)).toBe(true);
     const manifest = JSON.parse(readAppFile('public/static/manifest.webmanifest'));
-    expect(manifest.name).toBe('TutorBox');
+    expect(manifest.name).toBe("Utz'tutor");
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('/alumno/');
     expect(manifest.theme_color).toBe('#0B6E99');

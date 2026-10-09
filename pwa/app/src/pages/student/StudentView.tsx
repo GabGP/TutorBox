@@ -191,7 +191,7 @@ export const StudentView: React.FC = () => {
   return (
     <div className={styles.studentShell}>
       <header className={styles.header}>
-        <span>TutorBox</span>
+        <span>Utz'tutor</span>
         <span className={styles.headerActions}>
           <i className={`${styles.statusDot} ${dotClass}`} role="status" aria-label={dotLabel} />
           {user ? (

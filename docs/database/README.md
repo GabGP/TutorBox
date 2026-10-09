@@ -1,10 +1,10 @@
 # Database Schema Reference & Storage Architecture
 
-Technical specification, Entity-Relationship model, and indexing architecture for the **TutorBox** SQLite storage engine.
+Technical specification, Entity-Relationship model, and indexing architecture for the **Utz'tutor** SQLite storage engine.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Database Hub** • **Modular Schemas:** [Core Schema](core.md) • [Quiz Schema](quiz.md) • [Dialogue Telemetry](dialogue.md) • [Game Events](games.md) • [Migrations](migrations.md)
@@ -24,7 +24,7 @@ Technical specification, Entity-Relationship model, and indexing architecture fo
 
 ## <a id="1-engine-configuration--pragmas"></a>1. Engine Configuration & Pragmas
 
-TutorBox utilizes a local SQLite database (`tutorbox.db`) optimized for high-concurrency, offline edge execution on the NVIDIA Jetson Orin Nano (supporting 15–20 concurrent classroom users).
+Utz'tutor utilizes a local SQLite database (`tutorbox.db`) optimized for high-concurrency, offline edge execution on the NVIDIA Jetson Orin Nano (supporting 15–20 concurrent classroom users).
 
 All database connections initialized via `get_db_connection()` in [`backend/src/core/db/database.py`](../../backend/src/core/db/database.py) execute the following runtime configuration:
 

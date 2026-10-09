@@ -1,10 +1,10 @@
 # SQLite Database Migrations Playbook & Changelog
 
-Comprehensive migration specifications, historical changelog, and execution procedures for **TutorBox**.
+Comprehensive migration specifications, historical changelog, and execution procedures for **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Database](README.md) › **Migrations Playbook** • **Related:** [Database Hub](README.md) • [Backend Guide](../../backend/README.md)
@@ -39,7 +39,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
 
 ## <a id="1-migration-architecture--pragmas"></a>1. Migration Architecture & Pragmas
 
-TutorBox utilizes sequential SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
+Utz'tutor utilizes sequential SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
 
 * **Storage Location**: `backend/migrations/<NNN>_<description>.sql`
 * **Version Registry**: Every applied migration is tracked in the `schema_migrations` table with its integer version and timestamp.

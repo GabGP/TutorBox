@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 5 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Socratic Pedagogy](../architecture/socratic-pedagogy.md) • [Tutor API Reference](../api/tutor.md) • [Dialogue Telemetry](../database/dialogue.md)

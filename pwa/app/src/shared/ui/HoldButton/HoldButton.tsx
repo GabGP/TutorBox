@@ -5,10 +5,10 @@ import { useHoldProgress } from './useHoldProgress';
 import styles from './HoldButton.module.css';
 
 /**
- * TutorBox HoldButton: press-and-hold confirm with liquid fill.
+ * Utz'tutor HoldButton: press-and-hold confirm with liquid fill.
  * Replicates ReactBits HoldButton timing (linear fill over holdTime,
  * snap-back over releaseTime, wave meniscus, glow charge + done pulse,
- * ink inversion, done blur-in) styled with TutorBox tokens.
+ * ink inversion, done blur-in) styled with Utz'tutor tokens.
  */
 export const HoldButton: React.FC<HoldButtonProps> = ({
   children = 'Mantén para confirmar',

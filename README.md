@@ -1,10 +1,10 @@
-# TutorBox: Autonomous Offline Edge AI Socratic Educational Platform
+# Utz'tutor: Autonomous Offline Edge AI Socratic Educational Platform
 
 [![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
 <div align="center">
 
-| 🏠 **TutorBox** | 📚 [Docs](docs/README.md) | ⚙️ [Backend](backend/README.md) | 📱 [PWA](pwa/README.md) | 🔌 [Infra](infra/README.md) |
+| 🏠 **Utz'tutor** | 📚 [Docs](docs/README.md) | ⚙️ [Backend](backend/README.md) | 📱 [PWA](pwa/README.md) | 🔌 [Infra](infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Root Overview** • **Quick Links:** [Architecture](docs/README.md#1-system-architecture--appliance-modes) • [Roadmap](docs/milestones/roadmap.md) • [API Hub](docs/api/README.md) • [Database Schema](docs/database/README.md)
@@ -13,7 +13,7 @@
 
 ---
 
-**TutorBox** is an offline Edge AI educational appliance designed for basic education students in rural and off-grid communities with zero internet connectivity. The appliance delivers interactive classroom quizzes, Socratic math tutoring, and offline educational games with dual-language voice output in Spanish and **K'iche'** (`quc_Latn`).
+**Utz'tutor** is an offline Edge AI educational appliance designed for basic education students in rural and off-grid communities with zero internet connectivity. The appliance delivers interactive classroom quizzes, Socratic math tutoring, and offline educational games with dual-language voice output in Spanish and **K'iche'** (`quc_Latn`).
 
 > [!NOTE]
 > **Work in Progress**: This project is under active development as an engineering capstone project. Architecture, schemas, and features are subject to ongoing iteration.
@@ -35,7 +35,7 @@
 
 ## <a id="1-project-architecture"></a>1. Project Architecture
 
-TutorBox operates on a local network topology consisting of an isolated Access Point and an integrated Edge AI Core Appliance.
+Utz'tutor operates on a local network topology consisting of an isolated Access Point and an integrated Edge AI Core Appliance.
 
 ```mermaid
 graph TD
@@ -118,7 +118,7 @@ TutorBox/
 
 ## <a id="6-quick-start"></a>6. Quick Start
 
-TutorBox uses **[uv](https://docs.astral.sh/uv/)** for environment startup:
+Utz'tutor uses **[uv](https://docs.astral.sh/uv/)** for environment startup:
 
 ```bash
 # 1. Install uv (if not already installed)

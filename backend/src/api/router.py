@@ -1,4 +1,4 @@
-"""Centralized API routing topology for TutorBox."""
+"""Centralized API routing topology for Utz'tutor."""
 
 from fastapi import APIRouter
 

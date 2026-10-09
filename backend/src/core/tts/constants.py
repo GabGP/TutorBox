@@ -1,4 +1,4 @@
-"""Audio encoding, normalization, and hardware constants for TutorBox TTS."""
+"""Audio encoding, normalization, and hardware constants for Utz'tutor TTS."""
 
 # Linear PCM Audio Format
 PCM_CHANNELS_MONO: int = 1

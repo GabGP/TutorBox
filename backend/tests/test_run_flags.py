@@ -1,4 +1,4 @@
-"""Unit tests for TutorBox appliance runner build, sync, and flag dispatch (run.py)."""
+"""Unit tests for Utz'tutor appliance runner build, sync, and flag dispatch (run.py)."""
 
 import subprocess
 import sys

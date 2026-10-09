@@ -1,4 +1,4 @@
-"""TutorBox TTS comparative benchmark and profiler suite."""
+"""Utz'tutor TTS comparative benchmark and profiler suite."""
 
 from tools.benchmark.tts.metrics import (
     EngineStats,

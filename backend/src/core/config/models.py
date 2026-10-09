@@ -1,4 +1,4 @@
-"""Typed domain configuration data models for TutorBox."""
+"""Typed domain configuration data models for Utz'tutor."""
 
 from dataclasses import dataclass
 

@@ -1,4 +1,4 @@
-"""Logging filters for TutorBox server and access logs."""
+"""Logging filters for Utz'tutor server and access logs."""
 
 import logging
 

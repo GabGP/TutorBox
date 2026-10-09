@@ -5,10 +5,10 @@ export type HoldButtonFillDirection = 'right' | 'up';
 export type HoldButtonPhase = 'idle' | 'holding' | 'done';
 
 /**
- * Public contract for the TutorBox HoldButton.
+ * Public contract for the Utz'tutor HoldButton.
  * Mirrors ReactBits HoldButton behavior (press-and-hold confirm with
  * liquid fill, wave meniscus, glow, done blur-in) but defaults to
- * TutorBox design tokens instead of ReactBits dark/purple.
+ * Utz'tutor design tokens instead of ReactBits dark/purple.
  */
 export interface HoldButtonProps {
   children?: React.ReactNode;

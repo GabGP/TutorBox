@@ -19,7 +19,7 @@ def test_get_quiz_schema_success(client: TestClient):
     assert schema_payload["title"] == "QuizQuestion"
     assert (
         schema_payload["description"]
-        == "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+        == "Canonical versioned contract schema for Utz'tutor diagnostic multiple-choice quiz questions."
     )
 
     properties = schema_payload["properties"]

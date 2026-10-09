@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TutorBox · Panel del docente</title>
+<title>Utz'tutor · Panel del docente</title>
 <link rel="stylesheet" href="/static/tb.css">
 <style>
   /* Teacher console (/maestro/): one responsive page — a single phone column that opens into a
@@ -176,7 +176,7 @@
     <section id="s-login" class="step">
       <div class="logo">T</div>
       <h1>Panel del docente</h1>
-      <div class="status" id="health"><i></i><span>Buscando TutorBox…</span></div>
+      <div class="status" id="health"><i></i><span>Buscando Utz'tutor…</span></div>
       <input id="user" maxlength="32" autocomplete="username" placeholder="Usuario">
       <input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password" placeholder="PIN">
       <div class="err" id="lerr" hidden></div>
@@ -292,7 +292,7 @@
 <script>
 const STEPS = ['login', 'pin', 'topic', 'count', 'lobby', 'question', 'reveal', 'stats'];
 const TITLES = {
-  login: ['TutorBox', 'Iniciar sesión'], pin: ['TutorBox', 'PIN nuevo'], topic: ['Paso 1 de 3', 'Elegir tema'], count: ['Paso 2 de 3', 'Número de preguntas'],
+  login: ["Utz'tutor", 'Iniciar sesión'], pin: ["Utz'tutor", 'PIN nuevo'], topic: ['Paso 1 de 3', 'Elegir tema'], count: ['Paso 2 de 3', 'Número de preguntas'],
   lobby: ['Paso 3 de 3', 'Preparar el juego'], question: ['En juego', 'Respuestas en vivo'], reveal: ['En juego', 'Resultado de la pregunta'], stats: ['Juego terminado', 'Resumen del grupo'],
 };
 const TOPIC = { '': ['Todos los temas', '∗'], arithmetic: ['Aritmética', '+'], decimals_percentages: ['Decimales y porcentajes', '%'], fractions: ['Fracciones', '½'], pre_algebra: ['Pre-álgebra', 'x'] };
@@ -520,7 +520,7 @@ function renderLobby() {
     $('heroBig').textContent = S.question_count;
     $('genHelp').textContent = 'Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.';
   } else if (gen) {
-    $('heroLbl').textContent = 'TUTORBOX ESTÁ CREANDO';
+    $('heroLbl').textContent = "UTZ'TUTOR ESTÁ CREANDO";
     $('heroBig').textContent = `Pregunta ${Math.min(gen.done + 1, gen.total)} de ${gen.total}`;
     $('genHelp').textContent = 'El modelo local escribe cada pregunta y la revisa con matemáticas.' + (gen.eta ? ` Tarda aprox. ${gen.eta} s por pregunta.` : '');
   }
@@ -601,7 +601,7 @@ async function start(m) {
   render();
 }
 bindLogin({ show, onDone: start });
-fetch('/health').then(r => r.json()).then(h => { $('health').className = 'status ' + (h.status === 'ok' ? 'ok' : ''); $('health').lastElementChild.textContent = h.status === 'ok' ? 'TutorBox listo' : 'TutorBox con problemas: ' + h.database; }).catch(() => { $('health').lastElementChild.textContent = 'Sin conexión con TutorBox'; });
+fetch('/health').then(r => r.json()).then(h => { $('health').className = 'status ' + (h.status === 'ok' ? 'ok' : ''); $('health').lastElementChild.textContent = h.status === 'ok' ? "Utz'tutor listo" : "Utz'tutor con problemas: " + h.database; }).catch(() => { $('health').lastElementChild.textContent = "Sin conexión con Utz'tutor"; });
 auth.me().then(m => m ? start(m) : render());
 </script>
 </body>

@@ -51,7 +51,7 @@ export function getTeacherViewModel(input: TeacherViewModelInput): TeacherViewMo
   const { session, wizard, source, bankIds, isGenerating, roundClosed, isLast } = input;
   const step = getTeacherStep(session, wizard);
   const key = step as TeacherStep;
-  const [subtitle, title] = TEACHER_STEP_TITLES[key] ?? ['TutorBox', 'Panel'];
+  const [subtitle, title] = TEACHER_STEP_TITLES[key] ?? ["Utz'tutor", 'Panel'];
   const isBankSource = step === 'count' && source === 'bank';
   const isBankEmpty = isBankSource && bankIds.length === 0;
   const primaryText = isBankSource

@@ -31,7 +31,7 @@ tools/benchmark/
 
 ## 2. Hardware Constraints & Appliance Budget (NVIDIA Jetson Orin Nano 8GB)
 
-TutorBox runs as a self-contained offline appliance with 8GB unified LPDDR5 memory shared between CPU and GPU.
+Utz'tutor runs as a self-contained offline appliance with 8GB unified LPDDR5 memory shared between CPU and GPU.
 
 | Subsystem | RAM / VRAM Budget | Target Real-Time SLA | Concurrency Model |
 | :--- | :--- | :--- | :--- |

@@ -1,10 +1,10 @@
 # Mode 1: Classroom Quiz & Real-Time Sessions Schema
 
-Technical specification for question bank storage, SLM generation telemetry, live match sessions, voting windows, and student votes in **TutorBox**.
+Technical specification for question bank storage, SLM generation telemetry, live match sessions, voting windows, and student votes in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Database](README.md) › **Quiz Schema** • **Related:** [Core Schema](core.md) • [Migrations](migrations.md) • [Sessions API](../api/sessions.md)

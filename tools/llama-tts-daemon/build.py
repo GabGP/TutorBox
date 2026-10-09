@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Automated Build & Patch Tool for TutorBox Qwen3-TTS Daemon.
+"""Automated Build & Patch Tool for Utz'tutor Qwen3-TTS Daemon.
 
 Clones pinned upstream llama.cpp (b11002), applies the persistent daemon patch
 (0001-llama-tts-daemon-mode.patch), compiles the binary with CUDA or CPU,
@@ -198,7 +198,7 @@ def clone_upstream(force: bool = False) -> None:
 
 
 def apply_patch(force: bool = False) -> None:
-    """Applies the TutorBox daemon line-protocol patch onto upstream llama.cpp."""
+    """Applies the Utz'tutor daemon line-protocol patch onto upstream llama.cpp."""
     if not PATCH_FILE.is_file():
         print(f"{TAG_FAIL} Patch file not found at {PATCH_FILE}")
         sys.exit(1)
@@ -359,7 +359,7 @@ def install_artifacts() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Build and install TutorBox llama-tts daemon."
+        description="Build and install Utz'tutor llama-tts daemon."
     )
     parser.add_argument(
         "--force", action="store_true", help="Force clean re-clone and re-compilation"
@@ -370,7 +370,7 @@ def main() -> None:
     args = parser.parse_args()
 
     print("==================================================")
-    print("      TutorBox Qwen3-TTS Daemon Build Tool        ")
+    print("      Utz'tutor Qwen3-TTS Daemon Build Tool        ")
     print("==================================================")
 
     if not check_prerequisites():

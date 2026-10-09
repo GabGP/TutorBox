@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 4 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Voice Feedback Architecture](../architecture/voice-feedback.md) • [Session API Reference](../api/sessions.md)
@@ -118,7 +118,7 @@ This document summarizes the technical deliverables, architectural implementatio
    * Explain why **Qwen3-TTS** is the current quality winner, and why Sherpa-ONNX/Piper provide sub-second fallbacks while eSpeak-ng remains the robotic availability safety net.
    * Why Spanish Harvard Sentences (`es_ES-sharvard-medium`, Speaker 1) was selected as the educational default over Mexican regional voices (`es_MX-ald`, `es_MX-claude`): neutral, textbook-clean diction preventing regional bias in Central American classrooms.
 2. **Deterministic >51% Gating (Targeted Intervention vs Narration)**:
-   * Emphasize that TutorBox is **not a screen reader**: voice feedback is a targeted pedagogical intervention triggered strictly when $>51\%$ of the class share the exact same conceptual misconception:
+   * Emphasize that Utz'tutor is **not a screen reader**: voice feedback is a targeted pedagogical intervention triggered strictly when $>51\%$ of the class share the exact same conceptual misconception:
      $$\frac{\text{distractor\_votes}}{\text{total\_votes}} > 0.51$$
    * Ties, dispersed wrong answers, majority correct, or exact 51.0% remain strictly silent to avoid classroom audio fatigue.
 3. **Hardware Budget & Memory Co-Existence**:

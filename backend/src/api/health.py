@@ -21,6 +21,6 @@ def health_check():
 
     return {
         "status": "ok" if db_status == "healthy" else "degraded",
-        "service": "TutorBox Backend",
+        "service": "Utz'tutor Backend",
         "database": db_status,
     }

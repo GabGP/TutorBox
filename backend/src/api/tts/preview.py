@@ -16,8 +16,8 @@ router = APIRouter()
 __all__ = ["router"]
 
 PREVIEW_SAMPLE_TEXT: dict[str, str] = {
-    "es": "Hola, esta es la voz de TutorBox para tu clase.",
-    "quc": "TutorBox.",
+    "es": "Hola, esta es la voz de Utz'tutor para tu clase.",
+    "quc": "Utz'tutor.",
 }
 
 

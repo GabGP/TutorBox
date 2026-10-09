@@ -1,10 +1,10 @@
 # Quiz Match & Real-Time Voting Sessions API Specification
 
-Technical specification for real-time classroom quiz matches, countdown voting windows, first-press vote persistence, and the deterministic **>51% Rule** in **TutorBox**.
+Technical specification for real-time classroom quiz matches, countdown voting windows, first-press vote persistence, and the deterministic **>51% Rule** in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **Quiz Sessions** • **Related:** [Quiz API](quiz.md) • [Diagnostic Distractors](../architecture/diagnostic-distractors.md) • [Week 3 Milestone](../milestones/week-3-session-engine.md)

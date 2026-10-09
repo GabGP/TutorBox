@@ -1,4 +1,4 @@
-/* TutorBox quiz — shared tokens + primitives from the Claude Design "TutorBox Quiz Host" file.
+/* Utz'tutor quiz — shared tokens + primitives from the Claude Design "Utz'tutor Quiz Host" file.
    Served by server.py at /tb.css on every port. Rubik is the design font, but the classroom is
    offline, so we fall back to the system stack instead of fetching Google Fonts. */
 :root {

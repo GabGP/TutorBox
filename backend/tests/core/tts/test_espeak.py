@@ -1,7 +1,7 @@
 """Unit tests for the offline espeak voice engine (src/core/tts/espeak.py).
 
 espeak is not installed in CI, so the binary lookup and the subprocess call are both faked;
-what is asserted is the command TutorBox builds and how it degrades when the engine is absent.
+what is asserted is the command Utz'tutor builds and how it degrades when the engine is absent.
 """
 
 import subprocess

@@ -1,10 +1,10 @@
 # Hardware Clicker & Device Fleet API Specification
 
-Technical specification for physical ESP32 clicker registration, inventory management, and student pairing in **TutorBox**.
+Technical specification for physical ESP32 clicker registration, inventory management, and student pairing in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **Hardware Devices** • **Related:** [Staff Admin](staff.md) • [Clicker Transport](../architecture/esp32-clicker-transport.md)

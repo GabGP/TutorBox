@@ -1,10 +1,10 @@
 # System & Health API Specification
 
-Technical specification for TutorBox health probes, captive-portal connectivity probes, and core system diagnostics.
+Technical specification for Utz'tutor health probes, captive-portal connectivity probes, and core system diagnostics.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **System & Health** • **Related:** [Backend Guide](../../backend/README.md) • [Database Schema](../database/README.md) • [Captive Portal](../../infra/captive-portal.md)
@@ -41,7 +41,7 @@ Checks the availability of the FastAPI service process and verifies that the loc
 ```json
 {
   "status": "ok",
-  "service": "TutorBox Backend",
+  "service": "Utz'tutor Backend",
   "database": "healthy"
 }
 ```
@@ -50,7 +50,7 @@ Checks the availability of the FastAPI service process and verifies that the loc
 | Field | Type | Description |
 | :--- | :--- | :--- |
 | `status` | string | Overall service health (`"ok"`). |
-| `service` | string | Human-readable service banner (`"TutorBox Backend"`). |
+| `service` | string | Human-readable service banner (`"Utz'tutor Backend"`). |
 | `database` | string | Database engine connection status (`"healthy"`). |
 
 ---

@@ -17,7 +17,7 @@ def get_quiz_question_json_schema() -> dict[str, Any]:
     schema_definition["version"] = SCHEMA_VERSION
     schema_definition["title"] = "QuizQuestion"
     schema_definition["description"] = (
-        "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+        "Canonical versioned contract schema for Utz'tutor diagnostic multiple-choice quiz questions."
     )
     return schema_definition
 

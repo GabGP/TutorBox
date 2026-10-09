@@ -1,4 +1,4 @@
-"""Unit tests for TutorBox unified logging, formatters, and filters."""
+"""Unit tests for Utz'tutor unified logging, formatters, and filters."""
 
 import json
 import logging
@@ -278,7 +278,7 @@ def test_setup_logging_creates_stream_handler_if_none_present():
 
 
 def test_logging_config_uses_tutorbox_formatters():
-    """Verifies logging_config.json loads and uses TutorBox formatter classes."""
+    """Verifies logging_config.json loads and uses Utz'tutor formatter classes."""
     config_path = Path(__file__).resolve().parents[3] / "logging_config.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     logging.config.dictConfig(config)

@@ -4,7 +4,7 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Architecture** › **ESP32 Protocol** • **Related:** [ESP32 Clicker Transport](esp32-clicker-transport.md) • [GL.iNet AP Setup](../../infra/glinet/initial.md) • [Devices API](../api/devices.md) • [Sessions API](../api/sessions.md)
@@ -333,7 +333,7 @@ sudo apt install bluez python3-dbus python3-gi        # D-Bus + GLib bindings fo
 sudo rfkill unblock bluetooth
 sudo nmcli radio wifi off                              # appliance is wired; free the shared radio
 # /etc/bluetooth/main.conf
-#   [General]  Name = TutorBox
+#   [General]  Name = Utz'tutor
 #   [Policy]   AutoEnable = true                       # adapter powers on at boot
 sudo systemctl enable --now bluetooth
 bluetoothctl show                                      # expect "Powered: yes"
@@ -381,7 +381,7 @@ def on_result(value, options):
     prov.set_value(b"{}")                                   # never leave a packet readable
     slot.update(device_id=None, until=0.0)
 
-p = peripheral.Peripheral(adapter.Adapter().address, local_name="TutorBox")
+p = peripheral.Peripheral(adapter.Adapter().address, local_name="Utz'tutor")
 p.add_service(srv_id=1, uuid=SVC, primary=True)
 p.add_characteristic(srv_id=1, chr_id=1, uuid=HELLO, value=[], notifying=False, flags=["write"], write_callback=on_hello)
 p.add_characteristic(srv_id=1, chr_id=2, uuid=PROV, value=[], notifying=False, flags=["encrypt-read"])
@@ -395,7 +395,7 @@ p.publish()                                                 # blocks on the GLib
 ```ini
 # /etc/systemd/system/tutorbox-provisioner.service
 [Unit]
-Description=TutorBox BLE clicker provisioner
+Description=Utz'tutor BLE clicker provisioner
 After=bluetooth.target network-online.target tutorbox-backend.service
 Wants=bluetooth.target
 

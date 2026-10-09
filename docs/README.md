@@ -1,10 +1,10 @@
-# TutorBox Technical Documentation
+# Utz'tutor Technical Documentation
 
-Welcome to the **TutorBox** technical documentation portal. This hub indexes architectural specifications, database schemas, migration runbooks, and modular REST API contracts for the offline edge AI educational appliance.
+Welcome to the **Utz'tutor** technical documentation portal. This hub indexes architectural specifications, database schemas, migration runbooks, and modular REST API contracts for the offline edge AI educational appliance.
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 **Docs** | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 **Docs** | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Docs Hub** • **Quick Links:** [API Hub](api/README.md) • [Database Schema](database/README.md) • [Migrations](database/migrations.md) • [Roadmap](milestones/roadmap.md)

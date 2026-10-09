@@ -8,7 +8,7 @@ where = ["src"]
 [project]
 name = "tutorbox-backend"
 version = "0.1.0"
-description = "TutorBox FastAPI Backend & AI Socratic Engine"
+description = "Utz'tutor FastAPI Backend & AI Socratic Engine"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

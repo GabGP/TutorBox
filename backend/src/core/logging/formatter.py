@@ -1,4 +1,4 @@
-"""Custom colored and timestamped formatters for TutorBox application and server logs."""
+"""Custom colored and timestamped formatters for Utz'tutor application and server logs."""
 
 from uvicorn.logging import AccessFormatter, ColourizedFormatter
 

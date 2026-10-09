@@ -22,7 +22,7 @@ def build_quiz_system_prompt(
     """Returns the strict system prompt for local SLM question generation."""
     protocol_text = get_derivation_protocol(topic, subconcept)
     return (
-        "You are an expert pedagogical math quiz generator for TutorBox (primary school education).\n"
+        "You are an expert pedagogical math quiz generator for Utz'tutor (primary school education).\n"
         "Your goal is to generate exactly 1 multiple-choice diagnostic question in strict JSON format.\n"
         f"{protocol_text}\n"
         "MANDATORY SCRATCHPAD USAGE:\n"

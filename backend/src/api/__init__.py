@@ -1,4 +1,4 @@
-"""TutorBox API package."""
+"""Utz'tutor API package."""
 
 from . import auth, captive, games, health, llm, quiz, session, staff, tts, tutor, users
 from .router import api_v1_router, root_router
