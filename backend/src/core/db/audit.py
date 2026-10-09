@@ -16,6 +16,7 @@ VALID_ACTIONS = frozenset(
         "device_assigned",
         "device_unassigned",
         "device_deleted",
+        "device_secret_issued",
         "quiz_question_generated",
         "quiz_question_created",
         "quiz_question_updated",
