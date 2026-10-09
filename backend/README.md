@@ -65,12 +65,12 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
   - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Mobile conversational math practice: a deterministic dialogue planner with a bounded 4-tier hint ladder (0 → 3) for operations and one- and two-step equations, SymPy containment that replaces any model reply giving the answer away (digits, words, expressions or `x = …`) with the deterministic hint, turn telemetry labels (concept, CNB topic, scaffolding strategy and, on a wrong answer, the misconception) in `turn_logs`, and a 48-problem labeled bank validated in CI ([Tutor API](../docs/api/tutor.md)).
-  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: The appliance receives one event per answer tapped at `POST /api/v1/games/events`, labels it with its CNB topic and quiz taxonomy pair, and stores each client event id once ([Games API](../docs/api/games.md)). The queue in the games that will send the events is not built yet.
+  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: The appliance receives one event per answer tapped at `POST /api/v1/games/events`, labels it with its CNB topic and quiz taxonomy pair, keeps the misconception when the game names one, and stores each client event id once. Staff read the counts at `GET /api/v1/games/events/summary` ([Games API](../docs/api/games.md)). The queue in the games that will send the events is not built yet.
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
-- **Offline Games Ingestion (Week 6)**: The appliance side is built (`POST /api/v1/games/events`, see [Games API](../docs/api/games.md)). The client queue that sends the events, with opportunistic synchronization on AP reconnection, is not.
+- **Offline Games Ingestion (Week 6)**: The appliance side is built (`POST /api/v1/games/events` and its staff summary, see [Games API](../docs/api/games.md)). The client queue that sends the events, with opportunistic synchronization on AP reconnection, is not.
 - **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 

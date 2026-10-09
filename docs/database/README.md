@@ -113,6 +113,7 @@ erDiagram
         TEXT cnb_topic "CNB topic id (cnb_matematicas.json)"
         TEXT concept_topic "Curriculum topic (CURRICULUM_TAXONOMY key)"
         TEXT concept_subconcept "Curriculum subconcept (CURRICULUM_TAXONOMY key)"
+        TEXT misconception "Mistake behind a wrong answer, slug sent by the game"
     }
 
     quiz_questions {
@@ -212,8 +213,8 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 | **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
 | **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$)<br>• Concept, error type and scaffolding strategy labels per turn |
-| **Mode 3: Offline Games** | **[games.md](games.md)** | `game_events` | • One row per answer tapped, stored once per client event id (`UNIQUE(client_event_id)`)<br>• CNB topic and quiz taxonomy labels per event<br>• Events survive the deletion of their student |
-| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `013+`)<br>• Idempotent SQL execution & rollback procedures |
+| **Mode 3: Offline Games** | **[games.md](games.md)** | `game_events` | • One row per answer tapped, stored once per client event id (`UNIQUE(client_event_id)`)<br>• CNB topic and quiz taxonomy labels per event, and the misconception when the game names it<br>• Events survive the deletion of their student |
+| **Migrations & Versioning** | **[migrations.md](migrations.md)** | `schema_migrations` | • Numbered migrations (`001` to `014+`)<br>• Idempotent SQL execution & rollback procedures |
 
 ---
 

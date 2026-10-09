@@ -24,8 +24,12 @@ one row per answer tapped.
 ## <a id="1-data-dictionary-game_events"></a>1. Data Dictionary: `game_events`
 
 Stores one row per answer tapped in a grade app. Migration
-[`013_add_game_events.sql`](../../backend/migrations/013_add_game_events.sql) creates the table. The
-repository [`game_event_repository.py`](../../backend/src/core/db/game_event_repository.py) writes the rows.
+[`013_add_game_events.sql`](../../backend/migrations/013_add_game_events.sql) creates the table and
+[`014_add_game_event_misconception.sql`](../../backend/migrations/014_add_game_event_misconception.sql)
+adds `misconception`. The repository
+[`game_event_repository.py`](../../backend/src/core/db/game_event_repository.py) writes the rows, and
+[`game_event_summary.py`](../../backend/src/core/db/game_event_summary.py) counts them for the staff
+summary ([Games API §7](../api/games.md#7-summary-for-staff)).
 
 | Column | Type | Constraints | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -46,6 +50,7 @@ repository [`game_event_repository.py`](../../backend/src/core/db/game_event_rep
 | `cnb_topic` | `TEXT` | `NULL` | `NULL` | CNB topic id from `cnb_matematicas.json`, set from the lesson. See [§2](#2-invariants). |
 | `concept_topic` | `TEXT` | `NULL` | `NULL` | Quiz taxonomy topic (`CURRICULUM_TAXONOMY` key), set for four CNB topics. See [§2](#2-invariants). |
 | `concept_subconcept` | `TEXT` | `NULL` | `NULL` | Quiz taxonomy subconcept paired with `concept_topic`. It is `NULL` when `concept_topic` is `fractions`. See [§2](#2-invariants). |
+| `misconception` | `TEXT` | `NULL` | `NULL` | The mistake behind a wrong answer, as a snake_case slug that the game sends. `NULL` on a right answer and when the game sent none. See [§2](#2-invariants). |
 
 ---
 
@@ -58,8 +63,11 @@ repository [`game_event_repository.py`](../../backend/src/core/db/game_event_rep
   the row is stored, from the lesson table in `backend/src/modes/games/lesson_topics.json`. An unknown grade
   or lesson leaves all three `NULL`. The row keeps `grade` and `lesson_id`, so it can be labelled later.
 * **Open vocabularies**: as in migration 012, the label columns have no `CHECK` constraint. The
-  vocabularies live in code and tests, so they can grow without a migration. The table has no misconception
-  column, because the lessons do not tag their wrong choices yet.
+  vocabularies live in code and tests, so they can grow without a migration.
+* **The misconception comes from the phone**: it is the one label that the appliance does not set. The API
+  accepts any snake_case slug of 2 to 64 characters and stores it only on a wrong answer
+  ([Games API §4](../api/games.md#4-concept-labels)). It plays the part of `turn_logs.error_type` in the
+  tutor. No lesson sends one yet, so the column is `NULL` in every row stored today.
 * **Two clocks**: `occurred_at` is the phone's clock. It holds the time of the tap converted to UTC, stored
   to the second, so fractions of a second are dropped. It is wrong when the phone's clock is wrong.
   `received_at` is the appliance's clock: the database sets it to `CURRENT_TIMESTAMP` (UTC) when the row is

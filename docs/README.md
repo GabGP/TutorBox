@@ -55,7 +55,7 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 | **Quiz Question Bank** | **[api/quiz.md](api/quiz.md)** | Curriculum topics, JSON Schema, SymPy validate, SLM generation, question bank |
 | **Quiz Sessions & Voting** | **[api/sessions.md](api/sessions.md)** | Session match lifecycle, voting countdown, first-press vote persistence, >51% Rule |
 | **Socratic Tutor (Mode 2)** | **[api/tutor.md](api/tutor.md)** | `POST /tutor/message`, reset, ping, and the teacher's live student list |
-| **Offline Games (Mode 3)** | **[api/games.md](api/games.md)** | `POST /games/events`: one event per answer tapped, stored once per client event id |
+| **Offline Games (Mode 3)** | **[api/games.md](api/games.md)** | `POST /games/events`: one event per answer tapped, stored once per client event id; `GET /games/events/summary`: the counts for staff |
 
 ---
 
@@ -64,7 +64,7 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 Technical reference for the local SQLite edge database engine:
 
 * **[Database Schema & ER Model](database/README.md)**: Engine pragmas (WAL, busy timeout, foreign keys), full Mermaid Entity-Relationship (ER) diagram, complete data dictionary for all 12 tables, performance B-tree indexes, and data lifecycle policies (soft-delete, last-admin guard, clicker unlinking).
-* **[Database Migrations Playbook & Changelog](database/migrations.md)**: Complete chronological changelog for migrations `001` through `013`, migration authoring workflow, idempotency validation, and edge backup runbook.
+* **[Database Migrations Playbook & Changelog](database/migrations.md)**: Complete chronological changelog for migrations `001` through `014`, migration authoring workflow, idempotency validation, and edge backup runbook.
 
 ---
 

@@ -11,7 +11,7 @@
 
 ---
 
-This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 6 Milestone** by **Student A (Pilot: Game Error Ingestion & Idempotent Deduplication)** and **Student B (Copilot: Offline Game Hosting & Client-Side Sync Queue)**. It records the state of the repository on 2026-10-08.
+This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 6 Milestone** by **Student A (Pilot: Game Error Ingestion & Idempotent Deduplication)** and **Student B (Copilot: Offline Game Hosting & Client-Side Sync Queue)**. It records the state of the repository on 2026-10-09.
 
 ---
 
@@ -19,10 +19,10 @@ This document tracks the technical deliverables, architectural implementations, 
 
 * **Theme**: *"Opportunistic Synchronization: Data that survives disconnection"*
 * **Status**: **Pilot (Student A) Complete & Green · Copilot (Student B) Hosting in Place, Sync Queue Not Started**
-* **Backend Test Suite**: **2006 / 2006 passing tests** (213 new this week: `tests/modes/games/`, `tests/api/games/` and the two `game_event` files in `tests/core/db/`).
-* **Statement Coverage**: **100.00% statement coverage** across all 6,518 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Backend Test Suite**: **2046 / 2046 passing tests** (253 new this week: `tests/modes/games/`, `tests/api/games/` and the four `game_event` files in `tests/core/db/`).
+* **Statement Coverage**: **100.00% statement coverage** across all 6,581 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
 * **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
-* **Modularity Compliance**: **100% of production source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC**, validated by `tests/test_modularity_policy.py` (largest games module: `modes/games/ingest.py`, 74 lines).
+* **Modularity Compliance**: **100% of production source files $\le 150$ LoC** and **100% of test files $\le 300$ LoC**, validated by `tests/test_modularity_policy.py` (largest games module: `modes/games/ingest.py`, 76 lines).
 * **Game Content Checks**: **77 lessons and 336 choice rounds** pass `tests/check-lessons.mjs` (Primero 21 lessons / 48 rounds, Segundo 26 / 129, Tercero 30 / 159): every lesson loads its own file and every round has exactly one right answer.
 * **Acceptance Criteria Status**:
   * ⏳ **Games playable completely offline from the appliance on 3 client devices**: the three grade apps are served by the appliance and request nothing from outside it. No observation on three devices is recorded yet.
@@ -30,7 +30,9 @@ This document tracks the technical deliverables, architectural implementations, 
 * **Key Milestone Artifacts**:
   * **Ingestion Endpoint**: `POST /api/v1/games/events` stores each answer tapped once per client event id and answers with one status per event ([Games API](../api/games.md)).
   * **Lesson Concept Table**: all 77 lessons of the three grade apps mapped to the CNB topic the tutor already uses, and to the quiz taxonomy pair where the quiz has that concept.
-  * **Event Storage**: migration `013` creates `game_events` with `UNIQUE(client_event_id)` ([Game Events Schema](../database/games.md)).
+  * **Event Storage**: migration `013` creates `game_events` with `UNIQUE(client_event_id)`, and `014` adds `misconception` ([Game Events Schema](../database/games.md)).
+  * **Staff Summary**: `GET /api/v1/games/events/summary` counts the stored answers in total, per lesson and per phone ([Games API §7](../api/games.md#7-summary-for-staff)).
+  * **Rate Limit**: nginx allows each address 30 event batches a minute after a burst of 20 ([`tutorbox.conf`](../../infra/nginx/tutorbox.conf)).
   * **Three Grade Apps, Appliance Hosting, Android Wrapper and Class Mode `apps`**: in the repository before Week 6 began (Section 2.B).
 
 ---
@@ -62,25 +64,38 @@ This document tracks the technical deliverables, architectural implementations, 
 5. **Endpoint & Optional Identity (`backend/src/api/games/`)**:
    * `POST /api/v1/games/events` takes `{install_id, events}` with 1 to 200 events, in every class mode, and stores the batch in one transaction.
    * No login is needed. A valid student token ties the rows to that student. A missing, invalid, expired or logged-out token, or a staff login, stores them without a student instead of refusing them: an expired login must not block a queue.
-6. **Verification (`backend/tests/`)**:
+6. **Misconception Label (`events.py`, `ingest.py`, `backend/migrations/014_add_game_event_misconception.sql`)**:
+   * An event may carry `misconception`, a snake_case slug that names the mistake behind the wrong choice tapped. It is stored as sent, and only on a wrong answer.
+   * The game sends it because the appliance cannot work it out: an event has the value tapped and the right value, and not the numbers of the exercise. The tutor can infer its label because it knows the problem.
+   * The appliance half is done. The games half is not: Segundo and Tercero build their choices with `pickChoices(answer, [wrong, wrong])`, and 20 lesson files name in their header the mistake a wrong answer stands for (in `tercero/.../division-residuo.js`, `80 ÷ 2` offers `4` and `160`), but no choice carries a slug yet.
+7. **Staff Summary (`backend/src/api/games/summary.py`, `backend/src/core/db/game_event_summary.py`)**:
+   * `GET /api/v1/games/events/summary`, for teachers and admins: answers stored, wrong answers, number of phones, and the count per lesson with its labels.
+   * `?install_id=` counts one phone. That is the check of the sync test: the count must equal the taps made on that phone.
+8. **Rate Limit (`infra/nginx/tutorbox.conf`)**:
+   * Each address may post 30 batches a minute after a burst of 20; beyond that nginx answers `429`. A phone posts once or twice per lesson.
+   * The reason is the database, not an attacker: every batch takes SQLite's one write lock, which quiz votes also need, so a game stuck in a retry loop must not reach the backend.
+   * It covers port 80 only. uvicorn also listens on port 8000, where nginx is not in front. The config has not been loaded on the Jetson yet (`sudo nginx -t`).
+9. **Verification (`backend/tests/`)**:
    * `test_games_api.py` (20 tests): new events, the same batch twice, overlapping batches, a malformed event among valid ones, the six envelope errors and every identity case.
    * `test_games_concurrency.py` (2 tests): the two load cases of the acceptance criterion.
+   * `test_games_summary_api.py` (8 tests) and `test_game_event_summary.py` (8): counts, the filter by phone, the roles and the cap on the lesson list.
+   * `test_misconception.py` (21 tests) and `test_game_event_migration_014.py` (3): the slug rule, storage on wrong answers only, and the new column.
    * `test_events.py` (32 tests), `test_ingest.py` (16), `test_labels.py` (124), `test_game_event_repository.py` (10) and `test_game_event_migration_013.py` (9).
+   * **Test isolation**: every pytest-xdist worker now starts the app on its own default database (`tests/conftest.py`). Before, tests that asked for `client` ahead of their database fixture all started the app on `.cache/db/tutorbox.db`, and on a fresh checkout the workers ran the migrations there at the same time. That was the one-off `sqlite3.IntegrityError` in `tests/api/tts/test_lifecycle.py`.
 
 **Interface Contract Provided by Student A for Student B's Queue:** [Games API §6](../api/games.md), the steps a game follows to record, send and forget events.
 
-**Not Built, by Decision:**
+**Known Limits:**
 
-* **Misconception Labels**: Segundo and Tercero build their choices with `pickChoices(answer, [wrong, wrong])`, and 20 lesson files name in their header the mistake a wrong answer stands for (in `tercero/.../division-residuo.js`, `80 ÷ 2` offers `4` and `160`). No choice carries a slug, so an event stores the value tapped and no misconception.
-* **Rate Limit**: the endpoint has none and needs no login. On the classroom network anyone can post valid events.
-* **Read Endpoint**: nothing lists or counts stored events yet. The Week 8 report reads the table.
+* **Events can be invented**: the endpoint needs no login, so anyone on the classroom network can post valid events slowly enough to pass the rate limit. The Week 8 report should tell events with a student apart from anonymous ones.
+* **No list of single events**: the summary counts; nothing returns the rows. The Week 8 report reads the table.
 
 **What Still Stands Between the Games and Live Data:**
 
 1. **The APK sends nothing, on purpose**: it has no `INTERNET` permission ([Android Wrapper](../../pwa/tareas/android/README.md): *"Nothing leaves the phone"*). Its page runs on `https://appassets.androidplatform.net/`, so a request to `http://tutorbox` is cleartext, cross-origin and mixed content. Sync from the APK needs the permission, a cleartext exception for the appliance, a native bridge in the style of `AndroidTTS`, and new signed APKs.
 2. **The browser copy can send but cannot play offline**: `http://tutorbox/tareas/<grade>/` shares its origin with the API, so it can post with no CORS. Plain HTTP has no service worker, so the page does not open away from the appliance; "play offline, then reconnect" is limited there to a Wi-Fi drop while the page is open. `crypto.randomUUID()` is also absent on plain HTTP, so event ids must be built from `crypto.getRandomValues()`.
 3. **A game has no TutorBox student**: the child's profile is a name, an avatar and an optional parent PIN in `localStorage`, and mode `apps` asks for no login. An event is tied to a `users` row only when the game sends the login token that `/alumno/` keeps under the same origin (`tb_token`). The parent PIN is stored as typed and must never travel with an event.
-4. **Only Primero has an APK in the repository**: `pwa/tareas/descargas/` holds `primero.apk`; the download page hides a grade whose APK is missing.
+4. **Only Primero has an APK in the repository, and it is an old test build**: `pwa/tareas/descargas/` holds `primero.apk`, last built on 2026-09-23 and signed with a debug key (`CN=Android Debug`). The download page hides a grade whose APK is missing. The three APKs must come from one machine with the release keystore (`gradlew publishApk`, [Android Wrapper](../../pwa/tareas/android/README.md)): Android refuses an update signed with another key.
 
 ---
 
@@ -125,4 +140,4 @@ This document tracks the technical deliverables, architectural implementations, 
 3. **Conceptual Error Alignment Across Quiz, Tutor and Games Modes**:
    * The three modes now share one vocabulary: the quiz taxonomy pair in `quiz_questions`, `turn_logs` and `game_events`, and the CNB topic in `turn_logs` and `game_events`.
    * A first-grade lesson on position has no quiz concept. It still has a CNB topic, so it can be counted beside a tutor question on the same topic.
-   * The games stop at the concept: the quiz stores the misconception of the distractor chosen, the tutor infers one from the value typed, and a game event has none yet.
+   * The misconception has a place in all three: the quiz stores the one of the distractor chosen, the tutor infers one from the value typed, and a game event stores the one the game names. No lesson names one yet, so that column is empty until the lessons tag their wrong choices.

@@ -14,9 +14,10 @@
 The grade apps in `pwa/tareas/` will send each answer tapped to the appliance when their phone reaches
 it. The appliance stores each answer once, labels it with the concepts its lesson practises, and needs
 no login. The endpoint is open in every class mode. No game sends events yet: the queue that sends them
-is a separate deliverable, described in [§6](#6-client-contract). Code: `backend/src/api/games/` (HTTP),
-`backend/src/modes/games/` (validation, labels, ingestion) and `backend/src/core/db/game_event_repository.py`
-(storage).
+is a separate deliverable, described in [§6](#6-client-contract). Staff read the counts of what is stored
+at a second endpoint ([§7](#7-summary-for-staff)). Code: `backend/src/api/games/` (HTTP),
+`backend/src/modes/games/` (validation, labels, ingestion), and `game_event_repository.py` (writes) and
+`game_event_summary.py` (counts) in `backend/src/core/db/`.
 
 ## Table of Contents
 - [1. Endpoint](#1-endpoint)
@@ -25,7 +26,8 @@ is a separate deliverable, described in [§6](#6-client-contract). Code: `backen
 - [4. Concept Labels](#4-concept-labels)
 - [5. Deduplication](#5-deduplication)
 - [6. Client Contract](#6-client-contract)
-- [7. Limits](#7-limits)
+- [7. Summary for Staff](#7-summary-for-staff)
+- [8. Limits](#8-limits)
 
 ---
 
@@ -34,6 +36,7 @@ is a separate deliverable, described in [§6](#6-client-contract). Code: `backen
 | Method & path | Roles | Purpose |
 | :--- | :--- | :--- |
 | `POST /api/v1/games/events` | Public, Student | Stores a batch of answers tapped in a grade app. `422` only for a malformed envelope. |
+| `GET /api/v1/games/events/summary` | Teacher, Admin | Counts the stored answers, in total and per lesson ([§7](#7-summary-for-staff)). |
 
 ```http
 POST /api/v1/games/events
@@ -51,6 +54,7 @@ Content-Type: application/json
       "is_correct": false,
       "answer": "4",
       "expected": "5",
+      "misconception": "counted_one_less",
       "occurred_at": "2026-10-09T15:04:05.000Z",
       "app_version": "1.0"
     },
@@ -101,6 +105,7 @@ denominator. An event has these fields:
 | `answer` | string | Optional. At most 64 characters. | The answer tapped. |
 | `expected` | string | Optional. At most 64 characters. | The right answer for the round. |
 | `app_version` | string | Optional. At most 16 characters. | The version of the app that sent the event. |
+| `misconception` | string | Optional. A snake_case slug of 2 to 64 characters: a lowercase letter, then lowercase letters, digits and `_`. | The mistake that the tapped wrong choice stands for ([§4](#4-concept-labels)). It is stored only when `is_correct` is `false`. |
 
 Unknown fields are ignored, in the envelope and in each event. A newer app can therefore report to an
 older appliance.
@@ -180,8 +185,20 @@ key is the pair of grade and lesson id.
 
 * An unknown grade or lesson is stored with all three labels set to `NULL`. Its `grade` and `lesson_id`
   are stored too, so such rows can be labelled later.
-* No misconception is stored. The lessons do not tag their wrong choices yet, so `game_events` has no
-  `error_type` column.
+
+**`misconception`** is the one label that comes from the phone. The appliance cannot work it out: an
+event carries the value tapped and the right value, and not the numbers of the exercise. The lesson
+author knows which mistake each wrong choice stands for, so the game names it.
+
+* The slug is stored as sent, in `game_events.misconception`. It is the counterpart of the misconception
+  of a quiz distractor and of `turn_logs.error_type` in the tutor.
+* When a quiz taxonomy slug fits the lesson's pair, send that slug, for example `borrowing_error` or
+  `added_instead_of_subtracted` in an `addition_subtraction` lesson. The weekly report can then count the
+  same mistake across the quiz, the tutor and the games. Otherwise send a new slug: the column has no
+  fixed vocabulary.
+* A right answer never stores a misconception, whatever the game sent.
+* A value that is not a slug makes its event `rejected`.
+* No lesson tags its wrong choices yet, so every event stored today has `NULL` here.
 
 The tests in `backend/tests/modes/games/test_labels.py` keep the table honest:
 
@@ -235,20 +252,67 @@ The steps below are the client side of the contract. The event shape is the one 
    are final: a rejected event would be rejected again.
 7. On a network error, or any other status, keep the queue and try again later. Sending the same events
    again is safe.
-8. Cap the queue: drop the oldest events past a fixed size. A phone that never reaches the appliance must
+8. "Later" means the next trigger of step 4. Never retry in a loop or on a short timer. nginx answers
+   `429` to an address that posts more than 30 times a minute after a burst of 20
+   ([§8](#8-limits)), and a queue that retries at once would stay locked out.
+9. Cap the queue: drop the oldest events past a fixed size. A phone that never reaches the appliance must
    not fill its storage.
-9. Never put the child's name or the parent PIN of the game profile in an event.
+10. Never put the child's name or the parent PIN of the game profile in an event.
+11. Optional: give each wrong choice of a lesson a `misconception` slug and send it with the event
+    ([§4](#4-concept-labels)).
 
 ---
 
-## <a id="7-limits"></a>7. Limits
+## <a id="7-summary-for-staff"></a>7. Summary for Staff
 
-* **No rate limit.** The endpoint has none, and nginx limits only the login and signup paths
-  ([`tutorbox.conf`](../../infra/nginx/tutorbox.conf)). Anyone on the classroom network can post valid
-  events.
+`GET /api/v1/games/events/summary` counts the stored answers. It needs a teacher or admin login (`401`
+without one, `403` for a student).
+
+| Query parameter | Rule | Meaning |
+| :--- | :--- | :--- |
+| `install_id` | Optional. Same rule as the `install_id` of a batch; `422` otherwise. | Counts the events of that phone or browser only. |
+
+```json
+{
+  "events": 4,
+  "wrong_events": 3,
+  "installs": 2,
+  "lessons": [
+    {
+      "grade": "primero",
+      "lesson_id": "sumar-jocotes",
+      "cnb_topic": "suma_resta",
+      "concept_topic": "arithmetic",
+      "concept_subconcept": "addition_subtraction",
+      "events": 3,
+      "wrong_events": 2
+    }
+  ]
+}
+```
+
+* `events` is the number of stored answers, `wrong_events` the number with `is_correct` false, and
+  `installs` the number of different `install_id` values.
+* `lessons` has one item per grade and lesson id, with the most wrong answers first. It holds at most 200
+  items, because a lesson id is whatever a phone sent.
+* **Use in the sync test**: play with the phone away from the appliance, count the taps, reconnect, and
+  read the summary with that phone's `install_id`. `events` must equal the number of taps. Every id is
+  stored once, so a lower number means lost events and a higher one cannot happen.
+
+---
+
+## <a id="8-limits"></a>8. Limits
+
+* **Rate limit in nginx only.** [`tutorbox.conf`](../../infra/nginx/tutorbox.conf) allows each address 30
+  posts a minute to `POST /api/v1/games/events` after a burst of 20, and answers `429` beyond that. A
+  phone posts once or twice per lesson. The reason is the database: every batch takes SQLite's one
+  write lock, which quiz votes also need, so a game stuck in a retry loop must not reach the backend.
+  The backend itself has no limit, and uvicorn also listens on port 8000, where nginx is not in front.
+* **Events can be invented.** The endpoint needs no login, so anyone on the classroom network can post
+  valid events, slowly enough to pass the limit. Events with a `student_id` come from a logged-in
+  student; the others are anonymous.
 * **Request size.** The backend sets no request size limit. `tutorbox.conf` does not set
   `client_max_body_size`, so nginx's default of 1 MB applies in front of the endpoint.
-* **No read endpoint.** Nothing lists or counts the stored events yet.
 * **Clocks.** `occurred_at` comes from the phone's clock, so a phone with a wrong clock stores wrong
   times. `received_at` is the appliance's clock. See [Game Events Schema](../database/games.md#2-invariants).
 * **No client yet.** No game sends events. The queue is described in [§6](#6-client-contract).

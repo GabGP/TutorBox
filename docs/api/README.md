@@ -54,7 +54,7 @@ The API specification is decomposed into cohesive domain modules:
 | **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`PUT /api/v1/quiz/questions/{id}`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **Socratic Tutor (Mode 2)** | **[tutor.md](tutor.md)** | `POST /api/v1/tutor/message`<br>`POST /api/v1/tutor/reset`<br>`POST /api/v1/tutor/ping`<br>`GET /api/v1/tutor/students` | Student,<br>Teacher,<br>Admin |
-| **Offline Games (Mode 3)** | **[games.md](games.md)** | `POST /api/v1/games/events` | Public,<br>Student |
+| **Offline Games (Mode 3)** | **[games.md](games.md)** | `POST /api/v1/games/events`<br>`GET /api/v1/games/events/summary` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **TTS & LLM Lifecycle** | **[voice-feedback.md](../architecture/voice-feedback.md#9-phased-lifecycle-management-endpoints)** | `POST /api/v1/tts/load`<br>`POST /api/v1/tts/unload`<br>`GET /api/v1/tts/status`<br>`GET /api/v1/tts/voices`<br>`POST /api/v1/tts/preview`<br>`POST /api/v1/llm/load`<br>`POST /api/v1/llm/unload`<br>`GET /api/v1/llm/status` | Teacher,<br>Admin |
 
 ---
@@ -174,7 +174,7 @@ To prevent timing attacks and enumeration of valid accounts, verification steps 
 
 ### <a id="c-rate-limiting-protection"></a>C. Rate Limiting Protection
 Two distinct in-memory rate limiters protect the edge appliance:
-1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). nginx also allows login and signup 10 requests a minute per address.
+1. **Credential Lockout Limiter**: 5 wrong PINs for a username from one device address lock that pair for 30 s, doubling with each repeat up to 16 min; a successful login clears it (`core/security/rate_limit/lockout.py`). nginx also allows login and signup 10 requests a minute per address, and game event batches 30 a minute per address ([Games API §8](games.md#8-limits)).
 2. **Global Sliding Window Limiter**: Caps high-frequency public endpoints (e.g. signup) to prevent database flooding.
 
 ---

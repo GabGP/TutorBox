@@ -30,6 +30,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [011: Classroom Mode Switch](#011-classroom-mode-switch)
   - [012: Turn Log Pedagogy Labels](#012-turn-log-pedagogy-labels)
   - [013: Game Events](#013-game-events)
+  - [014: Game Event Misconception](#014-game-event-misconception)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -68,6 +69,7 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 | **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
 | **012** | `012_add_turn_log_pedagogy.sql` | Dialogue Telemetry | Adds nullable `concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy` to `turn_logs` and creates `idx_turn_logs_concept` | Week 5 |
 | **013** | `013_add_game_events.sql` | Games Telemetry | Creates `game_events` (one row per answer tapped, `UNIQUE(client_event_id)`) and `idx_game_events_concept` | Week 6 |
+| **014** | `014_add_game_event_misconception.sql` | Games Telemetry | Adds nullable `misconception` to `game_events` | Week 6 |
 
 ---
 
@@ -133,6 +135,10 @@ TutorBox utilizes sequential SQL migration files executed automatically at appli
 ### <a id="013-game-events"></a>013: Game Events
 * **File**: [`backend/migrations/013_add_game_events.sql`](../../backend/migrations/013_add_game_events.sql)
 * **Description**: Creates `game_events`, one row per answer tapped in a grade app, and the index `idx_game_events_concept ON game_events(concept_topic, concept_subconcept)`. The `client_event_id` column is `UNIQUE`, so a repeated delivery is stored once. The three label columns have no `CHECK` constraint, as in 012, and `student_id` becomes `NULL` when its user row is deleted. See [games.md](games.md).
+
+### <a id="014-game-event-misconception"></a>014: Game Event Misconception
+* **File**: [`backend/migrations/014_add_game_event_misconception.sql`](../../backend/migrations/014_add_game_event_misconception.sql)
+* **Description**: Adds the nullable `TEXT` column `misconception` to `game_events`, with no default and no `CHECK` constraint, as in 012. It holds the mistake behind a wrong answer as the game names it. See [games.md](games.md#2-invariants).
 
 ---
 
