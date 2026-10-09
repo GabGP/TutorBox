@@ -70,5 +70,11 @@ class AssignDeviceResponse(BaseModel):
     assigned_username: str
 
 
+class DeviceSecretResponse(BaseModel):
+    device_id: str
+    # Returned once, at issuance; the server keeps only its digest.
+    secret: str
+
+
 class AuditLogsResponse(BaseModel):
     logs: list[dict[str, Any]]

@@ -12,6 +12,7 @@ from api.staff.schemas import (
 )
 from core.db.audit import record_audit
 from core.db.database import get_db
+from core.db.device_repository import revoke_device_sessions
 from core.security import (
     AuthContext,
     require_roles,
@@ -104,6 +105,7 @@ def delete_device(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Device not found."
             )
 
+        revoke_device_sessions(conn, device_id)
         cursor.execute("DELETE FROM devices WHERE device_id = ?", (device_id,))
         record_audit(conn, actor_user_id=ctx.user_id, action="device_deleted")
         conn.commit()
