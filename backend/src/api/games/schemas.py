@@ -1,4 +1,4 @@
-"""Pydantic schemas for Mode 3 game event ingestion."""
+"""Pydantic schemas for Mode 3 game event ingestion and its summary."""
 
 from typing import Any, Literal
 
@@ -6,7 +6,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from modes.games.events import CLIENT_ID_PATTERN
 
-__all__ = ["MAX_EVENTS_PER_BATCH", "GameEventBatch", "GameEventBatchResult"]
+__all__ = [
+    "MAX_EVENTS_PER_BATCH",
+    "GameEventBatch",
+    "GameEventBatchResult",
+    "GameEventSummaryResponse",
+    "LessonEventCountItem",
+]
 
 MAX_EVENTS_PER_BATCH = 200
 
@@ -36,3 +42,28 @@ class GameEventBatchResult(BaseModel):
     duplicates: int
     rejected: int
     results: list[Literal["accepted", "duplicate", "rejected"]]
+
+
+class LessonEventCountItem(BaseModel):
+    """The answers stored for one lesson of one grade app, with the lesson's labels."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    grade: str
+    lesson_id: str
+    cnb_topic: str | None
+    concept_topic: str | None
+    concept_subconcept: str | None
+    events: int
+    wrong_events: int
+
+
+class GameEventSummaryResponse(BaseModel):
+    """How many answers are stored, from how many phones, and the count per lesson."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    events: int
+    wrong_events: int
+    installs: int
+    lessons: list[LessonEventCountItem]
