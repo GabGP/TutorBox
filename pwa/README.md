@@ -137,6 +137,24 @@ pnpm build      # Build production bundle to dist/
 
 ---
 
+### <a id="tutor-on-the-home-screen"></a>Tutor on the home screen
+
+The tutor on `/alumno/` has no service worker and no install wrapper: browsers allow both only on
+HTTPS pages, and the appliance serves plain HTTP (see [§3](#3-tareas--take-home-math-apps-tareas)).
+A phone can still keep the tutor as a home-screen icon. Observed on one iPhone on 2026-10-08
+(Safari → Share → *Add to Home Screen*), with the backend in `tutor` mode on the local network:
+
+| Situation | Observed |
+| :--- | :--- |
+| Open from the icon | iOS asks to confirm opening the page because it is not HTTPS; after that the tutor opens and works. |
+| Open again later | Still logged in: the token is in `localStorage`. |
+| App closed completely (swiped away), or a long time in the background | The visible conversation is gone: it is kept in `sessionStorage`, which ends with the app. |
+| No connection to the appliance | Nothing is shown: the page itself has to load from the appliance. Showing it offline needs a service worker, and therefore HTTPS. |
+
+No Android phone was tested.
+
+---
+
 ## <a id="3-tareas--take-home-math-apps-tareas"></a>3. Tareas — take-home math apps (`tareas/`)
 
 Grade-specific math apps that students also take home. Unlike `pilas/` and `app/` they need no

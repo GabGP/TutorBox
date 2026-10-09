@@ -57,7 +57,7 @@ gantt
     Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B) :done, w4, 2026-09-13, 2026-09-20
 
     section Socratic & Games Subsystems
-    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :active, w5, 2026-09-20, 2026-09-27
+    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :done, w5, 2026-09-20, 2026-09-27
     Week 6 - Offline Games & Log Sync (Pilot A / Copilot B)    :w6, 2026-09-27, 2026-10-04
 
     section Hardware, Analytics & Stress
@@ -77,7 +77,7 @@ gantt
 | **2** ✅ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, phased 4.7 GB SLM / 3.3 GB TTS RAM profile | **A** / B |
-| **5** ⏳ | [Socratic Tutor Mode](week-5-socratic-tutor.md) | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
+| **5** ✅ | [Socratic Tutor Mode](week-5-socratic-tutor.md) | Socratic dialogue state machine + SymPy containment (0 direct solutions) + turn telemetry + home-screen tutor client | **B** / A |
 | **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
 | **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
 | **8** ⏳ | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
@@ -168,12 +168,12 @@ gantt
 
 ---
 
-### <a id="week-5"></a>⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A — Copilot Delivered)
+### <a id="week-5"></a>✅ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
 * **Focus**: Launch Mode 2 (Conversational Math Practice) reusing the local inference backend.
-* **Student B (Pilot)**:
-  * Installable offline PWA tutor client with student login and persistent session state across visits.
+* **Student B (Pilot - Delivered)**:
+  * Tutor client on `/alumno/` kept on the phone's home screen, with a student login that persists across visits (no offline install: the appliance serves plain HTTP).
   * Dialogue turn telemetry logging (concept, error type, scaffolding strategy applied).
-* **Student A (Copilot)**:
+* **Student A (Copilot - Delivered)**:
   * Socratic dialogue management engine with bounded 4-tier hint escalation ladder ($0 \to 3$).
   * SymPy containment guardrail mechanically blocking direct solution leakage.
   * Initial labeled problem bank of $\ge 40$ arithmetic and pre-algebra questions.

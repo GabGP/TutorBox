@@ -18,7 +18,7 @@ This document summarizes the technical deliverables, architectural implementatio
 ## 1. Executive Summary & Verification Metrics
 
 * **Theme**: *"Socratic Tutoring with Mechanical Guarantees"*
-* **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) Telemetry Complete & Green, Device Evidence Pending**
+* **Status**: **Copilot (Student A) Complete & Green · Pilot (Student B) Complete & Green**
 * **Backend Test Suite**: **1793 / 1793 passing tests** (748 of them cover the tutor: `tests/modes/socratic/`, `tests/api/tutor/`, the turn-log repository and the tutor settings).
 * **Statement Coverage**: **100.00% statement coverage** across all 6,379 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
 * **Frontend Test Suite**: **299 / 299 passing tests** across 57 Vitest files, with `tsc -b --noEmit` reporting 0 errors.
@@ -27,7 +27,7 @@ This document summarizes the technical deliverables, architectural implementatio
 * **Acceptance Criteria Status**:
   * ✅ **30 dialogue turns, 10 adversarial probes, 0 solution leaks**: `test_containment_dialogues.py::test_thirty_turns_ten_probes_and_no_solution_before_the_child_finds_it`.
   * ✅ **Problem bank of $\ge 40$ validated questions in CI**: 48 labeled problems, each proven by SymPy in `test_problem_bank.py`.
-  * ⏳ **PWA tutor added to the home screen and functioning on the classroom network without internet**: amended from "installed and functioning offline on 3 test devices" (Section 2.B, work package). The chat client runs in the classroom browser; the device evidence is pending.
+  * ✅ **PWA tutor added to the home screen and functioning on the classroom network without internet**: amended from "installed and functioning offline on 3 test devices" (Section 2.B, item 7). Observed on one iPhone on 2026-10-08: the tutor opens from its home-screen icon and the login is kept between launches. No Android phone was available.
 * **Key Milestone Artifacts**:
   * **Deterministic Dialogue State Machine**: `planner.py` chooses every pedagogical move without the model and climbs a bounded 4-tier hint ladder ($0 \to 3$).
   * **SymPy Containment Guardrail**: `containment.py` blocks any reply that states an accepted answer in digits, in Spanish words, or as an expression SymPy evaluates to it.
@@ -129,12 +129,11 @@ This document summarizes the technical deliverables, architectural implementatio
    * An operator next to a parenthesis was dropped (`(2 + 3) por 4` was read as `(2 + 3)`), and a leading minus on an equation was lost (`-3 + x = 5` was solved as 2). Both are fixed in place.
    * The containment guard shares the normalizer, so it now also blocks a reply such as `(14 - 4) entre 2` that works out the answer.
 
-**Work Package** *[In Progress / Student B to complete]*:
-
-1. **Home-Screen Installation & Device Evidence**:
+7. **Home-Screen Installation & Device Evidence ([PWA README](../../pwa/README.md#tutor-on-the-home-screen))**:
    * Design decision (Pilot): the tutor gets no service worker and no install wrapper. Browsers run service workers and offer installation only in a secure context (HTTPS or `localhost`), and the appliance serves plain `http://tutorbox` ([PWA README §3](../../pwa/README.md#3-tareas--take-home-math-apps-tareas), [Captive Portal §6](../../infra/captive-portal.md#6-limitations--field-notes)). Every tutor reply also needs the appliance (the model and SymPy run there), so a copy installed for use away from the classroom would have nothing to do. The client students keep at home is the take-home app in `pwa/tareas/`, already installable offline as an Android APK.
-   * Amended acceptance criterion: the tutor is added to the phone's home screen and works on the classroom network without internet. Away from the classroom network the page does not open.
-   * Target: the procedure and result on an iPhone ("Add to Home Screen"), repeated on Android devices where available, recorded here and in the [PWA README](../../pwa/README.md).
+   * Amended acceptance criterion: the tutor is added to the phone's home screen and works on the classroom network without internet.
+   * Observed on one iPhone on 2026-10-08 (Safari → Share → *Add to Home Screen*, backend in `tutor` mode on the local network): iOS asks to confirm opening the page because it is not HTTPS, then the tutor opens and works, and the login is still there on the next launch.
+   * Limits observed on the same device: closing the app completely, or a long time in the background, clears the visible conversation (`sessionStorage` ends with the app). With no connection to the appliance the icon shows nothing, because the page itself loads from the appliance; showing it offline needs a service worker, and therefore HTTPS. No Android phone was available.
 
 **Session State (kept as delivered):**
 
