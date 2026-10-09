@@ -23,6 +23,7 @@ def test_api_v1_router_prefixes():
     assert "/api/v1/tutor/message" in paths
     assert "/api/v1/games/events" in paths
     assert "/api/v1/games/events/summary" in paths
+    assert "/api/v1/devices/auth" in paths
 
 
 def test_root_router_mounts_health_and_v1():

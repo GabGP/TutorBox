@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from api.auth import router as auth_router
 from api.captive import router as captive_router
+from api.devices import router as devices_router
 from api.games import router as games_router
 from api.health import router as health_router
 from api.llm import router as llm_router
@@ -26,6 +27,7 @@ api_v1_router.include_router(llm_router, prefix="/llm")
 api_v1_router.include_router(mode_router, prefix="/mode")
 api_v1_router.include_router(tutor_router, prefix="/tutor")
 api_v1_router.include_router(games_router, prefix="/games")
+api_v1_router.include_router(devices_router, prefix="/devices")
 
 root_router = APIRouter()
 root_router.include_router(health_router)
