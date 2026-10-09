@@ -17,14 +17,35 @@
 }
 
 .selectRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 12px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
-.selectCheck {
+.selectRowOn {
+  border-color: var(--ok);
+}
+
+.selectRowOpen {
+  background: var(--tint);
+}
+
+.chosenTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.chev {
   flex: 0 0 auto;
+  color: var(--mute2);
+  transition: transform 0.16s ease;
+}
+
+.chevOpen {
+  transform: rotate(180deg);
 }
 
 .faceButton {

@@ -12,6 +12,7 @@ import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import styles from './QuestionBankView.module.css';
 import { BankQuestion, bankApi } from './bankApi';
+import { BankQuestionInlineEditor } from './BankQuestionInlineEditor';
 import { BankQuestionRow } from './BankQuestionRow';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
@@ -25,8 +26,10 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * actions, detail in a floating sheet (refreshed from the server on open),
  * full-row hold-to-confirm delete (see BankQuestionRow), and an edit
  * affordance opening the floating edit sheet.
- * Optional select mode (checkboxes + tap-to-toggle) lets the quiz-prep
- * flow build a match from hand-picked questions. Creation lives in the
+ * Optional select mode lets the quiz-prep flow build a match from
+ * hand-picked questions: tapping a row unfolds its four options with
+ * their explanations, editable in place and saved back to the bank,
+ * next to a Usar/Quitar toggle for the match. Creation lives in the
  * Crear tab; the JSON contract viewer is admin-only.
  * Load and mutation failures float as error toasts so the list never
  * shifts; successes already toast through the same queue.
@@ -59,6 +62,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [detail, setDetail] = useState<BankQuestion | null>(null);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);
@@ -97,7 +101,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
 
   const handleFaceTap = (q: BankQuestion) => {
     if (selectable) {
-      onToggleSelect?.(q.id);
+      setExpandedId((cur) => (cur === q.id ? null : q.id));
       return;
     }
     void handleOpenDetail(q);
@@ -127,8 +131,16 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     setConfirmDelete(null);
   }, []);
 
+  const handleSavedInline = (saved: BankQuestion) => {
+    setQuestions((prev) => prev.map((x) => (x.id === saved.id ? saved : x)));
+    pushToast({ message: 'Pregunta guardada en el banco.' });
+  };
+
   const handleSavedEdit = (id: string) => {
     setEditing(null);
+    // The inline panel seeds its draft once; close it so it never
+    // shows the pre-edit text.
+    if (expandedId === id) setExpandedId(null);
     setOpenSwipeId(null);
     pushToast({ message: `Pregunta actualizada (${id}).` });
     load(topic, offset, pageSize);
@@ -197,9 +209,18 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               question={q}
               selectable={selectable}
               selected={selectedIds.includes(q.id)}
+              expanded={expandedId === q.id}
+              expandedContent={
+                <BankQuestionInlineEditor
+                  question={q}
+                  selected={selectedIds.includes(q.id)}
+                  onToggleSelect={(id) => onToggleSelect?.(id)}
+                  onSaved={handleSavedInline}
+                  onError={(message) => pushToast({ message, tone: 'error' })}
+                />
+              }
               confirmArmed={confirmDelete === q.id}
               swipeOpen={openSwipeId === q.id}
-              onToggleSelect={(id) => onToggleSelect?.(id)}
               onFaceTap={handleFaceTap}
               onOpenDetail={(row) => void handleOpenDetail(row)}
               onEdit={(row) => setEditing(row)}
