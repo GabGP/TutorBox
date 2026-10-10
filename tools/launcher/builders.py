@@ -103,7 +103,7 @@ def sync_backend(uv_cmd: str | None = None) -> bool:
 
 
 def download_models(target: str, python_bin: str | None = None) -> bool:
-    """Invokes tools/download_models.py to fetch the voice models for the given tier."""
+    """Invokes tools/voice_models/download_models.py to fetch the voice models for the given tier."""
     py_exec = python_bin or resolve_python()
     res = subprocess.run(
         [py_exec, str(DOWNLOAD_MODELS_SCRIPT), "--target", target],

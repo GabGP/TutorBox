@@ -245,7 +245,7 @@ Suggested order is at the end.
   - `SherpaBackend.is_available` goes through `resolve_sherpa_paths` to `ensure_sherpa_model`, which calls `onnx.load()` (`core/tts/engines/sherpa/metadata.py:21-29`).
   - `get_auto_backends` (`core/tts/router/selection.py:31-40`) checks *every* engine with no short-circuit, on each speech, status, load and preview request.
   - The metadata injection can even `onnx.save` a new model file mid-request (`metadata.py:64`).
-  - `tools/download_models.py` already generates the Sherpa model and tokens (`generate_sherpa_model`, `generate_sherpa_tokens`).
+  - `tools/voice_models/sherpa.py` already generates the Sherpa model and tokens (`generate_sherpa_model`, `generate_sherpa_tokens`).
   - Fix: make `is_available` a file-existence check and delete the runtime metadata and token generation (`sherpa/metadata.py`, `sherpa/models.py:42-72`). That also removes `onnx` (and its protobuf) from the runtime dependencies, which helps the 8 GB budget.
 - **M8. A hidden second LLM call drops the JSON schema.** `modes/quiz/generation/attempt_runner.py:21-31` catches `TypeError` and calls the model again without `response_format`. `LocalSLMClient._parse_completion_response` raises `TypeError` for malformed replies (`core/llm/client.py:93-108`). So one bad reply triggers a second slow generation with no constrained decoding. Fix: delete the fallback; every `LLMClient` already accepts `response_format`.
 - **M9. The 320 authored pool questions are never seeded.** `modes/quiz/seed_data/pool/*.json` is validated by `tests/modes/quiz/seed_data/test_pool.py` ("can be wired into the seed bank unchanged"), but `seed_question_bank` only inserts the 66 Python-literal questions. Fix: load the pool JSON in `seeder.py` (a few lines). Then turn the 16 Python seed modules into JSON too; they were split only to fit the 150-line rule (see S3).
@@ -270,8 +270,8 @@ Suggested order is at the end.
 - **L3. Model config rewritten during synthesis.** `sanitize_model_config` rewrites the model's JSON on every synthesis call (`core/tts/engines/piper/models.py:30-42`). Do it once at download.
 - **L4. LLM proxy passes upstream status codes through.** `api/llm/proxy.py:40-47` forwards the upstream status, so an upstream 401 looks like an expired Utz'tutor session to the PWA. Map it to 502.
 - **L5. Old tutor sessions are never evicted.** `TurnGate._recent` keeps one entry per session forever (`api/tutor/gate.py:29,50`). Prune empty deques.
-- **L6. Flawed tar extraction check.** `tools/download_models.py:48-55` validates paths with `startswith` (prefix bug, ignores symlink members). Use stdlib `archive.extractall(path, filter="data")` (Python ≥ 3.11.4).
-- **L7. Downloads are neither pinned nor verified.** Model downloads use `resolve/main` with no checksum (`tools/download_models.py:36-45`). Pin Hugging Face revisions and verify SHA-256. GGUF and ONNX files are parsed in-process.
+- **L6. Flawed tar extraction check.** `tools/voice_models/archive.py:7-14` validates paths with `startswith` (prefix bug, ignores symlink members). Use stdlib `archive.extractall(path, filter="data")` (Python ≥ 3.11.4).
+- **L7. Downloads are neither pinned nor verified.** Model downloads use `resolve/main` with no checksum (`tools/voice_models/catalog.py:8-28`). Pin Hugging Face revisions and verify SHA-256. GGUF and ONNX files are parsed in-process.
 - **L8. Grade-app service workers keep stale code.**
   - They're cache-first with a manually bumped `CACHE_VERSION` (primero `v6`, segundo and tercero `v1`), so students keep old JS until someone remembers to bump it.
   - `cache.addAll(...).catch(warn)` installs an empty cache silently (`pwa/tareas/*/public/sw.js`).

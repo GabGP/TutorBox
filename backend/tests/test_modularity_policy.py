@@ -6,6 +6,7 @@ TEST_SUITE_DIRECTORY = BACKEND_ROOT_DIRECTORY / "tests"
 REPOSITORY_ROOT_DIRECTORY = BACKEND_ROOT_DIRECTORY.parent
 LAUNCHER_ENTRY_POINT = REPOSITORY_ROOT_DIRECTORY / "run.py"
 LAUNCHER_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "launcher"
+DOWNLOADER_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "voice_models"
 
 MAX_PRODUCTION_MODULE_LINES_OF_CODE = 150
 MAX_TEST_FILE_LINES_OF_CODE = 300
@@ -71,4 +72,28 @@ def test_launcher_modules_within_loc_ceiling():
         f"Found {len(oversized_launcher_modules)} launcher module(s) exceeding "
         f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
         + "\n".join(oversized_launcher_modules)
+    )
+
+
+def test_downloader_modules_within_loc_ceiling():
+    """Enforces that every module in tools/voice_models/ is <= MAX_PRODUCTION_MODULE_LINES_OF_CODE."""
+    downloader_source_file_paths = sorted(DOWNLOADER_PACKAGE_DIRECTORY.rglob("*.py"))
+    assert downloader_source_file_paths, (
+        f"Expected modules under {DOWNLOADER_PACKAGE_DIRECTORY} to exist"
+    )
+    oversized_downloader_modules: list[str] = []
+    for downloader_source_file_path in downloader_source_file_paths:
+        total_line_count = len(
+            downloader_source_file_path.read_text(encoding="utf-8").splitlines()
+        )
+        if total_line_count > MAX_PRODUCTION_MODULE_LINES_OF_CODE:
+            oversized_downloader_modules.append(
+                f"{downloader_source_file_path.relative_to(REPOSITORY_ROOT_DIRECTORY)}: "
+                f"{total_line_count} lines (ceiling: {MAX_PRODUCTION_MODULE_LINES_OF_CODE})"
+            )
+
+    assert not oversized_downloader_modules, (
+        f"Found {len(oversized_downloader_modules)} downloader module(s) exceeding "
+        f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
+        + "\n".join(oversized_downloader_modules)
     )
