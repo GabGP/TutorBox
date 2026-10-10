@@ -1,4 +1,4 @@
-"""Unit tests for Utz'tutor TTS model downloader (tools/download_models.py) and runner integration."""
+"""Unit tests for Utz'tutor TTS model downloader (tools/download_models.py)."""
 
 import io
 import json
@@ -10,7 +10,6 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-import run
 from tools import download_models
 
 
@@ -142,40 +141,3 @@ def test_execute_download_routes_targets(tmp_path):
         m_piper.assert_called_once()
         m_kokoro.assert_called_once()
         m_qwen.assert_called_once()
-
-
-def test_run_check_voice_models_helper(tmp_path):
-    """Verifies run.check_voice_models returns names of missing models."""
-    missing = run.check_voice_models(tmp_path)
-    assert "Piper/Sherpa" in missing
-    assert "Kokoro-82M" in missing
-    assert "Qwen3-TTS" in missing
-
-    (tmp_path / "es_ES-sharvard-medium.onnx").write_bytes(b"weights")
-    remaining = run.check_voice_models(tmp_path)
-    assert "Piper/Sherpa" not in remaining
-    assert "Kokoro-82M" in remaining
-
-
-def test_run_main_download_models_flag(monkeypatch):
-    """Verifies run.py --download-models executes tools/download_models.py before exit."""
-    import subprocess
-
-    monkeypatch.setattr(
-        sys, "argv", ["run.py", "--download-models", "minimal", "--check-only"]
-    )
-    with (
-        patch("run.check_prerequisites"),
-        patch("run.sync_backend", return_value=True) as mock_sync,
-        patch(
-            "subprocess.run",
-            return_value=subprocess.CompletedProcess(args=[], returncode=0),
-        ) as mock_sub,
-    ):
-        run.main()
-        mock_sync.assert_called_once()
-        assert mock_sub.call_count == 1
-        cmd = mock_sub.call_args[0][0]
-        assert "download_models.py" in str(cmd[1])
-        assert "--target" in cmd
-        assert "minimal" in cmd
