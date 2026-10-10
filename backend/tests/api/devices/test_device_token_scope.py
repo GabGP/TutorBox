@@ -69,9 +69,7 @@ def clicker_headers(
         pytest.param("GET", "/api/v1/staff/devices", None, id="staff_device_list"),
     ],
 )
-def test_a_clicker_token_is_refused_outside_voting(
-    staff_db, client, method, url, body
-):
+def test_a_clicker_token_is_refused_outside_voting(staff_db, client, method, url, body):
     _, conn = staff_db
     clicker = clicker_headers(client, conn, "student1")
 
