@@ -9,9 +9,9 @@ import wave
 from pathlib import Path
 
 import numpy as np
+import onnxruntime
 import pytest
 
-from tools.benchmark.tts.melo import harness
 from tools.benchmark.tts.melo.harness import MeloTTSHarness
 from tools.benchmark.tts.melo.support_files import load_lexicon, load_token_ids
 from tools.benchmark.tts.melo.tokenizer import text_to_token_ids
@@ -65,7 +65,7 @@ def onnx_recorder(monkeypatch) -> OnnxRecorder:
             recorder.run_calls.append((output_names, inputs))
             return [recorder.session_output]
 
-    monkeypatch.setattr(harness.ort, "InferenceSession", FakeInferenceSession)
+    monkeypatch.setattr(onnxruntime, "InferenceSession", FakeInferenceSession)
     return recorder
 
 

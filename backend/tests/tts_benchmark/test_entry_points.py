@@ -25,6 +25,20 @@ SCRIPT_HELP_MARKERS = {
     "ab.py": ["TTS engine A/B sweep (Spanish-first)", "--engines", "--all-texts"],
     "harness_melo.py": ["MeloTTS Spanish ONNX harness", "--profile", "--provider"],
 }
+NATIVE_RUNTIME_MODULE_NAME = "onnxruntime"
+
+
+def direct_run_environment() -> dict[str, str]:
+    """Returns the environment for starting a script directly from another folder.
+
+    Without PYTHONPYCACHEPREFIX exported, the script falls back to its own absolute
+    .cache/pycache instead of resolving pytest's relative one against tmp_path.
+    """
+    return {
+        name: value
+        for name, value in os.environ.items()
+        if name != "PYTHONPYCACHEPREFIX"
+    }
 
 
 def test_metrics_script_exposes_the_profiling_cli_main():
@@ -60,17 +74,10 @@ def test_package_exports_the_profiling_api():
 def test_script_help_runs_from_any_directory(tmp_path, script_name):
     """Verifies each script prints its help when started as a script outside the repo root."""
     script_path = paths.BENCHMARK_DIR / script_name
-    # Without the prefix exported, the script falls back to its own absolute
-    # .cache/pycache instead of resolving pytest's relative one against tmp_path.
-    direct_run_environment = {
-        name: value
-        for name, value in os.environ.items()
-        if name != "PYTHONPYCACHEPREFIX"
-    }
     completed = subprocess.run(
         [sys.executable, str(script_path), "--help"],
         cwd=str(tmp_path),
-        env=direct_run_environment,
+        env=direct_run_environment(),
         capture_output=True,
         text=True,
         check=False,
@@ -80,3 +87,25 @@ def test_script_help_runs_from_any_directory(tmp_path, script_name):
     for expected_text in SCRIPT_HELP_MARKERS[script_name]:
         assert expected_text in completed.stdout
     assert completed.stderr == ""
+
+
+@pytest.mark.parametrize("script_name", sorted(SCRIPT_HELP_MARKERS))
+def test_script_help_does_not_load_onnxruntime(tmp_path, script_name):
+    """Verifies printing the help never imports onnxruntime, which logs host warnings on stderr."""
+    script_path = paths.BENCHMARK_DIR / script_name
+    # -X importtime lists every module the interpreter imports, one per stderr line.
+    completed = subprocess.run(
+        [sys.executable, "-X", "importtime", str(script_path), "--help"],
+        cwd=str(tmp_path),
+        env=direct_run_environment(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0
+    imported_module_names = [
+        import_line.rsplit("|", maxsplit=1)[-1].strip()
+        for import_line in completed.stderr.splitlines()
+    ]
+    assert "argparse" in imported_module_names
+    assert NATIVE_RUNTIME_MODULE_NAME not in imported_module_names

@@ -3,17 +3,25 @@
 from __future__ import annotations
 
 import gc
+import importlib
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
-import onnxruntime as ort
 
 from tools.benchmark.tts.audio.wav_encoding import encode_mono_pcm16_wav
 from tools.benchmark.tts.melo.support_files import load_lexicon, load_token_ids
 from tools.benchmark.tts.melo.tokenizer import text_to_token_ids as tokenize_text
 from tools.benchmark.tts.shared import paths
 from tools.benchmark.tts.shared.units import MILLISECONDS_PER_SECOND
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    import onnxruntime as ort
+
+ONNX_RUNTIME_MODULE_NAME: str = "onnxruntime"
 
 DEFAULT_SAMPLE_RATE: int = 44100
 DEFAULT_SPEED: float = 1.0
@@ -45,6 +53,14 @@ class MeloTTSHarness:
         self.lexicon_path = self.model_dir / LEXICON_FILE_NAME
         self.tokens_path = self.model_dir / TOKENS_FILE_NAME
 
+        # Imported when a harness is built, not with this module: reading the
+        # command line (--help) must not load the native runtime, which logs
+        # host hardware warnings on some machines. Building the harness still
+        # comes before the profiler's memory baseline and load timer, so
+        # load_ms and rss_delta_mb keep measuring the model alone.
+        self._onnx_runtime: ModuleType = importlib.import_module(
+            ONNX_RUNTIME_MODULE_NAME
+        )
         self._session: ort.InferenceSession | None = None
         self._token_ids_by_symbol: dict[str, int] = load_token_ids(self.tokens_path)
         self._lexicon: dict[str, list[str]] = load_lexicon(self.lexicon_path)
@@ -57,7 +73,9 @@ class MeloTTSHarness:
             if self.provider == "cuda"
             else CPU_EXECUTION_PROVIDERS
         )
-        self._session = ort.InferenceSession(str(self.model_path), providers=providers)
+        self._session = self._onnx_runtime.InferenceSession(
+            str(self.model_path), providers=providers
+        )
         elapsed_seconds = time.perf_counter() - start_time
         return elapsed_seconds * MILLISECONDS_PER_SECOND
 
@@ -87,7 +105,9 @@ class MeloTTSHarness:
         token_ids = self.text_to_token_ids(text)
         model_inputs = _build_model_inputs(token_ids, speed)
         outputs = self._session.run(None, model_inputs)
-        audio_samples = outputs[0].squeeze()
+        # run() is typed as returning arrays, sparse tensors, lists or dicts; this
+        # model's first output is always a dense audio array.
+        audio_samples = np.asarray(outputs[0]).squeeze()
         return encode_mono_pcm16_wav(audio_samples, DEFAULT_SAMPLE_RATE)
 
 
