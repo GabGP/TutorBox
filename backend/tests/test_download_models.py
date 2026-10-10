@@ -1,4 +1,4 @@
-"""Unit tests for TutorBox TTS model downloader (tools/download_models.py) and runner integration."""
+"""Unit tests for Utz'tutor TTS model downloader (tools/download_models.py) and runner integration."""
 
 import io
 import json

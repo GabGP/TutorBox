@@ -1,4 +1,4 @@
-"""Environment variable file discovery and loader for TutorBox appliance."""
+"""Environment variable file discovery and loader for Utz'tutor appliance."""
 
 import os
 from pathlib import Path

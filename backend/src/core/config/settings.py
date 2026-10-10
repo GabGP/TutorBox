@@ -1,4 +1,4 @@
-"""Settings builder, parser, and cached accessor for TutorBox."""
+"""Settings builder, parser, and cached accessor for Utz'tutor."""
 
 import os
 

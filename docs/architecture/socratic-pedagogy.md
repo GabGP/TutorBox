@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Architecture** › **Socratic Pedagogy** • **Related:** [Three Modes](three-modes.md) • [ESP32 Clicker Transport](esp32-clicker-transport.md) • [Hardware Topology](hardware-topology.md)
@@ -11,7 +11,7 @@
 
 ---
 
-TutorBox guides basic education students in rural Guatemala using an adaptive Socratic pedagogy. The system communicates via voice and text in **K'iche'** (`quc_Latn`) and **Spanish**.
+Utz'tutor guides basic education students in rural Guatemala using an adaptive Socratic pedagogy. The system communicates via voice and text in **K'iche'** (`quc_Latn`) and **Spanish**.
 
 ---
 

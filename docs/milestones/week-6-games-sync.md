@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 6 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Three Modes](../architecture/three-modes.md) • [Games API](../api/games.md) • [Game Events Schema](../database/games.md) • [Take-Home Apps](../../pwa/README.md#3-tareas--take-home-math-apps-tareas) • [Android Wrapper](../../pwa/tareas/android/README.md)
@@ -94,7 +94,7 @@ This document tracks the technical deliverables, architectural implementations, 
 
 1. **The APK sends nothing, on purpose**: it has no `INTERNET` permission ([Android Wrapper](../../pwa/tareas/android/README.md): *"Nothing leaves the phone"*). Its page runs on `https://appassets.androidplatform.net/`, so a request to `http://tutorbox` is cleartext, cross-origin and mixed content. Sync from the APK needs the permission, a cleartext exception for the appliance, a native bridge in the style of `AndroidTTS`, and new signed APKs.
 2. **The browser copy can send but cannot play offline**: `http://tutorbox/tareas/<grade>/` shares its origin with the API, so it can post with no CORS. Plain HTTP has no service worker, so the page does not open away from the appliance; "play offline, then reconnect" is limited there to a Wi-Fi drop while the page is open. `crypto.randomUUID()` is also absent on plain HTTP, so event ids must be built from `crypto.getRandomValues()`.
-3. **A game has no TutorBox student**: the child's profile is a name, an avatar and an optional parent PIN in `localStorage`, and mode `apps` asks for no login. An event is tied to a `users` row only when the game sends the login token that `/alumno/` keeps under the same origin (`tb_token`). The parent PIN is stored as typed and must never travel with an event.
+3. **A game has no Utz'tutor student**: the child's profile is a name, an avatar and an optional parent PIN in `localStorage`, and mode `apps` asks for no login. An event is tied to a `users` row only when the game sends the login token that `/alumno/` keeps under the same origin (`tb_token`). The parent PIN is stored as typed and must never travel with an event.
 4. **Only Primero has an APK in the repository, and it is an old test build**: `pwa/tareas/descargas/` holds `primero.apk`, last built on 2026-09-23 and signed with a debug key (`CN=Android Debug`). The download page hides a grade whose APK is missing. The three APKs must come from one machine with the release keystore (`gradlew publishApk`, [Android Wrapper](../../pwa/tareas/android/README.md)): Android refuses an update signed with another key.
 
 ---

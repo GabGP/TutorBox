@@ -1,6 +1,6 @@
 # Offline Spanish TTS Engine A/B Benchmarking
 
-This directory contains the benchmarking harness, fixed mathematical intervention corpus, and evaluation tooling for offline classroom speech synthesis on the TutorBox edge appliance (NVIDIA Jetson Orin Nano).
+This directory contains the benchmarking harness, fixed mathematical intervention corpus, and evaluation tooling for offline classroom speech synthesis on the Utz'tutor edge appliance (NVIDIA Jetson Orin Nano).
 
 ---
 
@@ -19,7 +19,7 @@ python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repea
 python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,kokoro,melo --repeats 5 --all-texts --out tools/benchmark/tts/results/
 ```
 
-> **Note**: TutorBox uses `uv` for dependency management (`uv run python ...`); invoking `python` directly is also supported in the active development environment.
+> **Note**: Utz'tutor uses `uv` for dependency management (`uv run python ...`); invoking `python` directly is also supported in the active development environment.
 
 The integrated `qwen3-tts` backend is the benchmark entry point. `harness_melo.py` remains as a standalone reference for the rejected MeloTTS spike. There is no separate Qwen harness.
 

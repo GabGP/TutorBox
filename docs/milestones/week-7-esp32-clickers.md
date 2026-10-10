@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 7 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Clicker Transport](../architecture/esp32-clicker-transport.md) • [Clicker Protocol](../architecture/esp32-protocol.md) • [Devices API](../api/devices.md) • [Sessions API](../api/sessions.md) • [Week 6 Milestone](week-6-games-sync.md)

@@ -86,7 +86,7 @@ CLIENT_DIR = validate_client_dir(resolve_client_dir())
 async def lifespan(app: FastAPI):
     """Manage appliance initialization, migrations, database seeds, and shutdown."""
     setup_logging()
-    logger.info("Initializing TutorBox backend appliance...")
+    logger.info("Initializing Utz'tutor backend appliance...")
     db_path = get_db_path()
     logger.info("Running database migrations on %s...", db_path)
     apply_migrations(db_path)
@@ -97,17 +97,17 @@ async def lifespan(app: FastAPI):
     if seed_teacher(db_path):
         logger.info("Bootstrap teacher account created.")
     logger.info(
-        "TutorBox Ready: Maestro -> http://localhost:8000/maestro/ | "
+        "Utz'tutor Ready: Maestro -> http://localhost:8000/maestro/ | "
         "Alumno -> http://localhost:8000/alumno/ | "
         "Pantalla -> http://localhost:8000/pantalla/ | "
         "Docs -> http://localhost:8000/docs"
     )
     yield
-    logger.info("Shutting down TutorBox backend appliance...")
+    logger.info("Shutting down Utz'tutor backend appliance...")
 
 
 app = FastAPI(
-    title="TutorBox API",
+    title="Utz'tutor API",
     description="Offline Edge AI Socratic Educational Platform Backend",
     version="0.1.0",
     lifespan=lifespan,

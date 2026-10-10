@@ -6,6 +6,9 @@ export interface ChatMessage {
   id: number;
   role: 'student' | 'tutor';
   text: string;
+  /** Tutor replies only: the backend's `kind` (hint, praise…) and hint level 0-3. */
+  kind?: string;
+  hintLevel?: number;
 }
 
 const PING_INTERVAL_MS = 20_000;
@@ -52,11 +55,8 @@ export function useTutorChat(username: string, options: { pingIntervalMs?: numbe
     return () => clearInterval(timer);
   }, [pingIntervalMs]);
 
-  const append = (role: ChatMessage['role'], text: string) =>
-    setMessages((current) => [
-      ...current,
-      { id: (current[current.length - 1]?.id ?? 0) + 1, role, text },
-    ]);
+  const append = (message: Omit<ChatMessage, 'id'>) =>
+    setMessages((current) => [...current, { id: (current[current.length - 1]?.id ?? 0) + 1, ...message }]);
 
   const send = useCallback(async (draft: string): Promise<boolean> => {
     const message = draft.trim();
@@ -64,10 +64,10 @@ export function useTutorChat(username: string, options: { pingIntervalMs?: numbe
     sendingRef.current = true;
     setSending(true);
     setError(null);
-    append('student', message);
+    append({ role: 'student', text: message });
     try {
       const reply = await tutorApi.send(message);
-      append('tutor', reply.reply);
+      append({ role: 'tutor', text: reply.reply, kind: reply.kind, hintLevel: reply.hint_level });
       return true;
     } catch (err) {
       setError(err instanceof ApiError ? err.detail || err.message : 'No se pudo enviar el mensaje.');

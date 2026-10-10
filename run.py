@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""TutorBox Appliance & Development Runner.
+"""Utz'tutor Appliance & Development Runner.
 
 Checks runtime prerequisites (uv, espeak-ng, local llama-server, pnpm) and boots
-the TutorBox FastAPI backend & classroom web clients.
+the Utz'tutor FastAPI backend & classroom web clients.
 """
 
 import argparse
@@ -295,7 +295,7 @@ def load_env(env_path: Path) -> None:
 
 
 def main() -> None:
-    """Boots the TutorBox appliance development server and launches Uvicorn."""
+    """Boots the Utz'tutor appliance development server and launches Uvicorn."""
     load_env(ROOT_DIR / ".env")
     load_env(BACKEND_DIR / ".env")
     raw_venv = os.environ.get("UV_PROJECT_ENVIRONMENT")
@@ -305,7 +305,7 @@ def main() -> None:
     os.environ["UV_PROJECT_ENVIRONMENT"] = str(venv_path)
 
     parser = argparse.ArgumentParser(
-        description="TutorBox Appliance Dev & Production Launcher"
+        description="Utz'tutor Appliance Dev & Production Launcher"
     )
     parser.add_argument(
         "--host", default="0.0.0.0", help="Host address to bind (default: 0.0.0.0)"
@@ -347,7 +347,7 @@ def main() -> None:
     args = parser.parse_args()
 
     print("==================================================")
-    print("      Starting TutorBox Edge AI Appliance         ")
+    print("      Starting Utz'tutor Edge AI Appliance         ")
     print("==================================================")
     check_prerequisites()
     print("--------------------------------------------------")
@@ -434,7 +434,7 @@ def main() -> None:
     try:
         subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
     except KeyboardInterrupt:
-        print("\nTutorBox server stopped.")
+        print("\nUtz'tutor server stopped.")
 
 
 if __name__ == "__main__":

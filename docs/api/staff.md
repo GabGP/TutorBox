@@ -1,10 +1,10 @@
 # Staff Administration & Audit API Specification
 
-Technical specification for school roster administration, user lifecycle management, and append-only security audit logging in **TutorBox**.
+Technical specification for school roster administration, user lifecycle management, and append-only security audit logging in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **Staff Administration** • **Related:** [Authentication](auth.md) • [Device Management](devices.md)

@@ -1,16 +1,16 @@
 # Qwen3-TTS Daemon: Build, Compilation & Deployment Guide
 
-This guide documents the architecture, compilation instructions, and reproduction steps for the **Qwen3-TTS Persistent Daemon** deployed in TutorBox.
+This guide documents the architecture, compilation instructions, and reproduction steps for the **Qwen3-TTS Persistent Daemon** deployed in Utz'tutor.
 
 ---
 
 ## 1. Overview & Architecture
 
-TutorBox uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish acoustic model for the deterministic **>51% Rule** spoken feedback.
+Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish acoustic model for the deterministic **>51% Rule** spoken feedback.
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                      TutorBox Backend                       │
+│                      Utz'tutor Backend                       │
 │  (QwenDaemon / QwenVoiceEngine - FastAPI / Python Process)  │
 └──────────────────────────────┬──────────────────────────────┘
                                │ Line-delimited JSON
@@ -69,7 +69,7 @@ TutorBox uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish acou
 
 ## 4. Automated Build Instructions
 
-TutorBox includes a cross-platform Python build tool that handles cloning the pinned upstream release, applying the patch, configuring CMake, building, and installing artifacts:
+Utz'tutor includes a cross-platform Python build tool that handles cloning the pinned upstream release, applying the patch, configuring CMake, building, and installing artifacts:
 
 ```bash
 # Standard automated build (detects CUDA or falls back to CPU, parallel Ninja build)

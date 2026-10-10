@@ -1,7 +1,7 @@
 # Q'uq' Matemáticas — Android wrapper
 
 Packs each grade's web app (`../primero/public`, `../segundo/public`, `../tercero/public`) into its own
-offline APK that families download from the TutorBox at `http://tutorbox/descargas/`, where the
+offline APK that families download from the Utz'tutor at `http://tutorbox/descargas/`, where the
 child picks the grade. See [pwa/README.md §3](../../README.md#3-tareas--take-home-math-apps-tareas)
 for why this is an APK and not an installable PWA.
 

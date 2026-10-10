@@ -1,4 +1,4 @@
-# TutorBox Backend
+# Utz'tutor Backend
 
 [![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
@@ -6,7 +6,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Backend Hub** • **Related:** [REST API Hub](../docs/api/README.md) • [Database Schema](../docs/database/README.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
@@ -16,7 +16,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [TutorBox Backend](#tutorbox-backend)
+- [Utz'tutor Backend](#tutorbox-backend)
   - [Table of Contents](#table-of-contents)
   - [1. Components \& Architecture](#1-components--architecture)
   - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
@@ -88,7 +88,7 @@ For further details check these documents:
 
 ## <a id="3-environment-setup"></a>3. Environment Setup
 
-Ensure you are using Python 3.11 or newer. TutorBox uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
+Ensure you are using Python 3.11 or newer. Utz'tutor uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
 
 ### A. Recommended: Instant Setup with `uv`
 
@@ -260,7 +260,7 @@ backend/
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   │   ├── security/  # bcrypt PIN hashing, session tokens, and rate limiters
 │   │   └── tts/       # Multi-tier pluggable voice synthesis (Qwen3-TTS, Sherpa, Piper, Kokoro, eSpeak)
-│   └── modes/         # TutorBox bounded appliance operating modes
+│   └── modes/         # Utz'tutor bounded appliance operating modes
 │       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
 │       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor
 │       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank, turn telemetry labels)

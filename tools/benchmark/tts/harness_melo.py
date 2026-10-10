@@ -1,6 +1,6 @@
 """Standalone inference and profiling harness for MeloTTS Spanish ONNX model.
 
-Part of TutorBox Phase 3 (Spike Candidate 4).
+Part of Utz'tutor Phase 3 (Spike Candidate 4).
 Usage:
     python tools/benchmark/tts/harness_melo.py --text "Hola mundo" --out tools/benchmark/tts/results/out/melo_test.wav
     python tools/benchmark/tts/harness_melo.py --profile

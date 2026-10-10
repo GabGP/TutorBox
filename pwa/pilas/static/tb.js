@@ -1,10 +1,10 @@
-/* TutorBox Pilas — shared client helpers. Pages are served by the FastAPI backend, so every call
+/* Utz'tutor Pilas — shared client helpers. Pages are served by the FastAPI backend, so every call
    goes to the same origin (/api/v1) with the bearer token from POST /auth/login. */
 const API = '/api/v1';
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ERR = {
-  0: 'Sin conexión con TutorBox', 401: 'Usuario o PIN incorrecto', 403: 'No tienes permiso para esto',
+  0: "Sin conexión con Utz'tutor", 401: 'Usuario o PIN incorrecto', 403: 'No tienes permiso para esto',
   404: 'No se encontró', 409: 'Ya existe', 422: 'Usuario de 3 a 32 letras o números y PIN de 4 a 8 números',
   429: 'Demasiados intentos, espera un momento', 502: 'El modelo no respondió',
 };

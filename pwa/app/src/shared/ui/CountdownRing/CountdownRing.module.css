@@ -26,6 +26,15 @@
   color: var(--bad);
 }
 
+/* On the dark wall screen the page is --navy (= --p): draw the arc in mint on a faint track. */
+.dark {
+  background: conic-gradient(var(--p-soft) calc(var(--pct, 100) * 1%), rgba(255, 255, 255, 0.15) 0);
+}
+
+.dark.low {
+  background: conic-gradient(var(--bad) calc(var(--pct, 100) * 1%), rgba(255, 255, 255, 0.15) 0);
+}
+
 .dark .inner {
   background: var(--navy);
   color: #fff;

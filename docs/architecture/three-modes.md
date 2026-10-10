@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Architecture** › **Three Modes** • **Related:** [Diagnostic Distractors](diagnostic-distractors.md) • [Hardware Topology](hardware-topology.md) • [ESP32 Clicker Transport](esp32-clicker-transport.md) • [Socratic Pedagogy](socratic-pedagogy.md)
@@ -11,7 +11,7 @@
 
 ---
 
-**TutorBox** operates as a multi-mode offline educational appliance centered around diagnosing and addressing student conceptual misconceptions.
+**Utz'tutor** operates as a multi-mode offline educational appliance centered around diagnosing and addressing student conceptual misconceptions.
 
 ---
 
@@ -19,7 +19,7 @@
 
 ```mermaid
 graph TD
-    subgraph Core ["TutorBox Offline Core Appliance"]
+    subgraph Core ["Utz'tutor Offline Core Appliance"]
         M1["1. Classroom Quiz (Primary Mode)<br/>Teacher-led classroom quiz with diagnostic distractors"]
         M2["2. Socratic Tutor (Chat)<br/>After-class mobile Socratic math tutor"]
         M3["3. Offline Primary Games<br/>Interactive offline games with opportunistic log sync"]

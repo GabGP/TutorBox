@@ -53,7 +53,7 @@ describe('StudentView Component', () => {
     });
 
     render(<StudentView />);
-    expect(screen.getByText('TutorBox')).toBeInTheDocument();
+    expect(screen.getByText("Utz'tutor")).toBeInTheDocument();
     expect(screen.getByText('Sin conexión')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Sin conexión' })).toBeInTheDocument();
     expect(screen.queryByText('Salir')).not.toBeInTheDocument();

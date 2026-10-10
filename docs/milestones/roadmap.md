@@ -1,8 +1,8 @@
-# TutorBox Engineering Roadmap (10-Week Plan)
+# Utz'tutor Engineering Roadmap (10-Week Plan)
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md) • [Week 5 Milestone](week-5-socratic-tutor.md) • [Week 6 Milestone](week-6-games-sync.md) • [Week 7 Milestone](week-7-esp32-clickers.md)
@@ -11,7 +11,7 @@
 
 ---
 
-This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
+This roadmap details the comprehensive 10-week engineering schedule for **Utz'tutor**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
 ## Table of Contents
 - [1. Operating Rules & Team Rotation](#1-operating-rules--team-rotation)
@@ -44,7 +44,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ```mermaid
 gantt
-    title TutorBox 10-Week Engineering Schedule (Rotational Ownership)
+    title Utz'tutor 10-Week Engineering Schedule (Rotational Ownership)
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
 

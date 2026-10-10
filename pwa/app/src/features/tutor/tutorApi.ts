@@ -20,6 +20,13 @@ export interface TutorStudent {
   hint_level: number;
 }
 
+/** Class totals for the wall screen: counts only, no names. */
+export interface TutorSummary {
+  online: number;
+  solved: number;
+  need_help: number;
+}
+
 /**
  * Mode 2 API client: students chat with the Socratic tutor, teachers watch who is using it.
  */
@@ -32,6 +39,9 @@ export const tutorApi = {
 
   /** Tells the teacher's panel that this student's chat is open. */
   ping: () => requestApi<{ status: string }>('POST', '/tutor/ping', {}),
+
+  /** Totals for the classroom screen, which has no login. */
+  summary: () => requestApi<TutorSummary>('GET', '/tutor/summary', undefined, false),
 
   /** Students using the tutor, connected ones first (teachers only). */
   students: async (): Promise<TutorStudent[]> =>

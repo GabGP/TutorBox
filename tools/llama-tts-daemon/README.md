@@ -1,6 +1,6 @@
-# TutorBox llama.cpp Patch Management & Build Protocol
+# Utz'tutor llama.cpp Patch Management & Build Protocol
 
-This directory contains upstream patches applied to [`llama.cpp`](https://github.com/ggerganov/llama.cpp) to enable low-latency, persistent in-memory speech synthesis for TutorBox.
+This directory contains upstream patches applied to [`llama.cpp`](https://github.com/ggerganov/llama.cpp) to enable low-latency, persistent in-memory speech synthesis for Utz'tutor.
 
 ---
 
@@ -69,7 +69,7 @@ If compiling manually from source without the helper script:
    cd .cache/build/llama.cpp
    ```
 
-2. **Apply TutorBox daemon patch**:
+2. **Apply Utz'tutor daemon patch**:
    ```bash
    git apply ../../../tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch
    ```

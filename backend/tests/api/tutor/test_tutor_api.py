@@ -172,3 +172,14 @@ def test_the_services_are_built_once_per_process():
 
     for provider in (get_tutor, get_turn_gate, get_roster):
         provider.cache_clear()
+
+
+def test_the_class_screen_gets_totals_without_names(staff_db, client, services):
+    services.record(1, "ana", "23 + 45", 3, solved=False)  # stuck on the last hint
+    services.record(2, "beto", "7 × 8", 1, solved=False)
+    services.record(2, "beto", "7 × 8", 1, solved=True)
+
+    resp = client.get("/api/v1/tutor/summary")  # no login: the wall screen
+
+    assert resp.status_code == 200
+    assert resp.json() == {"online": 2, "solved": 1, "need_help": 1}

@@ -1,4 +1,4 @@
-"""Unit tests for TutorBox appliance runner and prerequisite checks (run.py)."""
+"""Unit tests for Utz'tutor appliance runner and prerequisite checks (run.py)."""
 
 import os
 import subprocess

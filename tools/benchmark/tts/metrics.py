@@ -383,7 +383,7 @@ def _detect_engine_provider(engine: str) -> str:
 def main() -> None:
     """CLI entrypoint for running diagnostic benchmark on the appliance."""
     parser = argparse.ArgumentParser(
-        description="Benchmark TutorBox offline speech synthesis"
+        description="Benchmark Utz'tutor offline speech synthesis"
     )
     parser.add_argument(
         "--engine",
@@ -402,7 +402,7 @@ def main() -> None:
     parser.add_argument("--voice", default=None, help="Voice identifier (optional)")
     args = parser.parse_args()
 
-    print(f"Benchmarking TutorBox Neural TTS Pipeline [{args.engine}]...")
+    print(f"Benchmarking Utz'tutor Neural TTS Pipeline [{args.engine}]...")
     res = profile_speech_synthesis(
         args.text, lang=args.lang, voice=args.voice, engine=args.engine
     )

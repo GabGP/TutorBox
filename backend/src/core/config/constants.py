@@ -1,4 +1,4 @@
-"""Default configuration constants for TutorBox edge appliance."""
+"""Default configuration constants for Utz'tutor edge appliance."""
 
 from pathlib import Path
 

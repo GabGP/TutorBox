@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Automated Model Downloader for TutorBox TTS Voices.
+"""Automated Model Downloader for Utz'tutor TTS Voices.
 
 Downloads neural acoustic models for offline classroom speech synthesis:
 - Piper / Sherpa Spanish Harvard baseline (VITS, ~76 MB)
@@ -73,7 +73,7 @@ def download_file(
 
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "TutorBox-Appliance-Downloader/1.0"},
+        headers={"User-Agent": "Utz'tutor-Appliance-Downloader/1.0"},
     )
 
     try:
@@ -309,9 +309,9 @@ def execute_download(
 
 
 def main() -> None:
-    """CLI entrypoint for TutorBox model downloader."""
+    """CLI entrypoint for Utz'tutor model downloader."""
     parser = argparse.ArgumentParser(
-        description="Download offline voice models for TutorBox"
+        description="Download offline voice models for Utz'tutor"
     )
     parser.add_argument(
         "--target",
@@ -339,7 +339,7 @@ def main() -> None:
 
     status = check_models(args.models_dir)
     print("==================================================")
-    print("         TutorBox TTS Models Diagnostic           ")
+    print("         Utz'tutor TTS Models Diagnostic           ")
     print("==================================================")
     print(
         f"  * Piper / Sherpa (Spanish) : "

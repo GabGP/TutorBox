@@ -1,10 +1,10 @@
-"""Domain exceptions for TutorBox offline speech synthesis."""
+"""Domain exceptions for Utz'tutor offline speech synthesis."""
 
 __all__ = ["TTSError", "TTSSynthesisError", "TTSUnavailableError"]
 
 
 class TTSError(RuntimeError):
-    """Base exception for TutorBox speech synthesis errors."""
+    """Base exception for Utz'tutor speech synthesis errors."""
 
 
 class TTSUnavailableError(TTSError):

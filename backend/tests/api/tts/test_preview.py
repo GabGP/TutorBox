@@ -54,7 +54,7 @@ def test_tts_preview_unloads_when_engine_was_idle(
     unload.assert_called_once_with(engine="piper")
     assert synth is not None
     synth.assert_called_once_with(
-        "Hola, esta es la voz de TutorBox para tu clase.",
+        "Hola, esta es la voz de Utz'tutor para tu clase.",
         lang="es",
         voice=None,
         backend="piper",

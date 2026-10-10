@@ -62,7 +62,7 @@ def test_serves_files_from_static_dir(
     static_dir = tmp_path / "client" / "static"
     static_dir.mkdir(parents=True)
     (static_dir / "manifest.webmanifest").write_text(
-        '{"name":"TutorBox"}', encoding="utf-8"
+        '{"name":"Utz\'tutor"}', encoding="utf-8"
     )
     (static_dir / "favicon.svg").write_text("<svg></svg>", encoding="utf-8")
     (static_dir / "icon-192.svg").write_text("<svg>192</svg>", encoding="utf-8")
@@ -70,7 +70,7 @@ def test_serves_files_from_static_dir(
     monkeypatch.setenv("PWA_STATIC_DIR", str(tmp_path / "client"))
 
     cases = {
-        "/manifest.webmanifest": ("application/manifest+json", "TutorBox"),
+        "/manifest.webmanifest": ("application/manifest+json", "Utz'tutor"),
         "/favicon.svg": ("image/svg+xml", "<svg>"),
         "/favicon.ico": ("image/x-icon", "<svg>"),
         "/icon-192.svg": ("image/svg+xml", "192"),

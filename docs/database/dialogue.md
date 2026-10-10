@@ -1,10 +1,10 @@
 # Mode 2: Socratic Tutor & Dialogue Telemetry Schema
 
-Technical specification for conversational math dialogue turns, SymPy containment logs, and pedagogical hint escalation telemetry in **TutorBox**.
+Technical specification for conversational math dialogue turns, SymPy containment logs, and pedagogical hint escalation telemetry in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Database](README.md) › **Dialogue Telemetry** • **Related:** [Core Schema](core.md) • [Socratic Pedagogy](../architecture/socratic-pedagogy.md)

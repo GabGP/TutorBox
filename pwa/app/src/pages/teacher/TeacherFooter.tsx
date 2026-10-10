@@ -49,10 +49,10 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
             id="primary"
             ariaLabel="Terminar la pregunta"
             disabled={isPrimaryDisabled}
-            backgroundColor="var(--p, #0B6E99)"
-            fillColor="var(--navy, #062D3F)"
+            backgroundColor="var(--p, #1F3E33)"
+            fillColor="var(--accent, #F5B3B3)"
             textColor="#ffffff"
-            fillTextColor="#ffffff"
+            fillTextColor="var(--accent-ink, #1F3E33)"
             doneLabel="Cerrada"
             onHold={onPrimary}
           >

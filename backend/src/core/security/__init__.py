@@ -1,4 +1,4 @@
-"""TutorBox Security package."""
+"""Utz'tutor Security package."""
 
 from . import auth, auth_session, rate_limit, validation
 from .auth import generate_temporary_pin, hash_pin, verify_pin

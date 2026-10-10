@@ -1,4 +1,4 @@
-"""Curated, mathematically verified seed questions for TutorBox."""
+"""Curated, mathematically verified seed questions for Utz'tutor."""
 
 from modes.quiz.contracts.models import QuizQuestion
 from modes.quiz.seed_data.arithmetic_add import ARITHMETIC_ADD_QUESTIONS

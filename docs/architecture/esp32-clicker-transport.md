@@ -1,10 +1,10 @@
 # ESP32 Hardware Clicker Architecture & Transport Specification
 
-Comprehensive engineering specification for the **TutorBox Physical Clicker Subsystem**, detailing hardware design, network transport, AP association, telemetry monitoring, teacher pairing lifecycle, and the abstract `VoteTransport` interface.
+Comprehensive engineering specification for the **Utz'tutor Physical Clicker Subsystem**, detailing hardware design, network transport, AP association, telemetry monitoring, teacher pairing lifecycle, and the abstract `VoteTransport` interface.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Architecture** › **ESP32 Clicker Transport** • **Related:** [Hardware Topology](hardware-topology.md) • [Three Modes](three-modes.md) • [Database Schema](../database/README.md)
@@ -37,7 +37,7 @@ Comprehensive engineering specification for the **TutorBox Physical Clicker Subs
 
 In rural and primary classroom environments (grades 1–6, ages 6–12), asking students to type alphanumeric usernames and PINs on small screens is a significant pedagogical friction point.
 
-The **TutorBox Physical Clicker Subsystem** provides a dedicated, tactile 4-button hardware alternative (A, B, C, D) for the **Classroom Quiz Mode**:
+The **Utz'tutor Physical Clicker Subsystem** provides a dedicated, tactile 4-button hardware alternative (A, B, C, D) for the **Classroom Quiz Mode**:
 * **Zero Student Setup**: Students pick up their numbered clicker (e.g. `#5`) and immediately participate.
 * **Delegated Authorization**: The teacher links clicker IDs to student accounts via the Teacher PWA in seconds.
 * **Dual Feedback Loop**: Both the handheld RGB LED and the classroom HDMI projector visually confirm vote ingestion.
@@ -95,7 +95,7 @@ A common question in offline hardware design is: **How does each physical clicke
 > Bluetooth stays on and hands each clicker the Wi-Fi credentials and a device secret on a button press. See
 > [ESP32 Clicker Protocol](esp32-protocol.md). Factory flashing below remains the documented fallback.
 
-TutorBox evaluates three connectivity strategies, with **Factory Fleet Provisioning** serving as the primary design:
+Utz'tutor evaluates three connectivity strategies, with **Factory Fleet Provisioning** serving as the primary design:
 
 ```mermaid
 graph TD
@@ -127,7 +127,7 @@ graph TD
 ```
 
 ### 1. Primary Strategy: Appliance Factory Provisioning (Zero-Touch)
-* **Pre-Shared Appliance Network**: Every TutorBox appliance kit includes a pre-configured router (GL-AR300M16) with fixed network parameters:
+* **Pre-Shared Appliance Network**: Every Utz'tutor appliance kit includes a pre-configured router (GL-AR300M16) with fixed network parameters:
   - **SSID**: `TutorBox`
   - **WPA2 Pre-Shared Key**: Configured in appliance manufacturing
   - **Backend API**: `http://192.168.8.2/api/v1` (Jetson static lease; see [ESP32 Clicker Protocol](esp32-protocol.md))
@@ -150,7 +150,7 @@ graph TD
 
 ## <a id="4-end-to-end-communication-flow--pairing-model"></a>4. End-to-End Communication Flow & Pairing Model
 
-TutorBox utilizes a **Teacher-Delegated Trust Model** to eliminate student authentication barriers on hardware clickers while maintaining strict tenant isolation.
+Utz'tutor utilizes a **Teacher-Delegated Trust Model** to eliminate student authentication barriers on hardware clickers while maintaining strict tenant isolation.
 
 ```mermaid
 sequenceDiagram
@@ -256,7 +256,7 @@ The clicker incorporates two separate visual indicators: a **Primary RGB Vote LE
 
 While the physical clicker has local LED warnings, **primary school students should not be responsible for diagnosing battery or network issues**.
 
-Instead, TutorBox transmits real-time telemetry from every clicker directly to the **Teacher PWA Fleet Dashboard**:
+Instead, Utz'tutor transmits real-time telemetry from every clicker directly to the **Teacher PWA Fleet Dashboard**:
 
 ### 1. In-Flight Telemetry Payload
 Whenever a vote or 60-second periodic heartbeat is sent, the ESP32 includes hardware vitals:

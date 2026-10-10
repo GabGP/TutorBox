@@ -11,7 +11,7 @@
   justify-content: center;
   gap: 10px;
   flex: 1;
-  box-shadow: 0 8px 20px -10px rgba(11, 110, 153, 0.7);
+  box-shadow: 0 8px 20px -10px rgba(31, 62, 51, 0.7);
   transition: transform 0.16s ease, filter 0.16s ease, background 0.16s ease;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .playBtnActive {
-  background: var(--p-dark, #085273);
+  background: var(--p-dark, #16302A);
   box-shadow: 0 8px 22px -8px rgba(8, 82, 115, 0.8);
 }
 

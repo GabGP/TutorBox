@@ -1,5 +1,5 @@
 /**
- * Canonical press-and-hold durations for TutorBox HoldButton.
+ * Canonical press-and-hold durations for Utz'tutor HoldButton.
  *
  * Three tiers only — pick by consequence, never invent a new number:
  * - SHORT (800ms): reversible / low-risk guards (PIN change, PIN reset).

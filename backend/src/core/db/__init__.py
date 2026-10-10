@@ -1,4 +1,4 @@
-"""TutorBox DB package."""
+"""Utz'tutor DB package."""
 
 from . import (
     audit,

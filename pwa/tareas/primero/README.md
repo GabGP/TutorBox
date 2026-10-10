@@ -9,7 +9,7 @@ The same `public/` folder, unchanged, runs in three places — which is why ever
 
 | Where | URL | Offline at home? |
 | :--- | :--- | :--- |
-| TutorBox classroom (Jetson) | `http://tutorbox/tareas/primero/` | No — plain HTTP has no service worker |
+| Utz'tutor classroom (Jetson) | `http://tutorbox/tareas/primero/` | No — plain HTTP has no service worker |
 | Android app (APK) | packed by [`../android`](../android/README.md), downloaded from `http://tutorbox/descargas/` | Yes |
 | Public hosting (Netlify, see `CLOUD.md`) | `https://<your-site>.netlify.app/` | Yes, via `sw.js` |
 

@@ -1,4 +1,4 @@
-# TutorBox — Code Review Suggestions
+# Utz'tutor — Code Review Suggestions
 
 Review of the whole repository at commit `b7998fd` (2026-10-03). No code was changed; this file is the only output.
 Paths are repo-relative, with line numbers where it helps.
@@ -268,7 +268,7 @@ Suggested order is at the end.
 - **L1. Icons served with the wrong type.** `api/pwa_assets.py:24-28` serves SVG bytes as `image/png` (apple-touch-icon) and `image/x-icon`, and `pwa/app/index.html` points `apple-touch-icon` at an SVG. iOS needs a real PNG. The grade apps already ship PNG icons via `tools/render-icons.py`.
 - **L2. No subprocess timeout for Piper.** The Piper CLI fallback has none (`core/tts/engines/piper/engine.py:116-119`), while eSpeak does.
 - **L3. Model config rewritten during synthesis.** `sanitize_model_config` rewrites the model's JSON on every synthesis call (`core/tts/engines/piper/models.py:30-42`). Do it once at download.
-- **L4. LLM proxy passes upstream status codes through.** `api/llm/proxy.py:40-47` forwards the upstream status, so an upstream 401 looks like an expired TutorBox session to the PWA. Map it to 502.
+- **L4. LLM proxy passes upstream status codes through.** `api/llm/proxy.py:40-47` forwards the upstream status, so an upstream 401 looks like an expired Utz'tutor session to the PWA. Map it to 502.
 - **L5. Old tutor sessions are never evicted.** `TurnGate._recent` keeps one entry per session forever (`api/tutor/gate.py:29,50`). Prune empty deques.
 - **L6. Flawed tar extraction check.** `tools/download_models.py:48-55` validates paths with `startswith` (prefix bug, ignores symlink members). Use stdlib `archive.extractall(path, filter="data")` (Python ≥ 3.11.4).
 - **L7. Downloads are neither pinned nor verified.** Model downloads use `resolve/main` with no checksum (`tools/download_models.py:36-45`). Pin Hugging Face revisions and verify SHA-256. GGUF and ONNX files are parsed in-process.
