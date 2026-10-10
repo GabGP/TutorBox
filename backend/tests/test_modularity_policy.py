@@ -7,6 +7,9 @@ REPOSITORY_ROOT_DIRECTORY = BACKEND_ROOT_DIRECTORY.parent
 LAUNCHER_ENTRY_POINT = REPOSITORY_ROOT_DIRECTORY / "run.py"
 LAUNCHER_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "launcher"
 DOWNLOADER_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "voice_models"
+DAEMON_BUILD_PACKAGE_DIRECTORY = (
+    REPOSITORY_ROOT_DIRECTORY / "tools" / "llama_tts_daemon"
+)
 
 MAX_PRODUCTION_MODULE_LINES_OF_CODE = 150
 MAX_TEST_FILE_LINES_OF_CODE = 300
@@ -96,4 +99,30 @@ def test_downloader_modules_within_loc_ceiling():
         f"Found {len(oversized_downloader_modules)} downloader module(s) exceeding "
         f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
         + "\n".join(oversized_downloader_modules)
+    )
+
+
+def test_daemon_build_modules_within_loc_ceiling():
+    """Enforces that build.py and every module in tools/llama_tts_daemon/ are <= MAX_PRODUCTION_MODULE_LINES_OF_CODE."""
+    daemon_build_source_file_paths = sorted(
+        DAEMON_BUILD_PACKAGE_DIRECTORY.rglob("*.py")
+    )
+    assert daemon_build_source_file_paths, (
+        f"Expected modules under {DAEMON_BUILD_PACKAGE_DIRECTORY} to exist"
+    )
+    oversized_daemon_build_modules: list[str] = []
+    for daemon_build_source_file_path in daemon_build_source_file_paths:
+        total_line_count = len(
+            daemon_build_source_file_path.read_text(encoding="utf-8").splitlines()
+        )
+        if total_line_count > MAX_PRODUCTION_MODULE_LINES_OF_CODE:
+            oversized_daemon_build_modules.append(
+                f"{daemon_build_source_file_path.relative_to(REPOSITORY_ROOT_DIRECTORY)}: "
+                f"{total_line_count} lines (ceiling: {MAX_PRODUCTION_MODULE_LINES_OF_CODE})"
+            )
+
+    assert not oversized_daemon_build_modules, (
+        f"Found {len(oversized_daemon_build_modules)} daemon build module(s) exceeding "
+        f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
+        + "\n".join(oversized_daemon_build_modules)
     )

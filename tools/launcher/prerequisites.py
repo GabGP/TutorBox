@@ -70,7 +70,7 @@ def _check_llama_daemon() -> None:
         print(f"{TAG_OK} Found Qwen3-TTS daemon: {daemon_bin}")
     else:
         print(
-            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python tools/llama-tts-daemon/build.py' or '--build-llama' to compile."
+            f"{TAG_INFO} Qwen3-TTS daemon not found. Run 'python tools/llama_tts_daemon/build.py' or '--build-llama' to compile."
         )
 
 

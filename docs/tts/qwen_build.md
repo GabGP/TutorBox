@@ -45,8 +45,8 @@ Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish aco
 | :--- | :--- |
 | **Upstream Base** | [`ggerganov/llama.cpp`](https://github.com/ggerganov/llama.cpp) |
 | **Pinned Release** | `b11002` (commit `83078fec0`) |
-| **Patch Location** | [`tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch`](../../tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch) |
-| **License** | MIT License ([`tools/llama-tts-daemon/LICENSE-llama-cpp`](../../tools/llama-tts-daemon/LICENSE-llama-cpp)) |
+| **Patch Location** | [`tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch`](../../tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch) |
+| **License** | MIT License ([`tools/llama_tts_daemon/LICENSE-llama-cpp`](../../tools/llama_tts_daemon/LICENSE-llama-cpp)) |
 | **Installation Directory** | `.cache/bin/llama.cpp/` |
 
 ---
@@ -73,13 +73,13 @@ Utz'tutor includes a cross-platform Python build tool that handles cloning the p
 
 ```bash
 # Standard automated build (detects CUDA or falls back to CPU, parallel Ninja build)
-python tools/llama-tts-daemon/build.py
+python tools/llama_tts_daemon/build.py
 
 # Clean rebuild (deletes .cache/build/llama.cpp/build before building)
-python tools/llama-tts-daemon/build.py --force
+python tools/llama_tts_daemon/build.py --force
 
 # CPU-only compilation (forces -DGGML_CUDA=OFF)
-python tools/llama-tts-daemon/build.py --cpu-only
+python tools/llama_tts_daemon/build.py --cpu-only
 ```
 
 ### Integration with `run.py`

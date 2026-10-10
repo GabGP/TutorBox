@@ -73,7 +73,7 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
 
 
 def build_llama(force: bool = False, python_bin: str | None = None) -> bool:
-    """Invokes tools/llama-tts-daemon/build.py to compile and install the daemon binary."""
+    """Invokes tools/llama_tts_daemon/build.py to compile and install the daemon binary."""
     script = LLAMA_BUILD_SCRIPT
     if not script.is_file():
         print(f"{TAG_FAIL} Build script not found at {script}")

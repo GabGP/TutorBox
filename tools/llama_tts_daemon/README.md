@@ -39,14 +39,30 @@ To build and install the daemon binary into `.cache/bin/llama.cpp/`, run:
 
 ```bash
 # Standard automated build (detects CUDA or falls back to CPU, multithreaded Ninja build)
-python tools/llama-tts-daemon/build.py
+python tools/llama_tts_daemon/build.py
 
 # Force clean re-clone and re-compilation
-python tools/llama-tts-daemon/build.py --force
+python tools/llama_tts_daemon/build.py --force
 
 # Force CPU-only build (disables -DGGML_CUDA=ON)
-python tools/llama-tts-daemon/build.py --cpu-only
+python tools/llama_tts_daemon/build.py --cpu-only
 ```
+
+`build.py` is only the entry point. The steps live in the `build_llama/` package next to it:
+
+| Module | Responsibility |
+| :--- | :--- |
+| `cli.py` | Command-line flags and the order of the steps |
+| `toolchain.py` | Finds `git`, `cmake` and `ninja` on PATH or in a virtualenv |
+| `source.py` | Clones the pinned release and applies the daemon patch |
+| `compile.py` | CUDA detection, CMake configure and build |
+| `cmake_cache.py` | Discards a build folder whose cache no longer matches the generator |
+| `install.py` | Copies the binary, runtime libraries and license into `.cache/bin/llama.cpp/` |
+| `commands.py` | Runs each command, inside `vcvars64.bat` on Windows when needed |
+| `msvc.py`, `environment.py` | MSVC lookup and the venv directories added to PATH |
+| `paths.py`, `console.py` | Build locations and console tags |
+
+Their tests are in `backend/tests/llama_tts_daemon/`.
 
 Alternatively, `run.py` can automatically invoke compilation:
 ```bash
@@ -71,7 +87,7 @@ If compiling manually from source without the helper script:
 
 2. **Apply Utz'tutor daemon patch**:
    ```bash
-   git apply ../../../tools/llama-tts-daemon/0001-llama-tts-daemon-mode.patch
+   git apply ../../../tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch
    ```
 
 3. **Configure & Build with CMake (Multithreaded)**:
@@ -90,7 +106,7 @@ If compiling manually from source without the helper script:
    mkdir -p ../../bin/llama.cpp/
    cp build/bin/llama-tts ../../bin/llama.cpp/llama-tts-daemon
    cp build/bin/*.dll ../../bin/llama.cpp/
-   cp ../../../tools/llama-tts-daemon/LICENSE-llama-cpp ../../bin/llama.cpp/LICENSE-llama-cpp
+   cp ../../../tools/llama_tts_daemon/LICENSE-llama-cpp ../../bin/llama.cpp/LICENSE-llama-cpp
    ```
 
 ---
