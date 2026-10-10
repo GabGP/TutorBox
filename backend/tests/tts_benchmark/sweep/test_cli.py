@@ -288,4 +288,4 @@ def test_sweep_options_are_frozen_after_creation():
     """Verifies the parsed sweep options cannot be changed after they are built."""
     options = cli.SweepOptions(["piper"], 3, Path("c.txt"), Path("r"), "es", False)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        options.repeats = 9
+        options.repeats = 9  # pyright: ignore[reportAttributeAccessIssue]

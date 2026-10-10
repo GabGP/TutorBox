@@ -11,6 +11,7 @@ from modes.socratic.problems import (
     find_problem,
     normalize,
 )
+from tests.conftest import required
 
 
 @pytest.mark.parametrize(
@@ -55,7 +56,7 @@ def test_find_problem(message, text, target, operation, operands):
 
 
 def test_decimal_problems_remember_their_notation():
-    problem = find_problem("0,5 + 0,25")
+    problem = required(find_problem("0,5 + 0,25"))
 
     assert problem.text == "0.5 + 0.25"
     assert problem.target == Fraction(3, 4)
@@ -88,7 +89,7 @@ def test_messages_without_a_solvable_problem(message):
 
 
 def test_find_attempt_reads_the_childs_result():
-    problem, value = find_attempt("23 + 45 = 70")
+    problem, value = required(find_attempt("23 + 45 = 70"))
 
     assert (problem.text, value) == ("23 + 45", 70)
     assert find_attempt("x + 5 = 12") is None  # an equation, not an attempt
@@ -99,11 +100,11 @@ def test_find_attempt_reads_the_childs_result():
 
 
 def test_accepted_answers_include_the_quotient_of_a_division_with_remainder():
-    assert accepted_answers(find_problem("17 entre 5")) == {
+    assert accepted_answers(required(find_problem("17 entre 5"))) == {
         Fraction(17, 5),
         Fraction(3),
     }
-    assert accepted_answers(find_problem("16 entre 4")) == {Fraction(4)}
+    assert accepted_answers(required(find_problem("16 entre 4"))) == {Fraction(4)}
 
 
 def test_normalize_writes_operations_as_symbols():

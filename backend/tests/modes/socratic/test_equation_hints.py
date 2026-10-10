@@ -7,6 +7,7 @@ import pytest
 from modes.socratic import equation_hints
 from modes.socratic.equation_hints import equation_hint
 from modes.socratic.problems import Problem, find_problem
+from tests.conftest import required
 
 
 @pytest.mark.parametrize(
@@ -40,7 +41,7 @@ from modes.socratic.problems import Problem, find_problem
     ],
 )
 def test_level_2_names_the_first_step_without_taking_it(equation, step):
-    assert equation_hint(find_problem(equation), 2) == step
+    assert equation_hint(required(find_problem(equation)), 2) == step
 
 
 @pytest.mark.parametrize(
@@ -76,7 +77,7 @@ def test_level_2_names_the_first_step_without_taking_it(equation, step):
     ],
 )
 def test_level_3_solves_a_parallel_equation(equation, example):
-    problem = find_problem(equation)
+    problem = required(find_problem(equation))
 
     assert equation_hint(problem, 3) == (
         f"Mira este ejemplo: {example}. Ahora te toca: ¿qué número va en "
@@ -85,9 +86,9 @@ def test_level_3_solves_a_parallel_equation(equation, example):
 
 
 def test_level_3_never_works_the_childs_own_equation(monkeypatch):
-    problem = find_problem("x + 3 = 8")  # the first example itself
+    problem = required(find_problem("x + 3 = 8"))  # the first example itself
 
-    assert "en x + 4 = 6" in equation_hint(problem, 3)
+    assert "en x + 4 = 6" in required(equation_hint(problem, 3))
 
     monkeypatch.setattr(equation_hints, "_EXAMPLES", ((1, 3, 5),))
     assert equation_hint(problem, 3) is None
@@ -107,6 +108,7 @@ def test_level_3_never_works_the_childs_own_equation(monkeypatch):
         Problem("x = 5", Fraction(5), "ecuacion"),
         Problem("2x = 1/2", Fraction(1, 4), "ecuacion"),
         Problem("__", Fraction(1), "ecuacion"),
+        Problem("y + 5 = 12", Fraction(7), "ecuacion"),  # the unknown is not x or n
     ],
 )
 def test_other_equations_keep_the_generic_hint(problem):

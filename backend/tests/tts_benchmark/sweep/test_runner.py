@@ -34,7 +34,7 @@ class FakeProfiler:
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, str, str, int]] = []
-        self.outcomes: dict[tuple[str, str], object] = {}
+        self.outcomes: dict[tuple[str, str], EngineStats | BaseException] = {}
 
     def __call__(
         self, engine: str, text: str, lang: str = "es", repeats: int = 5

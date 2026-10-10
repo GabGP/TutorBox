@@ -239,6 +239,11 @@ Auto-format all code:
 uv run ruff format . ../tools ../run.py
 ```
 
+Check types with Pyright, the engine behind VS Code's Pylance, so CI reports the same errors the editor underlines. CI runs this command too. The root `pyrightconfig.json` sets the scope (`backend/src`, `backend/tests`, `tools/`, `run.py`), the import roots, the venv (`.cache/venv`) and the mode (`standard`, Python 3.11, no host platform assumed). Pyright needs Node.js: it uses the one on `PATH`, or downloads its own when there is none.
+```bash
+uv run pyright -p ..
+```
+
 ---
 
 ## <a id="6-project-structure"></a>6. Project Structure
@@ -266,7 +271,7 @@ backend/
 │       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank, turn telemetry labels)
 │       └── games/     # Mode 3: game event validation, concept labels, ingestion
 ├── tests/             # Pytest test suite mirroring src/ (core/, modes/, api/) with 100% coverage
-├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
+├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage); type checking is set in the root pyrightconfig.json
 └── README.md          # Backend developer documentation and local setup guide
 ```
 

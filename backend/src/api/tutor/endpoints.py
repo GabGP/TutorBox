@@ -92,7 +92,7 @@ def summary(roster: Roster) -> TutorSummaryResponse:
     online = [row for row in rows if row["online"]]
     return TutorSummaryResponse(
         online=len(online),
-        solved=sum(int(row["solved"]) for row in rows),
+        solved=sum(row["solved"] for row in rows),
         need_help=sum(1 for row in online if row["problem"] and row["hint_level"] == 3),
     )
 

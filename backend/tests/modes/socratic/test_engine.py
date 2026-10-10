@@ -15,6 +15,7 @@ from modes.socratic.engine import EXPLAIN_FOLLOW_UP
 from modes.socratic.hints import hint
 from modes.socratic.problems import find_problem
 from modes.socratic.prompts import explain_prompt, rewrite_prompt
+from tests.conftest import required
 
 
 def _tutor(*responses: str) -> tuple[SocraticTutor, MockLLMClient]:
@@ -32,12 +33,12 @@ def test_a_safe_model_rewording_is_shown():
 
     assert result.reply == "¡Vamos! Queremos juntar 23 y 45. ¿Por dónde empiezas tú?"
     assert result.used_model and not result.containment_triggered
-    assert (result.kind, result.hint_level, result.problem.text) == (
+    assert (result.kind, result.hint_level, required(result.problem).text) == (
         "hint",
         0,
         "23 + 45",
     )
-    assert result.llm_raw.startswith("<think>")
+    assert required(result.llm_raw).startswith("<think>")
     assert "Reescribe este mensaje" in client.call_history[0][1]
 
 
@@ -47,7 +48,7 @@ def test_a_leaking_model_reply_is_replaced_by_the_deterministic_hint():
     result = tutor.respond("login-1", "23 + 45")
 
     assert result.containment_triggered and not result.used_model
-    assert result.reply == hint(find_problem("23 + 45"), 0)
+    assert result.reply == hint(required(find_problem("23 + 45")), 0)
     assert result.llm_raw == "¡Es 68! ¿Ves?"
 
 

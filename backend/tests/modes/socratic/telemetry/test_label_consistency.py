@@ -10,6 +10,7 @@ from modes.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
 from modes.socratic import telemetry
 from modes.socratic.problems import find_problem
 from modes.socratic.telemetry import concept, error_type, strategy
+from tests.conftest import required
 from tests.modes.socratic.telemetry.test_error_type import LABELLED, RULE_ORDER
 
 # Every name the package exports, with the object its own module defines.
@@ -41,4 +42,5 @@ def test_a_misconception_is_listed_under_the_concept_of_its_problem(text, slug):
     assert problem is not None, text
     label = concept.concept_for(problem, None)
 
-    assert slug in CURRICULUM_TAXONOMY[label.topic][label.subconcept]
+    topic, subconcept = required(label.topic), required(label.subconcept)
+    assert slug in CURRICULUM_TAXONOMY[topic][subconcept]

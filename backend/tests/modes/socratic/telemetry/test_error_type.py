@@ -13,6 +13,7 @@ from modes.socratic.telemetry.error_type import (
     UNCLASSIFIED,
     classify_error,
 )
+from tests.conftest import required
 
 # (problem as the child typed it, the wrong answer, the misconception behind it)
 LABELLED = [
@@ -154,4 +155,5 @@ def test_a_turn_from_the_planner_is_labelled_by_its_attempt_and_problem():
     move, _ = plan(conversation, "10")
 
     assert (move.kind, move.is_correct) == ("hint", False)
-    assert classify_error(move.problem, move.attempt) == "forgot_division"
+    error_type = classify_error(required(move.problem), required(move.attempt))
+    assert error_type == "forgot_division"

@@ -52,7 +52,7 @@ class NVMLTracker:
                 pass
 
         try:
-            import torch
+            import torch  # pyright: ignore[reportMissingImports]
 
             if torch.cuda.is_available():
                 free_bytes, total_bytes = torch.cuda.mem_get_info()

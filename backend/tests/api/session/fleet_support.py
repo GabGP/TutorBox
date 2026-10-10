@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from core.db.question_repository import create_question
 from modes.quiz.contracts.models import DistractorDetail, QuizQuestionCreate
-from tests.conftest import PRE_HASHED_PIN_1234, auth_headers
+from tests.conftest import PRE_HASHED_PIN_1234, auth_headers, required
 
 FLEET_SIZE = 15
 TEACHER_USERNAME = "teacher1"
@@ -84,7 +84,8 @@ def seed_students(
             "INSERT INTO users (username, hashed_pin, role) VALUES (?, ?, 'student')",
             (username, PRE_HASHED_PIN_1234),
         )
-        accounts.append(StudentAccount(student_id=cursor.lastrowid, username=username))
+        student_id = required(cursor.lastrowid)
+        accounts.append(StudentAccount(student_id=student_id, username=username))
     conn.commit()
     return accounts
 

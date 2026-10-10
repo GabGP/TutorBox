@@ -80,7 +80,11 @@ def authenticate_device(
 
     with get_db() as conn:
         credentials = _verify_device_secret(conn, limit_key, payload)
-        if credentials.assigned_user_id is None:
+        # The id and the username come from the same joined row: both or neither.
+        if (
+            credentials.assigned_user_id is None
+            or credentials.assigned_username is None
+        ):
             logger.info("Device '%s' has no student assigned.", payload.device_id)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

@@ -6,6 +6,8 @@ block the rest of the phone's queue.
 """
 
 import sqlite3
+from collections.abc import Sequence
+from typing import Literal
 
 from pydantic import ValidationError
 
@@ -13,19 +15,21 @@ from core.db.game_event_repository import GameEventRecord, insert_game_event
 from modes.games.events import GameEvent
 from modes.games.labels import labels_for
 
-__all__ = ["ACCEPTED", "DUPLICATE", "REJECTED", "ingest_events"]
+__all__ = ["ACCEPTED", "DUPLICATE", "REJECTED", "EventStatus", "ingest_events"]
 
-ACCEPTED = "accepted"
-DUPLICATE = "duplicate"
-REJECTED = "rejected"
+EventStatus = Literal["accepted", "duplicate", "rejected"]
+
+ACCEPTED: EventStatus = "accepted"
+DUPLICATE: EventStatus = "duplicate"
+REJECTED: EventStatus = "rejected"
 
 
 def ingest_events(
     conn: sqlite3.Connection,
     install_id: str,
     student_id: int | None,
-    raw_events: list[object],
-) -> list[str]:
+    raw_events: Sequence[object],
+) -> list[EventStatus]:
     """One status per raw event, in the order received. The caller commits."""
     return [
         _ingest_one_event(conn, install_id, student_id, raw_event)
@@ -38,7 +42,7 @@ def _ingest_one_event(
     install_id: str,
     student_id: int | None,
     raw_event: object,
-) -> str:
+) -> EventStatus:
     try:
         event = GameEvent.model_validate(raw_event)
     except ValidationError:

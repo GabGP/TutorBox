@@ -9,7 +9,11 @@ from fractions import Fraction
 
 import sympy as sp
 
-from core.math_engine import is_two_step_linear, parse_equation_components
+from core.math_engine import (
+    exact_fraction,
+    is_two_step_linear,
+    parse_equation_components,
+)
 from modes.socratic.problems import Problem, sympy_equation
 
 __all__ = ["equation_predictions"]
@@ -46,11 +50,7 @@ def _read_equation(
     polynomial = left.as_poly(unknown)
     if polynomial is None or polynomial.degree() != 1:
         return None
-    q, s = polynomial.all_coeffs()
-    if not all(value.is_Rational for value in (q, s, right)):
+    q, s, c = (exact_fraction(value) for value in (*polynomial.all_coeffs(), right))
+    if q is None or s is None or c is None:
         return None
-    return polynomial, _fraction(q), _fraction(s), _fraction(right)
-
-
-def _fraction(value: sp.Expr) -> Fraction:
-    return Fraction(int(value.p), int(value.q))
+    return polynomial, q, s, c

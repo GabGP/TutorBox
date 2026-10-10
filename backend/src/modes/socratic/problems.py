@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from fractions import Fraction
 
-from core.math_engine import evaluate_exact, solve_linear_equation
+from core.math_engine import evaluate_exact, exact_fraction, solve_linear_equation
 from modes.socratic.numbers import extract_numbers
 from modes.socratic.text import fold
 
@@ -114,10 +114,10 @@ def _equation(text: str) -> Problem | None:
     shown = match.group(0).strip()
     if "××" in shown or "." in shown:  # a power, or a decimal the equation
         return None  # parser cuts short (x + 1 = 2.5 would be read as = 2)
-    solution = solve_linear_equation(sympy_equation(shown))
-    if solution is None or not solution.is_Rational:
+    solution = exact_fraction(solve_linear_equation(sympy_equation(shown)))
+    if solution is None:
         return None
-    return Problem(shown, Fraction(int(solution.p), int(solution.q)), "ecuacion")
+    return Problem(shown, solution, "ecuacion")
 
 
 def _operation(text: str) -> Problem | None:

@@ -1,6 +1,7 @@
 """Environment parsing for the Qwen3-TTS runtime options."""
 
 import os
+from typing import TypedDict
 
 from core.config.constants import (
     DEFAULT_TTS_QWEN_BINARY,
@@ -15,7 +16,18 @@ from core.config.parsers import parse_int
 __all__ = ["build_qwen_config"]
 
 
-def build_qwen_config() -> dict[str, object]:
+class QwenConfig(TypedDict):
+    """The Qwen fields of TTSConfig, under the names TTSConfig gives them."""
+
+    qwen_binary: str
+    qwen_gguf_path: str
+    qwen_threads: int
+    qwen_context: int
+    qwen_seed: int
+    qwen_speaker_file: str
+
+
+def build_qwen_config() -> QwenConfig:
     """Reads the Qwen-specific TTS environment variables."""
     env = os.environ.get
     return {

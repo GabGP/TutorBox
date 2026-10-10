@@ -1,7 +1,12 @@
+from fractions import Fraction
+
+import sympy as sp
+
 from core.math_engine.parser import (
     are_values_equivalent,
     evaluate_arithmetic_expression,
     evaluate_percentage_expression,
+    exact_fraction,
     extract_and_solve_problem,
     parse_option_expression,
     solve_linear_equation,
@@ -38,6 +43,18 @@ def test_are_values_equivalent():
     assert are_values_equivalent(4.0, 4) is True
     assert are_values_equivalent("abc", "abc") is True
     assert are_values_equivalent("abc", "def") is False
+
+
+def test_exact_fraction_converts_rational_numbers_exactly():
+    assert exact_fraction(sp.Rational(3, 4)) == Fraction(3, 4)
+    assert exact_fraction(sp.Integer(-5)) == Fraction(-5)
+
+
+def test_exact_fraction_refuses_what_is_not_a_rational_number():
+    assert exact_fraction(sp.Float(0.5)) is None
+    assert exact_fraction(sp.Symbol("x")) is None
+    assert exact_fraction(sp.sqrt(2)) is None
+    assert exact_fraction(None) is None
 
 
 def test_solve_linear_equation_standard_and_parentheses():

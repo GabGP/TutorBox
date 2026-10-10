@@ -4,6 +4,7 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+from typing import TypeVar
 
 # Use minimum work factor for fast test execution (240x speedup)
 os.environ["BCRYPT_ROUNDS"] = "4"
@@ -31,6 +32,14 @@ from src.main import app
 
 # Cache pre-hashed default test PIN ('1234') across fixtures
 PRE_HASHED_PIN_1234 = hash_pin("1234")
+
+ValueType = TypeVar("ValueType")
+
+
+def required(value: ValueType | None) -> ValueType:
+    """Returns a value the test cannot go on without, failing when it is None."""
+    assert value is not None
+    return value
 
 
 @pytest.fixture(scope="session")

@@ -66,7 +66,7 @@ def test_profile_result_is_frozen():
     """Verifies a profile run cannot be modified after it is built."""
     result = _run()
     with pytest.raises(dataclasses.FrozenInstanceError):
-        result.load_ms = 5.0
+        result.load_ms = 5.0  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_engine_stats_provider_defaults_to_cpu():

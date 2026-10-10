@@ -10,7 +10,9 @@ from core.tts.router import get_tts_router
 FAKE_WAV = b"RIFFfake-wav-bytes"
 
 
-def _patch_router(monkeypatch, *, loaded: bool, wav: bytes | None = FAKE_WAV):
+def _patch_router(
+    monkeypatch, *, loaded: bool, wav: bytes | Exception | None = FAKE_WAV
+):
     """Patches the singleton instance (class patches are shadowed once an
     earlier suite pins an instance attribute on the shared router)."""
     router = get_tts_router()

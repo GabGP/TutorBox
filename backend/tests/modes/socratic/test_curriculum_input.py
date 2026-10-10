@@ -5,6 +5,7 @@ import pytest
 from modes.socratic.curriculum import load_curriculum
 from modes.socratic.input_guard import InputProblem, check_input, clean_input
 from modes.socratic.text import Folded
+from tests.conftest import required
 
 
 def test_curriculum_covers_primaria_grades_1_to_5():
@@ -17,7 +18,7 @@ def test_curriculum_covers_primaria_grades_1_to_5():
         4,
         5,
     }
-    assert curriculum.get("fracciones").title == "fracciones"
+    assert required(curriculum.get("fracciones")).title == "fracciones"
     assert curriculum.get("calculo") is None
 
 
@@ -34,7 +35,9 @@ def test_curriculum_covers_primaria_grades_1_to_5():
     ],
 )
 def test_match_finds_the_cnb_topic(message, topic_id):
-    assert load_curriculum().match(Folded.of(message)).id == topic_id
+    topic = required(load_curriculum().match(Folded.of(message)))
+
+    assert topic.id == topic_id
 
 
 @pytest.mark.parametrize(

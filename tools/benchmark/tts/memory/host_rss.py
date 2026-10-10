@@ -11,7 +11,8 @@ from tools.benchmark.tts.shared.units import BYTES_PER_MB
 def _psutil_rss_megabytes(include_children: bool) -> float | None:
     """Returns process RSS in MB via psutil, or None when psutil is unusable."""
     try:
-        import psutil  # pyright: ignore[reportMissingImports]
+        # psutil is optional: it may be missing, or known only through bundled stubs.
+        import psutil  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 
         process = psutil.Process()
         total_rss = process.memory_info().rss

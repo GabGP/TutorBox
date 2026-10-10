@@ -10,7 +10,7 @@ from core.db.device_repository import (
     revoke_device_sessions,
     store_device_secret,
 )
-from tests.conftest import get_user_id
+from tests.conftest import get_user_id, required
 
 FIRST_SECRET_DIGEST = "digest-of-the-first-secret"
 SECOND_SECRET_DIGEST = "digest-of-the-second-secret"
@@ -60,7 +60,7 @@ def test_get_device_credentials_reports_unassigned_device_without_secret(staff_d
     _, conn = staff_db
     insert_device(conn, "CLICKER_01")
 
-    credentials = get_device_credentials(conn, "CLICKER_01")
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
 
     assert credentials == DeviceCredentials(
         device_id="CLICKER_01",
@@ -76,7 +76,7 @@ def test_get_device_credentials_returns_the_stored_secret_hash(staff_db):
     store_device_secret(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
     conn.commit()
 
-    credentials = get_device_credentials(conn, "CLICKER_01")
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
 
     assert credentials.secret_hash == FIRST_SECRET_DIGEST
 
@@ -86,7 +86,7 @@ def test_get_device_credentials_returns_assigned_student_id_and_username(staff_d
     student_id = get_user_id(conn, "student1")
     insert_device(conn, "CLICKER_01", student_id)
 
-    credentials = get_device_credentials(conn, "CLICKER_01")
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
 
     assert credentials.assigned_user_id == student_id
     assert credentials.assigned_username == "student1"
@@ -101,7 +101,7 @@ def test_get_device_credentials_reads_deleted_student_as_unassigned(staff_db):
     )
     conn.commit()
 
-    credentials = get_device_credentials(conn, "CLICKER_01")
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
 
     assert credentials == DeviceCredentials(
         device_id="CLICKER_01",
@@ -134,7 +134,7 @@ def test_store_device_secret_replaces_the_previous_hash(staff_db):
     store_device_secret(conn, "CLICKER_01", SECOND_SECRET_DIGEST)
     conn.commit()
 
-    credentials = get_device_credentials(conn, "CLICKER_01")
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
     assert credentials.secret_hash == SECOND_SECRET_DIGEST
 
 
@@ -161,9 +161,9 @@ def test_store_device_secret_leaves_the_commit_to_the_caller(staff_db):
 
     other_conn = get_db_connection(db_path)
     try:
-        seen_before_commit = get_device_credentials(other_conn, "CLICKER_01")
+        seen_before_commit = required(get_device_credentials(other_conn, "CLICKER_01"))
         conn.commit()
-        seen_after_commit = get_device_credentials(other_conn, "CLICKER_01")
+        seen_after_commit = required(get_device_credentials(other_conn, "CLICKER_01"))
     finally:
         other_conn.close()
 

@@ -9,8 +9,9 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from typing import TypedDict
 
-__all__ = ["StudentActivity", "TutorRoster"]
+__all__ = ["RosterRow", "StudentActivity", "TutorRoster"]
 
 ONLINE_SECONDS = 45.0
 FORGET_SECONDS = 1800.0
@@ -24,6 +25,18 @@ class StudentActivity:
     solved: int = 0
     problem: str | None = None
     hint_level: int = 0
+
+
+class RosterRow(TypedDict):
+    """One student as the teacher's panel lists them."""
+
+    username: str
+    online: bool
+    seconds_ago: int
+    turns: int
+    solved: int
+    problem: str | None
+    hint_level: int
 
 
 class TutorRoster:
@@ -71,7 +84,7 @@ class TutorRoster:
             user_id, username, lambda c: replace(c, problem=None, hint_level=0)
         )
 
-    def snapshot(self) -> list[dict[str, object]]:
+    def snapshot(self) -> list[RosterRow]:
         """Students seen in the last 30 minutes, connected ones first."""
         now = self._clock()
         with self._lock:
@@ -82,7 +95,7 @@ class TutorRoster:
             ]:
                 del self._students[user_id]
             students = list(self._students.values())
-        rows = [
+        rows: list[RosterRow] = [
             {
                 "username": s.username,
                 "online": now - s.last_seen <= self._online,

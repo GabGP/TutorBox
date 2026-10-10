@@ -18,6 +18,7 @@ from modes.socratic.replies import (
     word_problem,
 )
 from modes.socratic.text import Folded
+from tests.conftest import required
 
 
 @pytest.mark.parametrize(
@@ -137,7 +138,7 @@ from modes.socratic.text import Folded
     ],
 )
 def test_operation_ladders(message, level, expected):
-    assert hints.hint(find_problem(message), level) == expected
+    assert hints.hint(required(find_problem(message)), level) == expected
 
 
 @pytest.mark.parametrize(
@@ -173,14 +174,16 @@ def test_operation_ladders(message, level, expected):
     ],
 )
 def test_generic_hints_when_a_specific_one_is_not_safe(message, level, expected):
-    assert hints.hint(find_problem(message), level) == expected
+    assert hints.hint(required(find_problem(message)), level) == expected
 
 
 def test_no_safe_example_falls_back_to_the_generic_hint(monkeypatch):
     own_numbers_only = (lambda c, d: c + d, ((23, 45),))
     monkeypatch.setitem(hints._EXAMPLES, "suma", own_numbers_only)
 
-    assert hints.hint(find_problem("23 + 45"), 3).startswith("Prueba con números")
+    assert hints.hint(required(find_problem("23 + 45")), 3).startswith(
+        "Prueba con números"
+    )
 
 
 def test_social_replies_only_for_short_messages():
@@ -195,21 +198,21 @@ def test_social_replies_only_for_short_messages():
 
 
 def test_praise_states_the_result_once_found():
-    assert praise(find_problem("23 + 45")) == (
+    assert praise(required(find_problem("23 + 45"))) == (
         "¡Muy bien! 23 + 45 = 68. ¿Quieres intentar otro problema?"
     )
-    assert praise(find_problem("0,5 + 0,25")).startswith(
+    assert praise(required(find_problem("0,5 + 0,25"))).startswith(
         "¡Muy bien! 0.5 + 0.25 = 0.75."
     )
-    assert praise(find_problem("17 entre 5")).startswith(
+    assert praise(required(find_problem("17 entre 5"))).startswith(
         "¡Muy bien! 17 ÷ 5 = 3 y sobran 2."
     )
 
 
 def test_prompting_replies():
-    topic = load_curriculum().get("fracciones")
+    topic = required(load_curriculum().get("fracciones"))
 
-    assert back_to(find_problem("7 por 8")) == (
+    assert back_to(required(find_problem("7 por 8"))) == (
         "Sigamos con las matemáticas. ¿Cuánto crees que es 7 × 8?"
     )
     assert "con 5 y 3:" in word_problem([Fraction(5), Fraction(3)])

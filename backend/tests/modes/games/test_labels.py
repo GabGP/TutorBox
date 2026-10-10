@@ -10,6 +10,7 @@ from modes.games.labels import GameLabels, labels_for, load_lesson_topics
 from modes.quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
 from modes.socratic.curriculum import load_curriculum
 from modes.socratic.telemetry.concept import Concept, concept_for
+from tests.conftest import required
 
 GRADE_NUMBERS = {"primero": 1, "segundo": 2, "tercero": 3}
 EXPECTED_LESSON_COUNTS = {"primero": 21, "segundo": 26, "tercero": 30}
@@ -135,10 +136,11 @@ def test_at_least_one_lesson_is_labelled_with_a_taxonomy_topic():
 @pytest.mark.parametrize(("grade", "lesson_id"), TAXONOMY_LESSON_KEYS)
 def test_a_lessons_taxonomy_labels_are_in_the_quiz_taxonomy(grade, lesson_id):
     labels = labels_for(grade, lesson_id)
+    concept_topic = required(labels.concept_topic)
 
-    assert is_valid_topic(labels.concept_topic)
+    assert is_valid_topic(concept_topic)
     if labels.concept_subconcept is not None:
-        assert is_valid_subconcept(labels.concept_topic, labels.concept_subconcept)
+        assert is_valid_subconcept(concept_topic, labels.concept_subconcept)
 
 
 @pytest.mark.parametrize("cnb_topic", sorted(LABELS_BY_CNB_TOPIC))
