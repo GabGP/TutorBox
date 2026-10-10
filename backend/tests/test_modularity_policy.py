@@ -10,6 +10,7 @@ DOWNLOADER_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "voice_mode
 DAEMON_BUILD_PACKAGE_DIRECTORY = (
     REPOSITORY_ROOT_DIRECTORY / "tools" / "llama_tts_daemon"
 )
+BENCHMARK_PACKAGE_DIRECTORY = REPOSITORY_ROOT_DIRECTORY / "tools" / "benchmark"
 
 MAX_PRODUCTION_MODULE_LINES_OF_CODE = 150
 MAX_TEST_FILE_LINES_OF_CODE = 300
@@ -125,4 +126,28 @@ def test_daemon_build_modules_within_loc_ceiling():
         f"Found {len(oversized_daemon_build_modules)} daemon build module(s) exceeding "
         f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
         + "\n".join(oversized_daemon_build_modules)
+    )
+
+
+def test_benchmark_modules_within_loc_ceiling():
+    """Enforces that every module in tools/benchmark/ is <= MAX_PRODUCTION_MODULE_LINES_OF_CODE."""
+    benchmark_source_file_paths = sorted(BENCHMARK_PACKAGE_DIRECTORY.rglob("*.py"))
+    assert benchmark_source_file_paths, (
+        f"Expected modules under {BENCHMARK_PACKAGE_DIRECTORY} to exist"
+    )
+    oversized_benchmark_modules: list[str] = []
+    for benchmark_source_file_path in benchmark_source_file_paths:
+        total_line_count = len(
+            benchmark_source_file_path.read_text(encoding="utf-8").splitlines()
+        )
+        if total_line_count > MAX_PRODUCTION_MODULE_LINES_OF_CODE:
+            oversized_benchmark_modules.append(
+                f"{benchmark_source_file_path.relative_to(REPOSITORY_ROOT_DIRECTORY)}: "
+                f"{total_line_count} lines (ceiling: {MAX_PRODUCTION_MODULE_LINES_OF_CODE})"
+            )
+
+    assert not oversized_benchmark_modules, (
+        f"Found {len(oversized_benchmark_modules)} benchmark module(s) exceeding "
+        f"{MAX_PRODUCTION_MODULE_LINES_OF_CODE} LoC:\n"
+        + "\n".join(oversized_benchmark_modules)
     )

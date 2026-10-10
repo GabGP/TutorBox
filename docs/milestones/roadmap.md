@@ -152,7 +152,7 @@ gantt
   * Text adaptation layer converting oral fractions, exponents, and negative numbers for primary-school clarity.
   * Mayan language routing seam for K'iche' (`quc_Latn`) with strict failure isolation.
   * Comprehensive benchmark profiler (`ab.py`) asserting synthesis $\le 3$s SLA (Qwen warm p50 2.290s, Sherpa 0.388s, Piper 0.405s).
-  * Dual memory tracking (`memory.py`) with Host RAM child process recursion, NVML GPU VRAM, and Jetson Orin Nano UMA lifecycle decoupling.
+  * Dual memory tracking (`tools/benchmark/tts/memory/`) with Host RAM child process recursion, NVML GPU VRAM, and Jetson Orin Nano UMA lifecycle decoupling.
 * **Student B (Copilot)**:
   * Classroom HDMI display interface (presenting question, timer, and aggregate voting charts) decoupled from teacher admin portal.
   * Physical audio output verification and integration of TTS triggers into the match flow.

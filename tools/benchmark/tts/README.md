@@ -23,6 +23,21 @@ python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,kokoro,melo --
 
 The integrated `qwen3-tts` backend is the benchmark entry point. `harness_melo.py` remains as a standalone reference for the rejected MeloTTS spike. There is no separate Qwen harness.
 
+### Code layout
+
+`metrics.py`, `ab.py` and `harness_melo.py` are only entry points. The code lives in the subpackages next to them:
+
+| Package | Modules | Responsibility |
+| :--- | :--- | :--- |
+| `shared/` | `paths.py`, `units.py`, `sample_text.py` | Benchmark locations, unit conversions and the default sentence |
+| `audio/` | `wav_analysis.py`, `wav_encoding.py` | Duration, sample rate and peak of a WAV; float samples to 16-bit PCM |
+| `memory/` | `jetson.py`, `host_rss.py`, `windows_rss.py`, `nvml.py`, `monitor.py` | Peak host RAM and GPU VRAM during a run, and Jetson UMA detection |
+| `profiling/` | `results.py`, `rounding.py`, `backend_bridge.py`, `synthesis.py`, `single_run.py`, `load_timing.py`, `engine_run.py`, `cli.py` | Single-run and cold/warm engine profiling; `backend_bridge.py` is the only module that imports the backend |
+| `sweep/` | `engine_names.py`, `corpus.py`, `runner.py`, `report.py`, `cli.py` | The A/B sweep: engine list, corpus, one row per engine and text, `summary.csv` |
+| `melo/` | `phonetics.py`, `support_files.py`, `tokenizer.py`, `harness.py`, `profiler.py`, `cli.py` | The MeloTTS reference harness |
+
+For use from Python, `tools.benchmark.tts` exports `profile_speech_synthesis`, `profile_engine`, `ProfileResult` and `EngineStats`. The tests are in `backend/tests/tts_benchmark/`.
+
 ---
 
 ## 2. Benchmark Artifacts & Output Structure

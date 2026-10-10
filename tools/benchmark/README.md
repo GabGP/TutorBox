@@ -11,8 +11,15 @@ tools/benchmark/
   README.md                  # Comparative eval guide, hardware constraints & jury scorecard
   tts/
     README.md                # Quick start, SLA gates, and CLI usage
-    ab.py                    # Multi-engine sweep runner -> CSV + blind WAVs
-    metrics.py               # Profiler & acoustic metric analyzer
+    ab.py                    # Entry point: multi-engine sweep -> CSV + blind WAVs
+    metrics.py               # Entry point: single-run profiler
+    harness_melo.py          # Entry point: standalone MeloTTS reference harness
+    shared/                  # Paths, unit conversions, default sample sentence
+    audio/                   # WAV analysis (duration, rate, peak) and PCM encoding
+    memory/                  # Host RAM, NVML VRAM and Jetson UMA monitor
+    profiling/               # Result records, cold/warm engine runs, backend bridge
+    sweep/                   # Engine names, corpus, sweep runner, CSV report
+    melo/                    # MeloTTS phonetics, tokenizer, ONNX harness, profiler
     corpus/
       es_math.txt            # Fixed Spanish pedagogical intervention corpus
     engines/
