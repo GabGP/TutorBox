@@ -4,10 +4,16 @@ on:
   push:
     paths:
       - "backend/**"
+      - "tools/**"
+      - "run.py"
+      - "ruff.toml"
       - ".github/workflows/ci-backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "tools/**"
+      - "run.py"
+      - "ruff.toml"
       - ".github/workflows/ci-backend.yml"
 
 jobs:
@@ -38,8 +44,8 @@ jobs:
 
       - name: Lint and format check
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
+          uv run ruff check . ../tools ../run.py
+          uv run ruff format --check . ../tools ../run.py
 
       - name: Test with coverage gate
         run: uv run pytest

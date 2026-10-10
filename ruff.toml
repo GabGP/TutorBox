@@ -1,0 +1,5 @@
+# Lints the Python that lives outside backend/ (tools/, run.py) with the backend's
+# rules. Files under backend/ keep using backend/pyproject.toml, the closer config.
+extend = "backend/pyproject.toml"
+cache-dir = ".cache/ruff"
+src = ["."]

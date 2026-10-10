@@ -228,15 +228,15 @@ uv run pytest tests/core/tts/test_tts_benchmark.py -v
 ```
 
 ### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:
-Run Ruff linter and formatter checks:
+Run Ruff linter and formatter checks. These are the commands CI runs: they cover `backend/` and the repo-root Python (`tools/`, `run.py`), which takes the same rules from the root `ruff.toml`:
 ```bash
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check . ../tools ../run.py
+uv run ruff format --check . ../tools ../run.py
 ```
 
 Auto-format all code:
 ```bash
-uv run ruff format .
+uv run ruff format . ../tools ../run.py
 ```
 
 ---
