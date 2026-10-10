@@ -7,6 +7,14 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-json
+      # A script whose first line is "#!/usr/bin/env python3" (a "shebang") is meant
+      # to be launched directly, so git must store it as executable (mode 100755).
+      # CI enforces this on Linux through ruff's EXE001, which ruff skips on Windows;
+      # this hook reads the mode from the git index, so it works on every platform.
+      # The id is fixed by the upstream hook repo; only the display name is ours.
+      - id: check-shebang-scripts-are-executable
+        name: runnable scripts are marked executable in git
+        files: ^(backend/|tools/|run\.py$)
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.5
