@@ -81,10 +81,10 @@ describe('PresenceRow', () => {
 
     expect(screen.getByRole('img', { name: 'No ha entrado' })).toBeInTheDocument();
     expect(screen.queryByText('Teléfono')).not.toBeInTheDocument();
-    expect(screen.queryByText('Sin conectar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Desconectado')).not.toBeInTheDocument();
   });
 
-  it('marks an assigned clicker that was never seen as Sin conectar', () => {
+  it('marks an assigned clicker that was never seen as Desconectado, without dimming it', () => {
     renderStudent({
       clicker: {
         device_id: 'ESP32-B7C001',
@@ -97,7 +97,8 @@ describe('PresenceRow', () => {
     });
 
     expect(screen.getByText('ESP32-B7C001')).toBeInTheDocument();
-    expect(screen.getByText('Sin conectar')).toBeInTheDocument();
+    expect(screen.getByText('Desconectado')).toBeInTheDocument();
+    expect(markOf('ESP32-B7C001').className).not.toContain('markDimmed');
     expect(screen.queryByRole('img', { name: /Señal/ })).not.toBeInTheDocument();
   });
 

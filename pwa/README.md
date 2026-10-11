@@ -127,7 +127,7 @@ Inside `pwa/app/`:
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (74 suites, 473 tests)
+pnpm test       # Execute Vitest test suite (74 suites, 472 tests)
 pnpm build      # Build production bundle to dist/
 ```
 
@@ -155,7 +155,7 @@ The **Clickers** button in the `/maestro/` header (before the settings button) o
 
 ### Class list (teacher lobby)
 
-Before the quiz starts, the teacher's lobby on `/maestro/` shows the class from `src/features/presence/`. Each student is **Conectado** (connected by phone or clicker), **Se cayó hace 12 s** (dropped; when both the phone and the clicker dropped, the more recent drop is shown) or **No ha entrado**. A row also shows the phone mark, and the assigned clicker with its id, its signal bars and a low-battery warning under 20 %. A phone or clicker that dropped is marked **Desconectado**, with no time: how long ago is said once, in the student's status. The clickers no student holds are listed below with **Asignar clickers**, which opens the clicker sheet; **Administrar usuarios** opens the settings on the Usuarios row. The list refreshes every 2 seconds and keeps the last list on screen when a refresh fails. Every status comes from the server, and the screen does not recompute thresholds.
+Before the quiz starts, the teacher's lobby on `/maestro/` shows the class from `src/features/presence/`. Each student is **Conectado** (connected by phone or clicker), **Se cayó hace 12 s** (dropped; when both the phone and the clicker dropped, the more recent drop is shown) or **No ha entrado**. A row also shows the phone mark, and the assigned clicker with its id, its signal bars and a low-battery warning under 20 %. A phone that dropped, or a clicker that dropped or never joined, is marked **Desconectado**, with no time: how long ago is said once, in the student's status. The clickers no student holds are listed below with **Asignar clickers**, which opens the clicker sheet; **Administrar usuarios** opens the settings on the Usuarios row. The list refreshes every 2 seconds and keeps the last list on screen when a refresh fails. Every status comes from the server, and the screen does not recompute thresholds.
 
 A student's phone sends the heartbeat only while it waits in a quiz class: once when it starts, every 5 seconds, and again when the page becomes visible. Tutor mode keeps its own ping; take-home mode and a PIN change that is still pending send nothing.
 

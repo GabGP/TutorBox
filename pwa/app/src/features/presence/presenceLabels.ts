@@ -3,6 +3,9 @@ import type { PresenceChannel, SignalStrength, StudentPresence } from './presenc
 /** A clicker below this battery level shows the low-battery warning. */
 export const LOW_BATTERY_PERCENT = 20;
 
+/** What a phone or clicker mark says when it is not connected, whether it dropped or never joined. */
+export const DISCONNECTED_LABEL = 'Desconectado';
+
 const SIGNAL_LABELS: Record<SignalStrength, string> = {
   good: 'Señal buena',
   fair: 'Señal regular',

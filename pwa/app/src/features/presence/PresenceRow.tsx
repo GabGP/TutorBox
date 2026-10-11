@@ -3,7 +3,7 @@ import { BatteryLow, Gamepad2, Smartphone } from 'lucide-react';
 import styles from './presence.module.css';
 import type { ClickerPresence, PresenceChannel, PresenceStatus, StudentPresence } from './presence.types';
 import { SignalBars } from './SignalBars';
-import { lowBatteryLabel, studentStatusLabel } from './presenceLabels';
+import { DISCONNECTED_LABEL, lowBatteryLabel, studentStatusLabel } from './presenceLabels';
 
 const DOT_CLASS_BY_STATUS: Record<PresenceStatus, string> = {
   online: styles.dotOnline,
@@ -12,8 +12,9 @@ const DOT_CLASS_BY_STATUS: Record<PresenceStatus, string> = {
 };
 
 /**
- * A dropped channel is dimmed and says Desconectado, so the mark never relies on
- * colour. How long ago is said once, in the row's status, so one number ticks per row.
+ * A dropped channel is dimmed. Every mark that is not connected says Desconectado, so the
+ * status never relies on colour alone; a clicker that never joined says it without the dimming.
+ * How long ago is said once, in the row's status, so one number ticks per row.
  */
 function markClass(channel: PresenceChannel): string {
   return channel.status === 'dropped' ? `${styles.mark} ${styles.markDimmed}` : styles.mark;
@@ -23,7 +24,7 @@ const PhoneMark: React.FC<{ phone: PresenceChannel }> = ({ phone }) => (
   <span className={markClass(phone)}>
     <Smartphone size={16} aria-hidden />
     <span>Teléfono</span>
-    {phone.status === 'dropped' && <span className={styles.droppedNote}>Desconectado</span>}
+    {phone.status === 'dropped' && <span className={styles.droppedNote}>{DISCONNECTED_LABEL}</span>}
   </span>
 );
 
@@ -33,9 +34,9 @@ const ClickerMark: React.FC<{ clicker: ClickerPresence }> = ({ clicker }) => {
     <span className={markClass(clicker)}>
       <Gamepad2 size={16} aria-hidden />
       <span className={styles.clickerId}>{clicker.device_id}</span>
-      {clicker.status === 'absent' && <span className={styles.absentNote}>Sin conectar</span>}
+      {clicker.status === 'absent' && <span className={styles.absentNote}>{DISCONNECTED_LABEL}</span>}
       {clicker.status === 'online' && clicker.signal !== null && <SignalBars signal={clicker.signal} />}
-      {clicker.status === 'dropped' && <span className={styles.droppedNote}>Desconectado</span>}
+      {clicker.status === 'dropped' && <span className={styles.droppedNote}>{DISCONNECTED_LABEL}</span>}
       {batteryWarning !== null && (
         <span className={styles.batteryWarning}>
           <BatteryLow size={14} aria-hidden />
