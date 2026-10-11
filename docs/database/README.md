@@ -38,6 +38,8 @@ PRAGMA busy_timeout = 5000;
 * **`journal_mode = WAL`**: Write-Ahead Logging allows simultaneous non-blocking concurrent readers while a write transaction is committed.
 * **`busy_timeout = 5000`**: Sets a 5-second lock acquisition timeout to prevent immediate busy errors under concurrent student load.
 
+Request code opens its connection with the `get_db()` context manager in the same module. On exit it rolls back whatever was not committed and then closes the connection. The rollback is what releases the write lock after a refused write (for example a duplicate username answered with `409`): closing alone leaves the transaction open while the endpoint's cursor is still referenced from the raised error, and other writers would wait the full `busy_timeout` and fail.
+
 ---
 
 ## <a id="2-entity-relationship-er-diagram"></a>2. Entity-Relationship (ER) Diagram
