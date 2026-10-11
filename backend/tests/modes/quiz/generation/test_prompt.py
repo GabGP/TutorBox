@@ -10,7 +10,7 @@ from modes.quiz.generation.prompt import (
 
 def test_build_quiz_system_prompt_default():
     prompt = build_quiz_system_prompt()
-    assert "TutorBox" in prompt
+    assert "Utz'tutor" in prompt
     assert "strict JSON format" in prompt
     assert "MANDATORY REVERSE-ENGINEERING PROTOCOL" in prompt
     assert "Step 1 (Target Truth)" in prompt

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Eye, Pencil, Trash2 } from 'lucide-react';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
@@ -14,9 +14,12 @@ export interface BankQuestionRowProps {
   question: BankQuestion;
   selectable: boolean;
   selected: boolean;
+  /** Select mode only: the inline option editor is open below the row. */
+  expanded?: boolean;
+  /** Select mode only: rendered under the row while expanded. */
+  expandedContent?: React.ReactNode;
   confirmArmed: boolean;
   swipeOpen: boolean;
-  onToggleSelect: (id: string) => void;
   onFaceTap: (question: BankQuestion) => void;
   onOpenDetail: (question: BankQuestion) => void;
   onEdit: (question: BankQuestion) => void;
@@ -27,18 +30,20 @@ export interface BankQuestionRowProps {
 }
 
 /**
- * One bank row: select checkbox plus either the swipe strip
- * (Info/Edit/Delete) or, once delete is armed, a full-row
- * press-and-hold confirm with an explicit Cancelar affordance.
+ * One bank row: either the swipe strip (Info/Edit/Delete) or, once
+ * delete is armed, a full-row press-and-hold confirm with an explicit
+ * Cancelar affordance. In select mode the face toggles an inline panel
+ * (expandedContent) and a tag marks questions chosen for the match.
  * Escape disarms; opening another row disarms via onOpenChange.
  */
 export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   question,
   selectable,
   selected,
+  expanded = false,
+  expandedContent,
   confirmArmed,
   swipeOpen,
-  onToggleSelect,
   onFaceTap,
   onOpenDetail,
   onEdit,
@@ -59,17 +64,12 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   return (
     <div
       role="listitem"
-      className={selectable ? viewStyles.selectRow : undefined}
+      className={
+        selectable
+          ? `${viewStyles.selectRow} ${selected ? viewStyles.selectRowOn : ''} ${expanded ? viewStyles.selectRowOpen : ''}`
+          : undefined
+      }
     >
-      {selectable && (
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={() => onToggleSelect(question.id)}
-          aria-label={`Elegir pregunta ${question.id}`}
-          className={viewStyles.selectCheck}
-        />
-      )}
       <div className={utils.grow}>
         {confirmArmed ? (
           <div className={styles.confirmRow}>
@@ -129,14 +129,28 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
               type="button"
               className={`${listStyles.studentName} ${viewStyles.faceButton}`}
               onClick={() => onFaceTap(question)}
+              aria-expanded={selectable ? expanded : undefined}
             >
               {question.question_text}
             </button>
+            {selectable && selected && (
+              <span className={`${listStyles.roleTag} ${viewStyles.chosenTag}`}>
+                <Check size={14} aria-hidden /> En el juego
+              </span>
+            )}
             <span className={`${listStyles.roleTag} ${viewStyles.topicTag}`}>
               {getTopicLabel(question.topic)}
             </span>
+            {selectable && (
+              <ChevronDown
+                size={18}
+                aria-hidden
+                className={`${viewStyles.chev} ${expanded ? viewStyles.chevOpen : ''}`}
+              />
+            )}
           </SwipeRow>
         )}
+        {selectable && expanded && !confirmArmed && expandedContent}
       </div>
     </div>
   );

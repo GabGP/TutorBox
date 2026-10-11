@@ -22,6 +22,7 @@ from modes.socratic.curriculum import load_curriculum
 from modes.socratic.planner import MAX_LEVEL, plan
 from modes.socratic.problems import find_problem
 from modes.socratic.state import Conversation
+from tests.conftest import required
 
 BANK = load_bank()
 OPERATIONS = {
@@ -57,7 +58,7 @@ def test_an_unknown_field_is_rejected(tmp_path: Path):
 @pytest.mark.parametrize("item", BANK, ids=_ids)
 def test_labels_name_a_quiz_concept_and_a_cnb_grade(item):
     assert item.subconcept in CURRICULUM_TAXONOMY[item.topic]
-    assert item.grade in load_curriculum().get(item.cnb).grades
+    assert item.grade in required(load_curriculum().get(item.cnb)).grades
     assert item.answer >= 0 and item.answer.denominator == 1
 
 
@@ -74,7 +75,7 @@ def test_sympy_proves_the_answer_and_the_structure(item):
 
 @pytest.mark.parametrize("item", BANK, ids=_ids)
 def test_the_tutor_reads_the_childs_text_to_the_same_answer(item):
-    problem = find_problem(item.text)
+    problem = required(find_problem(item.text))
 
     assert problem.target == item.answer
     assert problem.operation in OPERATIONS[item.subconcept]
@@ -82,7 +83,7 @@ def test_the_tutor_reads_the_childs_text_to_the_same_answer(item):
 
 @pytest.mark.parametrize("item", BANK, ids=_ids)
 def test_four_distinct_hints_that_ask_and_never_leak(item):
-    problem = find_problem(item.text)
+    problem = required(find_problem(item.text))
     ladder = [hints.hint(problem, level) for level in range(MAX_LEVEL + 1)]
 
     assert len(set(ladder)) == 4

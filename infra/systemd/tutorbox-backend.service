@@ -1,4 +1,4 @@
-# TutorBox backend — FastAPI API + Pilas classroom pages + captive-portal answers.
+# Utz'tutor backend — FastAPI API + Pilas classroom pages + captive-portal answers.
 #
 # Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/tutorbox.conf)
 # publishes it on port 80. The three lines marked ADJUST assume this dev-kit layout
@@ -15,7 +15,7 @@
 # in-memory rate limiters and session state must not be duplicated across processes.
 
 [Unit]
-Description=TutorBox backend (FastAPI + Pilas pages) on :8000
+Description=Utz'tutor backend (FastAPI + Pilas pages) on :8000
 After=network-online.target
 Wants=network-online.target
 

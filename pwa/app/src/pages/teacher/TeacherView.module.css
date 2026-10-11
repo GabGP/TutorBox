@@ -78,7 +78,7 @@
   left: 4px;
   border-radius: 28px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(6, 45, 63, 0.25);
+  box-shadow: 0 2px 8px rgba(22, 48, 40, 0.25);
   transition: transform 0.28s cubic-bezier(0.3, 1.4, 0.4, 1), width 0.2s ease;
   pointer-events: none;
 }
@@ -158,13 +158,13 @@
   color: #fff;
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 20px -10px rgba(11, 110, 153, 0.7);
+  box-shadow: 0 8px 20px -10px rgba(31, 62, 51, 0.7);
   transition: transform 0.16s ease, filter 0.16s ease;
 }
 
 .primaryBtn:active:not(:disabled) { transform: scale(0.975); }
 .primaryBtn:hover:not(:disabled) { filter: brightness(0.92); }
-.primaryBtn:disabled { background: var(--p-soft); box-shadow: none; }
+.primaryBtn:disabled { background: var(--p-soft); color: var(--p); box-shadow: none; }
 .primaryBtn.ok { background: var(--D); }
 
 .secondaryBtn {

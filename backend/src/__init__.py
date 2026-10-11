@@ -1,4 +1,4 @@
-"""TutorBox Backend root source package."""
+"""Utz'tutor Backend root source package."""
 
 from . import api, core, modes
 

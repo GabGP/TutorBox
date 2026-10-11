@@ -15,7 +15,7 @@ export interface HealthResponse {
  */
 export const ServerBadge: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'ok' | 'err'>('loading');
-  const [label, setLabel] = useState('Buscando TutorBox…');
+  const [label, setLabel] = useState("Buscando Utz'tutor…");
 
   useEffect(() => {
     let mounted = true;
@@ -27,16 +27,16 @@ export const ServerBadge: React.FC = () => {
         if (!mounted) return;
         if (h.status === 'ok') {
           setStatus('ok');
-          setLabel('TutorBox listo');
+          setLabel("Utz'tutor listo");
         } else {
           setStatus('err');
-          setLabel(`TutorBox con problemas: ${h.database || 'desconocido'}`);
+          setLabel(`Utz'tutor con problemas: ${h.database || 'desconocido'}`);
         }
       })
       .catch(() => {
         if (!mounted) return;
         setStatus('err');
-        setLabel('Sin conexión con TutorBox');
+        setLabel("Sin conexión con Utz'tutor");
       });
 
     return () => {

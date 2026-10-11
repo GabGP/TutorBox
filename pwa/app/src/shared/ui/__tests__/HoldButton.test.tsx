@@ -44,7 +44,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('HoldButton (TutorBox merge of ReactBits hold interaction)', () => {
+describe("HoldButton (Utz'tutor merge of ReactBits hold interaction)", () => {
   it('renders idle label with screen-reader hold hint', () => {
     render(<HoldButton holdTime={2000}>Eliminar ronda</HoldButton>);
     // Dual label layers (base ink + clipped fill ink) intentionally duplicate text.
@@ -54,7 +54,7 @@ describe('HoldButton (TutorBox merge of ReactBits hold interaction)', () => {
     ).toBeInTheDocument();
   });
 
-  it('defaults to TutorBox tokens and exposes progress attributes', () => {
+  it("defaults to Utz'tutor tokens and exposes progress attributes", () => {
     const { container } = render(
       <HoldButton size="lg" radius={14} fillDirection="up" />
     );

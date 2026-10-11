@@ -46,14 +46,6 @@ class DeviceItem(BaseModel):
     assigned_user_id: int | None = None
     assigned_username: str | None = None
     created_at: str
-    # Fleet health, filled once the clicker checks in (api/clicker): enrolled means
-    # it holds a secret; online means it checked in within the last 45 seconds.
-    enrolled: bool = False
-    online: bool = False
-    last_seen_at: str | None = None
-    rssi: int | None = None
-    battery_mv: int | None = None
-    firmware: str | None = None
 
 
 class DeviceListResponse(BaseModel):
@@ -76,6 +68,12 @@ class AssignDeviceResponse(BaseModel):
     device_id: str
     assigned_user_id: int
     assigned_username: str
+
+
+class DeviceSecretResponse(BaseModel):
+    device_id: str
+    # Returned once, at issuance; the server keeps only its digest.
+    secret: str
 
 
 class AuditLogsResponse(BaseModel):

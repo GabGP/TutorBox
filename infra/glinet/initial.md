@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Infra](../README.md) › **GL.iNet Initial Setup** • **Related:** [Captive Portal](../captive-portal.md) • [Hardware Topology](../../docs/architecture/hardware-topology.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md)
@@ -40,7 +40,7 @@ someone plugs in a live uplink cable.
 The GL-AR300M16 runs GL.iNet firmware on top of **OpenWrt**, so everything is configurable through
 either the web UI (LuCI / GL.iNet Admin Panel) or `uci` over SSH. Relevant characteristics:
 
-| Property | Value | Consequence for TutorBox |
+| Property | Value | Consequence for Utz'tutor |
 | :--- | :--- | :--- |
 | Radio | 2.4 GHz 802.11n only | Matches the ESP32 clickers, which are 2.4 GHz only. No 5 GHz decision to make. |
 | Ethernet | 2 × 10/100 (WAN + LAN) | The Jetson takes the **LAN** port. The WAN port is decommissioned in §6. |
@@ -358,7 +358,7 @@ can be rebuilt from scratch without repeating the discovery work.
 ## <a id="9-known-limitations--field-notes"></a>9. Known Limitations & Field Notes
 
 - **Clock drift is now a real problem.** With no WAN there is no NTP, and neither the router nor a
-  stock Jetson Orin Nano dev kit keeps time across a power cut without an RTC battery. TutorBox
+  stock Jetson Orin Nano dev kit keeps time across a power cut without an RTC battery. Utz'tutor
   writes `created_at` timestamps into `sessions`, `audit_logs` and `quiz_generation_logs`; a Jetson
   that boots at epoch zero makes the teacher's weekly report incoherent and session expiry
   meaningless. **Mitigation**: fit an RTC module to the Jetson, or set the clock from the teacher's

@@ -1,10 +1,10 @@
-# TutorBox Frontend (PWA)
+# Utz'tutor Frontend (PWA)
 
 Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance (both the vanilla HTML/JS reference client in `pilas/` and the modular React 19 + TypeScript PWA in `app/`).
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 **PWA** | 🔌 [Infra](../infra/README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 **PWA** | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Frontend (PWA) Hub** • **Related:** [Docs Hub](../docs/README.md) • [REST API Hub](../docs/api/README.md) • [Three Modes](../docs/architecture/three-modes.md)
@@ -56,8 +56,9 @@ served from the question bank.
 
 Client-side only (per browser `localStorage`): the bearer token, the teacher's current session id and
 per-round reveal history (for the summary page), and each student's own votes/score. The ESP32
-clicker transport (Week 7) is not part of Pilas; the vote endpoint already accepts
-`transport_type: "hardware"`.
+clicker transport (Week 7) is not part of Pilas. A clicker votes on the same vote endpoint, and
+the server labels its vote `hardware` from the clicker's session; a `transport_type` sent in the
+body is ignored.
 
 ---
 
@@ -134,6 +135,24 @@ pnpm build      # Build production bundle to dist/
 
 `src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
 `/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
+
+---
+
+### <a id="tutor-on-the-home-screen"></a>Tutor on the home screen
+
+The tutor on `/alumno/` has no service worker and no install wrapper: browsers allow both only on
+HTTPS pages, and the appliance serves plain HTTP (see [§3](#3-tareas--take-home-math-apps-tareas)).
+A phone can still keep the tutor as a home-screen icon. Observed on one iPhone on 2026-10-08
+(Safari → Share → *Add to Home Screen*), with the backend in `tutor` mode on the local network:
+
+| Situation | Observed |
+| :--- | :--- |
+| Open from the icon | iOS asks to confirm opening the page because it is not HTTPS; after that the tutor opens and works. |
+| Open again later | Still logged in: the token is in `localStorage`. |
+| App closed completely (swiped away), or a long time in the background | The visible conversation is gone: it is kept in `sessionStorage`, which ends with the app. |
+| No connection to the appliance | Nothing is shown: the page itself has to load from the appliance. Showing it offline needs a service worker, and therefore HTTPS. |
+
+No Android phone was tested.
 
 ---
 

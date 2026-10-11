@@ -1,4 +1,4 @@
-"""Sherpa-ONNX speech synthesis backend for TutorBox."""
+"""Sherpa-ONNX speech synthesis backend for Utz'tutor."""
 
 import gc
 import logging

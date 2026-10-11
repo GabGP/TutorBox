@@ -2,9 +2,11 @@
 
 import pytest
 
-from modes.socratic import replies
+from modes.socratic import hints, replies
+from modes.socratic.containment import leaks
 from modes.socratic.planner import MAX_LEVEL, plan
 from modes.socratic.state import Conversation
+from tests.conftest import required
 
 
 def _working_on(message: str) -> Conversation:
@@ -15,7 +17,7 @@ def test_a_new_problem_starts_the_ladder_at_level_0():
     move, conversation = plan(Conversation(), "¿cuánto es 23 + 45?")
 
     assert (move.kind, move.llm, move.level) == ("hint", "rewrite", 0)
-    assert conversation.problem.text == "23 + 45"
+    assert required(conversation.problem).text == "23 + 45"
     assert conversation.level == 0
 
 
@@ -45,7 +47,8 @@ def test_asking_for_help_climbs_the_ladder():
 
 def test_a_problem_and_its_answer_in_words_are_read_as_numbers():
     move, conversation = plan(Conversation(), "suma doscientos más cien")
-    assert (move.kind, move.problem.text, move.problem.target) == (
+    problem = required(move.problem)
+    assert (move.kind, problem.text, problem.target) == (
         "hint",
         "200 + 100",
         300,
@@ -68,7 +71,7 @@ def test_off_topic_during_a_problem_brings_the_child_back():
 
     move, after = plan(conversation, "tengo 8 años y me gusta jugar fútbol")
 
-    assert move.text == replies.back_to(conversation.problem)
+    assert move.text == replies.back_to(required(conversation.problem))
     assert after == conversation
 
 
@@ -141,5 +144,38 @@ def test_a_new_question_after_an_explanation_is_not_an_idea():
 def test_concept_questions(message, kind, llm, topic_id):
     move, _ = plan(Conversation(), message)
 
-    assert (move.kind, move.llm, move.topic.id) == (kind, llm, topic_id)
+    assert (move.kind, move.llm, required(move.topic).id) == (kind, llm, topic_id)
     assert move.question == (message if kind == "explain" else "")
+
+
+def test_the_value_the_child_typed_is_kept_on_judged_moves():
+    conversation = _working_on("23 + 45")
+
+    wrong, conversation = plan(conversation, "70")
+    right, _ = plan(conversation, "68")
+    started, _ = plan(Conversation(), "¿cuánto es 23 + 45?")
+
+    assert (wrong.attempt, right.attempt, started.attempt) == (70, 68, None)
+
+
+def test_a_negative_answer_gets_the_negative_reply():
+    move, conversation = plan(Conversation(), "-x + 3 = 5")
+
+    assert (move.kind, move.llm) == ("negative", "none")
+    assert conversation == Conversation()
+
+
+def test_a_leading_minus_equation_climbs_to_level_3_without_the_answer():
+    conversation = _working_on("-3 + x = 5")
+    problem = required(conversation.problem)
+
+    for level in range(MAX_LEVEL + 1):
+        assert not leaks(hints.hint(problem, level), problem)
+
+    for expected in (1, 2, MAX_LEVEL):
+        move, conversation = plan(conversation, "2")
+        assert (move.kind, move.level, move.is_correct) == ("hint", expected, False)
+        assert not leaks(move.text, problem)
+
+    move, _ = plan(conversation, "8")
+    assert move.kind == "praise"

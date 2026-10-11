@@ -8,7 +8,7 @@ parallel equation with other numbers. Anything else keeps the generic hint.
 
 from fractions import Fraction
 
-from core.math_engine import parse_equation_components
+from core.math_engine import exact_fraction, parse_equation_components
 from modes.socratic.containment import leaks
 from modes.socratic.numbers import extract_numbers
 from modes.socratic.problems import UNKNOWN, Problem, sympy_equation
@@ -55,15 +55,15 @@ def equation_hint(problem: Problem, level: int) -> str | None:
     structure = _structure(problem)
     if structure is None:
         return None
-    shape, fields = structure
+    shape, unknown, numbers = structure
     if level == 2:
-        return _STEP[shape].format(**fields)
+        return _STEP[shape].format(**numbers)
     for q, s, x in _EXAMPLES:
         q, s = Fraction(q), Fraction(s)
-        example = _fields(q, s, q * x + s, fields["u"])
-        if _shape(q, s) != shape or example == fields:
+        example = _numbers(q, s, q * x + s)
+        if _shape(q, s) != shape or example == numbers:
             continue
-        worked = _WORKED[shape].format(**example, x=x)
+        worked = _WORKED[shape].format(**example, u=unknown, x=x)
         text = f"Mira este ejemplo: {worked}. Ahora te toca: ¿qué número va en "
         text += f"{problem.text}?"
         if not leaks(text, problem):
@@ -71,8 +71,8 @@ def equation_hint(problem: Problem, level: int) -> str | None:
     return None
 
 
-def _structure(problem: Problem) -> tuple[str, dict[str, object]] | None:
-    """The shape of q·u + s = c, and its numbers, if written just like that."""
+def _structure(problem: Problem) -> tuple[str, str, dict[str, Fraction]] | None:
+    """The shape of q·u + s = c, its unknown and its numbers, if written so."""
     parts = parse_equation_components(sympy_equation(problem.text))
     if parts is None:
         return None
@@ -80,17 +80,19 @@ def _structure(problem: Problem) -> tuple[str, dict[str, object]] | None:
     poly = left.as_poly(symbol)
     if poly is None or poly.degree() != 1:
         return None
-    values = (*poly.all_coeffs(), right)
-    if not all(value.is_Rational for value in values):
+    q, s, c = (exact_fraction(value) for value in (*poly.all_coeffs(), right))
+    if q is None or s is None or c is None:
         return None
-    q, s, c = (Fraction(int(v.p), int(v.q)) for v in values)
     shape = _shape(q, s)
-    if shape is None or s.denominator != 1 or c.denominator != 1:
+    unknown = UNKNOWN.search(problem.text)  # none when the letter is not x or n
+    if shape is None or unknown is None or s.denominator != 1 or c.denominator != 1:
         return None
-    fields = _fields(q, s, c, UNKNOWN.search(problem.text).group(0))
-    said = [fields["a"]] * (q != 1) + [abs(s)] * (s != 0) + [c]
+    numbers = _numbers(q, s, c)
+    said = [numbers["a"]] * (q != 1) + [abs(s)] * (s != 0) + [c]
     written = extract_numbers(UNKNOWN.sub(" ", problem.text))
-    return (shape, fields) if sorted(written) == sorted(said) else None
+    if sorted(written) != sorted(said):
+        return None
+    return shape, unknown.group(0), numbers
 
 
 def _shape(q: Fraction, s: Fraction) -> str | None:
@@ -105,6 +107,6 @@ def _shape(q: Fraction, s: Fraction) -> str | None:
     return None
 
 
-def _fields(q: Fraction, s: Fraction, c: Fraction, u: str) -> dict[str, object]:
+def _numbers(q: Fraction, s: Fraction, c: Fraction) -> dict[str, Fraction]:
     a = q if q >= 1 else 1 / q
-    return {"u": u, "a": a, "a2": 2 * a, "b": abs(s), "c": c, "m": c - s}
+    return {"a": a, "a2": 2 * a, "b": abs(s), "c": c, "m": c - s}

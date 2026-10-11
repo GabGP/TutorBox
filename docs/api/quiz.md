@@ -1,10 +1,10 @@
 # Quiz & Diagnostic Question Bank API Specification
 
-Technical specification for diagnostic question generation, mathematical SymPy validation, taxonomy discovery, and question bank management in **TutorBox**.
+Technical specification for diagnostic question generation, mathematical SymPy validation, taxonomy discovery, and question bank management in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **Quiz Question Bank** • **Related:** [Sessions](sessions.md) • [Diagnostic Distractors](../architecture/diagnostic-distractors.md)
@@ -136,7 +136,7 @@ Retrieve the canonical versioned JSON Schema (Draft 2020-12) for diagnostic quiz
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "https://tutorbox.local/schemas/v1/quiz_question.schema.json",
       "version": "1.0.0",
-      "description": "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+      "description": "Canonical versioned contract schema for Utz'tutor diagnostic multiple-choice quiz questions."
     }
     ```
 

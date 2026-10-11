@@ -14,7 +14,7 @@ interface Particle {
   opacity: number;
 }
 
-const CELEBRATION_COLORS = ['#E21B3C', '#1368CE', '#C98A00', '#1E7B2E', '#0B6E99', '#FFD700'];
+const CELEBRATION_COLORS = ['#E21B3C', '#1368CE', '#C98A00', '#1E7B2E', '#F5B3B3', '#9ED5B3', '#FFD700'];
 const REFLECTION_COLORS = ['#F59E0B', '#FCD34D', '#93C5FD', '#A7F3D0'];
 
 /**

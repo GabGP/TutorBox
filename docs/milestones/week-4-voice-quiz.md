@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Milestones](roadmap.md) › **Week 4 Milestone** • **Related:** [Engineering Roadmap](roadmap.md) • [Voice Feedback Architecture](../architecture/voice-feedback.md) • [Session API Reference](../api/sessions.md)
@@ -27,7 +27,7 @@ This document summarizes the technical deliverables, architectural implementatio
   * **Pluggable Voice Architecture**: Hardware-agnostic `TTSBackend` protocol with Qwen3-TTS (GGUF via `llama-tts`) as the primary high-fidelity Spanish backend, Sherpa-ONNX and Piper VITS as lightweight neural fallbacks, Kokoro-82M opt-in, and `EspeakBackend` as the formant safety fallback, backed by a `TTSRouter` with 32-entry LRU cache.
   * **Primary-School Text Adaptation**: Oral fraction conversions, LaTeX sanitization, exponent reading, and natural sentence pacing (`core/tts/text.py`).
   * **Mayan Language Routing Seam**: Dedicated routing seam for Mayan K'iche' (`quc_Latn`) in `TTSRouter` with fail-safe error isolation (`503 Service Unavailable` when model checkpoint is absent).
-  * **Multi-Engine Benchmarking & Accurate Preload Modeling**: Unified profiler (`tools/benchmark/tts/metrics.py`, `ab.py`, and `memory.py`) measuring cold load vs warm inference, Real-Time Factor (RTF), Host RAM, and GPU VRAM. In classroom quiz turns, TTS preloading during student voting yields pure neural generation: **2.290s warm p50** (0.2386x RTF, meeting the $\le 3.0$s SLA).
+  * **Multi-Engine Benchmarking & Accurate Preload Modeling**: Unified profiler (`tools/benchmark/tts/metrics.py`, `ab.py`, and the `memory/` package) measuring cold load vs warm inference, Real-Time Factor (RTF), Host RAM, and GPU VRAM. In classroom quiz turns, TTS preloading during student voting yields pure neural generation: **2.290s warm p50** (0.2386x RTF, meeting the $\le 3.0$s SLA).
   * **Dual Memory Tracking (PC VRAM vs Jetson UMA)**: Background sampling (`MemoryMonitor`) capturing recursive child process working sets (`llama-tts.exe`) and GPU VRAM via NVML. Dynamic platform detection (`is_jetson_uma()`) accounts for Jetson Orin Nano's 8GB shared LPDDR5 DRAM architecture.
   * **Context Window Optimization**: Calibrated `TTS_QWEN_CONTEXT=1024` tokens, reclaiming ~325 MB of VRAM compared to 4096 without sacrificing classroom utterance quality.
   * **End-to-End 10-Round Match Suite**: Full match simulation (`test_session_10_round_speech.py`) proving deterministic >51% gating, bilingual dispatch, and first-press locking across 10 rounds.
@@ -61,7 +61,7 @@ This document summarizes the technical deliverables, architectural implementatio
    * `router/`: Pluggable dispatcher (`router.py`, `selection.py`) selecting the Spanish tiers (`qwen3-tts`, `sherpa`, `piper`, `espeak`) in quality-first order, routing Mayan K'iche' (`quc_Latn`), falling back gracefully between Spanish tiers, and caching generated audio in an in-memory 32-entry LRU cache.
    * `api/session/speech.py`: Refactored to delegate synthesis directly to `core.tts.synthesize_speech()`.
 4. **Empirical Multi-Engine Benchmark & Memory Profiling (`tools/benchmark/tts/`)**:
-   * Unified benchmarking suite (`metrics.py`, `ab.py`) and memory tracking engine (`memory.py`):
+   * Unified benchmarking suite (`metrics.py`, `ab.py`) and memory tracking engine (`memory/`):
      * Samples Host RAM across the full process tree (`proc.children(recursive=True)`).
      * Measures GPU VRAM using `ctypes` NVML bindings with PyTorch fallback.
      * Auto-detects NVIDIA Tegra hardware via `/etc/nv_tegra_release` to classify memory scope (`uma-unified`, `discrete-vram`, `host-only`).
@@ -118,7 +118,7 @@ This document summarizes the technical deliverables, architectural implementatio
    * Explain why **Qwen3-TTS** is the current quality winner, and why Sherpa-ONNX/Piper provide sub-second fallbacks while eSpeak-ng remains the robotic availability safety net.
    * Why Spanish Harvard Sentences (`es_ES-sharvard-medium`, Speaker 1) was selected as the educational default over Mexican regional voices (`es_MX-ald`, `es_MX-claude`): neutral, textbook-clean diction preventing regional bias in Central American classrooms.
 2. **Deterministic >51% Gating (Targeted Intervention vs Narration)**:
-   * Emphasize that TutorBox is **not a screen reader**: voice feedback is a targeted pedagogical intervention triggered strictly when $>51\%$ of the class share the exact same conceptual misconception:
+   * Emphasize that Utz'tutor is **not a screen reader**: voice feedback is a targeted pedagogical intervention triggered strictly when $>51\%$ of the class share the exact same conceptual misconception:
      $$\frac{\text{distractor\_votes}}{\text{total\_votes}} > 0.51$$
    * Ties, dispersed wrong answers, majority correct, or exact 51.0% remain strictly silent to avoid classroom audio fatigue.
 3. **Hardware Budget & Memory Co-Existence**:

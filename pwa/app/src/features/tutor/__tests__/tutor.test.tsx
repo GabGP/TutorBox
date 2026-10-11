@@ -5,6 +5,7 @@ import { ApiError } from '../../../shared/api/httpClient';
 import { tutorApi, type TutorStudent } from '../tutorApi';
 import { TutorChat } from '../TutorChat';
 import { TutorRoster } from '../TutorRoster';
+import { TutorWall } from '../TutorWall';
 import { useTutorChat } from '../useTutorChat';
 
 const reply = { reply: '¿Por dónde empiezas?', kind: 'hint', hint_level: 0, used_model: true, topic: null };
@@ -29,6 +30,8 @@ describe('tutorApi', () => {
     expect(spy).toHaveBeenLastCalledWith('POST', '/tutor/ping', {});
     expect(await tutorApi.students()).toEqual([]);
     expect(spy).toHaveBeenLastCalledWith('GET', '/tutor/students');
+    await tutorApi.summary();
+    expect(spy).toHaveBeenLastCalledWith('GET', '/tutor/summary', undefined, false);
   });
 });
 
@@ -41,7 +44,7 @@ describe('useTutorChat', () => {
 
     expect(result.current.messages).toEqual([
       { id: 1, role: 'student', text: '23 + 45' },
-      { id: 2, role: 'tutor', text: '¿Por dónde empiezas?' },
+      { id: 2, role: 'tutor', text: '¿Por dónde empiezas?', kind: 'hint', hintLevel: 0 },
     ]);
     expect(JSON.parse(sessionStorage.getItem('tb_tutor_chat:ana') ?? '[]')).toHaveLength(2);
     expect(renderHook(() => useTutorChat('ana')).result.current.messages).toHaveLength(2);
@@ -105,6 +108,23 @@ describe('TutorChat', () => {
     expect(screen.getByLabelText('Tu mensaje para el tutor')).toHaveValue('');
   });
 
+  it('tags hints above level 0 and shows praise as the accent bubble', () => {
+    sessionStorage.setItem(
+      'tb_tutor_chat:ana',
+      JSON.stringify([
+        { id: 1, role: 'tutor', text: 'Empieza por las unidades.', kind: 'hint', hintLevel: 2 },
+        { id: 2, role: 'tutor', text: '¿Por dónde empiezas?', kind: 'hint', hintLevel: 0 },
+        { id: 3, role: 'tutor', text: '¡Muy bien! 23 + 45 = 68.', kind: 'praise', hintLevel: 2 },
+      ])
+    );
+    render(<TutorChat username="ana" />);
+
+    expect(screen.getAllByText(/^Pista \d de 3$/)).toHaveLength(1);
+    expect(screen.getByText('Pista 2 de 3')).toBeInTheDocument();
+    const praise = screen.getByText('¡Muy bien! 23 + 45 = 68.');
+    expect(praise.parentElement?.querySelector('svg')).not.toBeNull();
+  });
+
   it('refuses pasted or dropped images', () => {
     render(<TutorChat username="ana" />);
     const input = screen.getByLabelText('Tu mensaje para el tutor');
@@ -149,6 +169,17 @@ describe('TutorRoster', () => {
     expect(screen.getByRole('img', { name: 'Conectado' })).toBeInTheDocument();
   });
 
+  it('puts a connected student on the last hint first, marked as needing help', async () => {
+    const stuck: TutorStudent = { ...students[1], username: 'carla', online: true, problem: '36 ÷ 4', hint_level: 3 };
+    vi.spyOn(tutorApi, 'students').mockResolvedValue([...students, stuck]);
+    render(<TutorRoster host="tutorbox" />);
+
+    expect(await screen.findByText('Necesita ayuda')).toBeInTheDocument();
+    const names = screen.getAllByRole('listitem').map((item) => item.querySelector('strong')?.textContent);
+    expect(names).toEqual(['carla', 'ana', 'beto']);
+    expect(screen.getByText('Resolviendo 36 ÷ 4 · pista 3 de 3')).toBeInTheDocument();
+  });
+
   it('explains how students join, and reports errors', async () => {
     const list = vi
       .spyOn(tutorApi, 'students')
@@ -161,5 +192,29 @@ describe('TutorRoster', () => {
     expect(await screen.findByText('Sin permiso')).toBeInTheDocument();
     expect(await screen.findByText('No se pudo cargar la lista.')).toBeInTheDocument();
     expect(list.mock.calls.length).toBeGreaterThan(2);
+  });
+});
+
+describe('TutorWall', () => {
+  it('shows where to join and the class totals, without names', async () => {
+    vi.spyOn(tutorApi, 'summary').mockResolvedValue({ online: 3, solved: 5, need_help: 1 });
+    render(<TutorWall host="tutorbox" />);
+
+    expect(screen.getByText('Practica con el tutor')).toBeInTheDocument();
+    expect(screen.getByText('tutorbox/alumno')).toBeInTheDocument();
+    expect(screen.getAllByText('–')).toHaveLength(3); // before the first answer
+    expect(await screen.findByText('5')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+  });
+
+  it('keeps polling quietly when the totals cannot be read', async () => {
+    const summary = vi.spyOn(tutorApi, 'summary').mockRejectedValue(new Error('offline'));
+    const { unmount } = render(<TutorWall host="" pollingIntervalMs={20} />);
+
+    await waitFor(() => expect(summary.mock.calls.length).toBeGreaterThan(1));
+    expect(screen.getAllByText('–')).toHaveLength(3);
+    expect(screen.queryByText(/\/alumno/)).not.toBeInTheDocument();
+    unmount();
   });
 });

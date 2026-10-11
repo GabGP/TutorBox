@@ -1,1 +1,1 @@
-"""TutorBox Backend test suite package."""
+"""Utz'tutor Backend test suite package."""

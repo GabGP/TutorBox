@@ -1,4 +1,4 @@
-"""Offline text-to-speech package for the TutorBox appliance."""
+"""Offline text-to-speech package for the Utz'tutor appliance."""
 
 from core.tts.audio import pcm_to_wav, samples_to_wav
 from core.tts.constants import (

@@ -1,10 +1,10 @@
 # SQLite Database Migrations Playbook & Changelog
 
-Comprehensive migration specifications, historical changelog, and execution procedures for **TutorBox**.
+Comprehensive migration specifications, historical changelog, and execution procedures for **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [Database](README.md) › **Migrations Playbook** • **Related:** [Database Hub](README.md) • [Backend Guide](../../backend/README.md)
@@ -18,7 +18,7 @@ Comprehensive migration specifications, historical changelog, and execution proc
 - [2. Migration Changelog Overview](#2-migration-changelog-overview)
 - [3. Detailed Migration Specifications](#3-detailed-migration-specifications)
   - [001: Initial Baseline Schema](#001-initial-baseline-schema)
-  - [002: Role Check Constraints](#002-role-check-constraints)
+  - [002: User Role Column](#002-role-check-constraints)
   - [003: Foreign Key Lookup Indexes](#003-foreign-key-lookup-indexes)
   - [004: Forced PIN Rotation Flag](#004-forced-pin-rotation-flag)
   - [005: Soft-Deletion & Username Freeing](#005-soft-deletion--username-freeing)
@@ -28,7 +28,10 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [009: SLM Telemetry & Rejection History](#009-slm-telemetry--rejection-history)
   - [010: Quiz Sessions, Rounds & First-Press Voting](#010-quiz-sessions-rounds--first-press-voting)
   - [011: Classroom Mode Switch](#011-classroom-mode-switch)
-  - [012: Clicker Credentials & Fleet Health](#012-clicker-credentials--fleet-health)
+  - [012: Turn Log Pedagogy Labels](#012-turn-log-pedagogy-labels)
+  - [013: Game Events](#013-game-events)
+  - [014: Game Event Misconception](#014-game-event-misconception)
+  - [015: Clicker Secret & Session Device](#015-clicker-secret-and-session-device)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -36,11 +39,11 @@ Comprehensive migration specifications, historical changelog, and execution proc
 
 ## <a id="1-migration-architecture--pragmas"></a>1. Migration Architecture & Pragmas
 
-TutorBox utilizes sequential idempotent SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
+Utz'tutor utilizes sequential SQL migration files executed automatically at application startup by `backend/src/core/db/migrations.py`.
 
 * **Storage Location**: `backend/migrations/<NNN>_<description>.sql`
 * **Version Registry**: Every applied migration is tracked in the `schema_migrations` table with its integer version and timestamp.
-* **Idempotency Rule**: All migration files must be safe to execute multiple times (`CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`).
+* **Idempotency Rule**: Each migration is applied exactly once, tracked by version in `schema_migrations` (see `backend/src/core/db/migrations.py`). `CREATE TABLE` and `CREATE INDEX` statements still use `IF NOT EXISTS`, but `ALTER TABLE ... ADD COLUMN` migrations (`002`, `004`, `005`, `012`, `014`, `015`) have no `IF NOT EXISTS` form in SQLite, so they cannot be re-run by hand and rely on the version registry.
 * **Runtime Pragmas**:
   ```sql
   PRAGMA foreign_keys = ON;
@@ -54,7 +57,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 | Version | Migration File | Target Subsystem | Key Tables & Changes | Milestone |
 | :---: | :--- | :--- | :--- | :---: |
-| **001** | `001_initial_schema.sql` | Core Storage | `schema_migrations`, `users`, `sessions`, `turn_logs` | Week 1 |
+| **001** | `001_initial_schema.sql` | Core Storage | `users`, `sessions`, `turn_logs` | Week 1 |
 | **002** | `002_add_user_role.sql` | Security / RBAC | Adds `role` column (`student`, `teacher`, `admin`) to `users` | Week 1 |
 | **003** | `003_add_lookup_indexes.sql` | Performance | Adds `idx_sessions_user_id`, `idx_turn_logs_session_id` | Week 1 |
 | **004** | `004_add_must_change_pin.sql` | Security / PIN | Adds `must_change_pin` column to `users` | Week 1 |
@@ -65,7 +68,10 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 | **009** | `009_add_quiz_generation_logs.sql` | AI Telemetry | Creates `quiz_generation_logs` for latency and retry metrics | Week 2 |
 | **010** | `010_add_quiz_sessions_and_votes.sql` | Session Engine | Creates `quiz_sessions`, `quiz_session_rounds`, `quiz_session_votes` | Week 3 |
 | **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
-| **012** | `012_add_clicker_credentials.sql` | Hardware Clickers | Adds `secret_hash`, `last_seen_at`, `last_rssi`, `last_battery_mv`, `firmware` to `devices` | Week 7 |
+| **012** | `012_add_turn_log_pedagogy.sql` | Dialogue Telemetry | Adds nullable `concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy` to `turn_logs` and creates `idx_turn_logs_concept` | Week 5 |
+| **013** | `013_add_game_events.sql` | Games Telemetry | Creates `game_events` (one row per answer tapped, `UNIQUE(client_event_id)`) and `idx_game_events_concept` | Week 6 |
+| **014** | `014_add_game_event_misconception.sql` | Games Telemetry | Adds nullable `misconception` to `game_events` | Week 6 |
+| **015** | `015_add_device_secret.sql` | Hardware Clickers | Adds nullable `secret_hash` and `secret_issued_at` to `devices`, nullable `device_id` to `sessions`, and creates partial index `idx_sessions_device_id` | Week 7 |
 
 ---
 
@@ -73,11 +79,11 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 ### <a id="001-initial-baseline-schema"></a>001: Initial Baseline Schema
 * **File**: [`backend/migrations/001_initial_schema.sql`](../../backend/migrations/001_initial_schema.sql)
-* **Description**: Sets up tracking table `schema_migrations` and core entities: `users` (with bcrypt hash), `sessions` (UUIDv4 tokens), and `turn_logs` (student prompt and SymPy AST storage).
+* **Description**: Sets up core entities: `users` (with bcrypt hash), `sessions` (UUIDv4 tokens), and `turn_logs` (student prompt and SymPy AST storage). The `schema_migrations` tracking table is created by the runner in `backend/src/core/db/migrations.py`, not by this file.
 
-### <a id="002-role-check-constraints"></a>002: Role Check Constraints
+### <a id="002-role-check-constraints"></a>002: User Role Column
 * **File**: [`backend/migrations/002_add_user_role.sql`](../../backend/migrations/002_add_user_role.sql)
-* **Description**: Introduces the `role` column to `users` with check constraint `role IN ('student', 'teacher', 'admin')` defaulting to `'student'`.
+* **Description**: Introduces the `role` column to `users` as `TEXT NOT NULL DEFAULT 'student'`. The SQL has no `CHECK` constraint: the three roles (`student`, `teacher`, `admin`) are enforced by the application.
 
 ### <a id="003-foreign-key-lookup-indexes"></a>003: Foreign Key Lookup Indexes
 * **File**: [`backend/migrations/003_add_lookup_indexes.sql`](../../backend/migrations/003_add_lookup_indexes.sql)
@@ -103,7 +109,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 
 ### <a id="008-diagnostic-question-bank"></a>008: Diagnostic Question Bank
 * **File**: [`backend/migrations/008_add_quiz_questions.sql`](../../backend/migrations/008_add_quiz_questions.sql)
-* **Description**: Creates `quiz_questions` table storing question text, options JSON, correct answer, diagnostic distractors JSON (misconception slug + Spanish explanation), and SymPy verification status. Includes composite indexes `idx_quiz_questions_topic` and `idx_quiz_questions_created`.
+* **Description**: Creates `quiz_questions` table storing question text, options JSON, correct answer, diagnostic distractors JSON (misconception slug + Spanish explanation), and SymPy verification status. Includes the composite index `idx_quiz_questions_topic` and the single-column index `idx_quiz_questions_created`.
 
 ### <a id="009-slm-telemetry--rejection-history"></a>009: SLM Telemetry & Rejection History
 * **File**: [`backend/migrations/009_add_quiz_generation_logs.sql`](../../backend/migrations/009_add_quiz_generation_logs.sql)
@@ -112,21 +118,33 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 ### <a id="010-quiz-sessions-rounds--first-press-voting"></a>010: Quiz Sessions, Rounds & First-Press Voting
 * **File**: [`backend/migrations/010_add_quiz_sessions_and_votes.sql`](../../backend/migrations/010_add_quiz_sessions_and_votes.sql)
 * **Description**: Creates the real-time quiz session persistence layer:
-  * `quiz_sessions`: match metadata, topic, status (`lobby`, `active`, `completed`), duration.
+  * `quiz_sessions`: match metadata, topic, status (`lobby`, `active`, `completed`, `abandoned`).
   * `quiz_session_rounds`: individual question rounds, ordered round indexes, round status (`pending`, `open`, `closed`, `revealed`).
   * `quiz_session_votes`: individual student vote records with **strict database-level first-press lock enforcement** via:
     ```sql
     UNIQUE(round_id, student_id)
     ```
-  * Includes performance indexes: `idx_quiz_rounds_session_index`, `idx_quiz_votes_round_student`, `idx_quiz_votes_student`, `idx_quiz_votes_analytics`.
+  * Includes performance indexes: `idx_quiz_sessions_status`, `idx_quiz_rounds_session`, `idx_quiz_votes_round`, `idx_quiz_votes_student`, `idx_quiz_votes_analytics`.
 
 ### <a id="011-classroom-mode-switch"></a>011: Classroom Mode Switch
 * **File**: [`backend/migrations/011_add_appliance_mode.sql`](../../backend/migrations/011_add_appliance_mode.sql)
 * **Description**: Creates `appliance_state`, a single-row table (`CHECK (id = 1)`) holding the classroom-wide mode (`quiz`, `tutor`, `apps`) the teacher picks from their phone, and seeds it with `quiz` via `INSERT OR IGNORE` so re-runs are harmless. See [core.md](core.md#table-appliance_state).
 
-### <a id="012-clicker-credentials--fleet-health"></a>012: Clicker Credentials & Fleet Health
-* **File**: [`backend/migrations/012_add_clicker_credentials.sql`](../../backend/migrations/012_add_clicker_credentials.sql)
-* **Description**: Week 7 hardware clickers. `secret_hash` stores the SHA-256 of the secret each ESP32 generates on its first boot (set by its first check-in, trust on first use; see [clicker.md](../api/clicker.md)). `last_seen_at`, `last_rssi`, `last_battery_mv` and `firmware` hold the latest check-in, refreshed at most every 15 s per clicker so 30 clickers polling once a second cost about two writes a second. Plain `ALTER TABLE ... ADD COLUMN`, applied once through `schema_migrations`. Test: `backend/tests/core/db/test_clicker_migration_012.py`.
+### <a id="012-turn-log-pedagogy-labels"></a>012: Turn Log Pedagogy Labels
+* **File**: [`backend/migrations/012_add_turn_log_pedagogy.sql`](../../backend/migrations/012_add_turn_log_pedagogy.sql)
+* **Description**: Adds five nullable `TEXT` columns to `turn_logs` (`concept_topic`, `concept_subconcept`, `cnb_topic`, `error_type`, `scaffolding_strategy`) with no default and no `CHECK` constraint, so the label vocabularies can grow in code without a migration. Creates `idx_turn_logs_concept ON turn_logs(concept_topic, concept_subconcept)`. See [dialogue.md](dialogue.md#21-telemetry-label-vocabularies).
+
+### <a id="013-game-events"></a>013: Game Events
+* **File**: [`backend/migrations/013_add_game_events.sql`](../../backend/migrations/013_add_game_events.sql)
+* **Description**: Creates `game_events`, one row per answer tapped in a grade app, and the index `idx_game_events_concept ON game_events(concept_topic, concept_subconcept)`. The `client_event_id` column is `UNIQUE`, so a repeated delivery is stored once. The three label columns have no `CHECK` constraint, as in 012, and `student_id` becomes `NULL` when its user row is deleted. See [games.md](games.md).
+
+### <a id="014-game-event-misconception"></a>014: Game Event Misconception
+* **File**: [`backend/migrations/014_add_game_event_misconception.sql`](../../backend/migrations/014_add_game_event_misconception.sql)
+* **Description**: Adds the nullable `TEXT` column `misconception` to `game_events`, with no default and no `CHECK` constraint, as in 012. It holds the mistake behind a wrong answer as the game names it. See [games.md](games.md#2-invariants).
+
+### <a id="015-clicker-secret-and-session-device"></a>015: Clicker Secret & Session Device
+* **File**: [`backend/migrations/015_add_device_secret.sql`](../../backend/migrations/015_add_device_secret.sql)
+* **Description**: Adds three nullable columns: `devices.secret_hash TEXT` (the SHA-256 digest of the clicker's secret, never the secret), `devices.secret_issued_at TIMESTAMP`, and `sessions.device_id TEXT` (the clicker a login session was issued to; `NULL` for a phone or browser login). Creates the partial index `idx_sessions_device_id ON sessions(device_id) WHERE device_id IS NOT NULL`. `sessions.device_id` has no foreign key. Rows that exist before the migration get `NULL` in all three columns. See [core.md](core.md#d-clicker-token-revocation).
 
 ---
 
@@ -135,10 +153,11 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 Follow these sequential steps when adding or modifying database schemas:
 
 1. **Allocate Version Number**:
-   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `011_add_tts_cache.sql`).
+   Inspect `backend/migrations/` and pick the next 3-digit integer (e.g. `014_add_tts_cache.sql`).
 2. **Author SQL Script**:
    * Write plain SQL using strict SQLite syntax.
    * Use `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`.
+   * `ALTER TABLE ... ADD COLUMN` has no `IF NOT EXISTS` form in SQLite, so those statements are not safe to re-run and rely on the version registry (see [§1](#1-migration-architecture--pragmas)).
    * Never execute destructive schema migrations without migration rollback scripts.
 3. **Validate Idempotency & Clean Bootstrap**:
    Run the migration unit test suite:
@@ -165,7 +184,7 @@ Follow these sequential steps when adding or modifying database schemas:
   ```
 * **Migration Table Reversion**: If a migration fails during application bootstrap, SQLite transactions roll back automatically. To manually revert a version entry during development:
   ```sql
-  DELETE FROM schema_migrations WHERE version = 10;
+  DELETE FROM schema_migrations WHERE version = 12;
   ```
 
 ---

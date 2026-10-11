@@ -6,10 +6,10 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  border: 1px solid var(--line, #e4edf2);
+  border: 1px solid var(--line, #dce8e0);
   border-radius: var(--hb-radius, 14px);
-  background: var(--hb-bg, var(--panel, #f7fbfd));
-  color: var(--hb-ink, var(--ink, #131e23));
+  background: var(--hb-bg, var(--panel, #fbfdfc));
+  color: var(--hb-ink, var(--ink, #16241e));
   font-weight: 600;
   touch-action: none;
   user-select: none;
@@ -31,14 +31,14 @@
 }
 
 .root:focus-visible {
-  outline: 3px solid var(--p, #0b6e99);
+  outline: 3px solid var(--p, #1f3e33);
   outline-offset: 3px;
 }
 
 .fill {
   position: absolute;
   z-index: 0;
-  background: linear-gradient(180deg, var(--hb-fill, var(--p, #0b6e99)), color-mix(in srgb, var(--hb-fill, #0b6e99) 82%, #062d3f));
+  background: linear-gradient(180deg, var(--hb-fill, var(--p, #1f3e33)), color-mix(in srgb, var(--hb-fill, #1f3e33) 82%, #1f3e33));
 }
 
 .root[data-direction='right'] .fill { top: 0; bottom: 0; left: 0; width: calc(var(--hb-progress, 0) * 100%); }
@@ -61,7 +61,7 @@
   height: calc(var(--hb-wave, 6px) * 2); border-radius: 50%;
 }
 
-.glow { box-shadow: 0 0 0 calc(var(--hb-progress, 0) * 14px) color-mix(in srgb, var(--hb-fill, #0b6e99) 28%, transparent); }
+.glow { box-shadow: 0 0 0 calc(var(--hb-progress, 0) * 14px) color-mix(in srgb, var(--hb-fill, #1f3e33) 28%, transparent); }
 .glow.done { animation: hbGlowPulse 0.55s ease-out; }
 
 .label, .labelFill, .doneLabel {
@@ -76,7 +76,7 @@
   text-overflow: ellipsis;
 }
 
-.label { color: var(--hb-ink, var(--ink, #131e23)); }
+.label { color: var(--hb-ink, var(--ink, #16241e)); }
 .labelFill {
   position: absolute;
   inset: 0;
@@ -114,7 +114,7 @@
 }
 
 @keyframes hbGlowPulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hb-fill, #0b6e99) 55%, transparent); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hb-fill, #1f3e33) 55%, transparent); }
   100% { box-shadow: 0 0 0 18px transparent; }
 }
 

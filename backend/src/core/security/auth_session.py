@@ -18,6 +18,8 @@ bearer_scheme = HTTPBearer(auto_error=False)
 # if a school needs another one.
 SESSION_TTL_HOURS = 12
 
+CLICKER_SCOPE_DETAIL = "Clicker sessions can only vote."
+
 
 def token_digest(token: str) -> str:
     """What the database keeps for a bearer token: its SHA-256, never the token.
@@ -34,11 +36,14 @@ class AuthContext(BaseModel):
     role: str
     session_id: str  # sessions.id, the token's digest: safe to store, unlike the token
     must_change_pin: bool
+    # The clicker this session was issued to; None for a login from a phone or browser.
+    device_id: str | None = None
 
 
-def get_current_session(
+def get_voter_session(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> AuthContext:
+    """Any live session: a person's login or a clicker's. Only voting asks for this."""
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,7 +62,7 @@ def get_current_session(
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT s.user_id, u.username, u.role, u.must_change_pin "
+            "SELECT s.user_id, s.device_id, u.username, u.role, u.must_change_pin "
             "FROM sessions s "
             "JOIN users u ON u.id = s.user_id "
             "WHERE s.id = ? AND s.is_active = 1 AND u.deleted_at IS NULL "
@@ -78,7 +83,25 @@ def get_current_session(
         role=row["role"],
         session_id=session_id,
         must_change_pin=bool(row["must_change_pin"]),
+        device_id=row["device_id"],
     )
+
+
+def get_current_session(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+) -> AuthContext:
+    """A person's login. A clicker's session is refused: a clicker can only vote.
+
+    Every endpoint depends on this one, directly or through require_roles, so a new
+    endpoint refuses clickers unless it asks for get_voter_session instead.
+    """
+    ctx = get_voter_session(credentials)
+    if ctx.device_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=CLICKER_SCOPE_DETAIL,
+        )
+    return ctx
 
 
 def ensure_no_pending_rotation(

@@ -1,17 +1,17 @@
-# TutorBox Engineering Roadmap (10-Week Plan)
+# Utz'tutor Engineering Roadmap (10-Week Plan)
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md)
+📍 [Docs](../README.md) › **Milestones** › **Engineering Roadmap** • **Related:** [Week 1 Milestone](week-1-auth-storage.md) • [Week 2 Milestone](week-2-quiz-contract.md) • [Week 3 Milestone](week-3-session-engine.md) • [Week 4 Milestone](week-4-voice-quiz.md) • [Week 5 Milestone](week-5-socratic-tutor.md) • [Week 6 Milestone](week-6-games-sync.md) • [Week 7 Milestone](week-7-esp32-clickers.md)
 
 </div>
 
 ---
 
-This roadmap details the comprehensive 10-week engineering schedule for **TutorBox**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
+This roadmap details the comprehensive 10-week engineering schedule for **Utz'tutor**, balancing development between **Student A** and **Student B** through a rotating **Pilot / Copilot** structure.
 
 ## Table of Contents
 - [1. Operating Rules & Team Rotation](#1-operating-rules--team-rotation)
@@ -44,7 +44,7 @@ This roadmap details the comprehensive 10-week engineering schedule for **TutorB
 
 ```mermaid
 gantt
-    title TutorBox 10-Week Engineering Schedule (Rotational Ownership)
+    title Utz'tutor 10-Week Engineering Schedule (Rotational Ownership)
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
 
@@ -57,7 +57,7 @@ gantt
     Week 4 - Full Quiz with Offline Voice (Pilot A / Copilot B) :done, w4, 2026-09-13, 2026-09-20
 
     section Socratic & Games Subsystems
-    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :active, w5, 2026-09-20, 2026-09-27
+    Week 5 - Socratic Tutor Mode (Pilot B / Copilot A)         :done, w5, 2026-09-20, 2026-09-27
     Week 6 - Offline Games & Log Sync (Pilot A / Copilot B)    :w6, 2026-09-27, 2026-10-04
 
     section Hardware, Analytics & Stress
@@ -77,9 +77,9 @@ gantt
 | **2** ✅ | [Quiz Contract & Diagnostic Distractors](week-2-quiz-contract.md) | JSON Schema contract, prompt rejection cycle, SymPy validator, $\ge 50$ questions | **A** / B |
 | **3** ✅ | [Session Engine & Browser Voting](week-3-session-engine.md) | Wire Protocol (`VoteTransport` seam), session engine (>51% rule), Pilas PWA (15 clients, 0 lost votes) | **B** / A |
 | **4** ✅ | [Full Quiz with Spanish & Mayan Voice](week-4-voice-quiz.md) | Qwen3-TTS primary voice with Sherpa/Piper fallbacks, oral math adaptation, K'iche' routing seam, >51% voice gating, phased 4.7 GB SLM / 3.3 GB TTS RAM profile | **A** / B |
-| **5** ⏳ | Socratic Tutor Mode | Socratic dialogue state machine + SymPy containment (0 direct solutions) + offline PWA | **B** / A |
-| **6** ⏳ | Offline Games & Log Sync | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
-| **7** ⏳ | ESP32 Hardware Clickers | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
+| **5** ✅ | [Socratic Tutor Mode](week-5-socratic-tutor.md) | Socratic dialogue state machine + SymPy containment (0 direct solutions) + turn telemetry + home-screen tutor client | **B** / A |
+| **6** ⏳ | [Offline Games & Log Sync](week-6-games-sync.md) | `primariaconk.uk` offline, error event normalization, idempotent sync with 0 duplicates | **A** / B |
+| **7** ⏳ | [ESP32 Hardware Clickers](week-7-esp32-clickers.md) | ESP32 clicker firmware + backend `VoteTransport` + AP fleet association test ($\ge 10$ clickers) | **B** / A |
 | **8** ⏳ | Unified Analytics & Weekly Report | Cross-mode error report by concept + printable offline PDF/CSV + backup restoration | **A** / B |
 | **9** ⏳ | Concurrency & Full System Stress | Combined load (30 quiz + 10 tutor + games) + 2h stable soak test without OOM/throttling | **B** / A |
 | **10** ⏳ | Rehearsal, Documentation & Release v1.0 | User trial report, cold-rebuild runbook, teacher manual ($\le 10$p), 3-min video, tag `v1.0` | Both |
@@ -152,7 +152,7 @@ gantt
   * Text adaptation layer converting oral fractions, exponents, and negative numbers for primary-school clarity.
   * Mayan language routing seam for K'iche' (`quc_Latn`) with strict failure isolation.
   * Comprehensive benchmark profiler (`ab.py`) asserting synthesis $\le 3$s SLA (Qwen warm p50 2.290s, Sherpa 0.388s, Piper 0.405s).
-  * Dual memory tracking (`memory.py`) with Host RAM child process recursion, NVML GPU VRAM, and Jetson Orin Nano UMA lifecycle decoupling.
+  * Dual memory tracking (`tools/benchmark/tts/memory/`) with Host RAM child process recursion, NVML GPU VRAM, and Jetson Orin Nano UMA lifecycle decoupling.
 * **Student B (Copilot)**:
   * Classroom HDMI display interface (presenting question, timer, and aggregate voting charts) decoupled from teacher admin portal.
   * Physical audio output verification and integration of TTS triggers into the match flow.
@@ -168,12 +168,12 @@ gantt
 
 ---
 
-### <a id="week-5"></a>⏳ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
+### <a id="week-5"></a>✅ Week 5 — Socratic Tutor Mode (Pilot: B · Copilot: A)
 * **Focus**: Launch Mode 2 (Conversational Math Practice) reusing the local inference backend.
-* **Student B (Pilot)**:
-  * Installable offline PWA tutor client with student login and persistent session state across visits.
+* **Student B (Pilot - Delivered)**:
+  * Tutor client on `/alumno/` kept on the phone's home screen, with a student login that persists across visits (no offline install: the appliance serves plain HTTP).
   * Dialogue turn telemetry logging (concept, error type, scaffolding strategy applied).
-* **Student A (Copilot)**:
+* **Student A (Copilot - Delivered)**:
   * Socratic dialogue management engine with bounded 4-tier hint escalation ladder ($0 \to 3$).
   * SymPy containment guardrail mechanically blocking direct solution leakage.
   * Initial labeled problem bank of $\ge 40$ arithmetic and pre-algebra questions.
@@ -183,8 +183,9 @@ gantt
   3. Architectural differences between Quiz mode and Tutor mode.
 * **Acceptance Criteria & Deliverables**:
   * Automated test suite of 30 dialogue turns including 10 adversarial "give me the answer" probes resulting in 0 solution leaks.
-  * PWA tutor successfully installed and functioning offline on 3 test devices.
+  * PWA tutor added to the home screen and functioning on the classroom network without internet (amended from "installed and functioning offline on 3 test devices": the appliance serves plain HTTP, see the [Week 5 tracking](week-5-socratic-tutor.md)).
   * Problem bank of $\ge 40$ validated questions in CI.
+* **Detailed Milestone Tracking**: [Week 5 Milestone Tracking](week-5-socratic-tutor.md).
 
 ---
 
@@ -203,6 +204,8 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Games playable completely offline from the appliance on 3 client devices.
   * Disconnection sync test: play offline, reconnect to AP, verify 100% of error events ingested with 0 duplicates.
+* **Current State (2026-10-09)**: the games are hosted as the grade apps in `pwa/tareas/`, and the appliance ingests, labels and deduplicates their events (`POST /api/v1/games/events`), with a count for staff (`GET /api/v1/games/events/summary`) and a rate limit in nginx. The client queue in the games is not started, so the sync test on devices is pending; sync from the take-home APK is out of scope by decision.
+* **Detailed Milestone Tracking**: [Week 6 Milestone Tracking](week-6-games-sync.md).
 
 ---
 
@@ -221,6 +224,8 @@ gantt
 * **Acceptance Criteria & Deliverables**:
   * Live 10-question match conducted with $\ge 10$ physical ESP32 clickers with 0 lost votes.
   * Fleet benchmark report detailing connection limits and packet latency.
+* **Current State (2026-10-09)**: the backend half is built and green: migration `015`, the clicker secret (`POST /api/v1/staff/devices/{device_id}/secret`), device authentication (`POST /api/v1/devices/auth`) issuing a token that can only vote, and the vote label taken from the session. Firmware, the BLE provisioner and the physical batch are not started. Both acceptance criteria are pending hardware: the fleet test in CI is simulated, and the real-device match and the latency benchmark are not done.
+* **Detailed Milestone Tracking**: [Week 7 Milestone Tracking](week-7-esp32-clickers.md).
 
 ---
 

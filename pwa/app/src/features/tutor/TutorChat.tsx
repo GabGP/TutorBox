@@ -1,10 +1,35 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { RotateCcw, Send } from 'lucide-react';
-import { useTutorChat } from './useTutorChat';
+import { RotateCcw, Send, Star } from 'lucide-react';
+import { type ChatMessage, useTutorChat } from './useTutorChat';
 import styles from './tutor.module.css';
 
 const MAX_CHARS = 280;
 const TEXT_ONLY = 'Solo puedo leer texto, no imágenes. Escribe tu pregunta con palabras y números.';
+
+/**
+ * One message. Tutor hints above level 0 carry a "Pista N de 3" tag, and the praise for a
+ * solved problem is the one pink (accent) bubble of the chat.
+ */
+const Message: React.FC<{ message: ChatMessage }> = ({ message }) => {
+  if (message.role === 'student') return <p className={styles.studentBubble}>{message.text}</p>;
+  if (message.kind === 'praise') {
+    return (
+      <div className={styles.praiseBubble}>
+        <Star size={18} aria-hidden />
+        <p>{message.text}</p>
+      </div>
+    );
+  }
+  if (message.kind === 'hint' && message.hintLevel) {
+    return (
+      <div className={styles.hint}>
+        <span className={styles.hintTag}>Pista {message.hintLevel} de 3</span>
+        <p className={styles.tutorBubble}>{message.text}</p>
+      </div>
+    );
+  }
+  return <p className={styles.tutorBubble}>{message.text}</p>;
+};
 
 /**
  * The student's Socratic math tutor chat. Text only: there is no attachment button, and
@@ -51,14 +76,18 @@ export const TutorChat: React.FC<{ username: string }> = ({ username }) => {
           una fracción?». No te doy la respuesta: te ayudo a encontrarla.
         </p>
         {messages.map((message) => (
-          <p
-            key={message.id}
-            className={message.role === 'student' ? styles.studentBubble : styles.tutorBubble}
-          >
-            {message.text}
-          </p>
+          <Message key={message.id} message={message} />
         ))}
-        {sending && <p className={`${styles.tutorBubble} ${styles.thinking}`}>El tutor está pensando…</p>}
+        {sending && (
+          <p className={`${styles.tutorBubble} ${styles.thinking}`}>
+            <span className={styles.dots} aria-hidden>
+              <i />
+              <i />
+              <i />
+            </span>
+            El tutor está pensando…
+          </p>
+        )}
       </div>
 
       {(error || notice) && (

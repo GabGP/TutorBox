@@ -123,7 +123,7 @@
   font-weight: 600;
   background: var(--p);
   color: #fff;
-  box-shadow: 0 8px 20px -10px rgba(11, 110, 153, 0.7);
+  box-shadow: 0 8px 20px -10px rgba(31, 62, 51, 0.7);
   transition: transform 0.16s cubic-bezier(0.2, 0.85, 0.25, 1),
     filter 0.16s ease,
     box-shadow 0.16s ease;
@@ -135,11 +135,12 @@
 
 .submitBtn:hover:not(:disabled) {
   filter: brightness(0.92);
-  box-shadow: 0 12px 24px -10px rgba(11, 110, 153, 0.75);
+  box-shadow: 0 12px 24px -10px rgba(31, 62, 51, 0.75);
 }
 
 .submitBtn:disabled {
   background: var(--p-soft);
+  color: var(--p);
   box-shadow: none;
   filter: none;
   transform: none;

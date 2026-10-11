@@ -1,0 +1,9 @@
+{
+  "include": ["backend/src", "backend/tests", "tools", "run.py"],
+  "extraPaths": ["backend/src", "backend"],
+  "venvPath": ".cache",
+  "venv": "venv",
+  "pythonVersion": "3.11",
+  "pythonPlatform": "All",
+  "typeCheckingMode": "standard"
+}

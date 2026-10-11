@@ -11,7 +11,7 @@ interface ErrorBoundaryState {
 }
 
 /**
- * Root Error Boundary for the TutorBox application.
+ * Root Error Boundary for the Utz'tutor application.
  * Catches rendering exceptions and displays a fallback recovery screen
  * instead of a blank page.
  */
@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
    * @returns {void}
    */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('TutorBox Uncaught Error:', error, errorInfo);
+    console.error("Utz'tutor Uncaught Error:", error, errorInfo);
   }
 
   /**

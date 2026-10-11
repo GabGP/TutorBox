@@ -42,7 +42,7 @@ async function throwForBadResponse(response: Response): Promise<never> {
 }
 
 /**
- * Executes a typed JSON REST API request against the TutorBox backend.
+ * Executes a typed JSON REST API request against the Utz'tutor backend.
  * Automatically injects the stored Bearer auth token and standardizes error responses.
  *
  * @template T

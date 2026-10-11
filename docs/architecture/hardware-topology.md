@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Architecture** › **Hardware Topology** • **Related:** [Three Modes](three-modes.md) • [ESP32 Clicker Transport](esp32-clicker-transport.md) • [Socratic Pedagogy](socratic-pedagogy.md) • [Infra Guide](../../infra/README.md) • [Captive Portal](../../infra/captive-portal.md)
@@ -11,7 +11,7 @@
 
 ---
 
-The entire **TutorBox** platform operates **100% offline** as an integrated single-appliance edge system without WAN or internet connectivity.
+The entire **Utz'tutor** platform operates **100% offline** as an integrated single-appliance edge system without WAN or internet connectivity.
 
 ---
 

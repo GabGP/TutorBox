@@ -36,7 +36,7 @@ def leaks(text: str, problem: Problem) -> bool:
     shown = digits_for_words(text).replace(problem.text, " ")
     if answers & set(extract_numbers(shown)):
         return True
-    targets = [sp.Rational(a.numerator, a.denominator) for a in answers]
+    targets: list[sp.Expr] = [sp.Rational(a.numerator, a.denominator) for a in answers]
     return any(_equals(span, targets) for span in _spans(_plain(text, problem)))
 
 
@@ -66,7 +66,7 @@ def _balanced(span: str) -> str:
     return span.strip()
 
 
-def _equals(expression: str, targets: list[sp.Rational]) -> bool:
+def _equals(expression: str, targets: list[sp.Expr]) -> bool:
     if len(expression) > MAX_EXPRESSION_LENGTH:
         return True  # fails closed: no hint needs arithmetic this long
     try:

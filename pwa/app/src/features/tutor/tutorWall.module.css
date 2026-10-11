@@ -1,0 +1,103 @@
+/* Classroom screen in tutor mode. The shell (DisplayView) is already forest green (--navy). */
+.wall {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 1fr auto;
+  gap: 4vh 4vw;
+  align-items: center;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.4vh;
+}
+
+.tag {
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: clamp(14px, 1.5vw, 20px);
+  font-weight: 700;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(40px, 5.6vw, 84px);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+
+.lead {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 30px);
+  line-height: 1.35;
+  color: var(--navy-soft);
+}
+
+.address {
+  margin: 0.6vh 0 0;
+  padding: 1.6vh 2.6vw;
+  border-radius: 26px;
+  background: var(--p-soft);
+  color: var(--p);
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3vh;
+}
+
+.quq {
+  width: clamp(120px, 16vw, 240px);
+  height: auto;
+}
+
+.stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--navy-soft);
+  font-size: clamp(13px, 1.2vw, 17px);
+}
+
+.stats strong {
+  font-size: clamp(26px, 2.8vw, 40px);
+  font-weight: 800;
+  color: var(--p-soft);
+}
+
+.stats strong.accent {
+  color: var(--accent);
+}
+
+.footer {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: clamp(14px, 1.4vw, 20px);
+  color: var(--navy-mute);
+}

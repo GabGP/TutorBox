@@ -1,4 +1,4 @@
-"""Audio packaging, amplitude calibration, and WAV encoding for TutorBox TTS."""
+"""Audio packaging, amplitude calibration, and WAV encoding for Utz'tutor TTS."""
 
 import array
 import io

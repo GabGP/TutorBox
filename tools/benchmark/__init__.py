@@ -1,1 +1,1 @@
-"""TutorBox benchmark suite."""
+"""Utz'tutor benchmark suite."""

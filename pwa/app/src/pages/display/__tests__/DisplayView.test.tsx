@@ -21,7 +21,7 @@ describe('DisplayView Component', () => {
     });
 
     render(<DisplayView />);
-    expect(screen.getByText('TutorBox está listo')).toBeInTheDocument();
+    expect(screen.getByText("Utz'tutor está listo")).toBeInTheDocument();
     expect(
       screen.getByText('Esperando a que el docente inicie el juego')
     ).toBeInTheDocument();

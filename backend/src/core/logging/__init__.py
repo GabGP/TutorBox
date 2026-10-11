@@ -1,4 +1,4 @@
-"""TutorBox logging infrastructure."""
+"""Utz'tutor logging infrastructure."""
 
 from core.logging.filters import PROBE_PATHS, ProbeFilter
 from core.logging.formatter import (

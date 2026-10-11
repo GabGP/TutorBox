@@ -10,7 +10,9 @@ from core.tts.router import get_tts_router
 FAKE_WAV = b"RIFFfake-wav-bytes"
 
 
-def _patch_router(monkeypatch, *, loaded: bool, wav: bytes | None = FAKE_WAV):
+def _patch_router(
+    monkeypatch, *, loaded: bool, wav: bytes | Exception | None = FAKE_WAV
+):
     """Patches the singleton instance (class patches are shadowed once an
     earlier suite pins an instance attribute on the shared router)."""
     router = get_tts_router()
@@ -54,7 +56,7 @@ def test_tts_preview_unloads_when_engine_was_idle(
     unload.assert_called_once_with(engine="piper")
     assert synth is not None
     synth.assert_called_once_with(
-        "Hola, esta es la voz de TutorBox para tu clase.",
+        "Hola, esta es la voz de Utz'tutor para tu clase.",
         lang="es",
         voice=None,
         backend="piper",

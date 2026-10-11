@@ -1,4 +1,4 @@
-"""Neural Piper VITS speech synthesis backend for TutorBox."""
+"""Neural Piper VITS speech synthesis backend for Utz'tutor."""
 
 import gc
 import logging

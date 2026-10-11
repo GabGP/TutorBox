@@ -8,6 +8,9 @@ from .audit import (
 from .device_pairing import (
     router as device_pairing_router,
 )
+from .device_secret import (
+    router as device_secret_router,
+)
 from .devices import (
     router as devices_router,
 )
@@ -21,6 +24,7 @@ from .schemas import (
     DeviceItem,
     DeviceListResponse,
     DeviceMessageResponse,
+    DeviceSecretResponse,
     RecoverUserRequest,
     RecoverUserResponse,
     RegisterDeviceRequest,
@@ -52,6 +56,7 @@ router.include_router(user_recover_router)
 router.include_router(audit_router)
 router.include_router(devices_router)
 router.include_router(device_pairing_router)
+router.include_router(device_secret_router)
 
 __all__ = [
     "AssignDeviceRequest",
@@ -63,6 +68,7 @@ __all__ = [
     "DeviceItem",
     "DeviceListResponse",
     "DeviceMessageResponse",
+    "DeviceSecretResponse",
     "RecoverUserRequest",
     "RecoverUserResponse",
     "RegisterDeviceRequest",
@@ -70,6 +76,7 @@ __all__ = [
     "UserListResponse",
     "audit_router",
     "device_pairing_router",
+    "device_secret_router",
     "devices_router",
     "router",
     "user_change_role_router",

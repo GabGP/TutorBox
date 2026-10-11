@@ -7,7 +7,7 @@
 
 .track {
   flex: 1;
-  background: var(--line2, #e1ebf0);
+  background: var(--line2, #d7e4db);
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
@@ -28,7 +28,7 @@
 
 .fill {
   height: 100%;
-  background: var(--p, #0b6e99);
+  background: var(--p, #1f3e33);
   border-radius: 9999px;
   transition: width 0.4s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
   position: relative;
@@ -77,7 +77,7 @@
 .label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--mute, #4e5c63);
+  color: var(--mute, #4d5d55);
   min-width: 38px;
   text-align: right;
   font-variant-numeric: tabular-nums;

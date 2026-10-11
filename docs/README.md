@@ -1,10 +1,10 @@
-# TutorBox Technical Documentation
+# Utz'tutor Technical Documentation
 
-Welcome to the **TutorBox** technical documentation portal. This hub indexes architectural specifications, database schemas, migration runbooks, and modular REST API contracts for the offline edge AI educational appliance.
+Welcome to the **Utz'tutor** technical documentation portal. This hub indexes architectural specifications, database schemas, migration runbooks, and modular REST API contracts for the offline edge AI educational appliance.
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 **Docs** | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 **Docs** | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Docs Hub** • **Quick Links:** [API Hub](api/README.md) • [Database Schema](database/README.md) • [Migrations](database/migrations.md) • [Roadmap](milestones/roadmap.md)
@@ -32,8 +32,7 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 * **[Question Pool Authoring Brief](quiz/question-pool-brief.md)**: Validator-derived rules, exemplars, batch plan, and ready-to-paste prompt for authoring the pre-verified question pool (`seed_data/pool/*.json`) with a frontier model; checked offline by `tests/modes/quiz/seed_data/test_pool.py`.
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)**: Physical 4-button student clickers, delegated pairing workflow, dual RGB LED feedback state machine, and the hardware-agnostic `VoteTransport` interface.
-* **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API. Week 7 shipped the documented Wi-Fi fallback instead (see the status note at its top).
-* **[ESP32 Clicker Firmware & Build Guide](../firmware/clicker/README.md)**: What was built in Week 7: ESP32-C3 wiring, flashing, LED meanings, troubleshooting, and the PC simulator that runs the firmware against a real backend.
+* **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API.
 * **[Offline Voice Feedback & Neural TTS Pipeline](architecture/voice-feedback.md)**: Architectural design, multi-tier Spanish engine hierarchy (`Qwen3-TTS` -> `Sherpa-ONNX` -> `Piper` -> `eSpeak-ng`), >51% Rule audio gating, and K'iche' routing.
 * **[Qwen3-TTS Daemon: Build & Deployment Guide](tts/qwen_build.md)**: Compilation instructions, persistent in-memory daemon patch, CUDA acceleration, and cross-platform reproduction guide.
 * **[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)**: Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance (8GB Unified RAM budget).
@@ -52,10 +51,11 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 | **System & Health** | **[api/system.md](api/system.md)** | `GET /health`, captive-portal probes (`GET /generate_204`, `/hotspot-detect.html`, …) |
 | **Authentication & Users** | **[api/auth.md](api/auth.md)** | `POST /auth/login`, `POST /auth/logout`, `/users/*` (signup, me, pin, username) |
 | **Staff Administration** | **[api/staff.md](api/staff.md)** | `GET/POST /staff/users`, PIN resets, soft-delete, account recovery, audit logs |
-| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete, fleet health |
-| **Hardware Clicker Transport** | **[api/clicker.md](api/clicker.md)** | `POST /clicker/checkin`, `POST /clicker/vote`: clicker enrollment and `hardware` votes |
+| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete, clicker secret, device authentication (`POST /devices/auth`) |
 | **Quiz Question Bank** | **[api/quiz.md](api/quiz.md)** | Curriculum topics, JSON Schema, SymPy validate, SLM generation, question bank |
 | **Quiz Sessions & Voting** | **[api/sessions.md](api/sessions.md)** | Session match lifecycle, voting countdown, first-press vote persistence, >51% Rule |
+| **Socratic Tutor (Mode 2)** | **[api/tutor.md](api/tutor.md)** | `POST /tutor/message`, reset, ping, and the teacher's live student list |
+| **Offline Games (Mode 3)** | **[api/games.md](api/games.md)** | `POST /games/events`: one event per answer tapped, stored once per client event id; `GET /games/events/summary`: the counts for staff |
 
 ---
 
@@ -63,8 +63,8 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 
 Technical reference for the local SQLite edge database engine:
 
-* **[Database Schema & ER Model](database/README.md)**: Engine pragmas (WAL, busy timeout, foreign keys), full Mermaid Entity-Relationship (ER) diagram, complete data dictionary for all 11 tables, performance B-tree indexes, and data lifecycle policies (soft-delete, last-admin guard, clicker unlinking).
-* **[Database Migrations Playbook & Changelog](database/migrations.md)**: Complete chronological changelog for migrations `001` through `010`, migration authoring workflow, idempotency validation, and edge backup runbook.
+* **[Database Schema & ER Model](database/README.md)**: Engine pragmas (WAL, busy timeout, foreign keys), full Mermaid Entity-Relationship (ER) diagram, complete data dictionary for all 12 tables, performance B-tree indexes, and data lifecycle policies (soft-delete, last-admin guard, clicker unlinking).
+* **[Database Migrations Playbook & Changelog](database/migrations.md)**: Complete chronological changelog for migrations `001` through `015`, migration authoring workflow, idempotency validation, and edge backup runbook.
 
 ---
 
@@ -88,6 +88,9 @@ Engineering schedule and weekly deliverables:
 * **[Week 2 Milestone Tracking](milestones/week-2-quiz-contract.md)**: Quiz JSON Schema contract, SymPy validation, 32 diagnostic distractors, and question bank.
 * **[Week 3 Milestone Synthesis](milestones/week-3-session-engine.md)**: Real-time session engine, deterministic >51% Rule evaluator, first-press locking, and REST API.
 * **[Week 4 Milestone Synthesis](milestones/week-4-voice-quiz.md)**: Full Classroom Quiz with offline Spanish & Mayan voice, multi-tier TTS pipeline, oral math adaptation, and memory lifecycle profiling.
+* **[Week 5 Milestone Tracking](milestones/week-5-socratic-tutor.md)**: Socratic dialogue engine, SymPy answer containment, 48-problem bank, dialogue turn telemetry, and the tutor client's home-screen evidence.
+* **[Week 6 Milestone Tracking](milestones/week-6-games-sync.md)**: Game event ingestion endpoint, lesson-to-concept table for 77 lessons, deduplication per client event id, and the grade apps hosted from the appliance (client queue not started)
+* **[Week 7 Milestone Tracking](milestones/week-7-esp32-clickers.md)**: Clicker secret and device authentication, the vote label taken from the session, revocation of a clicker's sessions, and the simulated fleet test in CI (firmware and provisioner not started)
 
 ---
 

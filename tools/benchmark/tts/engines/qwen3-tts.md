@@ -35,7 +35,7 @@ Evaluated on the standardized classroom math intervention corpus entry (`corpus/
 
 ## Asynchronous Lifecycle & Pedagogical Preload Timing
 
-In the TutorBox appliance architecture:
+In the Utz'tutor appliance architecture:
 1. **Asynchronous SLM vs TTS Lifecycle**: Question generation by the Small Language Model (SLM) is asynchronous to quiz execution. Before student voting begins, the SLM is unloaded (`/api/v1/llm/unload`), reclaiming ~4.7 GB of memory.
 2. **Preloading During Voting**: When the teacher launches a quiz round, students vote for 20–30 seconds. The appliance preloads the neural TTS model during this voting period (`/api/v1/tts/load`).
 3. **Warm Pedagogical Intervention**: If the >51% distractor rule triggers at the end of the round, the model weights and CUDA graph are already resident. The system only performs prompt evaluation, token generation, and vocoding (**2.29s warm latency**, RTF 0.2386x), satisfying the `<= 3.0s` classroom turnaround SLA with high margin.

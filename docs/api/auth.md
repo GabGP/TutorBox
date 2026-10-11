@@ -1,10 +1,10 @@
 # Authentication & User Self-Service API Specification
 
-Technical specification for user authentication, bearer session management, and self-service credential operations in **TutorBox**.
+Technical specification for user authentication, bearer session management, and self-service credential operations in **Utz'tutor**.
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API](README.md) › **Authentication & Users** • **Related:** [Staff Admin](staff.md) • [Database Schema](../database/README.md)

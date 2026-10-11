@@ -4,8 +4,8 @@ import { ShinyText } from '../ShinyText/ShinyText';
 
 describe('ShinyText Component', () => {
   it('renders text content with default span tag', () => {
-    render(<ShinyText text="TutorBox está creando..." />);
-    const el = screen.getByText('TutorBox está creando...');
+    render(<ShinyText text="Utz'tutor está creando..." />);
+    const el = screen.getByText("Utz'tutor está creando...");
     expect(el).toBeInTheDocument();
     expect(el.tagName.toLowerCase()).toBe('span');
   });

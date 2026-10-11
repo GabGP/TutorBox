@@ -1,4 +1,4 @@
-[TutorBox](../../../README.md) › [pwa](../../README.md) › tareas › tercero
+[Utz'tutor](../../../README.md) › [pwa](../../README.md) › tareas › tercero
 
 # Matemáticas 3º con Q'uq'
 
@@ -11,7 +11,7 @@ competencia**, 30 lessons.
 
 | Where | URL |
 | :--- | :--- |
-| TutorBox classroom (Jetson) | `http://tutorbox/tareas/tercero/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
+| Utz'tutor classroom (Jetson) | `http://tutorbox/tareas/tercero/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
 | Any static host | serve `public/` — every path is relative |
 
 There is no APK for Tercero yet: [`../android`](../android/README.md) packs `primero/public` only.

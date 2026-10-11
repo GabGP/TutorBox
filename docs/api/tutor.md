@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › [REST API Hub](README.md) › **Tutor** • **Related:** [Socratic Pedagogy](../architecture/socratic-pedagogy.md) • [Three Modes](../architecture/three-modes.md#mode-2-socratic-tutor) • [Dialogue Telemetry](../database/dialogue.md)
@@ -31,6 +31,7 @@ who is using it. Code: `backend/src/api/tutor/` (HTTP) and `backend/src/modes/so
 | `POST /api/v1/tutor/reset` | Student, Teacher, Admin | Forgets the problem in progress ("Empezar de nuevo"). History stays in `turn_logs`. |
 | `POST /api/v1/tutor/ping` | Student, Teacher, Admin | The chat is open; the student counts as connected for 45 s. The PWA sends it every 20 s. |
 | `GET /api/v1/tutor/students` | Teacher, Admin | Students seen in the last 30 minutes, connected first. |
+| `GET /api/v1/tutor/summary` | Public | Class totals for the classroom screen (`/pantalla/` has no login): `{"online", "solved", "need_help"}`, no names. `need_help` counts connected students on hint 3 of 3. |
 
 ```http
 POST /api/v1/tutor/message
@@ -62,7 +63,12 @@ GET /api/v1/tutor/students →
 
 Every turn is written to `turn_logs` ([dialogue.md](../database/dialogue.md)): the child's text, the
 SymPy expression and target, whether the answer was correct, the raw model output, whether
-containment replaced it, the final reply and the hint level.
+containment replaced it, the final reply and the hint level. Each row also carries three labels: the
+concept practised (`concept_topic`, `concept_subconcept` and the CNB topic `cnb_topic`), the
+scaffolding strategy applied and, on a wrong answer, the misconception behind it (`error_type`). The
+labels are computed in `backend/src/modes/socratic/telemetry/` and written by
+`backend/src/api/tutor/turn_logging.py`; their vocabularies are in
+[dialogue.md §2.1](../database/dialogue.md#21-telemetry-label-vocabularies).
 
 ---
 

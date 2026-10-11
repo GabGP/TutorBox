@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Minus, Plus, SquareCheck, Zap } from 'lucide-react';
+import { BookOpen, Minus, Plus, Zap } from 'lucide-react';
 import { QuestionBankView } from '../../features/question-bank/QuestionBankView';
 import { QuestionForm } from '../../features/question-bank/QuestionForm';
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
@@ -24,7 +24,7 @@ import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 export type BankTab = 'elegir' | 'crear' | 'pregrow';
 
 const BANK_TABS = [
-  { value: 'elegir', icon: SquareCheck, label: 'Elegir' },
+  { value: 'elegir', icon: BookOpen, label: 'Elegir' },
   { value: 'crear', icon: Plus, label: 'Crear' },
   { value: 'pregrow', icon: Zap, label: 'Pre-generar' },
 ] as const;
@@ -100,8 +100,8 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
       {tab === 'elegir' && (
         <>
           <p className={styles.description}>
-            Marca las preguntas que quieres usar ({getTopicLabel(selectedTopic)}). El juego
-            se crea solo con las elegidas, sin generar.
+            Toca una pregunta para ver y editar sus opciones ({getTopicLabel(selectedTopic)}).
+            El juego se crea solo con las que elijas, sin generar.
           </p>
           <QuestionBankView
             selectable

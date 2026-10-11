@@ -1,4 +1,4 @@
-"""Logging initialization and configuration for TutorBox."""
+"""Logging initialization and configuration for Utz'tutor."""
 
 import logging
 import os

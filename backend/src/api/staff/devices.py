@@ -11,8 +11,8 @@ from api.staff.schemas import (
     RegisterDeviceRequest,
 )
 from core.db.audit import record_audit
-from core.db.clicker_repository import ONLINE_WINDOW_SECONDS
 from core.db.database import get_db
+from core.db.device_repository import revoke_device_sessions
 from core.security import (
     AuthContext,
     require_roles,
@@ -31,13 +31,10 @@ def list_devices(
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT d.device_id, d.assigned_user_id, d.created_at, "
-            "u.username AS assigned_username, d.secret_hash IS NOT NULL AS enrolled, "
-            "COALESCE(d.last_seen_at >= datetime('now', ?), 0) AS online, "
-            "d.last_seen_at, d.last_rssi, d.last_battery_mv, d.firmware "
+            "SELECT d.device_id, d.assigned_user_id, d.created_at, u.username AS assigned_username "
             "FROM devices d LEFT JOIN users u ON d.assigned_user_id = u.id "
             "ORDER BY d.device_id LIMIT ?",
-            (f"-{ONLINE_WINDOW_SECONDS} seconds", DEFAULT_DEVICE_LIST_LIMIT),
+            (DEFAULT_DEVICE_LIST_LIMIT,),
         )
         rows = cursor.fetchall()
 
@@ -48,12 +45,6 @@ def list_devices(
                 assigned_user_id=r["assigned_user_id"],
                 assigned_username=r["assigned_username"],
                 created_at=r["created_at"],
-                enrolled=bool(r["enrolled"]),
-                online=bool(r["online"]),
-                last_seen_at=r["last_seen_at"],
-                rssi=r["last_rssi"],
-                battery_mv=r["last_battery_mv"],
-                firmware=r["firmware"],
             )
             for r in rows
         ]
@@ -103,11 +94,7 @@ def delete_device(
     device_id: str,
     ctx: Annotated[AuthContext, Depends(require_roles("teacher", "admin"))],
 ):
-    """Removes a physical clicker from the appliance fleet.
-
-    Its secret goes with the row, so the clicker enrolls again, unassigned, on its
-    next check-in: this is how a clicker whose flash was erased is reset.
-    """
+    """Removes a physical clicker from the appliance fleet."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -118,6 +105,7 @@ def delete_device(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Device not found."
             )
 
+        revoke_device_sessions(conn, device_id)
         cursor.execute("DELETE FROM devices WHERE device_id = ?", (device_id,))
         record_audit(conn, actor_user_id=ctx.user_id, action="device_deleted")
         conn.commit()

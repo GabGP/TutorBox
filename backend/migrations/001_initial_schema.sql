@@ -1,5 +1,5 @@
 -- 001_initial_schema.sql
--- Initial database schema for TutorBox offline educational appliance
+-- Initial database schema for Utz'tutor offline educational appliance
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

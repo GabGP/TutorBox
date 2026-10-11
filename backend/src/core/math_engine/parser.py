@@ -1,4 +1,5 @@
 import re
+from fractions import Fraction
 from typing import Any
 
 import sympy as sp
@@ -41,6 +42,13 @@ def are_values_equivalent(expr_a: Any, expr_b: Any) -> bool:
     except (TypeError, ValueError, AttributeError):
         pass
     return str(expr_a).strip() == str(expr_b).strip()
+
+
+def exact_fraction(value: sp.Expr | None) -> Fraction | None:
+    """The value as an exact fraction, or None when it is not a rational number."""
+    if not isinstance(value, sp.Rational):
+        return None
+    return Fraction(int(value.p), int(value.q))
 
 
 def solve_linear_equation(question_text: str) -> sp.Expr | None:

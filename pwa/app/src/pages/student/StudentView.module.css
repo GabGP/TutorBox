@@ -51,6 +51,41 @@
   font-weight: 500;
 }
 
+/* The Utz'tutor mark: a forest-green tile with a mint dot, next to the name. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--p);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+:global(body[data-mood]) .brand {
+  color: #fff;
+}
+
+.mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--p);
+  display: inline-grid;
+  place-items: center;
+}
+
+:global(body[data-mood]) .mark {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mark::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--p-soft);
+}
+
 .statusDot {
   width: 8px;
   height: 8px;

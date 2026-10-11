@@ -113,7 +113,7 @@ class _Model(LLMClient):
         self.reply: str | None = ECHO
 
     def generate(self, system_prompt, user_prompt, response_format=None) -> str:
-        if self.reply is ECHO:
+        if self.reply is None:  # ECHO
             return user_prompt.split("«", 1)[1].split("»", 1)[0]
         return self.reply
 

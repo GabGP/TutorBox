@@ -18,6 +18,7 @@ from modes.quiz.session.exceptions import (
     SessionNotFoundError,
 )
 from modes.quiz.session.models import RoundStatus, SessionStatus
+from tests.conftest import required
 
 
 @pytest.fixture
@@ -181,7 +182,7 @@ def test_event_listener_hook_dispatch(session_db):
     engine.cast_vote("s6", round_0.id, 20, "B")
     engine.close_round("s6", round_0.id)
     engine.reveal_round("s6", round_0.id)
-    round_1 = engine.next_round("s6")
+    round_1 = required(engine.next_round("s6"))
     engine.reveal_round("s6", round_1.id)
     engine.next_round("s6")
 

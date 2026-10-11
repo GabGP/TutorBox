@@ -21,6 +21,6 @@ describe('DisplayView follows the classroom mode', () => {
   it('keeps the quiz idle screen in quiz mode', () => {
     mockMode = 'quiz';
     render(<DisplayView />);
-    expect(screen.getByText('TutorBox está listo')).toBeInTheDocument();
+    expect(screen.getByText("Utz'tutor está listo")).toBeInTheDocument();
   });
 });

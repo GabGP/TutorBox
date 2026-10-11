@@ -1,20 +1,20 @@
 :root {
-  --ink: #131E23;
-  --ink2: #26333A;
-  --mute: #4E5C63;
-  --mute2: #55636A;
-  --p: #0B6E99;
-  --p-dark: #095B7F;
-  --p-soft: #A9C3CF;
-  --bg: #EEF4F7;
-  --panel: #F7FBFD;
-  --line: #E4EDF2;
-  --line2: #E1EBF0;
-  --line3: #C9DBE4;
-  --tint: #E7F1F6;
-  --tint2: #D3E4EC;
-  --tint-ink: #093B51;
-  --chip: #F1F6F9;
+  --ink: #16241E;
+  --ink2: #24342C;
+  --mute: #4D5D55;
+  --mute2: #536259;
+  --p: #1F3E33;
+  --p-dark: #16302A;
+  --p-soft: #9ED5B3;
+  --bg: #F4F8F5;
+  --panel: #FBFDFC;
+  --line: #DCE8E0;
+  --line2: #D7E4DB;
+  --line3: #C3D6CA;
+  --tint: #EAF5EE;
+  --tint2: #D5EBDD;
+  --tint-ink: #1F3E33;
+  --chip: #EFF5F1;
   --ok-bg: #D7EAD9;
   --ok: #14532B;
   --ok2: #1E5B36;
@@ -26,26 +26,30 @@
   --bad-bg: #FFE9E7;
   --bad-line: #F6C9C4;
   --bad-ink: #5F1710;
-  --navy: #062D3F;
-  --navy-mute: #9FC6D8;
-  --navy-soft: #DCEDF5;
+  --navy: #1F3E33;
+  --navy-mute: #9ED5B3;
+  --navy-soft: #DDEFE4;
+  /* Utz'tutor accent: praise, "needs help", hold-to-confirm fill. Text on it is --accent-ink
+     (6.7:1); white text on --accent or --p-soft fails (1.8:1 and 1.7:1). */
+  --accent: #F5B3B3;
+  --accent-ink: #1F3E33;
   --A: #E21B3C;
   --B: #1368CE;
   --C: #C98A00;
   --D: #1E7B2E;
 
   /* Accent & Shimmer Brand Tokens */
-  --p-bright: #5BC0EB;
-  --shimmer-glow: rgba(91, 192, 235, 0.45);
+  --p-bright: #9ED5B3;
+  --shimmer-glow: rgba(158, 213, 179, 0.45);
   --shimmer-core: rgba(255, 255, 255, 0.75);
   --shimmer-track: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(91, 192, 235, 0.20) 25%,
+    rgba(158, 213, 179, 0.20) 25%,
     var(--shimmer-glow) 42%,
     var(--shimmer-core) 50%,
     var(--shimmer-glow) 58%,
-    rgba(91, 192, 235, 0.20) 75%,
+    rgba(158, 213, 179, 0.20) 75%,
     transparent 100%
   );
 

@@ -2,7 +2,7 @@
  * Standard Spanish error message dictionary matching legacy tb.js.
  */
 export const ERROR_MESSAGES: Record<number, string> = {
-  0: 'Sin conexión con TutorBox',
+  0: "Sin conexión con Utz'tutor",
   401: 'Usuario o PIN incorrecto',
   403: 'No tienes permiso para esto',
   404: 'No se encontró',

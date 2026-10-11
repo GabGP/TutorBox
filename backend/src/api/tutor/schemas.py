@@ -8,6 +8,7 @@ __all__ = [
     "TutorRosterResponse",
     "TutorStatusResponse",
     "TutorStudent",
+    "TutorSummaryResponse",
 ]
 
 
@@ -53,6 +54,14 @@ class TutorStudent(BaseModel):
     solved: int
     problem: str | None = Field(description="Problem in progress, if any.")
     hint_level: int = Field(ge=0, le=3)
+
+
+class TutorSummaryResponse(BaseModel):
+    """Class totals for the wall screen (/pantalla/): public, so no names."""
+
+    online: int = Field(description="Students with the chat open.")
+    solved: int = Field(description="Problems solved in the last 30 minutes.")
+    need_help: int = Field(description="Connected students on the last hint (3 of 3).")
 
 
 class TutorRosterResponse(BaseModel):

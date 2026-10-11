@@ -10,6 +10,7 @@ from api.staff.schemas import (
 )
 from core.db.audit import record_audit
 from core.db.database import get_db
+from core.db.device_repository import revoke_device_sessions
 from core.security import (
     AuthContext,
     require_roles,
@@ -29,9 +30,11 @@ def assign_device(
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT device_id FROM devices WHERE device_id = ?", (device_id,)
+            "SELECT device_id, assigned_user_id FROM devices WHERE device_id = ?",
+            (device_id,),
         )
-        if not cursor.fetchone():
+        device_row = cursor.fetchone()
+        if not device_row:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Device not found."
             )
@@ -51,6 +54,18 @@ def assign_device(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Only student accounts may be assigned to clickers.",
             )
+
+        # The tokens of a clicker follow its student: revoke the ones of any device
+        # this student held before, and the ones of this device if its student changes
+        cursor.execute(
+            "SELECT device_id FROM devices "
+            "WHERE assigned_user_id = ? AND device_id != ?",
+            (payload.user_id, device_id),
+        )
+        for previous_device_row in cursor.fetchall():
+            revoke_device_sessions(conn, previous_device_row["device_id"])
+        if device_row["assigned_user_id"] != payload.user_id:
+            revoke_device_sessions(conn, device_id)
 
         # Clear existing assignment if this student already held another device
         cursor.execute(
@@ -100,6 +115,7 @@ def unassign_device(
             "UPDATE devices SET assigned_user_id = NULL WHERE device_id = ?",
             (device_id,),
         )
+        revoke_device_sessions(conn, device_id)
         if prev_user_id is not None:
             record_audit(
                 conn,

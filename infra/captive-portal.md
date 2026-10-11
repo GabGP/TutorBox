@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ [Backend](../backend/README.md) | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Infra](README.md) › **Captive Portal** • **Related:** [GL.iNet Setup](glinet/initial.md) • [Hardware Topology](../docs/architecture/hardware-topology.md) • [System API](../docs/api/system.md)
@@ -32,7 +32,7 @@ Every mainstream OS fires a plain-HTTP request to a fixed URL the moment it asso
 is *exactly* what it expects, the network is "online"; if it gets a redirect (or any other page), the OS
 assumes a hotel-style sign-in page and opens it in a dedicated mini-browser:
 
-| Client | Probe (all plain `http://`, port 80) | Expects | TutorBox answers |
+| Client | Probe (all plain `http://`, port 80) | Expects | Utz'tutor answers |
 | :--- | :--- | :--- | :--- |
 | Android, ChromeOS, Chrome | `connectivitycheck.gstatic.com/generate_204` (also `android.com`, `clients3.google.com`, `play.googleapis.com`, `www.google.com/gen_204`) | `204 No Content` | `302 → /alumno/` |
 | Xiaomi / Huawei / Samsung builds | `connect.rom.miui.com/generate_204`, `connectivitycheck.platform.hicloud.com/generate_204`, … | `204` | `302 → /alumno/` |
@@ -154,7 +154,7 @@ Not used, on purpose:
   cookies and `localStorage`. The student can log in and vote there, but the `tb_token` stored inside
   the sandbox is not shared with Safari/Chrome — opening the page later in the real browser means
   logging in again.
-- **The network stays "no internet".** TutorBox never answers the probe with the expected `204`/`Success`
+- **The network stays "no internet".** Utz'tutor never answers the probe with the expected `204`/`Success`
   (doing so once the page is shown would make the OS *close* the sign-in browser mid-quiz). Phones keep
   a "Sign in to network" / "No internet" badge; students can tap **Use without internet** (iOS) or
   **Use this network as is** (Android ⋮ menu) and continue in the normal browser at

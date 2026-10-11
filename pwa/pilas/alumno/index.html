@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>TutorBox</title>
+<title>Utz'tutor</title>
 <link rel="stylesheet" href="/static/tb.css">
 <style>
   /* Student client (/alumno/): login -> (pin) -> wait -> play -> sent -> result -> final. Shell colour follows the mood. */
@@ -36,17 +36,17 @@
   /* The answer buttons are the only control a student ever touches: big targets, a physical press,
      and the chosen one stays lit while the vote travels over the classroom AP. */
   .tile { position: relative; border-radius: 26px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; min-height: clamp(96px, 17vh, 190px); user-select: none;
-          box-shadow: 0 12px 22px -14px rgba(6,45,63,.8), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -3px 0 rgba(0,0,0,.14);
+          box-shadow: 0 12px 22px -14px rgba(22, 48, 40,.8), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -3px 0 rgba(0,0,0,.14);
           transition: opacity .22s ease, transform .16s cubic-bezier(.2,.85,.25,1), box-shadow .16s ease, filter .2s ease; }
   .tile:hover:not(:disabled) { filter: brightness(1.06); }
-  .tile:active:not(:disabled) { transform: scale(.955); box-shadow: 0 3px 8px -6px rgba(6,45,63,.8), inset 0 3px 8px rgba(0,0,0,.2); }
+  .tile:active:not(:disabled) { transform: scale(.955); box-shadow: 0 3px 8px -6px rgba(22, 48, 40,.8), inset 0 3px 8px rgba(0,0,0,.2); }
   .tile:focus-visible { outline: 4px solid #fff; outline-offset: -6px; }
   .tile i { position: absolute; top: 12px; left: 12px; width: 38px; height: 38px; border-radius: 13px; background: rgba(255,255,255,.26); display: grid; place-items: center; font-size: 19px; font-weight: 700; font-style: normal; }
   .tile span { font-size: clamp(20px, 6.6vw, 32px); font-weight: 700; line-height: 1.15; text-align: center; overflow-wrap: anywhere; max-width: 100%; padding: 16px 2px 0; }
   /* pressed: the pick keeps its colour and wears a ring, the rest step back */
   .tiles.locked .tile { pointer-events: none; }
   .tiles.locked .tile:not(.picked) { opacity: .26; transform: scale(.955); box-shadow: none; }
-  .tile.picked { transform: scale(1.02); box-shadow: inset 0 0 0 4px rgba(255,255,255,.92), 0 16px 26px -14px rgba(6,45,63,.85); }
+  .tile.picked { transform: scale(1.02); box-shadow: inset 0 0 0 4px rgba(255,255,255,.92), 0 16px 26px -14px rgba(22, 48, 40,.85); }
   .tile.picked::after { content: '✓'; position: absolute; top: 9px; right: 13px; font-size: 19px; font-weight: 700; }
   .pick { width: 108px; height: 108px; border-radius: 34px; color: #fff; background: var(--tint2); display: grid; place-items: center; font-size: 46px; font-weight: 700; animation: popIn .32s cubic-bezier(.2,.9,.3,1); }
   #s-sent h1 { font-size: 26px; }
@@ -84,7 +84,7 @@
 </style>
 </head>
 <body>
-<header><span>TutorBox</span><span><i></i><span id="who">Sin conexión</span><button id="out" hidden>Salir</button></span></header>
+<header><span>Utz'tutor</span><span><i></i><span id="who">Sin conexión</span><button id="out" hidden>Salir</button></span></header>
 <main>
   <section id="s-login">
     <div class="logo">T</div>

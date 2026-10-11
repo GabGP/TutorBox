@@ -4,10 +4,18 @@ on:
   push:
     paths:
       - "backend/**"
+      - "tools/**"
+      - "run.py"
+      - "ruff.toml"
+      - "pyrightconfig.json"
       - ".github/workflows/ci-backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "tools/**"
+      - "run.py"
+      - "ruff.toml"
+      - "pyrightconfig.json"
       - ".github/workflows/ci-backend.yml"
 
 jobs:
@@ -38,8 +46,13 @@ jobs:
 
       - name: Lint and format check
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
+          uv run ruff check . ../tools ../run.py
+          uv run ruff format --check . ../tools ../run.py
+
+      # Pyright is the engine behind VS Code's Pylance, so an error here is the
+      # one the editor underlines. Scope and settings: ../pyrightconfig.json.
+      - name: Type check
+        run: uv run pyright -p ..
 
       - name: Test with coverage gate
         run: uv run pytest

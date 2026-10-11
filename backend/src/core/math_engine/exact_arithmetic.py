@@ -40,7 +40,9 @@ def evaluate_exact(expression: str) -> Fraction | None:
 
 def _value(node: ast.AST, text: str) -> Fraction:
     if isinstance(node, ast.Constant) and type(node.value) in (int, float):
-        return Fraction(ast.get_source_segment(text, node))  # the digits as typed
+        digits_as_typed = ast.get_source_segment(text, node)
+        assert digits_as_typed is not None  # ast.parse locates every node
+        return Fraction(digits_as_typed)
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
         value = _value(node.operand, text)
         return -value if isinstance(node.op, ast.USub) else value

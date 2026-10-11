@@ -1,4 +1,4 @@
-"""TutorBox Core Platform Infrastructure.
+"""Utz'tutor Core Platform Infrastructure.
 
 Provides foundational services shared across all appliance operating modes:
 - config: Centralized typed configuration dataclasses & environment loader.

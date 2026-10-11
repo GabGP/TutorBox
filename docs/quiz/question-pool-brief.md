@@ -2,7 +2,7 @@
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../README.md) › **Quiz** › **Question Pool Brief** • **Related:** [Diagnostic Distractors](../architecture/diagnostic-distractors.md) • [Quiz API](../api/quiz.md) • [Three Modes](../architecture/three-modes.md)
@@ -136,7 +136,7 @@ Canonical schema — `backend/schemas/v1/quiz_question.schema.json`, verbatim:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tutorbox.local/schemas/v1/quiz_question.schema.json",
   "version": "1.0.0",
-  "description": "Canonical versioned contract schema for TutorBox diagnostic multiple-choice quiz questions."
+  "description": "Canonical versioned contract schema for Utz'tutor diagnostic multiple-choice quiz questions."
 }
 ```
 
@@ -467,7 +467,7 @@ The failing ids and their error lists are printed in one assertion message; fix 
 Paste the brief (sections 2–8) first, then this block with the four placeholders filled in:
 
 ````text
-You are authoring diagnostic multiple-choice math questions for TutorBox, an offline classroom
+You are authoring diagnostic multiple-choice math questions for Utz'tutor, an offline classroom
 quiz appliance for Spanish-speaking primary-school students. Your output is validated by
 deterministic code (SymPy + regex), not by a human, so follow "the brief" (sections 2–8 above)
 literally: it is derived from that code.

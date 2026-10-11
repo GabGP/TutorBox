@@ -2,7 +2,7 @@
 
 ## 1. Overview & Pedagogical Purpose
 
-TutorBox applies the deterministic **>51% Rule** before any speech is generated:
+Utz'tutor applies the deterministic **>51% Rule** before any speech is generated:
 
 $$\frac{\text{distractor\_votes}}{\text{total\_votes}} > 0.51$$
 
@@ -33,11 +33,11 @@ Kokoro remains an experimental opt-in candidate. MeloTTS remains a rejected refe
 
 ## 3. Qwen3-TTS Model, CUDA, and Persistent Daemon Architecture
 
-TutorBox uses the **Qwen3-TTS 1.7B Base** model in GGUF format through a persistent, in-memory daemon mode (`llama-tts-daemon --daemon`). The canonical engine identifier is `qwen3-tts`; `qwen-gguf` and `qwen` remain compatibility aliases only.
+Utz'tutor uses the **Qwen3-TTS 1.7B Base** model in GGUF format through a persistent, in-memory daemon mode (`llama-tts-daemon --daemon`). The canonical engine identifier is `qwen3-tts`; `qwen-gguf` and `qwen` remain compatibility aliases only.
 
 The local workstation's `llama-tts-daemon --list-devices` reports an NVIDIA CUDA device, and synthesis logs report `using device CUDA0`. The CSV's Qwen result is GPU-backed. By running in persistent daemon mode with an in-memory JSON IPC protocol over stdio, the 1.7B acoustic model and vocoder remain resident in VRAM, eliminating the 1.5s cold reload delay of one-shot CLI invocations.
 
-The deployed **Base** checkpoint has no fixed named-speaker catalog. TutorBox exposes it as `base-default`; Base is intended for reference-audio voice cloning, but the current backend does not yet wire a reference audio file into the API. Qwen's separate **CustomVoice** checkpoints provide `Vivian`, `Serena`, `Uncle_Fu`, `Dylan`, `Eric`, `Ryan`, `Aiden`, `Ono_Anna`, and `Sohee`. Those speakers are not selectable in the current Base deployment. See the [official Qwen3-TTS speaker documentation](https://github.com/QwenLM/Qwen3-TTS#custom-voice-generate).
+The deployed **Base** checkpoint has no fixed named-speaker catalog. Utz'tutor exposes it as `base-default`; Base is intended for reference-audio voice cloning, but the current backend does not yet wire a reference audio file into the API. Qwen's separate **CustomVoice** checkpoints provide `Vivian`, `Serena`, `Uncle_Fu`, `Dylan`, `Eric`, `Ryan`, `Aiden`, `Ono_Anna`, and `Sohee`. Those speakers are not selectable in the current Base deployment. See the [official Qwen3-TTS speaker documentation](https://github.com/QwenLM/Qwen3-TTS#custom-voice-generate).
 
 ## 4. Spanish Model Selection & Dialect Analysis
 

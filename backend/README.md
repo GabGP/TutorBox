@@ -1,4 +1,4 @@
-# TutorBox Backend
+# Utz'tutor Backend
 
 [![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
 
@@ -6,7 +6,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 
 <div align="center">
 
-| 🏠 [TutorBox](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
+| 🏠 [Utz'tutor](../README.md) | 📚 [Docs](../docs/README.md) | ⚙️ **Backend** | 📱 [PWA](../pwa/README.md) | 🔌 [Infra](../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 **Backend Hub** • **Related:** [REST API Hub](../docs/api/README.md) • [Database Schema](../docs/database/README.md) • [Hardware Topology](../docs/architecture/hardware-topology.md)
@@ -16,7 +16,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [TutorBox Backend](#tutorbox-backend)
+- [Utz'tutor Backend](#tutorbox-backend)
   - [Table of Contents](#table-of-contents)
   - [1. Components \& Architecture](#1-components--architecture)
   - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
@@ -46,7 +46,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ## <a id="1-components--architecture"></a>1. Components & Architecture
 
 - **FastAPI Core Application**:
-  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, and physical ESP32 clicker fleet management.
+  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, physical ESP32 clicker fleet management (`api/staff/`), and the clicker login (`api/devices/`: `POST /api/v1/devices/auth`).
   - OpenAPI automated documentation generator (`/docs` and `/openapi.json`).
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
@@ -56,22 +56,22 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - Zero-credential logging guards and anti-oracle check ordering.
 - **Platform Infrastructure (`core/`)**:
   - **Centralized Configuration & Environment Loader (`core/config`)**: Typed domain dataclasses (`DatabaseConfig`, `SecurityConfig`, `LLMConfig`, `QuizConfig`, `TTSConfig`, `CaptivePortalConfig`), safe `.env` file discovery, early bootstrapping, and range/type coercion with fallback to safe defaults.
-  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, and generation telemetry.
-  - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, and zero-credential logging guards.
+  - **Database & Migrations (`core/db`)**: SQLite with foreign keys, index optimization, and WAL mode; numbered idempotent migrations; append-only audit logging; repository layers for quiz questions, sessions, rounds, votes, generation telemetry, game events, and clicker credentials (`device_repository.py`: the secret digest and the sessions issued to a clicker).
+  - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, the vote-only scope of a clicker's session (`get_voter_session` in `auth_session.py`), and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
   - **Offline Voice & Lifecycle (`core/tts`, `api/tts`, `api/llm`)**: Multi-tier pluggable voice synthesis for the >51% spoken intervention — state-of-the-art **Qwen3-TTS** (1.7B autoregressive transformer on CUDA), ultra-fast **Sherpa-ONNX / Piper VITS** (Latin American Spanish and Mayan K'iche'), high-fidelity **Kokoro-82M**, and **espeak-ng** formant fallback; hardware-contained LRU audio caching, and explicit quiz-agnostic lifecycle endpoints (`/api/v1/tts/load`, `/api/v1/tts/unload`, `/api/v1/tts/status`, `/api/v1/tts/voices`, and `/api/v1/llm/*` proxy).
 
 - **Appliance Operating Modes (`modes/`)**:
   - **Mode 1: Classroom Quiz Mode (`modes/quiz/`)**: Versioned JSON Schema contracts, diagnostic distractors with 32 misconception slugs, 66-question seed bank, multi-stage prompt rejection pipeline with anti-guessing shuffler, and real-time session engine (`modes/quiz/session/`) featuring monotonic countdown timer, first-press locks (`UNIQUE(round_id, student_id)`), and deterministic >51% Rule evaluator.
-  - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Mobile conversational math practice: a deterministic dialogue planner with a bounded 4-tier hint ladder (0 → 3) for operations and one- and two-step equations, SymPy containment that replaces any model reply giving the answer away (digits, words, expressions or `x = …`) with the deterministic hint, and a 48-problem labeled bank validated in CI ([Tutor API](../docs/api/tutor.md)).
-  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: Planned for Week 6 (offline educational games, student error event ingestion, opportunistic AP sync).
+  - **Mode 2: Socratic Tutor Mode (`modes/socratic/`)**: Mobile conversational math practice: a deterministic dialogue planner with a bounded 4-tier hint ladder (0 → 3) for operations and one- and two-step equations, SymPy containment that replaces any model reply giving the answer away (digits, words, expressions or `x = …`) with the deterministic hint, turn telemetry labels (concept, CNB topic, scaffolding strategy and, on a wrong answer, the misconception) in `turn_logs`, and a 48-problem labeled bank validated in CI ([Tutor API](../docs/api/tutor.md)).
+  - **Mode 3: Offline Primary Games Mode (`modes/games/`)**: The appliance receives one event per answer tapped at `POST /api/v1/games/events`, labels it with its CNB topic and quiz taxonomy pair, keeps the misconception when the game names one, and stores each client event id once. Staff read the counts at `GET /api/v1/games/events/summary` ([Games API](../docs/api/games.md)). The queue in the games that will send the events is not built yet.
 
 The following items are planned deliverables across upcoming milestone phases:
 
 - **Neural & K'iche' Voices (Week 4+)**: the >51% spoken intervention uses Qwen3-TTS first, then Sherpa/Piper ONNX, with a K'iche' Mayan voice slot (`TTS_VOICE` / `TTS_VOICE_QUC`) and zero-dependency eSpeak fallback.
-- **Offline Games Ingestion (Week 6)**: Normalization and ingestion of offline game error events with opportunistic synchronization.
-- **ESP32 Hardware Clickers (Week 7)**: Physical firmware, button debounce, RGB LED feedback, and `VoteTransport` driver integration.
+- **Offline Games Ingestion (Week 6)**: The appliance side is built (`POST /api/v1/games/events` and its staff summary, see [Games API](../docs/api/games.md)). The client queue that sends the events, with opportunistic synchronization on AP reconnection, is not.
+- **ESP32 Hardware Clickers (Week 7)**: The backend half is built: migration `015`, the clicker secret (`POST /api/v1/staff/devices/{device_id}/secret`), device authentication (`POST /api/v1/devices/auth`), the vote label taken from the caller's session, with no separate driver class, and a clicker token that every endpoint except the vote endpoint refuses ([Devices API](../docs/api/devices.md)). Physical firmware, the BLE provisioner and the button and LED work are not started.
 - **Unified Analytics (Week 8)**: Transversal student error synthesis across all 3 modes and printable offline weekly reports.
 
 ---
@@ -88,7 +88,7 @@ For further details check these documents:
 
 ## <a id="3-environment-setup"></a>3. Environment Setup
 
-Ensure you are using Python 3.11 or newer. TutorBox uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
+Ensure you are using Python 3.11 or newer. Utz'tutor uses [uv](https://docs.astral.sh/uv/) for high-speed, deterministic dependency management across developer workstations and the NVIDIA Jetson Orin Nano appliance.
 
 ### A. Recommended: Instant Setup with `uv`
 
@@ -228,15 +228,20 @@ uv run pytest tests/core/tts/test_tts_benchmark.py -v
 ```
 
 ### <a id="code-formatting--static-analysis"></a>Code Formatting & Static Analysis:
-Run Ruff linter and formatter checks:
+Run Ruff linter and formatter checks. These are the commands CI runs: they cover `backend/` and the repo-root Python (`tools/`, `run.py`), which takes the same rules from the root `ruff.toml`:
 ```bash
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check . ../tools ../run.py
+uv run ruff format --check . ../tools ../run.py
 ```
 
 Auto-format all code:
 ```bash
-uv run ruff format .
+uv run ruff format . ../tools ../run.py
+```
+
+Check types with Pyright, the engine behind VS Code's Pylance, so CI reports the same errors the editor underlines. CI runs this command too. The root `pyrightconfig.json` sets the scope (`backend/src`, `backend/tests`, `tools/`, `run.py`), the import roots, the venv (`.cache/venv`) and the mode (`standard`, Python 3.11, no host platform assumed). Pyright needs Node.js: it uses the one on `PATH`, or downloads its own when there is none.
+```bash
+uv run pyright -p ..
 ```
 
 ---
@@ -251,22 +256,22 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, devices, games, health, llm, quiz, session, staff, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
-│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry), migrations & audit
+│   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event, clicker device), migrations & audit
 │   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
 │   │   ├── logging/   # Unified application & access log formatting with captive probe filtering
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   │   ├── security/  # bcrypt PIN hashing, session tokens, and rate limiters
 │   │   └── tts/       # Multi-tier pluggable voice synthesis (Qwen3-TTS, Sherpa, Piper, Kokoro, eSpeak)
-│   └── modes/         # TutorBox bounded appliance operating modes
+│   └── modes/         # Utz'tutor bounded appliance operating modes
 │       ├── quiz/      # Mode 1: Classroom Quiz Mode (contracts, generator, seed data, validator)
 │       │   └── session/ # Real-time session engine, >51% rule evaluator, countdown timer, vote processor
-│       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank)
-│       └── games/     # Mode 3: Offline Primary Educational Games (Week 6 stub)
+│       ├── socratic/  # Mode 2: Socratic tutor (planner, hint ladders, SymPy containment, problem bank, turn telemetry labels)
+│       └── games/     # Mode 3: game event validation, concept labels, ingestion
 ├── tests/             # Pytest test suite mirroring src/ (core/, modes/, api/) with 100% coverage
-├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage)
+├── pyproject.toml     # Project dependencies, tool configurations (ruff, pytest, coverage); type checking is set in the root pyrightconfig.json
 └── README.md          # Backend developer documentation and local setup guide
 ```
 
