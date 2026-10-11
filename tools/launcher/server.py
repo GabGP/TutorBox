@@ -54,7 +54,8 @@ def print_client_urls(port: int) -> None:
 def serve(uv_cmd: str, *, host: str, port: int, reload: bool) -> None:
     """Launches Uvicorn and blocks until the server stops."""
     cmd = build_uvicorn_command(uv_cmd, host=host, port=port, reload=reload)
-    print(f"Running: {' '.join(cmd)}")
+    reload_state = "on" if reload else "off"
+    print(f"Starting Uvicorn on {host}:{port} (auto-reload {reload_state})")
     print_client_urls(port)
     try:
         subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)

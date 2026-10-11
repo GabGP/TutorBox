@@ -94,7 +94,16 @@ def test_serve_runs_uvicorn_once_from_root_directory(capsys):
     assert run_mock.call_args.kwargs["cwd"] == str(paths.ROOT_DIR)
     assert run_mock.call_args.kwargs["check"] is False
     printed_lines = capsys.readouterr().out.splitlines()
-    assert any(line.startswith("Running: ") for line in printed_lines)
+    assert printed_lines[0] == "Starting Uvicorn on 127.0.0.1:8000 (auto-reload off)"
+
+
+def test_serve_reports_auto_reload_on_when_reload_is_enabled(capsys):
+    """Verifies the start line names the address and says auto-reload is on."""
+    with patch("subprocess.run"):
+        server.serve("uv", host="0.0.0.0", port=8123, reload=True)
+
+    printed_lines = capsys.readouterr().out.splitlines()
+    assert printed_lines[0] == "Starting Uvicorn on 0.0.0.0:8123 (auto-reload on)"
 
 
 def test_serve_swallows_keyboard_interrupt_and_reports_stop(capsys):
