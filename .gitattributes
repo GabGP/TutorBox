@@ -1,2 +1,5 @@
 # Preserve LF endings on patch files to prevent git apply corruption
 *.patch text eol=lf
+
+# Shell scripts run under bash (Linux, macOS, WSL): keep LF even on a Windows checkout
+*.sh text eol=lf

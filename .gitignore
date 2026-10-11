@@ -254,3 +254,8 @@ benchmark/**/results/
 
 # Git Bash (MSYS2) crash dumps, written when bash.exe crashes in a directory
 *.stackdump
+
+# ESP32 clicker firmware: the classroom Wi-Fi password, PlatformIO and host-test outputs
+firmware/clicker/clicker/secrets.h
+firmware/clicker/.pio/
+firmware/clicker/hosttest/.deps/
