@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Settings } from 'lucide-react';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
@@ -12,6 +12,8 @@ export interface TeacherHeaderProps {
   onBack: () => void;
   onToggleVoice: () => void;
   onOpenSettings?: () => void;
+  /** Opens the clicker fleet sheet; the button is hidden when absent. */
+  onOpenClickers?: () => void;
 }
 
 /**
@@ -29,6 +31,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   onBack,
   onToggleVoice,
   onOpenSettings,
+  onOpenClickers,
 }) => {
   return (
     <header className={styles.header}>
@@ -56,6 +59,16 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       >
         {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
       </button>
+      {onOpenClickers && (
+        <button
+          id="clickers"
+          onClick={onOpenClickers}
+          aria-label="Clickers"
+          className={`${styles.voiceBtn} ${utils.rowInline}`}
+        >
+          <Gamepad2 size={18} aria-hidden />
+        </button>
+      )}
       {onOpenSettings && (
         <button
           id="settings"
