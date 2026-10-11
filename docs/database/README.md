@@ -63,9 +63,14 @@ erDiagram
     }
 
     devices {
-        TEXT device_id PK "Hardware clicker ID (e.g. '1', 'ESP32_01')"
+        TEXT device_id PK "Hardware clicker ID (e.g. 'ESP32-A4CF12')"
         INTEGER assigned_user_id UK "REFERENCES users(id) ON DELETE SET NULL"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+        TEXT secret_hash "SHA-256 of the clicker secret (012)"
+        TIMESTAMP last_seen_at "Last check-in, 15 s resolution (012)"
+        INTEGER last_rssi "dBm (012)"
+        INTEGER last_battery_mv "mV (012)"
+        TEXT firmware "Reported version (012)"
     }
 
     sessions {

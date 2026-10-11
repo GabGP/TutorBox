@@ -27,6 +27,8 @@ Comprehensive migration specifications, historical changelog, and execution proc
   - [008: Diagnostic Question Bank](#008-diagnostic-question-bank)
   - [009: SLM Telemetry & Rejection History](#009-slm-telemetry--rejection-history)
   - [010: Quiz Sessions, Rounds & First-Press Voting](#010-quiz-sessions-rounds--first-press-voting)
+  - [011: Classroom Mode Switch](#011-classroom-mode-switch)
+  - [012: Clicker Credentials & Fleet Health](#012-clicker-credentials--fleet-health)
 - [4. Migration Workflow & Verification Runbook](#4-migration-workflow--verification-runbook)
 - [5. Rollback & Disaster Recovery](#5-rollback--disaster-recovery)
 
@@ -63,6 +65,7 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 | **009** | `009_add_quiz_generation_logs.sql` | AI Telemetry | Creates `quiz_generation_logs` for latency and retry metrics | Week 2 |
 | **010** | `010_add_quiz_sessions_and_votes.sql` | Session Engine | Creates `quiz_sessions`, `quiz_session_rounds`, `quiz_session_votes` | Week 3 |
 | **011** | `011_add_appliance_mode.sql` | Mode Switch | Creates single-row `appliance_state` (active classroom mode) | Week 3 |
+| **012** | `012_add_clicker_credentials.sql` | Hardware Clickers | Adds `secret_hash`, `last_seen_at`, `last_rssi`, `last_battery_mv`, `firmware` to `devices` | Week 7 |
 
 ---
 
@@ -120,6 +123,10 @@ TutorBox utilizes sequential idempotent SQL migration files executed automatical
 ### <a id="011-classroom-mode-switch"></a>011: Classroom Mode Switch
 * **File**: [`backend/migrations/011_add_appliance_mode.sql`](../../backend/migrations/011_add_appliance_mode.sql)
 * **Description**: Creates `appliance_state`, a single-row table (`CHECK (id = 1)`) holding the classroom-wide mode (`quiz`, `tutor`, `apps`) the teacher picks from their phone, and seeds it with `quiz` via `INSERT OR IGNORE` so re-runs are harmless. See [core.md](core.md#table-appliance_state).
+
+### <a id="012-clicker-credentials--fleet-health"></a>012: Clicker Credentials & Fleet Health
+* **File**: [`backend/migrations/012_add_clicker_credentials.sql`](../../backend/migrations/012_add_clicker_credentials.sql)
+* **Description**: Week 7 hardware clickers. `secret_hash` stores the SHA-256 of the secret each ESP32 generates on its first boot (set by its first check-in, trust on first use; see [clicker.md](../api/clicker.md)). `last_seen_at`, `last_rssi`, `last_battery_mv` and `firmware` hold the latest check-in, refreshed at most every 15 s per clicker so 30 clickers polling once a second cost about two writes a second. Plain `ALTER TABLE ... ADD COLUMN`, applied once through `schema_migrations`. Test: `backend/tests/core/db/test_clicker_migration_012.py`.
 
 ---
 

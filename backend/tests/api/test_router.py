@@ -21,6 +21,8 @@ def test_api_v1_router_prefixes():
     assert any(path.startswith("/api/v1/tts") for path in paths)
     assert any(path.startswith("/api/v1/llm") for path in paths)
     assert "/api/v1/tutor/message" in paths
+    assert "/api/v1/clicker/checkin" in paths
+    assert "/api/v1/clicker/vote" in paths
 
 
 def test_root_router_mounts_health_and_v1():

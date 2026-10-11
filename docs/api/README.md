@@ -7,7 +7,7 @@ Comprehensive technical specification, security architecture, and integration co
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Devices](devices.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md) • [Tutor](tutor.md)
+📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Clicker](clicker.md) • [Devices](devices.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md) • [Tutor](tutor.md)
 
 </div>
 
@@ -51,6 +51,7 @@ The API specification is decomposed into cohesive domain modules:
 | **Authentication & Users** | **[auth.md](auth.md)** | `POST /api/v1/auth/login`<br>`POST /api/v1/auth/logout`<br>`POST /api/v1/users/signup`<br>`GET /api/v1/users/me`<br>`PATCH /api/v1/users/me/pin`<br>`PATCH /api/v1/users/me/username` | Public,<br>Student,<br>Staff |
 | **Staff Administration** | **[staff.md](staff.md)** | `GET/POST /api/v1/staff/users`<br>`POST /api/v1/staff/users/{id}/reset-pin`<br>`DELETE /api/v1/staff/users/{id}`<br>`POST /api/v1/staff/users/{id}/recover`<br>`PATCH /api/v1/staff/users/{id}/role`<br>`GET /api/v1/staff/audit-logs` | Teacher,<br>Admin |
 | **Hardware Devices** | **[devices.md](devices.md)** | `GET/POST /api/v1/staff/devices`<br>`POST /api/v1/staff/devices/{id}/assign`<br>`POST /api/v1/staff/devices/{id}/unassign`<br>`DELETE /api/v1/staff/devices/{id}` | Teacher,<br>Admin |
+| **Hardware Clicker Transport** | **[clicker.md](clicker.md)** | `POST /api/v1/clicker/checkin`<br>`POST /api/v1/clicker/vote` | Clicker<br>(device secret) |
 | **Quiz Question Bank** | **[quiz.md](quiz.md)** | `GET /api/v1/quiz/topics`<br>`GET /api/v1/quiz/schema`<br>`POST /api/v1/quiz/validate`<br>`POST /api/v1/quiz/generate`<br>`GET /api/v1/quiz/generation-logs`<br>`GET /api/v1/quiz/generation-metrics`<br>`GET /api/v1/quiz/questions`<br>`GET /api/v1/quiz/questions/{id}`<br>`POST /api/v1/quiz/questions`<br>`PUT /api/v1/quiz/questions/{id}`<br>`DELETE /api/v1/quiz/questions/{id}` | Public,<br>Teacher,<br>Admin |
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **Socratic Tutor (Mode 2)** | **[tutor.md](tutor.md)** | `POST /api/v1/tutor/message`<br>`POST /api/v1/tutor/reset`<br>`POST /api/v1/tutor/ping`<br>`GET /api/v1/tutor/students` | Student,<br>Teacher,<br>Admin |
@@ -123,6 +124,8 @@ TutorBox enforces strict role-based access across three user roles:
 | `/api/v1/staff/devices/{id}/assign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/staff/devices/{id}/unassign` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/staff/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
+| `/api/v1/clicker/checkin` | `POST` | 🔑 Clicker headers | ❌ | ❌ | ❌ | No (device secret) | [clicker.md](clicker.md) |
+| `/api/v1/clicker/vote` | `POST` | 🔑 Clicker headers | ❌ | ❌ | ❌ | No (device secret) | [clicker.md](clicker.md) |
 | `/api/v1/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/validate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |

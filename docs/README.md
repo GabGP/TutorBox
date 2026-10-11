@@ -32,7 +32,8 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 * **[Question Pool Authoring Brief](quiz/question-pool-brief.md)**: Validator-derived rules, exemplars, batch plan, and ready-to-paste prompt for authoring the pre-verified question pool (`seed_data/pool/*.json`) with a frontier model; checked offline by `tests/modes/quiz/seed_data/test_pool.py`.
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Hardware Clicker Architecture & Transport](architecture/esp32-clicker-transport.md)**: Physical 4-button student clickers, delegated pairing workflow, dual RGB LED feedback state machine, and the hardware-agnostic `VoteTransport` interface.
-* **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API.
+* **[ESP32 Clicker Protocol — BLE Provisioning & Voting](architecture/esp32-protocol.md)**: How a clicker receives the classroom Wi-Fi and its device secret over Bluetooth from the always-on appliance, then authenticates and votes through the session API. Week 7 shipped the documented Wi-Fi fallback instead (see the status note at its top).
+* **[ESP32 Clicker Firmware & Build Guide](../firmware/clicker/README.md)**: What was built in Week 7: ESP32-C3 wiring, flashing, LED meanings, troubleshooting, and the PC simulator that runs the firmware against a real backend.
 * **[Offline Voice Feedback & Neural TTS Pipeline](architecture/voice-feedback.md)**: Architectural design, multi-tier Spanish engine hierarchy (`Qwen3-TTS` -> `Sherpa-ONNX` -> `Piper` -> `eSpeak-ng`), >51% Rule audio gating, and K'iche' routing.
 * **[Qwen3-TTS Daemon: Build & Deployment Guide](tts/qwen_build.md)**: Compilation instructions, persistent in-memory daemon patch, CUDA acceleration, and cross-platform reproduction guide.
 * **[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)**: Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance (8GB Unified RAM budget).
@@ -51,7 +52,8 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 | **System & Health** | **[api/system.md](api/system.md)** | `GET /health`, captive-portal probes (`GET /generate_204`, `/hotspot-detect.html`, …) |
 | **Authentication & Users** | **[api/auth.md](api/auth.md)** | `POST /auth/login`, `POST /auth/logout`, `/users/*` (signup, me, pin, username) |
 | **Staff Administration** | **[api/staff.md](api/staff.md)** | `GET/POST /staff/users`, PIN resets, soft-delete, account recovery, audit logs |
-| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete |
+| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete, fleet health |
+| **Hardware Clicker Transport** | **[api/clicker.md](api/clicker.md)** | `POST /clicker/checkin`, `POST /clicker/vote`: clicker enrollment and `hardware` votes |
 | **Quiz Question Bank** | **[api/quiz.md](api/quiz.md)** | Curriculum topics, JSON Schema, SymPy validate, SLM generation, question bank |
 | **Quiz Sessions & Voting** | **[api/sessions.md](api/sessions.md)** | Session match lifecycle, voting countdown, first-press vote persistence, >51% Rule |
 

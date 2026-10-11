@@ -65,6 +65,11 @@ Registry of physical ESP32 clickers and active 1:1 classroom pairings to student
 | `device_id` | `TEXT` | `PRIMARY KEY` | — | Unique hardware clicker identifier (1–32 chars, e.g. `'1'`, `'ESP32_01'`). |
 | `assigned_user_id` | `INTEGER` | `UNIQUE`, `FOREIGN KEY -> users(id) ON DELETE SET NULL` | `NULL` | Currently linked student account ID (`NULL` when unassigned). |
 | `created_at` | `TIMESTAMP` | — | `CURRENT_TIMESTAMP` | UTC timestamp when clicker was registered into the fleet. |
+| `secret_hash` | `TEXT` | `NULL` | `NULL` | SHA-256 of the secret the clicker generated on first boot; set on its first check-in (trust on first use, [clicker.md](../api/clicker.md)). `NULL` = never checked in. Migration 012. |
+| `last_seen_at` | `TIMESTAMP` | `NULL` | `NULL` | Last check-in, written at most every 15 s; the fleet view calls the clicker online within 45 s. |
+| `last_rssi` | `INTEGER` | `NULL` | `NULL` | Wi-Fi signal (dBm) at that check-in. |
+| `last_battery_mv` | `INTEGER` | `NULL` | `NULL` | Battery voltage (mV) at that check-in, when the clicker measures it. |
+| `firmware` | `TEXT` | `NULL` | `NULL` | Firmware version the clicker reported. |
 
 ---
 

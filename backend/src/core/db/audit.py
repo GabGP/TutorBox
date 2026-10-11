@@ -13,6 +13,7 @@ VALID_ACTIONS = frozenset(
         "account_recovered",
         "role_changed",
         "device_registered",
+        "device_enrolled",
         "device_assigned",
         "device_unassigned",
         "device_deleted",

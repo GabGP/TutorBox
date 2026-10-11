@@ -19,6 +19,26 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 > with provisioning over Bluetooth from the appliance; hardware, LED tables and the `VoteTransport`
 > principle from that document still apply and are not repeated here.
 
+> [!IMPORTANT]
+> **Week 7 status: the documented fallback was built, not the BLE design below.** The classroom Wi-Fi
+> name and passphrase are compiled into the firmware once (`secrets.h`, git-ignored), and each clicker
+> enrolls itself over Wi-Fi with a random secret it generates on first boot (trust on first use).
+> BLE provisioning stays the hardening path if the passphrase must stop living in firmware.
+>
+> | This page (BLE design, not built) | Built in Week 7 |
+> | :--- | :--- |
+> | Jetson BLE provisioner hands out SSID, passphrase and a device secret | Passphrase flashed once; the clicker generates its own secret and stores it in NVS |
+> | `POST /devices/auth` → student bearer token, then `POST /session/{id}/vote` | `POST /api/v1/clicker/checkin` + `POST /api/v1/clicker/vote`, `X-Clicker-Id` / `X-Clicker-Secret` on every request, no token |
+> | Migration `011_add_device_secret.sql` | Migration `012_add_clicker_credentials.sql` (011 was already the classroom mode switch) |
+> | Clicker polls `GET /session/current` | Check-in returns `round_id`, `round_open` and `voted` for this clicker's student |
+> | Hold A for 3 s to provision | Nothing to hold: power on, the teacher assigns it once |
+>
+> Why: the web vote endpoint now stamps every vote `web` (`suggestions.md` H6), so clickers needed their
+> own authenticated path anyway; per-request device credentials avoid student tokens that expire after
+> 12 h; and the capstone needs no Jetson Bluetooth service or NimBLE code. The trust model in §5 is
+> unchanged: enrolling grants nothing until a teacher assigns the clicker. What was built:
+> [Clicker firmware](../../firmware/clicker/README.md) and [Clicker API](../api/clicker.md).
+
 ---
 
 ## Table of Contents

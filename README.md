@@ -108,8 +108,9 @@ All components operate **100% offline** without WAN connectivity.
 TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
 ├── pwa/          # Classroom web clients and static assets
+├── firmware/     # ESP32-C3 hardware clicker firmware (Arduino / PlatformIO) and PC simulator
 ├── infra/        # Systemd, Nginx, captive portal, and router runbooks
-├── tools/        # Offline benchmarks and llama.cpp TTS daemon build toolchain
+├── tools/        # Offline benchmarks, llama.cpp TTS daemon toolchain, clicker roster CLI
 ├── docs/         # Architecture specs, pedagogy, API documentation, and milestones
 └── run.py        # One-command development and appliance startup runner
 ```

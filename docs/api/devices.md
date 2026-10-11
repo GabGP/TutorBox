@@ -7,7 +7,7 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 | 🏠 [TutorBox](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › [REST API](README.md) › **Hardware Devices** • **Related:** [Staff Admin](staff.md) • [Clicker Transport](../architecture/esp32-clicker-transport.md)
+📍 [Docs](../README.md) › [REST API](README.md) › **Hardware Devices** • **Related:** [Staff Admin](staff.md) • [Clicker API](clicker.md) • [Clicker Firmware](../../firmware/clicker/README.md) • [Clicker Transport](../architecture/esp32-clicker-transport.md)
 
 </div>
 
@@ -16,6 +16,10 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 ## Endpoint Overview
 
 These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting.
+
+Since Week 7 a clicker registers itself: its first `POST /api/v1/clicker/checkin` adds it to this list, unassigned, with its secret's digest ([clicker.md](clicker.md)). The teacher only assigns it. `POST /staff/devices` is still useful to pre-register an id; the clicker claims that row on its first check-in.
+
+From a laptop on the classroom Wi-Fi, [`tools/clickers/clickers.py`](../../tools/clickers/clickers.py) wraps these endpoints (`list`, `assign`, `assign-csv`, `unassign`, `forget`).
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
@@ -31,7 +35,7 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 
 ### <a id="get-staff-devices"></a>`GET /api/v1/staff/devices`
 
-List all registered physical clickers, their creation timestamps, and current assigned student metadata.
+List all registered physical clickers, their creation timestamps, current assigned student, and fleet health from their last check-in.
 
 * **Authorization**: Teacher, Admin
 * **Responses**:
@@ -40,21 +44,34 @@ List all registered physical clickers, their creation timestamps, and current as
     {
       "devices": [
         {
-          "device_id": "1",
+          "device_id": "ESP32-A4CF12",
           "assigned_user_id": 12,
           "assigned_username": "juan_p",
-          "created_at": "2026-08-29 14:00:00"
+          "created_at": "2026-08-29 14:00:00",
+          "enrolled": true,
+          "online": true,
+          "last_seen_at": "2026-10-09 18:20:01",
+          "rssi": -55,
+          "battery_mv": 3950,
+          "firmware": "1.0.0"
         },
         {
           "device_id": "ESP32_02",
           "assigned_user_id": null,
           "assigned_username": null,
-          "created_at": "2026-08-29 14:05:00"
+          "created_at": "2026-08-29 14:05:00",
+          "enrolled": false,
+          "online": false,
+          "last_seen_at": null,
+          "rssi": null,
+          "battery_mv": null,
+          "firmware": null
         }
       ]
     }
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
+* **Fleet health fields** (migration 012): `enrolled` is true once the clicker has checked in with its secret; `online` is true if it checked in within the last 45 s; `last_seen_at` (UTC), `rssi` (dBm), `battery_mv` and `firmware` come from that check-in, refreshed at most every 15 s.
 
 ---
 
@@ -76,7 +93,13 @@ Registers a new physical clicker identifier into the appliance fleet.
       "device_id": "1",
       "assigned_user_id": null,
       "assigned_username": null,
-      "created_at": "2026-08-29 14:00:00"
+      "created_at": "2026-08-29 14:00:00",
+      "enrolled": false,
+      "online": false,
+      "last_seen_at": null,
+      "rssi": null,
+      "battery_mv": null,
+      "firmware": null
     }
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
@@ -134,7 +157,7 @@ Unlinks a physical clicker from its currently paired student, setting `assigned_
 
 ### <a id="delete-staff-devices"></a>`DELETE /api/v1/staff/devices/{device_id}`
 
-Removes a physical clicker identifier from the appliance database completely.
+Removes a physical clicker identifier from the appliance database completely, together with its secret's digest. A clicker that is still powered on enrolls again, unassigned, on its next check-in: this is how a clicker whose flash was erased (new secret, `401` on check-in) is reset.
 
 * **Authorization**: Teacher, Admin
 * **Path Parameters**:
