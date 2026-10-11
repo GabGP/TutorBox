@@ -43,7 +43,10 @@ class AuthContext(BaseModel):
 def get_voter_session(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> AuthContext:
-    """Any live session: a person's login or a clicker's. Only voting asks for this."""
+    """Any live session: a person's login or a clicker's.
+
+    Voting and the presence heartbeat ask for this, and no other endpoint does.
+    """
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -90,7 +93,8 @@ def get_voter_session(
 def get_current_session(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> AuthContext:
-    """A person's login. A clicker's session is refused: a clicker can only vote.
+    """A person's login. A clicker's session is refused: a clicker can only vote and
+    send the presence heartbeat.
 
     Every endpoint depends on this one, directly or through require_roles, so a new
     endpoint refuses clickers unless it asks for get_voter_session instead.

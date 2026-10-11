@@ -7,7 +7,7 @@ Comprehensive technical specification, security architecture, and integration co
 | 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Devices](devices.md) • [Games](games.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md) • [Tutor](tutor.md)
+📍 [Docs](../README.md) › **REST API Hub** • **Endpoints:** [Auth](auth.md) • [Devices](devices.md) • [Games](games.md) • [Presence](presence.md) • [Quiz](quiz.md) • [Sessions](sessions.md) • [Staff](staff.md) • [System](system.md) • [Tutor](tutor.md)
 
 </div>
 
@@ -55,6 +55,7 @@ The API specification is decomposed into cohesive domain modules:
 | **Quiz Sessions & Voting** | **[sessions.md](sessions.md)** | `POST /api/v1/session`<br>`GET /api/v1/session/current`<br>`GET /api/v1/session/{id}`<br>`POST /api/v1/session/{id}/start`<br>`POST /api/v1/session/{id}/vote`<br>`POST /api/v1/session/{id}/close`<br>`POST /api/v1/session/{id}/reveal`<br>`POST /api/v1/session/{id}/next`<br>`GET /api/v1/session/{id}/report`<br>`GET /api/v1/session/{id}/speech` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **Socratic Tutor (Mode 2)** | **[tutor.md](tutor.md)** | `POST /api/v1/tutor/message`<br>`POST /api/v1/tutor/reset`<br>`POST /api/v1/tutor/ping`<br>`GET /api/v1/tutor/students`<br>`GET /api/v1/tutor/summary` | Public,<br>Student,<br>Teacher,<br>Admin |
 | **Offline Games (Mode 3)** | **[games.md](games.md)** | `POST /api/v1/games/events`<br>`GET /api/v1/games/events/summary` | Public,<br>Student,<br>Teacher,<br>Admin |
+| **Classroom Presence** | **[presence.md](presence.md)** | `POST /api/v1/presence/heartbeat`<br>`GET /api/v1/presence/class` | Student,<br>Teacher,<br>Admin |
 | **TTS & LLM Lifecycle** | **[voice-feedback.md](../architecture/voice-feedback.md#9-phased-lifecycle-management-endpoints)** | `POST /api/v1/tts/load`<br>`POST /api/v1/tts/unload`<br>`GET /api/v1/tts/status`<br>`GET /api/v1/tts/voices`<br>`POST /api/v1/tts/preview`<br>`POST /api/v1/llm/load`<br>`POST /api/v1/llm/unload`<br>`GET /api/v1/llm/status` | Teacher,<br>Admin |
 
 ---
@@ -63,7 +64,7 @@ The API specification is decomposed into cohesive domain modules:
 
 Utz'tutor uses stateful **Bearer Session Tokens**. The client keeps the token; the local SQLite database
 stores only its SHA-256 digest, so the `sessions` and `turn_logs` tables never hold a working token. A
-token stops working 12 hours after login, on logout, or on a PIN or username change. A clicker's token also stops when staff unassign or delete the clicker, assign it to another student, or issue it a new secret ([Clicker Token Revocation](devices.md#clicker-token-revocation)). A clicker's token is accepted only by the vote endpoint; every other endpoint answers `403` with `"Clicker sessions can only vote."` ([Devices API](devices.md#post-devices-auth)).
+token stops working 12 hours after login, on logout, or on a PIN or username change. A clicker's token also stops when staff unassign or delete the clicker, assign it to another student, or issue it a new secret ([Clicker Token Revocation](devices.md#clicker-token-revocation)). A clicker's token is accepted only by the vote endpoint and by the presence heartbeat; every other endpoint answers `403` with `"Clicker sessions can only vote."` ([Devices API](devices.md#post-devices-auth), [Presence API](presence.md#post-presence-heartbeat)).
 
 ```mermaid
 sequenceDiagram
@@ -126,6 +127,8 @@ Utz'tutor enforces strict role-based access across three user roles:
 | `/api/v1/staff/devices/{id}` | `DELETE` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/staff/devices/{id}/secret` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [devices.md](devices.md) |
 | `/api/v1/devices/auth` | `POST` | ✅ | ✅ | ✅ | ✅ | No (Public) | [devices.md](devices.md) |
+| `/api/v1/presence/heartbeat` | `POST` | ❌ | ✅ | ✅ | ✅ | No | [presence.md](presence.md) |
+| `/api/v1/presence/class` | `GET` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [presence.md](presence.md) |
 | `/api/v1/quiz/topics` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/schema` | `GET` | ✅ | ✅ | ✅ | ✅ | No (Public) | [quiz.md](quiz.md) |
 | `/api/v1/quiz/validate` | `POST` | ❌ | ❌ | ✅ | ✅ | **Yes (403)** | [quiz.md](quiz.md) |

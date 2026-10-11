@@ -1,4 +1,7 @@
-"""A clicker's token can vote and nothing else: every other endpoint refuses it."""
+"""A clicker's token can vote and send the presence heartbeat, and nothing else.
+
+Every other endpoint refuses it.
+"""
 
 import sqlite3
 
@@ -11,6 +14,7 @@ from tests.api.clicker_support import clicker_token_is_live
 from tests.conftest import auth_headers, get_user_id
 
 AUTH_URL = "/api/v1/devices/auth"
+HEARTBEAT_URL = "/api/v1/presence/heartbeat"
 GAME_EVENTS_URL = "/api/v1/games/events"
 DEVICE_ID = "ESP32_01"
 SECRET = "0123456789abcdef0123456789abcdef"
@@ -67,6 +71,7 @@ def clicker_headers(
         pytest.param("POST", "/api/v1/tutor/ping", None, id="tutor_ping"),
         pytest.param("POST", "/api/v1/tutor/reset", None, id="tutor_reset"),
         pytest.param("GET", "/api/v1/staff/devices", None, id="staff_device_list"),
+        pytest.param("GET", "/api/v1/presence/class", None, id="presence_class"),
     ],
 )
 def test_a_clicker_token_is_refused_outside_voting(staff_db, client, method, url, body):
@@ -77,6 +82,17 @@ def test_a_clicker_token_is_refused_outside_voting(staff_db, client, method, url
 
     assert response.status_code == 403
     assert response.json()["detail"] == CLICKER_SCOPE_DETAIL
+
+
+def test_a_clicker_token_sends_the_presence_heartbeat(staff_db, client):
+    _, conn = staff_db
+    clicker = clicker_headers(client, conn, "student1")
+
+    response = client.post(
+        HEARTBEAT_URL, json={"rssi": -58, "battery_pct": 88}, headers=clicker
+    )
+
+    assert response.status_code == 204
 
 
 def test_a_phone_login_of_the_same_student_is_still_accepted(staff_db, client):

@@ -9,6 +9,7 @@ from api.games import router as games_router
 from api.health import router as health_router
 from api.llm import router as llm_router
 from api.mode import router as mode_router
+from api.presence import router as presence_router
 from api.quiz import router as quiz_router
 from api.session import router as session_router
 from api.staff import router as staff_router
@@ -28,6 +29,7 @@ api_v1_router.include_router(mode_router, prefix="/mode")
 api_v1_router.include_router(tutor_router, prefix="/tutor")
 api_v1_router.include_router(games_router, prefix="/games")
 api_v1_router.include_router(devices_router, prefix="/devices")
+api_v1_router.include_router(presence_router, prefix="/presence")
 
 root_router = APIRouter()
 root_router.include_router(health_router)

@@ -124,12 +124,13 @@ stateDiagram-v2
     ROUND_OPEN --> VOTE_SENT: button A-D, vote accepted 200 (green 1.5 s)
     ROUND_OPEN --> READY: 409 already voted or window closed (red x3)
     VOTE_SENT --> READY: poll sees the round revealed or the next round
-    READY --> DEVICE_AUTH: any 401 (token revoked), re-auth once
+    READY --> DEVICE_AUTH: any 401 from the vote or the heartbeat (token revoked), re-auth once
 ```
 
-Two rules that keep the firmware simple:
+Three rules that keep the firmware simple:
 1. **One request in flight at a time.** Buttons are ignored while the vote LED is busy (transmitting / green / red), exactly as the transport spec's debounce rule says.
 2. **The backend is the only clock.** The clicker never runs its own countdown; it votes when the round is `open` and accepts whatever the server answers.
+3. **A heartbeat every 5 seconds while the clicker holds a token.** It is `POST /api/v1/presence/heartbeat` with the bearer token and the Wi-Fi signal and battery (§8.3). A `401` on the heartbeat sends the clicker to `DEVICE_AUTH` at once, so a clicker that the teacher has unassigned shows its red pattern within seconds, not at its next vote.
 
 ---
 
@@ -221,7 +222,7 @@ Rules that follow from this:
 - Credentials go **only** to devices with `assigned_user_id` set — the teacher's assignment *is* the trust decision, and it is already an audited staff action.
 - The device secret is stored as a **SHA-256 digest**, the way bearer tokens are stored, not with bcrypt like PINs. It is 128 random bits, so a fast hash is enough, and the public `POST /api/v1/devices/auth` must not run bcrypt on every request. It is shown exactly once, to the provisioner, which forwards it over the encrypted BLE link. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
 - The student bearer token obtained with the secret lives **only in clicker RAM**; a reboot re-authenticates.
-- That token can **only vote** (§6.6). A secret dumped from a clicker's flash, or a token captured on the classroom Wi-Fi, casts the votes that clicker could already cast and opens nothing else of the student's account.
+- That token can **only vote and send the presence heartbeat** (§6.6). A secret dumped from a clicker's flash, or a token captured on the classroom Wi-Fi, casts the votes that clicker could already cast, can make that clicker look connected in the lobby, and opens nothing else of the student's account.
 - Unassigning, reassigning or deleting a clicker, and issuing it a new secret, revokes its active sessions at once (§6.4). A clicker taken away from a child gets `401` on its next vote, and `403` when it authenticates again.
 - Rotating the classroom passphrase invalidates every clicker; re-provision the fleet (a minute per 10 clickers at the desk). Plan it with the router change, not after.
 - Later hardening, not needed for the capstone: ESP32 NVS encryption + flash encryption (someone with physical access and a USB cable can otherwise dump the passphrase), and app-layer AES-GCM of the packet with a fleet key burned at flashing time — which reintroduces the flashing step this design removes, so weigh it honestly.
@@ -239,7 +240,7 @@ Built in Week 7 by Student A, backend only. The code is in `backend/migrations/0
 3. **The vote label comes from the session, not from the body.** The design sent `transport_type: "hardware"` and `device_id` in the vote body. A code review fix (H6 in `suggestions.md`) removed both fields from the request. The server now labels each vote from the caller's session row, so a phone cannot pose as a clicker. The firmware may still send the two fields; the server ignores them.
 4. **Device sessions are stored as digests and expire.** The design said device authentication inserts the session "the same as login" and did not cover expiry. As built, the row holds `token_digest(token)` in `sessions.id`, as login does, and the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`). The token itself is never written to the database.
 5. **The lockout key is per device and address.** The key is `device:<device_id>@<address>`, so a clicker never shares a lockout with a username.
-6. **A clicker's token can only vote.** The design gave the clicker "a student bearer token" and did not say what else that token could do. As built, every endpoint except the vote endpoint refuses a session issued to a clicker (§6.6).
+6. **A clicker's token can only vote and send the heartbeat.** The design gave the clicker "a student bearer token" and did not say what else that token could do. As built, every endpoint except the vote endpoint and the presence heartbeat refuses a session issued to a clicker (§6.6).
 
 ### 6.1 Migration `015_add_device_secret.sql`
 
@@ -305,10 +306,10 @@ Phone and browser sessions (`device_id` NULL) do not match the query. The studen
 
 A clicker's token votes as its student, but it is not a login. `core/security/auth_session.py` has two dependencies:
 
-- `get_voter_session` resolves any live session, a person's or a clicker's. Only `submit_vote` depends on it.
+- `get_voter_session` resolves any live session, a person's or a clicker's. Only `submit_vote` and the presence heartbeat depend on it.
 - `get_current_session` calls it and answers `403 "Clicker sessions can only vote."` when the session has a `device_id`. Every other endpoint depends on it, directly or through `ensure_no_pending_rotation` and `require_roles`.
 
-The refusal is the default: an endpoint added later refuses clickers unless it asks for `get_voter_session`. A revoked or expired token gets `401` before the scope is checked, so the firmware still reads `401` as "authenticate again". `POST /api/v1/games/events` reads an optional login and never refuses a batch; with a clicker's token it stores the events with no student. `GET /api/v1/session/current` is public, so the clicker's two runtime calls (§8) are unaffected. Tests: `backend/tests/api/devices/test_device_token_scope.py` and `backend/tests/core/security/test_auth_session_device.py`.
+The refusal is the default: an endpoint added later refuses clickers unless it asks for `get_voter_session`. A revoked or expired token gets `401` before the scope is checked, so the firmware still reads `401` as "authenticate again". `POST /api/v1/games/events` reads an optional login and never refuses a batch; with a clicker's token it stores the events with no student. `GET /api/v1/session/current` is public, so the clicker's runtime calls (§8.3) are unaffected. The token can do two things and nothing else: vote, and send the heartbeat of §6.9. Tests: `backend/tests/api/devices/test_device_token_scope.py` and `backend/tests/core/security/test_auth_session_device.py`.
 
 ### 6.7 Configuration (not built)
 
@@ -316,10 +317,20 @@ The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) ar
 
 ### 6.8 Known limits
 
-- The vote endpoint does not check a pending PIN rotation, because it uses `get_voter_session` and not `ensure_no_pending_rotation`. A student with a pending rotation can vote from a clicker or a phone.
+- The vote endpoint does not check a pending PIN rotation, because it uses `get_voter_session` and not `ensure_no_pending_rotation`. A student with a pending rotation can vote from a clicker or a phone. The heartbeat does not check it either.
 - A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
 - The lockout counters are in memory, so a backend restart clears them.
 - The fleet test in CI is simulated. The latency and connection-limit benchmark on real ESP32 devices is not done.
+
+### 6.9 Presence heartbeat (as built)
+
+`POST /api/v1/presence/heartbeat` tells the lobby that a phone or a clicker is connected. Code: `backend/src/api/presence/`. Reference: [Presence API](../api/presence.md).
+
+- **Who is recorded**: a clicker's token records the clicker under its `device_id`, with the `rssi` and `battery_pct` in the body (both optional, ranges -120 to 0 and 0 to 100). A student's login records the phone and ignores any body. A staff login is accepted and recorded nowhere.
+- **Body**: optional. A beat with no body is accepted and clears the clicker's vitals until the next beat that carries them. The designed firmware sends the body every time (§8.3, not written yet).
+- **Timing**: one beat every 5 seconds is expected. `online` means the last beat was 15 seconds ago or less. An entry not heard from for 30 minutes is forgotten.
+- **Storage**: in memory, in the single uvicorn process. A restart empties it, and it fills again within seconds because every client beats.
+- **Clicker with no student**: it has no token, so it cannot beat. The class view lists it under `unassigned_clickers`, with no vitals.
 
 ---
 
@@ -469,16 +480,28 @@ bool provision() {
 ```
 
 ### 8.3 Runtime loop (sketch)
+
+This is a design sketch. `firmware/clicker/` is not written yet.
+
 ```cpp
 String token;                       // RAM only
 String lastRound, seenRound;        // round_id already voted / last seen open
 uint32_t roundSeenAt = 0;
+uint32_t lastBeat = 0;              // when the last heartbeat was sent
 
 bool deviceAuth() {                 // 200 → token; 403 → UNASSIGNED pattern; 401 → wrong secret → re-provision hint
   HTTPClient http; http.begin(api + "/devices/auth"); http.addHeader("Content-Type", "application/json");
   int code = http.POST("{\"device_id\":\"" + dev + "\",\"secret\":\"" + secret + "\"}");
   if (code == 200) { StaticJsonDocument<256> d; deserializeJson(d, http.getString()); token = d["session_id"].as<String>(); }
   http.end(); return code == 200;
+}
+
+void heartbeat() {                  // every 5 s while a token is held; the lobby shows this clicker
+  HTTPClient http; http.begin(api + "/presence/heartbeat"); http.addHeader("Content-Type", "application/json");
+  http.addHeader("Authorization", "Bearer " + token);
+  int code = http.POST("{\"rssi\":" + String(WiFi.RSSI()) + ",\"battery_pct\":" + String(batteryPct()) + "}");
+  http.end();                                                  // batteryPct(): the ADC divider of §2, 0–100
+  if (code == 401 && !deviceAuth()) token = "";                // revoked: 403 → UNASSIGNED pattern within 5 s; no token, no more beats until the 30 s retry of §3 succeeds
 }
 
 void loop() {
@@ -494,6 +517,10 @@ void loop() {
       if (armed && rid != seenRound) { seenRound = rid; roundSeenAt = millis(); }
     } else armed = false;
     http.end();
+  }
+  if (token.length() > 0 && millis() - lastBeat > 5000) {      // presence: 5 s, with the token
+    lastBeat = millis();
+    heartbeat();
   }
   char pressed = readButtonDebounced();                        // 'A'..'D' or 0; ignored while the LED is busy
   if (pressed && armed) vote(pressed);
@@ -518,6 +545,8 @@ Details worth keeping in mind:
 - `WiFi.setSleep(true)` (modem sleep) roughly halves idle current; polling once a second still works.
 - `response_time_ms` is measured from the moment the clicker *saw* the round open, which is up to one poll interval late — good enough for the weekly report, and the same bias as the phones.
 - 30 clickers × 1 poll/s ≈ 30 req/s on `/session/current`: four cheap SQLite reads each, well within the Jetson's budget. If it ever isn't, the upgrade path is one SSE endpoint the clicker subscribes to; the firmware loop above changes only where `armed` is set.
+- The heartbeat sends `rssi` and `battery_pct` only. The `voltage_mv` of the older payload in [Clicker Transport §7](esp32-clicker-transport.md#7-fleet-health-telemetry--teacher-pwa-dashboard) is not read by the server, so the firmware may leave it out.
+- Each clicker sends 12 heartbeats a minute. The 30 clickers of a class send 360 in all, next to the one poll a second per clicker in the loop above. A `204` needs no reply and no retry.
 - Keep the HTTP client on plain `http://` inside the isolated LAN; TLS on a WROOM-32 costs RAM and certificates that nobody can renew offline.
 
 ---

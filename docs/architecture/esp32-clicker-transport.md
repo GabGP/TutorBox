@@ -258,8 +258,19 @@ While the physical clicker has local LED warnings, **primary school students sho
 
 Instead, Utz'tutor transmits real-time telemetry from every clicker directly to the **Teacher PWA Fleet Dashboard**:
 
+**Status (2026-10-11).** Built on the server:
+
+* The heartbeat `POST /api/v1/presence/heartbeat` is sent every **5 seconds**, not every 60. Its body carries `rssi` and `battery_pct`, both optional. A clicker's vote token is the one that sends it, and it can vote and beat and nothing else ([Presence API](../api/presence.md), [Devices API](../api/devices.md#post-devices-auth)).
+* The class view `GET /api/v1/presence/class` gives the lobby each student's phone and clicker status (`online`, `dropped` or `absent`), the clicker's signal level (`good`, `fair`, `weak`), its last RSSI and battery, and the clickers that have no student.
+
+Still planned, not built:
+
+* The clicker firmware that sends the heartbeat. `firmware/clicker/` is not written, and the sketch in [Protocol §8.3](esp32-protocol.md#83-runtime-loop-sketch) is a design only.
+* `voltage_mv` in the payload below. The server does not read it.
+* A low-battery flag. The server does not compute the 20% warning; the lobby screen decides how to show the `battery_pct` it receives.
+
 ### 1. In-Flight Telemetry Payload
-Whenever a vote or 60-second periodic heartbeat is sent, the ESP32 includes hardware vitals:
+Whenever a vote or the 5-second heartbeat is sent, the ESP32 includes hardware vitals (the heartbeat carries `battery_pct` and `rssi` only, see the status above):
 ```json
 {
   "device_id": "1",

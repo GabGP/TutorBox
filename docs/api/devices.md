@@ -15,7 +15,7 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 
 ## Endpoint Overview
 
-These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)); it never calls the secret endpoint, which is for the Bluetooth provisioner. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
+These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)); it never calls the secret endpoint, which is for the Bluetooth provisioner. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and send the presence heartbeat ([Presence API](presence.md)), and nothing else.
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
@@ -25,7 +25,7 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 | `POST` | `/api/v1/staff/devices/{device_id}/unassign` | Teacher, Admin | Unpair a physical clicker from any student |
 | `POST` | `/api/v1/staff/devices/{device_id}/secret` | Teacher, Admin | Issue a new secret for a clicker; its active sessions are revoked |
 | `DELETE` | `/api/v1/staff/devices/{device_id}` | Teacher, Admin | Remove a clicker identifier from the fleet |
-| `POST` | `/api/v1/devices/auth` | Public | Trade a clicker's secret for a vote-only session of its assigned student |
+| `POST` | `/api/v1/devices/auth` | Public | Trade a clicker's secret for a session of its assigned student, which can only vote and send the presence heartbeat |
 
 ---
 
@@ -186,7 +186,7 @@ Issues a new secret for a physical clicker. The clicker sends this secret to `PO
 
 ### <a id="post-devices-auth"></a>`POST /api/v1/devices/auth`
 
-A clicker has no PIN. It trades its secret for a session of the student it is assigned to. The session can only vote (see **Voting only** below). The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
+A clicker has no PIN. It trades its secret for a session of the student it is assigned to. The session can only vote and send the presence heartbeat (see **Voting only** below). The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
 
 * **Authorization**: Public
 * **Request Body**:
@@ -215,8 +215,8 @@ A clicker has no PIN. It trades its secret for a session of the student it is as
 * **Notes**:
   * **Lockout**: each wrong secret counts against the key `device:<device_id>@<address>`, where `<address>` is the client address, as for login. After `AUTH_MAX_ATTEMPTS` wrong secrets (5 in `.env.example`) the key is locked for `AUTH_LOCKOUT_SECONDS` (30 in `.env.example`). Each later lockout lasts twice as long as the one before, up to 16 minutes. A locked device gets `429` even with the right secret. A successful authentication clears the count. The key never shares a lockout with a username. The counters are kept in memory, so a backend restart clears them.
   * **One live token**: a successful authentication revokes the clicker's earlier sessions, so a clicker holds one token at a time.
-  * **Expiry**: the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`), like any login. The clicker authenticates again when a vote returns `401`.
-  * **Voting only**: the token is accepted by `POST /api/v1/session/{session_id}/vote` and by no other endpoint. Everywhere else it gets `403 Forbidden` with `"Clicker sessions can only vote."`: the profile, the PIN and username changes, logout, the tutor and every staff endpoint. A revoked or expired token gets `401` first, as on the vote endpoint. `POST /api/v1/games/events`, which takes an optional login and never refuses a batch, stores events sent with a clicker's token with no student. The rule is the default in `get_current_session` (`backend/src/core/security/auth_session.py`), so an endpoint added later refuses clickers unless it asks for `get_voter_session`.
+  * **Expiry**: the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`), like any login. The clicker authenticates again when a vote or a heartbeat returns `401`.
+  * **Voting only**: the token is accepted by `POST /api/v1/session/{session_id}/vote` and by `POST /api/v1/presence/heartbeat` ([Presence API](presence.md#post-presence-heartbeat)), and by no other endpoint. Everywhere else it gets `403 Forbidden` with `"Clicker sessions can only vote."`: the profile, the PIN and username changes, logout, the tutor, the class view and every staff endpoint. A revoked or expired token gets `401` first, as on the vote endpoint. `POST /api/v1/games/events`, which takes an optional login and never refuses a batch, stores events sent with a clicker's token with no student. The rule is the default in `get_current_session` (`backend/src/core/security/auth_session.py`), so an endpoint added later refuses clickers unless it asks for `get_voter_session`.
   * The vote endpoint labels a vote cast with this token as `hardware`, with the clicker's `device_id`. See [Sessions API](sessions.md#post-session-vote).
   * Neither the secret nor the token is written to the logs.
 
@@ -232,7 +232,7 @@ A clicker's active sessions, the ones issued to it by `POST /api/v1/devices/auth
 * the clicker is deleted (`DELETE /api/v1/staff/devices/{device_id}`);
 * a new secret is issued (`POST /api/v1/staff/devices/{device_id}/secret`).
 
-After a revocation the clicker's next vote is refused with `401`. When it authenticates again it gets `403` while it has no student, a new session for the student it has now, or `401` when its secret was replaced or the clicker was deleted.
+After a revocation the clicker's next vote or heartbeat is refused with `401`. The heartbeat, sent every 5 seconds, is what makes an unassigned clicker show its red pattern within seconds. When it authenticates again it gets `403` while it has no student, a new session for the student it has now, or `401` when its secret was replaced or the clicker was deleted.
 
 Assigning the same student to the same clicker again revokes nothing. These events never end a phone or browser login, including a phone login of the same student. A student's own PIN or username change ends only the session it was made from. A staff PIN reset, or the deletion of the student's account, ends all of the student's sessions, the clicker's included.
 
