@@ -1,7 +1,7 @@
 import React from 'react';
+import { ClassPresenceList } from '../../features/presence/ClassPresenceList';
 import { GenerationProgress } from '../../features/question-generator/generator.types';
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
-import { RosterTable, RosterTableProps } from '../../features/roster/RosterTable';
 import { SessionModel } from '../../features/session-engine/session.types';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherLobby.module.css';
@@ -9,20 +9,22 @@ import styles from './TeacherLobby.module.css';
 export interface TeacherLobbyProps {
   session: SessionModel | null;
   progress: GenerationProgress | null;
-  rosterProps: RosterTableProps;
   hostAddress: string;
+  onManageUsers: () => void;
+  onOpenClickers: () => void;
 }
 
 /**
  * Teacher Pre-Game Lobby View component.
  * Displays connection instructions, question generation progress telemetry,
- * and the student roster table for classroom preparation.
+ * and the class list: who is connected by phone or clicker, and who dropped.
  */
 export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
   session,
   progress,
-  rosterProps,
   hostAddress,
+  onManageUsers,
+  onOpenClickers,
 }) => {
   return (
     <div className={styles.stack} id="s-lobby">
@@ -63,7 +65,7 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
         Los alumnos entran con su usuario y PIN. Cuando estén listos, comience el juego.
       </p>
 
-      <RosterTable {...rosterProps} />
+      <ClassPresenceList onManageUsers={onManageUsers} onOpenClickers={onOpenClickers} />
     </div>
   );
 };

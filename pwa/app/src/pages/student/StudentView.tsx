@@ -15,6 +15,7 @@ import utils from '../../shared/styles/utils.module.css';
 import { StudentModeCard } from '../../features/mode/ModeCards';
 import { useApplianceMode } from '../../features/mode/useApplianceMode';
 import { TutorChat } from '../../features/tutor/TutorChat';
+import { usePresenceHeartbeat } from '../../features/presence/usePresenceHeartbeat';
 import { StudentScreens } from './StudentScreens';
 import styles from './StudentView.module.css';
 
@@ -96,6 +97,12 @@ export const StudentView: React.FC = () => {
         : 'Sin conexión';
 
   useOptionKeyboard(castVote, step === 'play');
+
+  // A student waiting in a quiz class shows as present on the teacher's list. Tutor
+  // mode keeps its own ping, take-home mode has no class, and a PIN change comes first.
+  usePresenceHeartbeat({
+    enabled: user?.role === 'student' && !mustChangePin && mode !== 'tutor' && mode !== 'apps',
+  });
 
   useEffect(() => {
     if (!user) setShowAccount(false);

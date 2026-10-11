@@ -4,7 +4,6 @@ import { QuestionCountPicker } from '../../features/question-generator/QuestionC
 import { TopicSelector } from '../../features/question-generator/TopicSelector';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import { TelemetryView } from '../../features/question-generator/TelemetryView';
-import { RosterTableProps } from '../../features/roster/RosterTable';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 import { useHostAddress } from '../../shared/routing/session';
 import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
@@ -52,7 +51,7 @@ export interface TeacherMainContentProps {
   session: SessionModel | null;
   currentRound?: RoundModel | null;
   quiz: QuizSetupProps;
-  roster: RosterTableProps;
+  lobby: { onManageUsers: () => void; onOpenClickers: () => void };
   voice: LiveVoiceProps;
   outcome: MatchOutcomeProps;
 }
@@ -62,7 +61,7 @@ export interface TeacherMainContentProps {
  * Renders the active workspace screen: topic selector, question count picker,
  * pre-game lobby, live voting/reveal rounds, or end-of-game match report.
  *
- * @param {TeacherMainContentProps} props - Step state plus the quiz, roster,
+ * @param {TeacherMainContentProps} props - Step state plus the quiz, lobby,
  * voice and outcome slices.
  * @returns {JSX.Element} The rendered main content panel.
  */
@@ -71,7 +70,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
   session,
   currentRound,
   quiz,
-  roster,
+  lobby,
   voice,
   outcome,
 }) => {
@@ -115,7 +114,8 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           session={session}
           progress={quiz.progress}
           hostAddress={hostAddress}
-          rosterProps={roster}
+          onManageUsers={lobby.onManageUsers}
+          onOpenClickers={lobby.onOpenClickers}
         />
       )}
       {(step === 'question' || step === 'reveal') && session && currentRound && (

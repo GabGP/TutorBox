@@ -1,6 +1,10 @@
 import React from 'react';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
-import { SettingsView, type SettingsRosterBundle } from '../../features/settings/SettingsView';
+import {
+  SettingsView,
+  type SettingsRosterBundle,
+  type SettingsSectionId,
+} from '../../features/settings/SettingsView';
 import type { User } from '../../features/auth/auth.types';
 
 export interface TeacherSettingsSheetProps {
@@ -10,6 +14,8 @@ export interface TeacherSettingsSheetProps {
   onClose: () => void;
   roster?: SettingsRosterBundle;
   staffEnabled?: boolean;
+  /** Accordion row open when the sheet appears; closed when absent. */
+  initialSection?: SettingsSectionId;
 }
 
 /**
@@ -24,6 +30,7 @@ export const TeacherSettingsSheet: React.FC<TeacherSettingsSheetProps> = ({
   onClose,
   roster,
   staffEnabled,
+  initialSection,
 }) => {
   return (
     <Sheet label="Ajustes" onClose={onClose}>
@@ -33,6 +40,7 @@ export const TeacherSettingsSheet: React.FC<TeacherSettingsSheetProps> = ({
         onSessionInvalidated={onSessionInvalidated}
         roster={roster}
         staffEnabled={staffEnabled}
+        initialSection={initialSection}
       />
     </Sheet>
   );

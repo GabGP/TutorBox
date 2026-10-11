@@ -26,9 +26,12 @@ export interface SettingsViewProps {
   roster?: SettingsRosterBundle;
   /** Gates the Voz / Auditoría sections (both need staff backends). */
   staffEnabled?: boolean;
+  /** Section open when the list mounts (e.g. Usuarios from the lobby). Closed when absent. */
+  initialSection?: SettingsSectionId;
 }
 
-type SectionId = 'cuenta' | 'usuarios' | 'voz' | 'auditoria';
+/** The accordion rows of the settings list. */
+export type SettingsSectionId = 'cuenta' | 'usuarios' | 'voz' | 'auditoria';
 
 /**
  * Teacher Settings list (FB Settings style accordion).
@@ -41,14 +44,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSessionInvalidated,
   roster,
   staffEnabled = false,
+  initialSection,
 }) => {
-  const [open, setOpen] = useState<SectionId | null>(null);
+  const [open, setOpen] = useState<SettingsSectionId | null>(initialSection ?? null);
 
-  const toggle = (id: SectionId) =>
+  const toggle = (id: SettingsSectionId) =>
     setOpen((prev) => (prev === id ? null : id));
 
   const row = (
-    id: SectionId,
+    id: SettingsSectionId,
     icon: LucideIcon,
     label: string,
     content: React.ReactNode,

@@ -4,6 +4,7 @@ import { resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { BankPickStep } from './BankPickStep';
 import { useRosterManager } from '../../features/roster/useRosterManager';
 import { TeacherSettingsSheet } from './TeacherSettingsSheet';
+import type { SettingsSectionId } from '../../features/settings/SettingsView';
 import { ClickerFleetSheet } from '../../features/clickers/ClickerFleetSheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { SpeechLanguage } from '../../features/speech/speech.types';
@@ -39,6 +40,8 @@ export const TeacherView: React.FC = () => {
   });
   const [roleError, setRoleError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  // Which accordion row the settings sheet opens on (none for the gear button).
+  const [settingsSection, setSettingsSection] = useState<SettingsSectionId | undefined>(undefined);
   const [showClickers, setShowClickers] = useState(false);
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
@@ -46,9 +49,13 @@ export const TeacherView: React.FC = () => {
   const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
   const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
     usePlayedRounds(coordinator.sid, voiceLang);
-  const { students, users, deleted, showDeleted, pinNotice, toasts, pushToast, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
+  const { users, deleted, showDeleted, pinNotice, toasts, pushToast, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
+  const openSettings = (section?: SettingsSectionId) => {
+    setSettingsSection(section);
+    setShowSettings(true);
+  };
   const creatableRoles =
     user?.role === 'admin' ? ['student', 'teacher', 'admin'] : ['student', 'teacher'];
   // The appliance has no keyboard: this page is the remote that picks the class mode.
@@ -169,7 +176,7 @@ export const TeacherView: React.FC = () => {
         voiceLang={voiceLang}
         onBack={() => coordinator.setWizard('topic')}
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
-        onOpenSettings={() => setShowSettings(true)}
+        onOpenSettings={() => openSettings()}
         onOpenClickers={() => setShowClickers(true)}
       />
       {showModePicker && (
@@ -217,8 +224,9 @@ export const TeacherView: React.FC = () => {
               onChangeCount: coordinator.setCount,
               onSourceChange: coordinator.setSource,
             }}
-            roster={{
-              students, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
+            lobby={{
+              onManageUsers: () => openSettings('usuarios'),
+              onOpenClickers: () => setShowClickers(true),
             }}
             voice={{
               done: voiceDone,
@@ -252,6 +260,7 @@ export const TeacherView: React.FC = () => {
           onSessionInvalidated={logout}
           onClose={handleCloseSettings}
           staffEnabled={isStaff}
+          initialSection={settingsSection}
           roster={{
             users, pinNotice, onAddStudent: addStudent, onResetPin: resetStudentPin,
             creatableRoles, deleted, showDeleted, onDeleteUser: deleteStudent,

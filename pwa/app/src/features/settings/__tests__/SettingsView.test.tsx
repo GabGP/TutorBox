@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SettingsView } from '../SettingsView';
+import { SettingsView, type SettingsSectionId } from '../SettingsView';
 
 describe('SettingsView accordion', () => {
   beforeEach(() => {
@@ -43,5 +43,31 @@ describe('SettingsView accordion', () => {
     });
     // …then unmounted.
     expect(screen.queryByText('Cambiar mi nombre')).not.toBeInTheDocument();
+  });
+});
+
+describe('SettingsView initialSection', () => {
+  function renderWith(initialSection?: SettingsSectionId) {
+    render(
+      <SettingsView
+        user={{ id: 't1', username: 'profe', role: 'teacher' }}
+        onProfileChanged={vi.fn()}
+        onSessionInvalidated={vi.fn()}
+        roster={{ users: [], onAddStudent: vi.fn(), onResetPin: vi.fn() }}
+        initialSection={initialSection}
+      />
+    );
+  }
+
+  it('opens the given row when the list mounts', () => {
+    renderWith('usuarios');
+    expect(screen.getByRole('button', { name: 'Usuarios' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Usuarios registrados')).toBeInTheDocument();
+  });
+
+  it('keeps every row closed when no section is given', () => {
+    renderWith();
+    expect(screen.getByRole('button', { name: 'Usuarios' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Usuarios registrados')).not.toBeInTheDocument();
   });
 });

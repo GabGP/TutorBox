@@ -93,6 +93,7 @@ pwa/
 │       │   ├── voting/             # Voting grid, response latency & first-press lock
 │       │   ├── roster/             # Student management & PIN resets
 │       │   ├── clickers/           # ESP32 clicker fleet sheet (teacher header)
+│       │   ├── presence/           # Teacher lobby class list & student phone heartbeat
 │       │   ├── question-generator/ # Topic selector & question count picker
 │       │   ├── speech/             # TTS audio playback & status badge
 │       │   └── match-report/       # Aggregate analytics, remediation alert & CSV export
@@ -126,7 +127,7 @@ Inside `pwa/app/`:
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (66 suites, 399 tests)
+pnpm test       # Execute Vitest test suite (74 suites, 473 tests)
 pnpm build      # Build production bundle to dist/
 ```
 
@@ -149,6 +150,19 @@ The **Clickers** button in the `/maestro/` header (before the settings button) o
 | `POST /api/v1/staff/devices/{id}/assign`, `POST /api/v1/staff/devices/{id}/unassign` | Editar: assign or take off the student |
 | `DELETE /api/v1/staff/devices/{id}` | Eliminar (hold to confirm) |
 | `GET /api/v1/staff/users` | student picker (through the roster client) |
+
+---
+
+### Class list (teacher lobby)
+
+Before the quiz starts, the teacher's lobby on `/maestro/` shows the class from `src/features/presence/`. Each student is **Conectado** (connected by phone or clicker), **Se cayó hace 12 s** (dropped; when both the phone and the clicker dropped, the more recent drop is shown) or **No ha entrado**. A row also shows the phone mark, and the assigned clicker with its id, its signal bars and a low-battery warning under 20 %. The clickers no student holds are listed below with **Asignar clickers**, which opens the clicker sheet; **Administrar usuarios** opens the settings on the Usuarios row. The list refreshes every 2 seconds and keeps the last list on screen when a refresh fails. Every status comes from the server, and the screen does not recompute thresholds.
+
+A student's phone sends the heartbeat only while it waits in a quiz class: once when it starts, every 5 seconds, and again when the page becomes visible. Tutor mode keeps its own ping; take-home mode and a PIN change that is still pending send nothing.
+
+| Endpoint | Used by |
+| :--- | :--- |
+| `GET /api/v1/presence/class` | teacher lobby list (every 2 s, staff only) |
+| `POST /api/v1/presence/heartbeat` | student phone in a quiz class (every 5 s; answers 204 with no body) |
 
 ---
 
