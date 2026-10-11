@@ -11,7 +11,7 @@
 
 ---
 
-This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)**. It records the state of the repository on 2026-10-09.
+This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)**. It records the state of the repository on 2026-10-10.
 
 ---
 
@@ -19,9 +19,10 @@ This document tracks the technical deliverables, architectural implementations, 
 
 * **Theme**: *"One More Transport: Integrating hardware without redesigning the system"*
 * **Status**: **Copilot (Student A) Backend Complete & Green · Pilot (Student B) Firmware, Provisioner and Assembly Not Started**
-* **Backend Test Suite**: **2141 / 2141 passing tests** (95 new this week: 19 in `tests/core/db/`, 19 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`).
-* **Statement Coverage**: **100.00% statement coverage** across all 6,716 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
-* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
+* **Backend Test Suite**: **2638 / 2638 passing tests** (98 new for the clickers this week: 19 in `tests/core/db/`, 22 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`; plus 8 for the database lock fix below).
+* **Frontend Test Suite**: **399 / 399 passing tests** in 66 files (`pnpm test` in `pwa/app/`; 95 new this week in 9 files, for the teacher clicker screen). `pnpm typecheck` and `pnpm build` are clean.
+* **Statement Coverage**: **100.00% statement coverage** across all 6,755 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 8 hooks).
 * **Modularity Compliance**: production modules are held to the 150-line ceiling by `tests/test_modularity_policy.py`. The largest new production module is `backend/src/api/devices/auth.py` (104 lines).
 * **Acceptance Criteria Status**:
   * ⏳ **Live 10-question match with at least 10 physical ESP32 clickers and 0 lost votes**: pending hardware. Proven in CI today: 15 simulated clickers and 15 phones, through the real endpoints, play 5 rounds with zero lost votes (`test_session_fleet_hardware.py`). Not proven: a match with physical clickers, which waits for the firmware and the first batch.
@@ -33,6 +34,8 @@ This document tracks the technical deliverables, architectural implementations, 
   * **Vote Label**: each vote is labelled `hardware` with the clicker's id, or `web`, from the caller's session. The request body cannot choose the label ([Sessions API](../api/sessions.md#post-session-vote)).
   * **Migration `015`**: three nullable columns and the partial index `idx_sessions_device_id` ([Migrations](../database/migrations.md#015-clicker-secret-and-session-device)).
   * **Revocation**: a clicker's sessions end when it is unassigned, reassigned, deleted, or given a new secret ([Clicker Token Revocation](../api/devices.md#clicker-token-revocation)).
+  * **Setup State in the List**: `GET /api/v1/staff/devices` returns `secret_issued_at` for each clicker, so staff can see which clickers were never set up ([Devices API](../api/devices.md#get-staff-devices)).
+  * **Teacher Clicker Screen**: the **Clickers** button in the `/maestro/` header opens the fleet in its own sheet, where a teacher adds, assigns, unassigns and deletes clickers ([PWA](../../pwa/README.md)).
 
 ---
 
@@ -70,13 +73,25 @@ This document tracks the technical deliverables, architectural implementations, 
    * `POST /api/v1/games/events` takes an optional login and never refuses a batch. Events sent with a clicker's token are stored with no student, like events sent with an expired login.
 6. **Revocation (`backend/src/api/staff/device_pairing.py`, `devices.py`, `device_repository.py`)**:
    * A clicker's sessions end when it is unassigned, when it is assigned to a different student, when its student moves to another clicker, when it is deleted, and when it is given a new secret. Assigning the same student to the same clicker again revokes nothing. These events never end a phone login.
-7. **Verification (`backend/tests/`)**:
+7. **Setup State in the List (`backend/src/api/staff/devices.py`, `schemas.py`)**:
+   * `GET /api/v1/staff/devices` returns `secret_issued_at` for each clicker: the time its current secret was issued, or `null` when it has never had one. The secret and its digest are never returned.
+8. **Teacher Clicker Screen (`pwa/app/src/features/clickers/`, `pwa/app/src/pages/teacher/TeacherHeader.tsx`, `TeacherView.tsx`)**:
+   * A **Clickers** button in the teacher header opens the fleet in its own sheet, at every step and in every mode, so a clicker can be reassigned during a match. It is not part of the settings accordion.
+   * Each row shows the clicker id in full, the student it votes as or `Sin alumno`, and `Sin configurar` while `secret_issued_at` is `null`. Swiping a row gives **Info**, **Editar** and **Eliminar**, as in the question bank. Tapping the id opens **Editar**. **Eliminar** asks for a two-second hold.
+   * **Editar** lists the students with no clicker first, then the students who hold one, labelled with that clicker, because assigning moves them. The add form checks the id against the server's rule before sending it.
+   * The screen uses the list, register, assign, unassign and delete endpoints. It never calls the secret endpoint and never shows a secret.
+   * The server sends user ids as numbers and the roster type declares them as strings. The clicker code compares them in string form and sends `user_id` as a number.
+9. **Verification (`backend/tests/`, `pwa/app/src/`)**:
    * `tests/core/db/test_device_repository.py` (14 tests) and `test_device_secret_migration_015.py` (5 tests): the repository functions, the new columns and index, and inserts that do not name the new columns.
    * `tests/api/staff/test_device_secret.py` (12 tests) and `test_device_revocation.py` (7 tests): the secret contract, the audit row, the log, and each revocation case.
+   * `tests/api/staff/test_device_list_secret_state.py` (3 tests): the list shows `null` before a secret is issued and the stored time after, and it never carries the secret or its digest.
    * `tests/api/devices/test_device_auth.py` and `test_device_auth_lockout.py`: the status codes and their detail strings, the anti-oracle symmetry, one live token, the lockout, and the log. The malformed-body test runs seven cases.
    * `tests/api/devices/test_device_token_scope.py` (12 test cases): a clicker's token is refused with `403` on the profile, the PIN change, the username change, logout, the three student tutor endpoints and a staff endpoint; the refused logout leaves the token able to vote; the refused PIN change leaves the PIN as it was; game events carry no student; and a phone login of the same student is still accepted.
    * `tests/api/session/test_session_hardware_vote.py` (8 tests), `test_transport.py` (2) and `tests/core/security/test_auth_session_device.py` (6): the label on each path, the first-press lock across transports, a revoked clicker's vote, and which of the three session dependencies accept a clicker's session.
    * The revocation rules and the token scope were checked by breaking each rule in the source and running these tests: ten deliberate breakages, each caught by at least one test.
+   * Teacher clicker screen: 95 tests in `pwa/app/src/features/clickers/__tests__/` (8 files) and `pwa/app/src/pages/teacher/__tests__/TeacherClickers.test.tsx`. They cover the API client, the id rule, the dates, the row and its armed delete, the list, the add form, the two sheets, each error message, numeric and string user ids, and the header button. 42 deliberate breakages of the screen's source were each caught by at least one test.
+   * Teacher clicker screen, in a browser: the built page was driven in headless Chrome at 360 px against a real backend with an empty database (add, invalid and duplicate id, assign, move a student between clickers, unassign, Info, swipe, hold to delete, Escape). The header fits with the new button, the id is never cut off, the armed row keeps its height, and no request goes to the secret endpoint. A mouse drag at desktop width opens the row's actions without opening **Editar**.
+   * Database lock after a refused duplicate, found while driving the clicker screen and fixed: a `409` for a duplicate clicker id or username left the write lock held, so the next writes (a login, an assignment, a vote) waited 5 s and failed with `500`. `get_db` (`backend/src/core/db/database.py`) now rolls back before it closes. `tests/api/test_writes_after_refused_duplicate.py` (5 tests, one for each endpoint that refuses a duplicate) and 3 tests in `tests/core/db/test_database.py` cover it; all 5 fail without the rollback. Checked against a running server too: a login right after each refused duplicate answers `200`.
    * Fleet, in CI: `tests/api/session/test_session_fleet_hardware.py` (6 tests, helpers in `fleet_support.py`) runs 15 simulated clickers and 15 phones through the real endpoints (register, assign, secret, authenticate, vote). Five rounds of 30 simultaneous votes store 150 rows, 75 `hardware` and 75 `web`, with none lost. The other tests cover 15 clickers pressing twice at once (one vote each), an unassigned clicker that stops voting while the other 14 continue, a reassigned clicker that votes as its new student after authenticating again, and the >51% rule with mixed transports (16 of 30 on one distractor speaks, 15 of 30 stays silent).
 
 **Known Limits:**
@@ -86,6 +101,7 @@ This document tracks the technical deliverables, architectural implementations, 
 * A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
 * The lockout counters are in memory, so a backend restart clears them.
 * The fleet test is simulated. It proves the endpoints and the session rules, not the radio, the router's association limit or a clicker's latency.
+* The teacher clicker screen was checked in a desktop browser at phone size, not on a phone. With a row's actions swiped open and nothing else open, Escape closes the whole Clickers sheet. A clicker row is about 104 px tall, so a phone shows four or five clickers at a time.
 
 **Interface for Student B (Firmware and Provisioner):**
 

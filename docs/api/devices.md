@@ -15,7 +15,7 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 
 ## Endpoint Overview
 
-These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
+These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)); it never calls the secret endpoint, which is for the Bluetooth provisioner. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
@@ -35,6 +35,8 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 
 List all registered physical clickers, their creation timestamps, and current assigned student metadata.
 
+`secret_issued_at` is the time the clicker's current secret was issued, and it stays `null` until a secret is issued. The secret itself and its digest (`devices.secret_hash`) are never returned.
+
 * **Authorization**: Teacher, Admin
 * **Responses**:
   * `200 OK`:
@@ -45,13 +47,15 @@ List all registered physical clickers, their creation timestamps, and current as
           "device_id": "1",
           "assigned_user_id": 12,
           "assigned_username": "juan_p",
-          "created_at": "2026-08-29 14:00:00"
+          "created_at": "2026-08-29 14:00:00",
+          "secret_issued_at": "2026-08-29 14:10:00"
         },
         {
           "device_id": "ESP32_02",
           "assigned_user_id": null,
           "assigned_username": null,
-          "created_at": "2026-08-29 14:05:00"
+          "created_at": "2026-08-29 14:05:00",
+          "secret_issued_at": null
         }
       ]
     }
@@ -78,7 +82,8 @@ Registers a new physical clicker identifier into the appliance fleet.
       "device_id": "1",
       "assigned_user_id": null,
       "assigned_username": null,
-      "created_at": "2026-08-29 14:00:00"
+      "created_at": "2026-08-29 14:00:00",
+      "secret_issued_at": null
     }
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.

@@ -4,6 +4,7 @@ import { resolvePostLoginRedirect } from '../../features/auth/EntryForm';
 import { BankPickStep } from './BankPickStep';
 import { useRosterManager } from '../../features/roster/useRosterManager';
 import { TeacherSettingsSheet } from './TeacherSettingsSheet';
+import { ClickerFleetSheet } from '../../features/clickers/ClickerFleetSheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
@@ -38,6 +39,7 @@ export const TeacherView: React.FC = () => {
   });
   const [roleError, setRoleError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showClickers, setShowClickers] = useState(false);
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
@@ -68,7 +70,10 @@ export const TeacherView: React.FC = () => {
   }, [curRound?.round_id, curRound?.status, curRound?.round_index, prefetch]);
 
   useEffect(() => {
-    if (!user) setShowSettings(false);
+    if (!user) {
+      setShowSettings(false);
+      setShowClickers(false);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -165,6 +170,7 @@ export const TeacherView: React.FC = () => {
         onBack={() => coordinator.setWizard('topic')}
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenClickers={() => setShowClickers(true)}
       />
       {showModePicker && (
         <ModePicker
@@ -254,6 +260,7 @@ export const TeacherView: React.FC = () => {
           }}
         />
       )}
+      {showClickers && isStaff && <ClickerFleetSheet onClose={() => setShowClickers(false)} />}
       <ToastViewport toasts={toasts ?? []} onDismiss={(id) => dismissToast?.(id)} />
     </div>
   );

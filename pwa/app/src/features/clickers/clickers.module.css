@@ -1,0 +1,229 @@
+/* Clicker fleet: only the rules the shared list, form and sheet styles lack. */
+
+/* Fixed minimum height: the header, the add form and the first rows stay above
+   the toast strip, and the sheet does not change height as rows load. */
+/* Bottom room: the shared toast strip sits 16px above the bottom edge and is
+   about 54px tall, so it reaches 70px up (plus the safe-area inset). The sheet
+   already pads 20px, so the last row needs about 50px more to clear it. 80px
+   here leaves a margin, so the last row's Eliminar stays tappable when the
+   sheet is scrolled to the end. */
+.fleet {
+  min-height: 60vh;
+  min-height: 60dvh;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+/* Add form plus its inline validation line, stacked. */
+.addStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+  width: 100%;
+}
+
+.addButton:disabled {
+  opacity: 0.55;
+}
+
+/* Row face: the same frame for the swipe face and the armed confirm, so arming
+   a delete keeps the row height. Padding matches SwipeRow's face. */
+.faceFrame {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.faceBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Line 1: the clicker id. Never truncated (a 32-character id wraps instead).
+   The 44px tap target is 10px padding around a 24px line. */
+.idButton,
+.idText {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--ink);
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.idButton {
+  cursor: pointer;
+}
+
+/* Line 2: the tags. At least 40px, the same height as the armed confirm. */
+.tagLine {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.tags {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A long username may ellipsise; the id above never does. */
+.tagChip {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Warn tone for "Sin alumno", so an idle clicker stands out in the list. */
+.unassignedTag {
+  color: var(--warn2);
+  background: var(--warn-bg);
+}
+
+/* Armed: the tags keep their space but are not shown; the confirm covers them. */
+.tagsHidden {
+  visibility: hidden;
+}
+
+.confirmOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* Both children fill the tag line exactly. HoldButton's own min-height and
+   border would otherwise push it past the line by a few pixels. */
+.confirmOverlay > .confirmHold {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.cancelBtn {
+  flex: 0 0 auto;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--tint);
+  color: var(--p);
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.16s ease;
+}
+
+.cancelBtn:hover {
+  background: var(--tint2);
+}
+
+/* Skeleton rows match a clicker row: 10px + 44px id line + 40px tag line + 10px. */
+.skeletonRow {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 10px 12px;
+}
+
+.skeletonId {
+  box-sizing: border-box;
+  width: 55%;
+  height: 18px;
+  margin: 13px 0;
+}
+
+.skeletonTags {
+  box-sizing: border-box;
+  width: 40%;
+  height: 22px;
+  margin: 9px 0;
+  border-radius: 12px;
+}
+
+/* Sheet content: title, actions and hints (overlay and panel live in shared/ui/Sheet). */
+.sheetTitle {
+  font-size: 21px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetAction {
+  min-height: 56px;
+  border-radius: 28px;
+  padding: 0 18px;
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--tint);
+  color: var(--p);
+  display: grid;
+  place-items: center;
+}
+
+.sheetAction:hover:not(:disabled) {
+  background: var(--tint2);
+}
+
+.sheetAction:disabled {
+  opacity: 0.55;
+}
+
+.sheetHint {
+  font-size: 13px;
+  color: var(--mute2);
+  line-height: 1.4;
+}
+
+/* Info sheet: label above value, one block per fact. */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoLabel {
+  font-size: 13px;
+  color: var(--mute2);
+}
+
+.infoValue {
+  margin: 0;
+  font-size: 17px;
+  color: var(--ink);
+}

@@ -22,7 +22,7 @@ Deployment configurations, systemd service units, and isolated networking setup 
   * **Web Server & Reverse Proxy**: [`nginx/tutorbox.conf`](nginx/tutorbox.conf) publishes the backend on port 80 (`http://tutorbox`, `http://192.168.8.2`) — required because phone captive-portal probes only use port 80. It also limits requests per address on three paths: login, signup and game event batches (the reasons are in the file).
   * **Captive Portal**: [`captive-portal.md`](captive-portal.md) — a phone that joins the Wi-Fi opens the student page automatically (router catch-all DNS + backend probe answers).
   * **Audio Output & TTS**: ALSA/PulseAudio configuration routing offline Spanish TTS and K'iche' native audio output to classroom speakers.
-  * **System Tuning**: Headless mode, 25W performance mode, and persistent `jetson_clocks` execution.
+  * **System Tuning**: 25W clock caps applied at boot by [`systemd/tutorbox-power.service`](systemd/tutorbox-power.service), because nvpmodel's own boot step fails on this board (the unit header explains why). The desktop stays on for now, and `jetson_clocks` is not used: it pins clocks at maximum, which raises sustained current.
 * **Isolated Classroom AP (GL.iNet GL-AR300M16)**:
   * Local DHCP configuration broadcasting SSID `TutorBox`.
   * dnsmasq static lease `tutorbox` → `192.168.8.2` and catch-all DNS (every name resolves to the Jetson).

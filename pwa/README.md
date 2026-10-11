@@ -92,6 +92,7 @@ pwa/
 │       │   ├── session-engine/     # Round state machine & polling coordinator
 │       │   ├── voting/             # Voting grid, response latency & first-press lock
 │       │   ├── roster/             # Student management & PIN resets
+│       │   ├── clickers/           # ESP32 clicker fleet sheet (teacher header)
 │       │   ├── question-generator/ # Topic selector & question count picker
 │       │   ├── speech/             # TTS audio playback & status badge
 │       │   └── match-report/       # Aggregate analytics, remediation alert & CSV export
@@ -125,7 +126,7 @@ Inside `pwa/app/`:
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (13 suites, 49 tests)
+pnpm test       # Execute Vitest test suite (66 suites, 399 tests)
 pnpm build      # Build production bundle to dist/
 ```
 
@@ -135,6 +136,19 @@ pnpm build      # Build production bundle to dist/
 
 `src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
 `/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
+
+---
+
+### Clickers (teacher header)
+
+The **Clickers** button in the `/maestro/` header (before the settings button) opens the ESP32 clicker fleet in its own sheet, from `src/features/clickers/`. Each row shows the clicker id, the student it votes as (or `Sin alumno`) and `Sin configurar` when it was never set up over Bluetooth. Tapping the id or swiping to **Editar** picks its student; a student who already held another clicker moves to this one. **Info** shows the dates, and **Eliminar** deletes after a hold. The screen never requests or shows a clicker secret: secrets are issued by the Bluetooth provisioner, not from this page.
+
+| Endpoint | Used by |
+| :--- | :--- |
+| `GET /api/v1/staff/devices`, `POST /api/v1/staff/devices` | list, add by hardware label |
+| `POST /api/v1/staff/devices/{id}/assign`, `POST /api/v1/staff/devices/{id}/unassign` | Editar: assign or take off the student |
+| `DELETE /api/v1/staff/devices/{id}` | Eliminar (hold to confirm) |
+| `GET /api/v1/staff/users` | student picker (through the roster client) |
 
 ---
 

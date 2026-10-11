@@ -42,9 +42,17 @@ def get_db(db_path: str | None = None) -> Generator[sqlite3.Connection, None, No
     """
     Context manager that guarantees the SQLite connection is closed,
     even if an exception occurs during the request.
+
+    Work that was not committed is rolled back before the close. A refused write
+    leaves a transaction open, and closing alone does not end it while the caller's
+    cursor is still referenced from the raised error, so the write lock would stay
+    held and other writers would time out.
     """
     conn = get_db_connection(db_path)
     try:
         yield conn
     finally:
-        conn.close()
+        try:
+            conn.rollback()
+        finally:
+            conn.close()

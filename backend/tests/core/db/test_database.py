@@ -1,3 +1,7 @@
+import sqlite3
+
+import pytest
+
 from core.db.database import get_db_connection
 
 
@@ -119,6 +123,73 @@ def test_get_db_context_manager(temp_db):
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         assert cursor.fetchone()[0] == 1
+
+
+def test_get_db_releases_the_write_lock_after_a_refused_write(temp_db):
+    """
+    Test that a write refused inside get_db does not keep the database locked
+    while the caller still holds the cursor that ran it.
+    """
+    from core.db.database import get_db
+
+    db_path, _ = temp_db
+    with get_db(db_path) as conn:
+        conn.execute("INSERT INTO devices (device_id) VALUES ('CLICKER_01')")
+        conn.commit()
+
+    # Kept referenced on purpose: the lock was only held while this cursor was alive.
+    held_cursors: list[sqlite3.Cursor] = []
+    with pytest.raises(sqlite3.IntegrityError), get_db(db_path) as conn:
+        held_cursors.append(conn.cursor())
+        held_cursors[0].execute("INSERT INTO devices (device_id) VALUES ('CLICKER_01')")
+
+    second_writer = sqlite3.connect(db_path, timeout=0.2)
+    try:
+        second_writer.execute("INSERT INTO devices (device_id) VALUES ('CLICKER_02')")
+        second_writer.commit()
+    finally:
+        second_writer.close()
+    assert len(held_cursors) == 1
+
+
+def test_get_db_discards_writes_that_were_not_committed(temp_db):
+    """
+    Test that leaving get_db without a commit drops the pending write.
+    """
+    from core.db.database import get_db
+
+    db_path, check_conn = temp_db
+    with get_db(db_path) as conn:
+        conn.execute("INSERT INTO devices (device_id) VALUES ('CLICKER_01')")
+
+    assert check_conn.execute("SELECT COUNT(*) FROM devices").fetchone()[0] == 0
+
+
+def test_get_db_closes_the_connection_when_the_rollback_fails(monkeypatch):
+    """
+    Test that get_db still closes its connection when rolling back raises.
+    """
+    from core.db import database
+
+    class FailingRollbackConnection:
+        closed = False
+
+        def rollback(self) -> None:
+            raise sqlite3.OperationalError("disk I/O error")
+
+        def close(self) -> None:
+            self.closed = True
+
+    connection = FailingRollbackConnection()
+    monkeypatch.setattr(database, "get_db_connection", lambda db_path=None: connection)
+
+    with (
+        pytest.raises(sqlite3.OperationalError, match="disk I/O error"),
+        database.get_db(),
+    ):
+        pass
+
+    assert connection.closed is True
 
 
 def test_busy_timeout_env_and_fallback(monkeypatch):
