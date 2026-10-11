@@ -46,6 +46,8 @@ class DeviceItem(BaseModel):
     assigned_user_id: int | None = None
     assigned_username: str | None = None
     created_at: str
+    # When the current secret was issued; None while the clicker has none.
+    secret_issued_at: str | None = None
 
 
 class DeviceListResponse(BaseModel):

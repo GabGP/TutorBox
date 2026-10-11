@@ -11,7 +11,7 @@
 
 ---
 
-This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)**. It records the state of the repository on 2026-10-09.
+This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)**. It records the state of the repository on 2026-10-10.
 
 ---
 
@@ -19,9 +19,9 @@ This document tracks the technical deliverables, architectural implementations, 
 
 * **Theme**: *"One More Transport: Integrating hardware without redesigning the system"*
 * **Status**: **Copilot (Student A) Backend Complete & Green · Pilot (Student B) Firmware, Provisioner and Assembly Not Started**
-* **Backend Test Suite**: **2141 / 2141 passing tests** (95 new this week: 19 in `tests/core/db/`, 19 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`).
-* **Statement Coverage**: **100.00% statement coverage** across all 6,716 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
-* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 7 hooks).
+* **Backend Test Suite**: **2630 / 2630 passing tests** (98 new for the clickers this week: 19 in `tests/core/db/`, 22 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`).
+* **Statement Coverage**: **100.00% statement coverage** across all 6,753 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 8 hooks).
 * **Modularity Compliance**: production modules are held to the 150-line ceiling by `tests/test_modularity_policy.py`. The largest new production module is `backend/src/api/devices/auth.py` (104 lines).
 * **Acceptance Criteria Status**:
   * ⏳ **Live 10-question match with at least 10 physical ESP32 clickers and 0 lost votes**: pending hardware. Proven in CI today: 15 simulated clickers and 15 phones, through the real endpoints, play 5 rounds with zero lost votes (`test_session_fleet_hardware.py`). Not proven: a match with physical clickers, which waits for the firmware and the first batch.
@@ -33,6 +33,7 @@ This document tracks the technical deliverables, architectural implementations, 
   * **Vote Label**: each vote is labelled `hardware` with the clicker's id, or `web`, from the caller's session. The request body cannot choose the label ([Sessions API](../api/sessions.md#post-session-vote)).
   * **Migration `015`**: three nullable columns and the partial index `idx_sessions_device_id` ([Migrations](../database/migrations.md#015-clicker-secret-and-session-device)).
   * **Revocation**: a clicker's sessions end when it is unassigned, reassigned, deleted, or given a new secret ([Clicker Token Revocation](../api/devices.md#clicker-token-revocation)).
+  * **Setup State in the List**: `GET /api/v1/staff/devices` returns `secret_issued_at` for each clicker, so staff can see which clickers were never set up ([Devices API](../api/devices.md#get-staff-devices)).
 
 ---
 
@@ -70,9 +71,12 @@ This document tracks the technical deliverables, architectural implementations, 
    * `POST /api/v1/games/events` takes an optional login and never refuses a batch. Events sent with a clicker's token are stored with no student, like events sent with an expired login.
 6. **Revocation (`backend/src/api/staff/device_pairing.py`, `devices.py`, `device_repository.py`)**:
    * A clicker's sessions end when it is unassigned, when it is assigned to a different student, when its student moves to another clicker, when it is deleted, and when it is given a new secret. Assigning the same student to the same clicker again revokes nothing. These events never end a phone login.
-7. **Verification (`backend/tests/`)**:
+7. **Setup State in the List (`backend/src/api/staff/devices.py`, `schemas.py`)**:
+   * `GET /api/v1/staff/devices` returns `secret_issued_at` for each clicker: the time its current secret was issued, or `null` when it has never had one. The secret and its digest are never returned.
+8. **Verification (`backend/tests/`)**:
    * `tests/core/db/test_device_repository.py` (14 tests) and `test_device_secret_migration_015.py` (5 tests): the repository functions, the new columns and index, and inserts that do not name the new columns.
    * `tests/api/staff/test_device_secret.py` (12 tests) and `test_device_revocation.py` (7 tests): the secret contract, the audit row, the log, and each revocation case.
+   * `tests/api/staff/test_device_list_secret_state.py` (3 tests): the list shows `null` before a secret is issued and the stored time after, and it never carries the secret or its digest.
    * `tests/api/devices/test_device_auth.py` and `test_device_auth_lockout.py`: the status codes and their detail strings, the anti-oracle symmetry, one live token, the lockout, and the log. The malformed-body test runs seven cases.
    * `tests/api/devices/test_device_token_scope.py` (12 test cases): a clicker's token is refused with `403` on the profile, the PIN change, the username change, logout, the three student tutor endpoints and a staff endpoint; the refused logout leaves the token able to vote; the refused PIN change leaves the PIN as it was; game events carry no student; and a phone login of the same student is still accepted.
    * `tests/api/session/test_session_hardware_vote.py` (8 tests), `test_transport.py` (2) and `tests/core/security/test_auth_session_device.py` (6): the label on each path, the first-press lock across transports, a revoked clicker's vote, and which of the three session dependencies accept a clicker's session.

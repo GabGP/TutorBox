@@ -31,7 +31,8 @@ def list_devices(
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT d.device_id, d.assigned_user_id, d.created_at, u.username AS assigned_username "
+            "SELECT d.device_id, d.assigned_user_id, d.created_at, d.secret_issued_at, "
+            "u.username AS assigned_username "
             "FROM devices d LEFT JOIN users u ON d.assigned_user_id = u.id "
             "ORDER BY d.device_id LIMIT ?",
             (DEFAULT_DEVICE_LIST_LIMIT,),
@@ -45,6 +46,7 @@ def list_devices(
                 assigned_user_id=r["assigned_user_id"],
                 assigned_username=r["assigned_username"],
                 created_at=r["created_at"],
+                secret_issued_at=r["secret_issued_at"],
             )
             for r in rows
         ]

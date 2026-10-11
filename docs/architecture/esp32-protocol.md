@@ -575,7 +575,7 @@ In the order each piece unblocks the next:
 2. **Provisioner (Pilot B, ~1 day): not started** — `infra/provisioner/` script + systemd unit + `--dry-run`; verified with a phone BLE scanner app and the checklist above.
 3. **Firmware (Pilot B, ~2 days): not started** — provisioning routine, NVS, runtime loop, LED mapping; one clicker end-to-end against the real backend.
 4. **Fleet test (both, ½ day): simulated in CI, not on hardware** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable). The CI test has no radio. The real-device part is not started.
-5. **Pilas roster** — optional: show `GET /staff/devices` (device, assigned student; `secret_issued_at` is not in the list response yet) with assign/unassign buttons on `/maestro/`, so the "unregistered → assign → press again" loop never needs Swagger.
+5. **Pilas roster** — optional: show `GET /staff/devices` (device, assigned student; the list response now includes `secret_issued_at`) with assign/unassign buttons on `/maestro/`, so the "unregistered → assign → press again" loop never needs Swagger.
 
 ---
 
