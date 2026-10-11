@@ -158,6 +158,24 @@ def test_device_whose_student_is_soft_deleted_is_403(staff_db, client):
     assert response.json()["detail"] == UNASSIGNED_DETAIL
 
 
+@pytest.mark.parametrize("staff_username", ["teacher1", "admin1"])
+def test_device_assigned_to_a_staff_account_is_403_and_creates_no_session(
+    staff_db, client, staff_username
+):
+    """A row left from before role changes gave clickers back: still no token."""
+    _, conn = staff_db
+    seed_clicker(conn, DEVICE_ID, get_user_id(conn, staff_username))
+
+    response = post_auth(client, DEVICE_ID, SECRET)
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == UNASSIGNED_DETAIL
+    session_rows = conn.execute(
+        "SELECT COUNT(*) FROM sessions WHERE device_id = ?", (DEVICE_ID,)
+    ).fetchone()[0]
+    assert session_rows == 0
+
+
 @pytest.mark.parametrize(
     "payload",
     [

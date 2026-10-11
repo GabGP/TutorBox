@@ -10,6 +10,7 @@ __all__ = [
     "DeviceCredentials",
     "create_device_session",
     "get_device_credentials",
+    "release_clicker_of_user",
     "revoke_device_sessions",
     "store_device_secret",
 ]
@@ -22,7 +23,8 @@ class DeviceCredentials:
     device_id: str
     # None until a secret has been issued.
     secret_hash: str | None
-    # None when unassigned, or when the assigned student's account is deleted.
+    # None when unassigned, or when the assigned account is deleted or is not a
+    # student's.
     assigned_user_id: int | None
     assigned_username: str | None
 
@@ -30,12 +32,17 @@ class DeviceCredentials:
 def get_device_credentials(
     conn: sqlite3.Connection, device_id: str
 ) -> DeviceCredentials | None:
-    """Returns the clicker's credentials, or None when no device has that id."""
+    """Returns the clicker's credentials, or None when no device has that id.
+
+    Only an active student account counts as assigned: a clicker never gets a
+    session for a teacher or an admin.
+    """
     row = conn.execute(
         "SELECT d.device_id, d.secret_hash, u.id AS assigned_user_id, "
         "u.username AS assigned_username "
         "FROM devices d "
         "LEFT JOIN users u ON u.id = d.assigned_user_id AND u.deleted_at IS NULL "
+        "AND u.role = 'student' "
         "WHERE d.device_id = ?",
         (device_id,),
     ).fetchone()
@@ -89,3 +96,24 @@ def revoke_device_sessions(conn: sqlite3.Connection, device_id: str) -> int:
         (device_id,),
     )
     return cursor.rowcount
+
+
+def release_clicker_of_user(conn: sqlite3.Connection, user_id: int) -> str | None:
+    """Unassigns the clicker the user holds and revokes the sessions issued to it.
+
+    Returns the clicker's id, or None when the user holds none. A user holds one
+    clicker at most: devices.assigned_user_id is unique. The user's phone logins are
+    left untouched. The caller commits.
+    """
+    row = conn.execute(
+        "SELECT device_id FROM devices WHERE assigned_user_id = ?", (user_id,)
+    ).fetchone()
+    if row is None:
+        return None
+    released_device_id: str = row["device_id"]
+    revoke_device_sessions(conn, released_device_id)
+    conn.execute(
+        "UPDATE devices SET assigned_user_id = NULL WHERE device_id = ?",
+        (released_device_id,),
+    )
+    return released_device_id

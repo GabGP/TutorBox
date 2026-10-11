@@ -209,7 +209,7 @@ A clicker has no PIN. It trades its secret for a session of the student it is as
     ```
     `session_id` is a bearer token that votes as the assigned student, sent as `Authorization: Bearer <session_id>`. The database keeps only its digest.
   * `401 Unauthorized`: `"Invalid device credentials."` An unknown device, a device that has no secret, and a wrong secret all get this same response.
-  * `403 Forbidden`: `"Device is not assigned to any student."` The secret is right, but the clicker is unassigned or its student's account is deleted. This is not counted as a failed attempt, so a clicker waiting for the teacher can retry.
+  * `403 Forbidden`: `"Device is not assigned to any student."` The secret is right, but the clicker is unassigned, its student's account is deleted, or the account it points to is not a student's. This is not counted as a failed attempt, so a clicker waiting for the teacher can retry.
   * `422 Unprocessable Entity`: the body breaks the rules above. The response lists each invalid field and repeats the value sent, as FastAPI does by default (login does the same for a malformed PIN).
   * `429 Too Many Requests`: `"Too many failed login attempts. Please try again later."`
 * **Notes**:
@@ -229,6 +229,7 @@ A clicker's active sessions, the ones issued to it by `POST /api/v1/devices/auth
 * the clicker is unassigned (`POST /api/v1/staff/devices/{device_id}/unassign`);
 * the clicker is assigned to a different student;
 * its student is moved to another clicker, which revokes the clicker the student left;
+* its student becomes a teacher or an admin (`PATCH /api/v1/staff/users/{user_id}/role`), which also unassigns the clicker, because only students hold one;
 * the clicker is deleted (`DELETE /api/v1/staff/devices/{device_id}`);
 * a new secret is issued (`POST /api/v1/staff/devices/{device_id}/secret`).
 

@@ -282,19 +282,20 @@ Trades the secret for a bearer session of the assigned student. Code: `backend/s
 {"session_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", "username": "ana", "device_id": "ESP32-A4CF12"}
 ```
 
-- **Responses**: `200` with the body above. `401 "Invalid device credentials."` for an unknown device, a device with no secret, or a wrong secret, all the same. `403 "Device is not assigned to any student."` for the right secret on an unassigned device or on a deleted student's account; this is not counted as a failure. `422` for a malformed body. `429` while the key is locked.
+- **Responses**: `200` with the body above. `401 "Invalid device credentials."` for an unknown device, a device with no secret, or a wrong secret, all the same. `403 "Device is not assigned to any student."` for the right secret on an unassigned device, on a deleted student's account, or on an account that is not a student's; this is not counted as a failure. `422` for a malformed body. `429` while the key is locked.
 - **Lockout**: the same limiter as login (`check_rate_limit` and `login_rate_limiter`) on the key `device:<device_id>@<address>`. After `AUTH_MAX_ATTEMPTS` wrong secrets (5 by default) the key is locked for `AUTH_LOCKOUT_SECONDS` (30 by default). Each later lockout lasts twice as long, up to 16 minutes. A right secret clears the count.
 - **Session**: `create_device_session` inserts the session with `device_id` set, for the assigned student. The `AuthContext` is the student's, so the vote is recorded with `student_id = assigned_user_id`. The session engine is unchanged.
 - **One live token**: before it inserts a new session, the endpoint revokes the clicker's earlier sessions, so the clicker holds one token at a time. The token expires after `SESSION_TTL_HOURS` (12), like any login.
 
 ### 6.4 Revocation
 
-The clicker's active sessions (`sessions.device_id` equal to its id, `is_active = 1`) are set to `is_active = 0` by `revoke_device_sessions` in four places:
+The clicker's active sessions (`sessions.device_id` equal to its id, `is_active = 1`) are set to `is_active = 0` by `revoke_device_sessions` in five places:
 
 - `api/staff/device_pairing.py::unassign_device`: on every unassignment.
 - `api/staff/device_pairing.py::assign_device`: when the clicker's student changes, and for the clicker that the student is moved away from. Assigning the same student to the same clicker again revokes nothing.
 - `api/staff/devices.py::delete_device`: before the clicker row is deleted.
 - `api/staff/device_secret.py`: when a new secret is issued.
+- `api/staff/user_change_role.py::change_user_role`: when a student becomes a teacher or an admin. `release_clicker_of_user` (`core/db/device_repository.py`) also unassigns the clicker, because only students hold one. `get_device_credentials` reads a clicker whose account is not a student's as unassigned, so the clicker login never issues a token for a staff account.
 
 Phone and browser sessions (`device_id` NULL) do not match the query. The student-level view, which includes a staff PIN reset and an account deletion, is in [Clicker Token Revocation](../api/devices.md#clicker-token-revocation).
 
@@ -576,7 +577,7 @@ Details worth keeping in mind:
 | Read returns 20 bytes / truncated JSON | MTU not negotiated and long reads disabled | Request MTU 256 before the read; keep the packet ≤ 512 B |
 | `status: busy` in a loop | A previous provisioning never wrote `result` | Slot expires after 10 s; check provisioner log |
 | Joins Wi-Fi, then vote LED red every 10 s | Device unassigned (403) | Teacher assigns a student in the roster; clicker re-auths within 30 s |
-| Every vote 401 | The session was revoked (unassign, reassign, delete or a new secret), or it is older than 12 hours | Authenticate again with `POST /api/v1/devices/auth`. If that answers `401`, the secret changed: re-provision (hold A 3 s) |
+| Every vote 401 | The session was revoked (unassign, reassign, delete, a new secret, or its student became a teacher), or it is older than 12 hours | Authenticate again with `POST /api/v1/devices/auth`. If that answers `401`, the secret changed: re-provision (hold A 3 s) |
 | Auth answers `401` | Secret not issued, replaced by another provisioning, or the device id is unknown | Re-provision (hold A 3 s) |
 | Auth answers `429` | Five wrong secrets from this device at this address (30 s, doubling to 16 min) | Wait. The lockout is in memory, so a backend restart clears it |
 | Auth answers `422` | Secret or device id has the wrong shape (the secret is 32 lowercase hex characters) | Packet or NVS bug: check the value the clicker sends |

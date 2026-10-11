@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from api.staff.guards import ensure_managers_remain
 from core.db.audit import record_audit
 from core.db.database import get_db
+from core.db.device_repository import release_clicker_of_user
 from core.security import AuthContext, RoleField, require_roles
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ def change_user_role(
     """
     Changes a user's role. Teachers may move users between student and
     teacher; only admins may assign or touch admin accounts. Demoting the
-    last remaining admin is rejected.
+    last remaining admin is rejected. A student who becomes staff gives their
+    clicker back: only students hold one.
     """
     with get_db() as conn:
         cursor = conn.cursor()
@@ -101,7 +103,27 @@ def change_user_role(
             action="role_changed",
             target_user_id=user_id,
         )
+        # Only students hold a clicker, and this account has just stopped being one.
+        released_device_id = (
+            release_clicker_of_user(conn, user_id)
+            if target["role"] == "student"
+            else None
+        )
+        if released_device_id is not None:
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="device_unassigned",
+                target_user_id=user_id,
+            )
         conn.commit()
+
+    if released_device_id is not None:
+        logger.info(
+            "Clicker '%s' unassigned: user id %d is no longer a student.",
+            released_device_id,
+            user_id,
+        )
 
     logger.info(
         "Role changed: user id %d to '%s' by '%s'.",

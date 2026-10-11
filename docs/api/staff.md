@@ -24,6 +24,7 @@ Staff administration endpoints allow teachers and system administrators to manag
 | `POST` | `/api/v1/staff/users/{user_id}/reset-pin` | Teacher, Admin | Issue temporary random PIN and enforce rotation |
 | `DELETE` | `/api/v1/staff/users/{user_id}` | Teacher, Admin | Soft-delete an account and free username |
 | `POST` | `/api/v1/staff/users/{user_id}/recover` | Teacher, Admin | Restore soft-deleted account under new username |
+| `PATCH` | `/api/v1/staff/users/{user_id}/role` | Teacher, Admin | Change an account's role; a student who becomes staff gives their clicker back |
 | `GET` | `/api/v1/staff/audit-logs` | Admin Only | Read append-only security audit log trails |
 
 ---
@@ -163,6 +164,35 @@ Restores a soft-deleted account under a new unique username, sets a temporary PI
   * `403 Forbidden`: Teacher attempting to recover an `admin` account.
   * `404 Not Found`: Target is not soft-deleted or does not exist.
   * `409 Conflict`: Target recovery username is already taken.
+
+---
+
+### <a id="patch-staff-users-role"></a>`PATCH /api/v1/staff/users/{user_id}/role`
+
+Changes an account's role. The account's own logins stay valid and carry the new role from the next request.
+
+* **Authorization**: Teacher (between `student` and `teacher`), Admin (any role)
+* **Clickers**: only students hold a clicker. When a student becomes a teacher or an admin, the clicker assigned to them is unassigned, its sessions are revoked, and a `device_unassigned` audit row is written next to `role_changed`. See [Clicker Token Revocation](devices.md#clicker-token-revocation).
+* **Path Parameters**:
+  * `user_id` (`integer`, required): Target user ID.
+* **Request Body**:
+  ```json
+  {
+    "role": "teacher"
+  }
+  ```
+* **Responses**:
+  * `200 OK`:
+    ```json
+    {
+      "username": "student1",
+      "role": "teacher"
+    }
+    ```
+    Sending the role the account already has answers `200` and changes nothing.
+  * `403 Forbidden`: Teacher attempting to assign `admin` or to change an `admin` account.
+  * `404 Not Found`: Target user ID not found or account is soft-deleted.
+  * `409 Conflict`: The change would demote the last admin, the last teacher, or the last staff account.
 
 ---
 
