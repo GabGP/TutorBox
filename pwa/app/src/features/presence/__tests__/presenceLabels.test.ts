@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StudentPresence } from '../presence.types';
 import {
-  channelDroppedLabel,
   formatSecondsAgo,
   lowBatteryLabel,
   mostRecentDropSeconds,
@@ -98,13 +97,6 @@ describe('studentStatusLabel', () => {
     });
     expect(mostRecentDropSeconds(noAge)).toBeNull();
     expect(studentStatusLabel(noAge)).toBe('Se cayó');
-  });
-});
-
-describe('channelDroppedLabel', () => {
-  it('describes one dropped channel with its age, or without one', () => {
-    expect(channelDroppedLabel(9)).toBe('se cayó hace 9 s');
-    expect(channelDroppedLabel(null)).toBe('se cayó');
   });
 });
 

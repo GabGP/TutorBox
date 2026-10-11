@@ -3,7 +3,7 @@ import { BatteryLow, Gamepad2, Smartphone } from 'lucide-react';
 import styles from './presence.module.css';
 import type { ClickerPresence, PresenceChannel, PresenceStatus, StudentPresence } from './presence.types';
 import { SignalBars } from './SignalBars';
-import { channelDroppedLabel, lowBatteryLabel, studentStatusLabel } from './presenceLabels';
+import { lowBatteryLabel, studentStatusLabel } from './presenceLabels';
 
 const DOT_CLASS_BY_STATUS: Record<PresenceStatus, string> = {
   online: styles.dotOnline,
@@ -11,7 +11,10 @@ const DOT_CLASS_BY_STATUS: Record<PresenceStatus, string> = {
   absent: styles.dotAbsent,
 };
 
-/** A dropped channel is dimmed and says so in words, so the mark never relies on colour. */
+/**
+ * A dropped channel is dimmed and says Desconectado, so the mark never relies on
+ * colour. How long ago is said once, in the row's status, so one number ticks per row.
+ */
 function markClass(channel: PresenceChannel): string {
   return channel.status === 'dropped' ? `${styles.mark} ${styles.markDimmed}` : styles.mark;
 }
@@ -20,9 +23,7 @@ const PhoneMark: React.FC<{ phone: PresenceChannel }> = ({ phone }) => (
   <span className={markClass(phone)}>
     <Smartphone size={16} aria-hidden />
     <span>Teléfono</span>
-    {phone.status === 'dropped' && (
-      <span className={styles.droppedNote}>{channelDroppedLabel(phone.seconds_ago)}</span>
-    )}
+    {phone.status === 'dropped' && <span className={styles.droppedNote}>Desconectado</span>}
   </span>
 );
 
@@ -34,9 +35,7 @@ const ClickerMark: React.FC<{ clicker: ClickerPresence }> = ({ clicker }) => {
       <span className={styles.clickerId}>{clicker.device_id}</span>
       {clicker.status === 'absent' && <span className={styles.absentNote}>Sin conectar</span>}
       {clicker.status === 'online' && clicker.signal !== null && <SignalBars signal={clicker.signal} />}
-      {clicker.status === 'dropped' && (
-        <span className={styles.droppedNote}>{channelDroppedLabel(clicker.seconds_ago)}</span>
-      )}
+      {clicker.status === 'dropped' && <span className={styles.droppedNote}>Desconectado</span>}
       {batteryWarning !== null && (
         <span className={styles.batteryWarning}>
           <BatteryLow size={14} aria-hidden />

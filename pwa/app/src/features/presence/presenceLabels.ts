@@ -44,11 +44,6 @@ export function studentStatusLabel(student: StudentPresence): string {
   return `Se cayó${agoSuffix(mostRecentDropSeconds(student))}`;
 }
 
-/** The dropped note on one channel (phone or clicker): "se cayó hace 9 s". */
-export function channelDroppedLabel(seconds: number | null): string {
-  return `se cayó${agoSuffix(seconds)}`;
-}
-
 /** Text alternative of the signal bars. */
 export function signalLabel(signal: SignalStrength): string {
   return SIGNAL_LABELS[signal];

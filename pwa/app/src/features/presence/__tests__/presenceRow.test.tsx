@@ -49,14 +49,16 @@ describe('PresenceRow', () => {
     expect(screen.queryByText(/Batería baja/)).not.toBeInTheDocument();
   });
 
-  it('says how long ago a dropped student went silent and dims the dropped phone', () => {
+  it('says how long ago a dropped student went silent, once, and dims the dropped phone', () => {
     renderStudent({
       status: 'dropped',
       phone: { status: 'dropped', seconds_ago: 12 },
     });
 
     expect(screen.getByRole('img', { name: 'Se cayó hace 12 s' })).toBeInTheDocument();
-    expect(screen.getByText('se cayó hace 12 s')).toBeInTheDocument();
+    expect(screen.getAllByText(/hace 12 s/)).toHaveLength(1);
+    expect(markOf('Teléfono')).toHaveTextContent('Desconectado');
+    expect(markOf('Teléfono')).not.toHaveTextContent(/hace/);
     expect(markOf('Teléfono').className).toContain('markDimmed');
   });
 
@@ -99,13 +101,15 @@ describe('PresenceRow', () => {
     expect(screen.queryByRole('img', { name: /Señal/ })).not.toBeInTheDocument();
   });
 
-  it('dims a dropped clicker and says when it dropped', () => {
+  it('dims a dropped clicker and marks it Desconectado while the phone keeps the student connected', () => {
     renderStudent({
       phone: { status: 'online', seconds_ago: 3 },
       clicker: { ...onlineClicker, status: 'dropped', seconds_ago: 9 },
     });
 
-    expect(screen.getByText('se cayó hace 9 s')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Conectado' })).toBeInTheDocument();
+    expect(markOf('ESP32-A4CF12')).toHaveTextContent('Desconectado');
+    expect(screen.queryByText(/hace/)).not.toBeInTheDocument();
     expect(markOf('ESP32-A4CF12').className).toContain('markDimmed');
     expect(screen.queryByRole('img', { name: /Señal/ })).not.toBeInTheDocument();
   });
