@@ -15,7 +15,7 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 
 ## Endpoint Overview
 
-These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
+These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)); it never calls the secret endpoint, which is for the Bluetooth provisioner. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and nothing else.
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
