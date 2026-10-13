@@ -14,6 +14,10 @@ __all__ = ["QwenDaemonClient"]
 
 logger = logging.getLogger(__name__)
 
+_QUIT_GRACE_SECONDS = 2.0
+# A daemon that crashed may still be writing its core dump when it is killed.
+_KILL_REAP_SECONDS = 5.0
+
 
 class QwenDaemonClient:
     """Manages a persistent llama-tts-daemon subprocess via stdin/stdout."""
@@ -117,7 +121,7 @@ class QwenDaemonClient:
         return response
 
     def close(self) -> None:
-        """Terminates the daemon subprocess and reclaims OS resources."""
+        """Terminates the daemon subprocess and reaps it, so no zombie is left."""
         if self._process:
             proc = self._process
             self._process = None
@@ -125,6 +129,15 @@ class QwenDaemonClient:
                 if proc.poll() is None and proc.stdin:
                     proc.stdin.write("QUIT\n")
                     proc.stdin.flush()
-                proc.wait(timeout=2.0)
+                proc.wait(timeout=_QUIT_GRACE_SECONDS)
             except (OSError, subprocess.SubprocessError):
                 proc.kill()
+                _reap_killed_process(proc)
+
+
+def _reap_killed_process(proc: subprocess.Popen[str]) -> None:
+    """Collects the exit status of a killed daemon; until then it stays a zombie."""
+    try:
+        proc.wait(timeout=_KILL_REAP_SECONDS)
+    except subprocess.TimeoutExpired:
+        logger.warning("Qwen daemon (pid %s) did not exit after kill.", proc.pid)

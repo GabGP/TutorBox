@@ -2,16 +2,19 @@
 
 import queue
 import subprocess
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from core.tts.engines.qwen import daemon as daemon_module
 from core.tts.engines.qwen.daemon import QwenDaemonClient
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 
 
 def _create_mock_popen(stdout_lines: list[str], returncode: int | None = None):
     mock_proc = MagicMock(spec=subprocess.Popen)
+    mock_proc.pid = 4321
     mock_proc.poll.return_value = returncode
     mock_proc.stdin = MagicMock()
     mock_proc.stderr = MagicMock()
@@ -126,3 +129,34 @@ def test_daemon_client_close_kill_on_wait_failure():
         client.close()
         mock_proc.kill.assert_called_once()
         assert not client.is_alive()
+
+
+def test_daemon_client_close_reaps_the_killed_process():
+    mock_proc = _create_mock_popen(["READY\n"])
+    mock_proc.wait.side_effect = [subprocess.TimeoutExpired("llama-tts-daemon", 2.0), 0]
+    with patch("subprocess.Popen", return_value=mock_proc):
+        client = QwenDaemonClient(["llama-tts-daemon"], startup_timeout=1.0)
+        client.close()
+        mock_proc.kill.assert_called_once()
+        assert mock_proc.wait.call_count == 2
+
+
+def test_daemon_client_leaves_no_zombie_when_startup_fails(monkeypatch):
+    """A real child that never answers is killed and reaped, not left defunct."""
+    monkeypatch.setattr(daemon_module, "_QUIT_GRACE_SECONDS", 0.05)
+    spawned: list[subprocess.Popen[str]] = []
+    real_popen = subprocess.Popen
+
+    def recording_popen(*args, **kwargs):
+        spawned.append(real_popen(*args, **kwargs))
+        return spawned[-1]
+
+    silent_child = [sys.executable, "-c", "import time; time.sleep(60)"]
+    with (
+        patch("subprocess.Popen", side_effect=recording_popen),
+        pytest.raises(TTSUnavailableError, match="timed out"),
+    ):
+        QwenDaemonClient(silent_child, startup_timeout=0.2)
+
+    # returncode is only set once the exit status was collected (no zombie).
+    assert spawned[0].returncode is not None
