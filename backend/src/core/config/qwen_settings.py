@@ -4,6 +4,7 @@ import os
 from typing import TypedDict
 
 from core.config.constants import (
+    DEFAULT_TTS_QWEN_BATCH,
     DEFAULT_TTS_QWEN_BINARY,
     DEFAULT_TTS_QWEN_CONTEXT,
     DEFAULT_TTS_QWEN_GGUF_PATH,
@@ -23,6 +24,7 @@ class QwenConfig(TypedDict):
     qwen_gguf_path: str
     qwen_threads: int
     qwen_context: int
+    qwen_batch: int
     qwen_seed: int
     qwen_speaker_file: str
 
@@ -41,6 +43,9 @@ def build_qwen_config() -> QwenConfig:
             DEFAULT_TTS_QWEN_CONTEXT,
             min_value=512,
             max_value=32768,
+        ),
+        "qwen_batch": parse_int(
+            "TTS_QWEN_BATCH", DEFAULT_TTS_QWEN_BATCH, min_value=16, max_value=2048
         ),
         "qwen_seed": parse_int("TTS_QWEN_SEED", DEFAULT_TTS_QWEN_SEED, min_value=-1),
         "qwen_speaker_file": env(

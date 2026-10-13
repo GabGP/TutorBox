@@ -19,6 +19,31 @@ __all__ = [
 ]
 
 
+def _model_arguments(paths: QwenModelPaths, tts_cfg: TTSConfig) -> list[str]:
+    """Returns the llama-tts flags that both command builders share, in order."""
+    # -b and -ub get the same value: a speech prompt is far shorter than the llama.cpp
+    # default of 512, and the smaller batch reserves about 460 MB less memory.
+    batch = str(tts_cfg.qwen_batch)
+    return [
+        "-m",
+        str(paths.model_path),
+        "-mm",
+        str(paths.mmproj_path),
+        "-c",
+        str(tts_cfg.qwen_context),
+        "-b",
+        batch,
+        "-ub",
+        batch,
+        "-ngl",
+        "99",
+        "-t",
+        str(tts_cfg.qwen_threads),
+        "-s",
+        str(tts_cfg.qwen_seed),
+    ]
+
+
 def build_qwen_command(
     paths: QwenModelPaths,
     text: str,
@@ -30,18 +55,7 @@ def build_qwen_command(
     """Assembles the CLI argument list for invoking one-shot llama-tts."""
     cmd = [
         str(paths.bin_path),
-        "-m",
-        str(paths.model_path),
-        "-mm",
-        str(paths.mmproj_path),
-        "-c",
-        str(tts_cfg.qwen_context),
-        "-ngl",
-        "99",
-        "-t",
-        str(tts_cfg.qwen_threads),
-        "-s",
-        str(tts_cfg.qwen_seed),
+        *_model_arguments(paths, tts_cfg),
         "--tts-lang",
         lang,
         "-p",
@@ -63,18 +77,7 @@ def build_qwen_daemon_command(
     bin_to_use = paths.daemon_bin_path or paths.bin_path
     cmd = [
         str(bin_to_use),
-        "-m",
-        str(paths.model_path),
-        "-mm",
-        str(paths.mmproj_path),
-        "-c",
-        str(tts_cfg.qwen_context),
-        "-ngl",
-        "99",
-        "-t",
-        str(tts_cfg.qwen_threads),
-        "-s",
-        str(tts_cfg.qwen_seed),
+        *_model_arguments(paths, tts_cfg),
         "--daemon",
     ]
     if speaker_file:

@@ -1,10 +1,17 @@
 """Unit tests for Qwen3-TTS command runner and timing parser."""
 
 import platform
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from core.config import clear_settings_cache, get_settings
+from core.config import TTSConfig, clear_settings_cache, get_settings
+from core.config.constants import (
+    DEFAULT_TTS_QWEN_BATCH,
+    DEFAULT_TTS_QWEN_CONTEXT,
+    DEFAULT_TTS_QWEN_SEED,
+    DEFAULT_TTS_QWEN_THREADS,
+)
 from core.tts.engines.qwen import QwenBackend
 from core.tts.engines.qwen.models import QwenModelPaths
 from core.tts.engines.qwen.runner import (
@@ -81,6 +88,97 @@ def test_build_qwen_daemon_command_with_speaker(tmp_path):
     cmd = build_qwen_daemon_command(paths, cfg, speaker_file=speaker)
     assert "--tts-speaker-file" in cmd
     assert str(speaker) == cmd[cmd.index("--tts-speaker-file") + 1]
+
+
+def _model_paths(tmp_path: Path) -> QwenModelPaths:
+    """Builds model, mmproj and both llama-tts binary paths under tmp_path."""
+    return QwenModelPaths(
+        model_path=tmp_path / "model.gguf",
+        mmproj_path=tmp_path / "mmproj.gguf",
+        bin_path=tmp_path / "llama-tts",
+        daemon_bin_path=tmp_path / "llama-tts-daemon",
+    )
+
+
+def test_build_qwen_command_exact_arguments(tmp_path):
+    paths = _model_paths(tmp_path)
+    out_wav = tmp_path / "out.wav"
+    cmd = build_qwen_command(paths, "Hola clase", "es", out_wav, TTSConfig())
+    assert cmd == [
+        str(paths.bin_path),
+        "-m",
+        str(paths.model_path),
+        "-mm",
+        str(paths.mmproj_path),
+        "-c",
+        str(DEFAULT_TTS_QWEN_CONTEXT),
+        "-b",
+        str(DEFAULT_TTS_QWEN_BATCH),
+        "-ub",
+        str(DEFAULT_TTS_QWEN_BATCH),
+        "-ngl",
+        "99",
+        "-t",
+        str(DEFAULT_TTS_QWEN_THREADS),
+        "-s",
+        str(DEFAULT_TTS_QWEN_SEED),
+        "--tts-lang",
+        "es",
+        "-p",
+        "Hola clase",
+        "-o",
+        str(out_wav),
+    ]
+
+
+def test_build_qwen_daemon_command_exact_arguments(tmp_path):
+    paths = _model_paths(tmp_path)
+    cmd = build_qwen_daemon_command(paths, TTSConfig())
+    assert cmd == [
+        str(paths.daemon_bin_path),
+        "-m",
+        str(paths.model_path),
+        "-mm",
+        str(paths.mmproj_path),
+        "-c",
+        str(DEFAULT_TTS_QWEN_CONTEXT),
+        "-b",
+        str(DEFAULT_TTS_QWEN_BATCH),
+        "-ub",
+        str(DEFAULT_TTS_QWEN_BATCH),
+        "-ngl",
+        "99",
+        "-t",
+        str(DEFAULT_TTS_QWEN_THREADS),
+        "-s",
+        str(DEFAULT_TTS_QWEN_SEED),
+        "--daemon",
+    ]
+
+
+def test_speaker_file_is_appended_after_shared_arguments_in_both_commands(tmp_path):
+    paths = _model_paths(tmp_path)
+    speaker = tmp_path / "spk.wav"
+    out_wav = tmp_path / "out.wav"
+    cfg = TTSConfig()
+    cli_plain = build_qwen_command(paths, "Texto", "es", out_wav, cfg)
+    cli_with_speaker = build_qwen_command(
+        paths, "Texto", "es", out_wav, cfg, speaker_file=speaker
+    )
+    daemon_plain = build_qwen_daemon_command(paths, cfg)
+    daemon_with_speaker = build_qwen_daemon_command(paths, cfg, speaker_file=speaker)
+    assert cli_with_speaker == [*cli_plain, "--tts-speaker-file", str(speaker)]
+    assert daemon_with_speaker == [*daemon_plain, "--tts-speaker-file", str(speaker)]
+
+
+def test_non_default_batch_follows_both_batch_flags_in_both_commands(tmp_path):
+    paths = _model_paths(tmp_path)
+    cfg = replace(TTSConfig(), qwen_batch=64)
+    cli_cmd = build_qwen_command(paths, "Texto", "es", tmp_path / "out.wav", cfg)
+    daemon_cmd = build_qwen_daemon_command(paths, cfg)
+    for cmd in (cli_cmd, daemon_cmd):
+        assert "64" == cmd[cmd.index("-b") + 1]
+        assert "64" == cmd[cmd.index("-ub") + 1]
 
 
 def test_parse_qwen_timings_daemon_format():

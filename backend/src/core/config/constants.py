@@ -66,6 +66,7 @@ DEFAULT_TTS_QWEN_GGUF_PATH: str = ""
 DEFAULT_TTS_QWEN_BINARY: str = ""  # empty: auto-detect llama-tts in standard paths/PATH
 DEFAULT_TTS_QWEN_THREADS: int = 6
 DEFAULT_TTS_QWEN_CONTEXT: int = 1024
+DEFAULT_TTS_QWEN_BATCH: int = 128  # passed as -b and -ub to llama-tts
 DEFAULT_TTS_QWEN_SEED: int = 42
 DEFAULT_TTS_QWEN_SPEAKER_FILE: str = ""
 

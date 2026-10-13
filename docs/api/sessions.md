@@ -287,7 +287,8 @@ round that did not trigger it. Allows speculative pre-fetching during the `close
 `TTS_PIPER_MODEL_ES` (default `es_ES-sharvard-medium.onnx`), `TTS_PIPER_SPEAKER_ES` (default `1`),
 `TTS_PIPER_MODEL_QUC` (default `quc_Latn-maya-medium.onnx`), `TTS_PIPER_SPEAKER_QUC` (default `0`),
 `TTS_PIPER_LENGTH_SCALE` (default `1.12`), `TTS_PIPER_NOISE_SCALE` (default `0.35`),
-`TTS_PIPER_NOISE_W_SCALE` (default `0.45`), `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`.
+`TTS_PIPER_NOISE_W_SCALE` (default `0.45`), `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`,
+`TTS_QWEN_CONTEXT` (default `1024`), `TTS_QWEN_BATCH` (default `128`).
 
 ---
 
