@@ -78,9 +78,10 @@ wifi_ssid: Utztutor
 wifi_channel: 6           # 1, 6 or 11: survey the room first
 wifi_country: GT
 wifi_htmode: HT20
+# The router's own defaults: .100 to .249, 12 hour leases.
 dhcp_start: 100
-dhcp_limit: 60
-dhcp_leasetime: 4h
+dhcp_limit: 150
+dhcp_leasetime: 12h
 # Router init scripts that look for an internet path (initial.md §7).
 router_disable_services:
   - gl-cloud

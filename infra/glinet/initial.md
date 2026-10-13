@@ -61,7 +61,7 @@ either the web UI (LuCI / GL.iNet Admin Panel) or `uci` over SSH. Relevant chara
 | :--- | :--- | :--- |
 | Router (gateway + DNS + DHCP) | `192.168.8.1` | Static, firmware default |
 | Jetson Orin Nano (nginx :80 → FastAPI :8000) | `192.168.8.2` | Static DHCP lease by MAC (§5) |
-| Student devices & ESP32 clickers | `192.168.8.100 – 192.168.8.159` | DHCP pool, 60 addresses for 15–20 sessions |
+| Student devices & ESP32 clickers | `192.168.8.100 – 192.168.8.249` | DHCP pool, 150 addresses (the firmware default) |
 | Reserved / staff laptop | `192.168.8.3 – 192.168.8.99` | Manual, outside the pool |
 
 Students reach the PWA at **`http://192.168.8.2`** or **`http://utztutor`** (local DNS, §5) — and, once
@@ -159,14 +159,15 @@ Two decisions worth understanding:
 
 ## <a id="5-step-3--lan-dhcp--the-jetson-static-lease"></a>5. Step 3 — LAN, DHCP & the Jetson Static Lease
 
-Size the pool for the classroom and pin the Jetson so the PWA URL never moves. **All of this block
+Keep the default pool and pin the Jetson so the PWA URL never moves. **All of this block
 is required** — the captive portal (§5b) depends on the name *and* the catch-all:
 
 ```sh
-# DHCP pool: .100 through .159
+# DHCP pool: .100 through .249, 12 hour leases. These are the firmware defaults; setting
+# them puts back a router that was changed.
 uci set dhcp.lan.start='100'
-uci set dhcp.lan.limit='60'
-uci set dhcp.lan.leasetime='4h'
+uci set dhcp.lan.limit='150'
+uci set dhcp.lan.leasetime='12h'
 
 # Static lease for the Jetson (substitute the MAC recorded in §2)
 uci add dhcp host
@@ -336,7 +337,7 @@ requires actually plugging a known-good live internet cable into the WAN port** 
 passes only because no cable is attached proves nothing.
 
 - [ ] SSID `Utztutor` is visible and a phone joins with the WPA2 passphrase.
-- [ ] The joined phone receives an address in `192.168.8.100–159`: check *Clients* in the admin panel.
+- [ ] The joined phone receives an address in `192.168.8.100–249`: check *Clients* in the admin panel.
 - [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show enP8p1s0` on the Jetson.
 - [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://utztutor`.
 - [ ] `nslookup captive.apple.com 192.168.8.1` answers `192.168.8.2` (catch-all active). `REFUSED`

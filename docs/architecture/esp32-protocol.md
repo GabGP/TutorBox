@@ -556,7 +556,7 @@ Details worth keeping in mind:
 
 | Topic | Consideration |
 | :--- | :--- |
-| Addresses | Clickers take DHCP leases from `192.168.8.100–159` (60 addresses). 30 clickers + 20 phones fits; widen `dhcp.lan.limit` before adding a second class set. |
+| Addresses | Clickers take DHCP leases from `192.168.8.100–249` (150 addresses, the router's default pool). 30 clickers + 20 phones fits, with room for a second class set. |
 | Client isolation | `isolate='1'` on the AP blocks station↔station traffic only. Clickers talk to the Jetson on the **wired** LAN, so isolation costs nothing here and must stay on. |
 | WPA2 only | Keep `psk2+ccmp`. ESP32 WPA3/SAE support exists but is the most common cause of silent join failures on this hardware class. |
 | 2.4 GHz congestion | ESP32 is 2.4 GHz only; `HT20` and an empirically chosen channel (1/6/11) per the router runbook. BLE also lives in 2.4 GHz but only during the seconds of provisioning. |
