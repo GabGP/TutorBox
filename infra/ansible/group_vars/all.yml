@@ -9,6 +9,8 @@ app_user: "{{ ansible_facts.user_id }}"
 app_home: "{{ ansible_facts.user_dir }}"
 # Tools installed for the user (uv, node, pnpm), then the CUDA compiler, then the system.
 tool_path: "{{ app_home }}/.local/bin:/usr/local/cuda/bin:{{ ansible_facts.env.PATH }}"
+# Where the long tasks write their output, to follow with tail -f (README §6).
+log_dir: "{{ repo_dir }}/.cache/logs"
 
 # ---- Pinned versions (what the reference Jetson runs) -----------------------------------
 uv_version: "0.12.13"

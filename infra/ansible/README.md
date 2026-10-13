@@ -190,8 +190,33 @@ daemon. What it does, in order:
 | `kiosk` | Automatic login, a desktop that never blanks or locks, Firefox policies, and the classroom-screen unit. |
 | `network` | Stops the wired connection from using the router's DNS ([Captive Portal §6](../captive-portal.md#6-limitations--field-notes)). |
 
-Then **reboot once** (`sudo reboot`). The automatic login and the classroom screen start with the
-next desktop session: the Jetson should boot straight to `/pantalla/` in full screen.
+**Watching a long task.** Ansible prints the title of a task, then nothing until the task ends. The
+long tasks write their output to a file in `<repo>/.cache/logs/` (git-ignored; the `log_dir`
+setting), and their titles end with the file to follow. Open a second terminal on the Jetson, or a
+second SSH session, and run:
+
+```bash
+tail -F /opt/utztutor/.cache/logs/prepare.log
+```
+
+`-F` (capital) waits for a file that does not exist yet and keeps following when the file is
+overwritten. On a [development Jetson](#12-a-development-jetson), replace `/opt/utztutor` with your
+checkout.
+
+| Task | File to follow | What is in it |
+| :--- | :--- | :--- |
+| Ollama install | `.cache/logs/ollama-install.log` | The Ollama install. Overwritten each time the task runs. |
+| Model downloads | `.cache/logs/ollama-pull.log` | One file for all models, appended, with a header line per model. It holds Ollama's progress display, so read it with `tail`, not an editor. |
+| `run.py --prepare` | `.cache/logs/prepare.log` | Python environment, voice model downloads, the Qwen3-TTS daemon build (the longest), the PWA build. Overwritten each time the task runs. |
+| Package installs (`packages`, `cuda`) | `/var/log/apt/term.log` | Written by Ubuntu, not by the playbook. Readable by the `adm` group, which the default user is in. |
+
+A task writes its log only when it runs: on a second run where nothing needs doing, the task is
+skipped and the old log stays. For everything else, `journalctl -f` shows each Ansible task as it
+starts, system-wide. Adding `-v` to `ansible-playbook` prints each task's result after it ends; it
+is not live.
+
+When the run ends, **reboot once** (`sudo reboot`). The automatic login and the classroom screen
+start with the next desktop session: the Jetson should boot straight to `/pantalla/` in full screen.
 
 Good to know:
 
@@ -351,7 +376,7 @@ slow. The playbooks stay the source of truth: an image is a finished kit, copied
 | Saved Wi-Fi networks and their passwords | `nmcli connection delete <name>` for each Wi-Fi profile |
 | SSH identity | `/etc/ssh/ssh_host_*` (regenerate with `ssh-keygen -A` on first boot), `~/.ssh/` |
 | Machine identity | `/etc/machine-id` (empty it), the hostname |
-| History | shell history, `journalctl --vacuum-time=1s` |
+| History | shell history, `journalctl --vacuum-time=1s`, `<repo>/.cache/logs/` |
 
 3. Capture the NVMe drive with NVIDIA's backup tooling from a Linux PC, with the Jetson in recovery
    mode, and flash the image to each new Jetson.
@@ -391,6 +416,10 @@ adjust details the first time each one runs, and update this section when they h
 | `sudo: a password is required` | `-K` is missing | Add `-K` |
 | `uv … is expected` | A different `uv` is installed | `uv self update 0.12.13`, or run `./bootstrap.sh` |
 | `--check` on a blank Jetson skips or fails late tasks | A check run installs nothing, so later tasks find no `node`, no units | Expected. Apply, then use `--check` for later changes |
+| A run seems stuck on one task | Ansible prints nothing while a task runs | Follow the task's log from a second terminal ([Step 4](#6-step-4--set-up-the-jetson)) |
+| The Ollama install, a model download or `run.py --prepare` fails | Ansible shows only the end of the task's log | Read the full log at the path Ansible prints, in `<repo>/.cache/logs/` |
+| A package install fails or takes long (`packages`, `cuda`) | The playbook does not log `apt`; Ubuntu does | `tail -f /var/log/apt/term.log` |
+| A log in `.cache/logs/` is old or missing | The task was skipped: nothing needed doing | Expected. A task writes its log only when it runs |
 | `--require-cuda: no CUDA toolkit found` | The `cuda` part did not run or failed | `ansible-playbook jetson.yml -K --tags cuda`, then check `/usr/local/cuda/bin/nvcc` |
 | `router.yml` fails with `Permission denied (publickey)` | The Jetson's key is not on the router | [Step 5](#7-step-5--prepare-the-router-by-hand-once), item 4 |
 | `router.yml` reports `key: differs (value hidden)` forever | `wifi_passphrase` in `kit.yml` is still the placeholder | Set it. The passphrase is never printed |

@@ -7,6 +7,7 @@
 #
 # Needs internet, except for the offline step. Safe to run again: a second run changes nothing.
 # Parts (tags): system packages cuda tools ollama app nginx services kiosk network offline
+# The long tasks write their output to <repo>/.cache/logs; their titles name the file to follow.
 - name: Utz'tutor Jetson
   hosts: localhost
   become: false
@@ -14,6 +15,12 @@
   pre_tasks:
     - name: Kit values
       ansible.builtin.import_tasks: tasks/kit.yml
+      tags: [always]
+    - name: Make the log folder
+      ansible.builtin.file:
+        path: "{{ log_dir }}"
+        state: directory
+        mode: "0755"
       tags: [always]
   tasks:
     - name: System

@@ -47,15 +47,24 @@
 
 # Runs when the checkout or the build options changed since the last build, when the PWA
 # is missing, or with -e force_prepare=true.
-- name: Build the app (run.py --prepare)
-  ansible.builtin.command:
-    argv: "{{ ['python3', 'run.py', '--prepare', '--download-models', voice_tier] + daemon_flags }}"
+# The output goes to the log only, line by line (PYTHONUNBUFFERED). When the build fails,
+# Ansible shows the end of the log.
+- name: Build the app (run.py --prepare); follow {{ log_dir | relpath(repo_dir) }}/prepare.log
+  ansible.builtin.shell: |
+    log={{ (log_dir ~ '/prepare.log') | quote }}
+    {{ prepare_argv | map('quote') | join(' ') }} > "$log" 2>&1 || {
+      rc=$?; tail -n 40 "$log" >&2; echo "Full log: $log" >&2; exit "$rc"
+    }
+  args:
     chdir: "{{ repo_dir }}"
+    executable: /bin/bash
   environment:
     PATH: "{{ tool_path }}"
     PYTHONPYCACHEPREFIX: "{{ repo_dir }}/.cache/pycache"
+    PYTHONUNBUFFERED: "1"
   vars:
     daemon_flags: "{{ (['--build-llama'] + (['--require-cuda'] if (tts_cuda | bool) else [])) if (build_daemon | bool) else [] }}"
+    prepare_argv: "{{ ['python3', 'run.py', '--prepare', '--download-models', voice_tier] + daemon_flags }}"
   when: >-
     (force_prepare | default(false) | bool) or not pwa_bundle.stat.exists
     or last_stamp != build_stamp

@@ -7,10 +7,22 @@
   check_mode: false
   failed_when: false
 
-- name: Install Ollama {{ ollama_version }}
+# The install runs as root; its log is made first, so that it belongs to the app user.
+- name: Make the Ollama install log
+  ansible.builtin.file:
+    path: "{{ log_dir }}/ollama-install.log"
+    state: touch
+    mode: "0644"
+  when: ollama_found.rc != 0 or ollama_version not in ollama_found.stdout
+
+# The output goes to the log only. When the install fails, Ansible shows the end of the log.
+- name: Install Ollama {{ ollama_version }}; follow {{ log_dir | relpath(repo_dir) }}/ollama-install.log
   ansible.builtin.shell: |
     set -o pipefail
-    curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION={{ ollama_version }} sh
+    log={{ (log_dir ~ '/ollama-install.log') | quote }}
+    { curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION={{ ollama_version }} sh; } > "$log" 2>&1 || {
+      rc=$?; tail -n 40 "$log" >&2; echo "Full log: $log" >&2; exit "$rc"
+    }
   args:
     executable: /bin/bash
   become: true
@@ -36,7 +48,18 @@
   delay: 3
   until: ollama_list.rc == 0 or ansible_check_mode
 
-- name: Pull the models
-  ansible.builtin.command: ollama pull {{ item }}
+# One log for every model: each pull adds a line with the model and the time, then its output.
+# Ollama writes its progress display (terminal control codes) even into a file, so the log
+# reads well through tail -f only. When a pull fails, Ansible shows the plain lines: the
+# model lines and the errors.
+- name: Pull the models; follow {{ log_dir | relpath(repo_dir) }}/ollama-pull.log
+  ansible.builtin.shell: |
+    log={{ (log_dir ~ '/ollama-pull.log') | quote }}
+    printf '==== %s  %s ====\n' {{ item | quote }} "$(date '+%F %T')" >> "$log"
+    ollama pull {{ item | quote }} >> "$log" 2>&1 || {
+      rc=$?; grep -av $'\033' "$log" | tail -n 10 >&2; echo "Full log: $log" >&2; exit "$rc"
+    }
+  args:
+    executable: /bin/bash
   loop: "{{ ollama_models | unique }}"
   when: item not in ollama_list.stdout
