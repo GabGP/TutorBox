@@ -20,6 +20,9 @@ dependencies = [
     "httpx2>=2.13.0",
     "piper-tts>=1.8.0",
     "sherpa-onnx>=1.13.8",
+    # Carries libonnxruntime for sherpa-onnx. Listed here because uv.lock records
+    # sherpa-onnx with no dependencies: its linux_armv7l wheel declares none.
+    "sherpa-onnx-core>=1.13.8",
     "onnx>=1.22.0",
 ]
 
