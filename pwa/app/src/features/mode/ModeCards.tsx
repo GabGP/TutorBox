@@ -41,7 +41,7 @@ export const StudentModeCard: React.FC = () => (
 /**
  * Teacher panel while the class is in tutor or take-home mode, in place of the quiz setup.
  *
- * @param {object} props - `mode` and the appliance `host` (e.g. `tutorbox`).
+ * @param {object} props - `mode` and the appliance `host` (e.g. `utztutor`).
  * @returns {JSX.Element} What the students see and how to go back to the quiz.
  */
 export const TeacherModeNotice: React.FC<{ mode: 'tutor' | 'apps'; host: string }> = ({ mode, host }) => (

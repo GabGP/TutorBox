@@ -10,7 +10,7 @@ context). Only the content changes: **7 levels, one per CNB Segundo math compete
 
 | Where | URL |
 | :--- | :--- |
-| Utz'tutor classroom (Jetson) | `http://tutorbox/tareas/segundo/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
+| Utz'tutor classroom (Jetson) | `http://utztutor/tareas/segundo/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
 | Any static host | serve `public/` — every path is relative |
 
 There is no APK for Segundo yet: [`../android`](../android/README.md) packs `primero/public` only.

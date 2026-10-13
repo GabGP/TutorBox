@@ -233,7 +233,7 @@ The steps below are the client side of the contract. The event shape is the one 
 1. On every answer tapped, right or wrong, append one event to a queue kept in `localStorage`.
 2. Build `client_event_id` and `install_id` from `crypto.getRandomValues()`, for example 16 random bytes
    written as 32 hex characters. Generate `install_id` once and keep it. `crypto.randomUUID()` is not
-   available there: the appliance serves plain `http://tutorbox`, which is not a secure context.
+   available there: the appliance serves plain `http://utztutor`, which is not a secure context.
 
    ```js
    function randomHexId() {
@@ -303,7 +303,7 @@ without one, `403` for a student).
 
 ## <a id="8-limits"></a>8. Limits
 
-* **Rate limit in nginx only.** [`tutorbox.conf`](../../infra/nginx/tutorbox.conf) allows each address 30
+* **Rate limit in nginx only.** [`utztutor.conf`](../../infra/nginx/utztutor.conf) allows each address 30
   posts a minute to `POST /api/v1/games/events` after a burst of 20, and answers `429` beyond that. A
   phone posts once or twice per lesson. The reason is the database: every batch takes SQLite's one
   write lock, which quiz votes also need, so a game stuck in a retry loop must not reach the backend.
@@ -311,7 +311,7 @@ without one, `403` for a student).
 * **Events can be invented.** The endpoint needs no login, so anyone on the classroom network can post
   valid events, slowly enough to pass the limit. Events with a `student_id` come from a logged-in
   student; the others are anonymous.
-* **Request size.** The backend sets no request size limit. `tutorbox.conf` does not set
+* **Request size.** The backend sets no request size limit. `utztutor.conf` does not set
   `client_max_body_size`, so nginx's default of 1 MB applies in front of the endpoint.
 * **Clocks.** `occurred_at` comes from the phone's clock, so a phone with a wrong clock stores wrong
   times. `received_at` is the appliance's clock. See [Game Events Schema](../database/games.md#2-invariants).

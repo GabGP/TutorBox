@@ -23,9 +23,9 @@ backend session engine is the only source of truth and the pages poll it once pe
 | URL | Who | What it does |
 | :--- | :--- | :--- |
 | `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /api/v1/quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline multi-tier TTS: Qwen3-TTS -> Sherpa -> Piper -> espeak-ng, Spanish). |
-| `/alumno/` | Students | **Opens by itself when a phone joins the `TutorBox` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
+| `/alumno/` | Students | **Opens by itself when a phone joins the `Utztutor` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
 | `/pantalla/` | HDMI classroom screen | Question + countdown + vote count, then the correct answer with the aggregate bars. Never per-student votes. |
-| `/` | — | Redirects to `/alumno/` (to `http://tutorbox/alumno/` when reached through any other name). |
+| `/` | — | Redirects to `/alumno/` (to `http://utztutor/alumno/` when reached through any other name). |
 
 ### Run it
 
@@ -33,7 +33,7 @@ backend session engine is the only source of truth and the pages poll it once pe
 sudo apt install espeak-ng                           # offline voice for the >51% intervention
 cd backend
 python -m uvicorn main:app --app-dir src --host 0.0.0.0        # teacher: http://<appliance-ip>:8000/maestro/
-# classroom: nginx publishes the same process on :80 → http://tutorbox/maestro/ (infra/nginx/tutorbox.conf)
+# classroom: nginx publishes the same process on :80 → http://utztutor/maestro/ (infra/nginx/utztutor.conf)
 ```
 
 Bootstrap teacher: `teacher1` / `1234` (`SEED_TEACHER_*` in `.env`). The model must be reachable at
@@ -199,7 +199,7 @@ backend: plain static files, no build step.
 | `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |
 
 **Why an APK and not an installable PWA:** browsers only run service workers (offline support) and
-offer "Install app" on HTTPS pages, and the offline Jetson serves plain `http://tutorbox`. The APK
+offer "Install app" on HTTPS pages, and the offline Jetson serves plain `http://utztutor`. The APK
 carries every file inside and speaks through the phone's own offline text-to-speech, so it keeps
 working at home with no internet. Android only; iPhones can still play in the classroom browser.
 Chrome warns *"no se puede descargar de forma segura"* on any APK over HTTP — families tap
@@ -212,7 +212,7 @@ redirects (`RESERVED_PREFIXES`, `backend/src/api/captive.py`).
 
 ## 4. Architecture & Offline Design
 
-* **Network Delivery**: Static pages served by the appliance over the isolated `TutorBox` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
+* **Network Delivery**: Static pages served by the appliance over the isolated `Utztutor` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.
 * **Hardware Agnostic**: Built to communicate via standard HTTP endpoints, seamlessly interoperating alongside physical ESP32 clickers.
 

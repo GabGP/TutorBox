@@ -3,7 +3,7 @@
 #
 # Install on the Jetson (desktop user with automatic login enabled):
 #   mkdir -p ~/.config/autostart
-#   cp infra/kiosk/tutorbox-kiosk.desktop ~/.config/autostart/
+#   cp infra/kiosk/utztutor-kiosk.desktop ~/.config/autostart/
 # See infra/README.md (Classroom screen) for auto-login and screen-blanking settings.
 [Desktop Entry]
 Type=Application

@@ -12,7 +12,7 @@
 ---
 
 Provisioning runbook for the **GL.iNet GL-AR300M16** as the isolated classroom Access Point:
-broadcasting SSID `TutorBox`, serving local DHCP to student devices and ESP32 clickers, with the
+broadcasting SSID `Utztutor`, serving local DHCP to student devices and ESP32 clickers, with the
 **WAN path removed at four independent layers** so the appliance cannot reach the internet even if
 someone plugs in a live uplink cable.
 
@@ -25,7 +25,7 @@ someone plugs in a live uplink cable.
 - [1. Hardware & Addressing Plan](#1-hardware--addressing-plan)
 - [2. Recovery & Safety Net (read first)](#2-recovery--safety-net-read-first)
 - [3. Step 1 — First Boot & Admin Hardening](#3-step-1--first-boot--admin-hardening)
-- [4. Step 2 — Wi-Fi: SSID TutorBox](#4-step-2--wi-fi-ssid-tutorbox)
+- [4. Step 2 — Wi-Fi: SSID Utztutor](#4-step-2--wi-fi-ssid-utztutor)
 - [5. Step 3 — LAN, DHCP & the Jetson Static Lease](#5-step-3--lan-dhcp--the-jetson-static-lease)
 - [6. Step 4 — Kill the WAN Path (4 layers)](#6-step-4--kill-the-wan-path-4-layers)
 - [7. Step 5 — Disable Cloud, Repeater & DNS Leaks](#7-step-5--disable-cloud-repeater--dns-leaks)
@@ -56,8 +56,8 @@ either the web UI (LuCI / GL.iNet Admin Panel) or `uci` over SSH. Relevant chara
 | Student devices & ESP32 clickers | `192.168.8.100 – 192.168.8.159` | DHCP pool, 60 addresses for 15–20 sessions |
 | Reserved / staff laptop | `192.168.8.3 – 192.168.8.99` | Manual, outside the pool |
 
-Students reach the PWA at **`http://192.168.8.2`** or **`http://tutorbox`** (local DNS, §5) — and, once
-§5 is applied, a phone that joins the Wi-Fi opens `http://tutorbox/alumno/` by itself (see
+Students reach the PWA at **`http://192.168.8.2`** or **`http://utztutor`** (local DNS, §5) — and, once
+§5 is applied, a phone that joins the Wi-Fi opens `http://utztutor/alumno/` by itself (see
 [Captive Portal](../captive-portal.md)).
 
 ---
@@ -109,9 +109,9 @@ depends on this being right.
 
 ---
 
-## <a id="4-step-2--wi-fi-ssid-tutorbox"></a>4. Step 2 — Wi-Fi: SSID TutorBox
+## <a id="4-step-2--wi-fi-ssid-utztutor"></a>4. Step 2 — Wi-Fi: SSID Utztutor
 
-**Via the GL.iNet Admin Panel**: *Wireless → 2.4 GHz* → SSID `TutorBox`, security **WPA2-PSK**,
+**Via the GL.iNet Admin Panel**: *Wireless → 2.4 GHz* → SSID `Utztutor`, security **WPA2-PSK**,
 passphrase set, SSID visible, then Apply.
 
 **Via SSH (`uci`)** — confirm the AP interface index first, since GL.iNet firmware often defines
@@ -129,7 +129,7 @@ uci set wireless.radio0.channel='6'          # 1, 6 or 11 — survey the room fi
 uci set wireless.radio0.htmode='HT20'        # HT20 is more robust in crowded rooms
 uci set wireless.radio0.country='GT'
 uci set wireless.@wifi-iface[0].mode='ap'
-uci set wireless.@wifi-iface[0].ssid='TutorBox'
+uci set wireless.@wifi-iface[0].ssid='Utztutor'
 uci set wireless.@wifi-iface[0].encryption='psk2+ccmp'
 uci set wireless.@wifi-iface[0].key='<classroom-passphrase>'
 uci set wireless.@wifi-iface[0].hidden='0'
@@ -162,7 +162,7 @@ uci set dhcp.lan.leasetime='4h'
 
 # Static lease for the Jetson (substitute the MAC recorded in §2)
 uci add dhcp host
-uci set dhcp.@host[-1].name='tutorbox'
+uci set dhcp.@host[-1].name='utztutor'
 uci set dhcp.@host[-1].mac='AA:BB:CC:DD:EE:FF'
 uci set dhcp.@host[-1].ip='192.168.8.2'
 uci set dhcp.@host[-1].dns='1'               # publish the name even before the lease is active
@@ -175,7 +175,7 @@ uci commit dhcp
 /etc/init.d/dnsmasq restart
 ```
 
-The `name='tutorbox'` entry makes dnsmasq resolve `http://tutorbox` to `192.168.8.2` for every DHCP
+The `name='utztutor'` entry makes dnsmasq resolve `http://utztutor` to `192.168.8.2` for every DHCP
 client — friendlier than an IP for students typing on tablets. The catch-all resolves *every* other
 domain to the Jetson too, so any address a student types lands on the PWA instead of a browser error —
 and, more importantly, the phones' connectivity probes reach the appliance (§5b).
@@ -189,7 +189,7 @@ shows `.2`. `nmcli -t -f NAME,DEVICE connection show --active` lists the profile
 Right after joining, every phone fetches a fixed HTTP URL (`http://connectivitycheck.gstatic.com/generate_204`
 on Android, `http://captive.apple.com/hotspot-detect.html` on iOS, `http://www.msftconnecttest.com/connecttest.txt`
 on Windows). With the catch-all, that name resolves to the Jetson; nginx on `:80` hands the request to the
-backend, which answers `302 → http://tutorbox/alumno/`; the phone concludes "sign-in page" and opens the
+backend, which answers `302 → http://utztutor/alumno/`; the phone concludes "sign-in page" and opens the
 student page in its captive-portal browser. Without the catch-all the lookup simply fails and the phone
 reports "no internet" — nothing opens.
 
@@ -198,7 +198,7 @@ Mechanics worth knowing on the router side:
 - **GL.iNet 4.3.x ships dnsmasq 2.86, which silently ignores `address=/#/…`.** The rule shows up in
   `uci show dhcp` and in `/var/etc/dnsmasq.conf.*`, yet lookups such as `captive.apple.com` come back
   `REFUSED` and phones just report "no internet". `address=/./…` does the same job on 2.86 (verified on
-  the GL-AR300M16: it answers every name, bare ones like `tutorbox` included). Check the version with
+  the GL-AR300M16: it answers every name, bare ones like `utztutor` included). Check the version with
   `dnsmasq --version`; the block above sets both forms, so it works either way.
 - dnsmasq prefers the most specific `address=` entry, so GL.iNet's own `console.gl-inet.com` keeps
   pointing at the router.
@@ -327,14 +327,14 @@ Reboot the router (`reboot`), wait for the LED to settle, then confirm every lin
 requires actually plugging a known-good live internet cable into the WAN port** — a test that
 passes only because no cable is attached proves nothing.
 
-- [ ] SSID `TutorBox` is visible and a phone joins with the WPA2 passphrase.
+- [ ] SSID `Utztutor` is visible and a phone joins with the WPA2 passphrase.
 - [ ] The joined phone receives an address in `192.168.8.100–159`: check *Clients* in the admin panel.
 - [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show enP8p1s0` on the Jetson.
-- [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://tutorbox`.
+- [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://utztutor`.
 - [ ] `nslookup captive.apple.com 192.168.8.1` answers `192.168.8.2` (catch-all active). `REFUSED`
       means the `/./` line is missing ([§5b](#5b-captive-portal)).
 - [ ] From a laptop on the Wi-Fi: `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/hotspot-detect.html`
-      returns `302` with `Location: http://tutorbox/alumno/`, while
+      returns `302` with `Location: http://utztutor/alumno/`, while
       `curl -sI -H 'Host: captive.apple.com' http://192.168.8.2/api/v1/nope` returns `404`.
 - [ ] Forget the network on an iPhone and rejoin: the sign-in sheet shows the student page. Same on an
       Android phone joined from the Wi-Fi picker (see [Captive Portal §7](../captive-portal.md#7-verification)).

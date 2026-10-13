@@ -51,5 +51,5 @@ This document summarizes the technical deliverables, architectural implementatio
    * Configured for maximum performance in 25W mode with persistent `jetson_clocks`.
    * Idle system verified under memory budget ($\le 1.0$ GB RSS).
 2. **Classroom Local Access Point (GL-AR300M16)**:
-   * Isolated local network broadcasting SSID `TutorBox` with local DHCP pool.
+   * Isolated local network broadcasting SSID `Utztutor` with local DHCP pool.
    * WAN interface disconnected/disabled to enforce 100% offline isolation.

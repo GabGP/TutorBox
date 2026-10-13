@@ -16,7 +16,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ---
 
 ## Table of Contents
-- [Utz'tutor Backend](#tutorbox-backend)
+- [Utz'tutor Backend](#utztutor-backend)
   - [Table of Contents](#table-of-contents)
   - [1. Components \& Architecture](#1-components--architecture)
   - [2. API Contracts \& Specifications](#2-api-contracts--specifications)
@@ -185,7 +185,7 @@ uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
 > is recreated next to sources. `pytest` sets the prefix automatically via
 > `[tool.pytest_env]`.
 
-On the appliance this command is supervised by [`infra/systemd/tutorbox-backend.service`](../infra/systemd/tutorbox-backend.service), and [`infra/nginx/tutorbox.conf`](../infra/nginx/tutorbox.conf) publishes it on port 80 (`http://tutorbox`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
+On the appliance this command is supervised by [`infra/systemd/utztutor-backend.service`](../infra/systemd/utztutor-backend.service), and [`infra/nginx/utztutor.conf`](../infra/nginx/utztutor.conf) publishes it on port 80 (`http://utztutor`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
 
 The database `tutorbox.db` will be initialized inside `.cache/db/` and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
 

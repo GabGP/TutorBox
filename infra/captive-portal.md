@@ -11,7 +11,7 @@
 
 ---
 
-When a phone joins the `TutorBox` Wi-Fi, its browser opens `http://tutorbox/alumno/` by itself —
+When a phone joins the `Utztutor` Wi-Fi, its browser opens `http://utztutor/alumno/` by itself —
 no address to type, no QR code. This page explains the mechanism, the three pieces that make it
 work, what it can *not* do, and how to verify it.
 
@@ -63,8 +63,8 @@ sequenceDiagram
     R-->>P: 192.168.8.2 (address=/./ catch-all)
     P->>N: GET /hotspot-detect.html<br/>Host: captive.apple.com
     N->>B: proxy, Host preserved
-    B-->>P: 302 Location: http://tutorbox/alumno/<br/>Cache-Control: no-store
-    P->>N: GET /alumno/  Host: tutorbox
+    B-->>P: 302 Location: http://utztutor/alumno/<br/>Cache-Control: no-store
+    P->>N: GET /alumno/  Host: utztutor
     N->>B: proxy
     B-->>P: student page (opens in the sign-in browser)
 ```
@@ -93,7 +93,7 @@ Implemented in [`backend/src/api/captive.py`](../backend/src/api/captive.py), wi
 | Anything under `/api/`, `/health`, `/maestro/`, `/alumno/`, `/pantalla/`, `/static/`, `/tareas/`, `/descargas/` | **never redirected** — API 404s keep their JSON body; a missing asset stays a 404 |
 
 *Appliance host* = `localhost`, any IP literal (`192.168.8.2`, `[fd00::2]`), or the hostname of
-`CAPTIVE_PORTAL_URL` (`tutorbox` by default). Everything else only resolves to the box because of the
+`CAPTIVE_PORTAL_URL` (`utztutor` by default). Everything else only resolves to the box because of the
 catch-all DNS, hence "foreign". The `/api/*` exemption matters for the ESP32 clickers: their HTTP client
 treats any non-`200` as a failure ([ESP32 protocol](../docs/architecture/esp32-protocol.md)).
 
@@ -102,7 +102,7 @@ treats any non-`200` as a failure ([ESP32 protocol](../docs/architecture/esp32-p
 | Variable | Default | Effect |
 | :--- | :--- | :--- |
 | `CAPTIVE_PORTAL_ENABLED` | `true` | `false` answers probes and foreign-host 404s with a plain 404 (phones just say "no internet"). |
-| `CAPTIVE_PORTAL_URL` | `http://tutorbox/alumno/` | Absolute redirect target. Use `http://192.168.8.2/alumno/` if the router does not resolve `tutorbox`. Its hostname is always treated as the appliance, so a misconfigured value cannot loop. |
+| `CAPTIVE_PORTAL_URL` | `http://utztutor/alumno/` | Absolute redirect target. Use `http://192.168.8.2/alumno/` if the router does not resolve `utztutor`. Its hostname is always treated as the appliance, so a misconfigured value cannot loop. |
 
 The probes are hidden from `/openapi.json`. The same behaviour is active on the dev port `:8000`, which
 makes the curl checks in [§7](#7-verification) runnable on a laptop.
@@ -113,12 +113,12 @@ makes the curl checks in [§7](#7-verification) runnable on a laptop.
 
 Two files, both with their install commands in their header comments:
 
-- [`infra/nginx/tutorbox.conf`](nginx/tutorbox.conf) — `listen 80 default_server; server_name _;`
+- [`infra/nginx/utztutor.conf`](nginx/utztutor.conf) — `listen 80 default_server; server_name _;`
   proxying to `127.0.0.1:8000` with `proxy_set_header Host $host` (the backend needs the original
   name to tell appliance from foreign hosts) and `proxy_redirect off` (the backend writes its own
   `Location`). Remove Ubuntu's `sites-enabled/default`, which also claims `default_server`.
   **Install `nginx-light` while the Jetson still has an internet uplink** — the classroom has none.
-- [`infra/systemd/tutorbox-backend.service`](systemd/tutorbox-backend.service) — uvicorn on
+- [`infra/systemd/utztutor-backend.service`](systemd/utztutor-backend.service) — uvicorn on
   `0.0.0.0:8000` from this checkout as user `damarti` (three `ADJUST` lines for another layout), single
   worker, no `EnvironmentFile` (the app reads `<repo>/.env` itself). Port `8000` stays reachable so dev
   URLs and the planned clicker base URL keep working; `:80` is the classroom-facing address.
@@ -134,7 +134,7 @@ two that used to be optional are now **required**:
 
 | Setting | Why the portal needs it |
 | :--- | :--- |
-| Static lease `192.168.8.2` with `name='tutorbox'` and `dns='1'` | The redirect target `http://tutorbox/alumno/` must resolve, and to a fixed address. |
+| Static lease `192.168.8.2` with `name='utztutor'` and `dns='1'` | The redirect target `http://utztutor/alumno/` must resolve, and to a fixed address. |
 | Catch-all `address='/./192.168.8.2'` and `'/#/192.168.8.2'` (the dnsmasq 2.86 on GL.iNet 4.3.x only honours `/./`) | Probe names (`captive.apple.com`, …) must resolve *to the Jetson* rather than fail — a DNS failure means "no internet", not "sign-in page". |
 | `noresolv='1'`, no upstream (§7) | Keeps every lookup local; with the catch-all there is nothing to forward anyway. |
 
@@ -158,9 +158,9 @@ Not used, on purpose:
   (doing so once the page is shown would make the OS *close* the sign-in browser mid-quiz). Phones keep
   a "Sign in to network" / "No internet" badge; students can tap **Use without internet** (iOS) or
   **Use this network as is** (Android ⋮ menu) and continue in the normal browser at
-  `http://tutorbox/alumno/`.
+  `http://utztutor/alumno/`.
 - **Android + mobile data.** Until the student accepts the network, an unvalidated Wi-Fi is not
-  Android's default route; Chrome may resolve `tutorbox` over cellular and fail. Accepting the network
+  Android's default route; Chrome may resolve `utztutor` over cellular and fail. Accepting the network
   or turning mobile data off fixes it. Android **Private DNS** in *strict* mode (a named DoT server)
   blocks detection entirely — use *Automatic*.
 - **Auto-open needs a manual join on Android.** Auto-reconnects only show a notification.
@@ -188,7 +188,7 @@ Not used, on purpose:
 ```bash
 H=127.0.0.1:8000     # or 192.168.8.2 once nginx is up
 curl -sI -H 'Host: connectivitycheck.gstatic.com' http://$H/generate_204 | grep -E '^(HTTP|Location|Cache)'
-#  HTTP/1.1 302 Found · Location: http://tutorbox/alumno/ · Cache-Control: no-store
+#  HTTP/1.1 302 Found · Location: http://utztutor/alumno/ · Cache-Control: no-store
 curl -sI -H 'Host: captive.apple.com' http://$H/hotspot-detect.html | head -1     # 302
 curl -sI -H 'Host: www.google.com'    http://$H/search               | head -1     # 302 (walled garden)
 curl -si -H 'Host: 192.168.8.2'       http://$H/search               | tail -1     # {"detail":"Not Found"}
@@ -200,7 +200,7 @@ curl -s  -o /dev/null -w '%{http_code}\n' http://$H/api/v1/session/current      
 
 ```bash
 nslookup captive.apple.com 192.168.8.1      # → 192.168.8.2
-nslookup tutorbox 192.168.8.1               # → 192.168.8.2
+nslookup utztutor 192.168.8.1               # → 192.168.8.2
 ```
 
 **Phones** — forget the network first so DNS/probe caches are cold:
@@ -208,7 +208,7 @@ nslookup tutorbox 192.168.8.1               # → 192.168.8.2
 - [ ] iPhone: join → the CNA sheet shows the student page; a student can log in and vote from it.
 - [ ] Android: join from the Wi-Fi picker → `CaptivePortalLogin` opens the student page.
 - [ ] Windows laptop: "Open browser" toast → student page.
-- [ ] After **Use without internet** / **Use this network as is**, `http://tutorbox/alumno/` works in the normal browser.
+- [ ] After **Use without internet** / **Use this network as is**, `http://utztutor/alumno/` works in the normal browser.
 - [ ] Clicker-style check from a laptop: `curl -s -o /dev/null -w '%{http_code}' http://192.168.8.2/api/v1/session/current` is never `302`.
 
 ---

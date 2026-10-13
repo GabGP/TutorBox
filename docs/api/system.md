@@ -61,12 +61,12 @@ Answered by `backend/src/api/captive.py` for **any** `Host` header. Hidden from 
 
 * **Authorization**: Public
 * **Rate Limiting**: Exempt
-* **Configuration**: `CAPTIVE_PORTAL_ENABLED` (default `true`), `CAPTIVE_PORTAL_URL` (default `http://tutorbox/alumno/`)
+* **Configuration**: `CAPTIVE_PORTAL_ENABLED` (default `true`), `CAPTIVE_PORTAL_URL` (default `http://utztutor/alumno/`)
 
 #### Response (`302 Found`)
 ```http
 HTTP/1.1 302 Found
-Location: http://tutorbox/alumno/
+Location: http://utztutor/alumno/
 Cache-Control: no-store
 ```
 

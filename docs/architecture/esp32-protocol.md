@@ -54,7 +54,7 @@ sequenceDiagram
     participant Kid as Student
     participant ESP as ESP32 clicker
     participant BT as Jetson provisioner (BLE)
-    participant AP as GL.iNet AP "TutorBox"
+    participant AP as GL.iNet AP "Utztutor"
     participant API as FastAPI (:8000)
 
     Kid->>ESP: hold A for 3 s
@@ -84,8 +84,8 @@ sequenceDiagram
 - **A Bluetooth radio.** The Developer Kit ships an M.2 Key-E module (Realtek RTL8822CE: Wi-Fi 5 + **Bluetooth 5.0**). Check with `bluetoothctl show` — if no controller is listed, use any BlueZ-supported USB dongle (CSR8510, Intel AX200) rather than fighting the driver.
 - **BlueZ ≥ 5.50** (JetPack 5 / 6 ship 5.53 / 5.64). GATT servers are exposed over D-Bus (`org.bluez.GattManager1`, `org.bluez.LEAdvertisingManager1`); the provisioner is a Python process talking to that bus.
 - **Turn the Jetson's own Wi-Fi off** (`nmcli radio wifi off`). The appliance is wired to the router (see [hardware topology](hardware-topology.md)); BT and Wi-Fi share the same RTL8822CE radio and coexistence only costs you BLE reliability.
-- **The appliance must know the Wi-Fi it hands out.** The GL.iNet SSID/passphrase are set in [`infra/glinet/initial.md` §4](../../infra/glinet/initial.md#4-step-2--wi-fi-ssid-tutorbox); the provisioner reads them from its own env file (§7). Keep that file `0600`, owned by the service user.
-- **A stable API address**: the Jetson holds the static lease `192.168.8.2` (`infra/glinet/initial.md` §5), so the packet can carry `http://192.168.8.2/api/v1` (nginx on :80, [`infra/nginx/tutorbox.conf`](../../infra/nginx/tutorbox.conf); `:8000` reaches uvicorn directly — either way it is *data in the packet*, not something baked into firmware). The captive portal never redirects `/api/*`, so clickers are unaffected by it.
+- **The appliance must know the Wi-Fi it hands out.** The GL.iNet SSID/passphrase are set in [`infra/glinet/initial.md` §4](../../infra/glinet/initial.md#4-step-2--wi-fi-ssid-utztutor); the provisioner reads them from its own env file (§7). Keep that file `0600`, owned by the service user.
+- **A stable API address**: the Jetson holds the static lease `192.168.8.2` (`infra/glinet/initial.md` §5), so the packet can carry `http://192.168.8.2/api/v1` (nginx on :80, [`infra/nginx/utztutor.conf`](../../infra/nginx/utztutor.conf); `:8000` reaches uvicorn directly — either way it is *data in the packet*, not something baked into firmware). The captive portal never redirects `/api/*`, so clickers are unaffected by it.
 
 ### ESP32
 - **ESP32-S2 has no Bluetooth at all** — it cannot be used with this design. Original ESP32 (WROOM-32), ESP32-S3, ESP32-C3 and C6 all have BLE. The C3 / WROOM-32 in the [BOM](esp32-clicker-transport.md#2-hardware-specifications--bill-of-materials) are fine.
@@ -160,7 +160,7 @@ All values are UTF-8 JSON, **≤ 512 bytes** (the ATT maximum attribute length).
 
 **`provision`** — read after `hello`. One of:
 ```json
-{"v": 1, "status": "assigned", "ssid": "TutorBox", "psk": "<classroom passphrase>",
+{"v": 1, "status": "assigned", "ssid": "Utztutor", "psk": "<classroom passphrase>",
  "api": "http://192.168.8.2/api/v1", "device_id": "ESP32-A4CF12",
  "username": "ana", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
 ```
@@ -337,7 +337,7 @@ The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) ar
 
 ## <a id="7-jetson-provisioner-service"></a>7. Jetson Provisioner Service
 
-A separate process (`infra/provisioner/tutorbox_provisioner.py`) with its own systemd unit. It is deliberately **not** inside FastAPI: BlueZ needs a GLib main loop, and a BLE stack hiccup must never take the quiz API down.
+A separate process (`infra/provisioner/utztutor_provisioner.py`) with its own systemd unit. It is deliberately **not** inside FastAPI: BlueZ needs a GLib main loop, and a BLE stack hiccup must never take the quiz API down.
 
 ### 7.1 Host setup (once)
 ```bash
@@ -363,10 +363,10 @@ pip install bluezero                                   # or: bless — either wr
 
 ### 7.3 Sketch
 ```python
-# infra/provisioner/tutorbox_provisioner.py  (sketch — bluezero peripheral API)
+# infra/provisioner/utztutor_provisioner.py  (sketch — bluezero peripheral API)
 import json, os, time
 from bluezero import adapter, peripheral
-from tutorbox_api import backend        # thin urllib client: login(), devices(), register(), issue_secret()
+from utztutor_api import backend        # thin urllib client: login(), devices(), register(), issue_secret()
 
 SVC, HELLO, PROV, RESULT = (f"5f8c000{i}-4c2b-4a7e-9d5e-7b1a2e3c4d5f" for i in (1, 2, 3, 4))
 slot = {"device_id": None, "until": 0.0}
@@ -401,22 +401,22 @@ p.add_characteristic(srv_id=1, chr_id=3, uuid=RESULT, value=[], notifying=False,
 prov = p.characteristics[1]
 p.publish()                                                 # blocks on the GLib main loop
 ```
-`tutorbox_api.backend` is ~40 lines of `urllib` (login, list devices, register, issue secret) — the same stdlib style as `core/llm/client.py`. Memory: ~30 MB RSS, negligible against the 8 GB budget.
+`utztutor_api.backend` is ~40 lines of `urllib` (login, list devices, register, issue secret) — the same stdlib style as `core/llm/client.py`. Memory: ~30 MB RSS, negligible against the 8 GB budget.
 
 ### 7.4 systemd unit
 ```ini
-# /etc/systemd/system/tutorbox-provisioner.service
+# /etc/systemd/system/utztutor-provisioner.service
 [Unit]
 Description=Utz'tutor BLE clicker provisioner
-After=bluetooth.target network-online.target tutorbox-backend.service
+After=bluetooth.target network-online.target utztutor-backend.service
 Wants=bluetooth.target
 
 [Service]
-EnvironmentFile=/etc/tutorbox/provisioner.env     # mode 0600
-ExecStart=/usr/bin/python3 /opt/tutorbox/infra/provisioner/tutorbox_provisioner.py
+EnvironmentFile=/etc/utztutor/provisioner.env     # mode 0600
+ExecStart=/usr/bin/python3 /opt/utztutor/infra/provisioner/utztutor_provisioner.py
 Restart=on-failure
 RestartSec=3
-User=tutorbox
+User=utztutor
 SupplementaryGroups=bluetooth
 
 [Install]
@@ -572,7 +572,7 @@ Details worth keeping in mind:
 ### Failure modes
 | Symptom | Likely cause | Fix |
 | :--- | :--- | :--- |
-| Clicker never finds `TutorBox` | Jetson adapter blocked/off; provisioner not running; clicker too far | `rfkill list`, `bluetoothctl show`, `systemctl status tutorbox-provisioner`; provision at the desk |
+| Clicker never finds `TutorBox` | Jetson adapter blocked/off; provisioner not running; clicker too far | `rfkill list`, `bluetoothctl show`, `systemctl status utztutor-provisioner`; provision at the desk |
 | Read fails with *Authentication Failed* | Stale bond on either side | Design uses no bonding; if a bond exists from experiments: `bluetoothctl remove <clicker MAC>` and erase NVS on the clicker |
 | Read returns 20 bytes / truncated JSON | MTU not negotiated and long reads disabled | Request MTU 256 before the read; keep the packet ≤ 512 B |
 | `status: busy` in a loop | A previous provisioning never wrote `result` | Slot expires after 10 s; check provisioner log |
@@ -586,9 +586,9 @@ Details worth keeping in mind:
 | Some clickers get no IP | DHCP pool exhausted | Widen the pool (`infra/glinet/initial.md` §5) |
 
 ### Bring-up checklist (in this order)
-- [ ] `bluetoothctl show` on the Jetson lists a powered controller; `btmon` shows advertising after `systemctl start tutorbox-provisioner`.
+- [ ] `bluetoothctl show` on the Jetson lists a powered controller; `btmon` shows advertising after `systemctl start utztutor-provisioner`.
 - [ ] A phone BLE scanner sees `TutorBox` with service `5f8c0001-…`; reading `provision` from the phone without a `hello` returns `{}` / `busy` — never credentials.
-- [ ] `python3 tutorbox_provisioner.py --dry-run ESP32-A4CF12` prints the packet the clicker would receive (secrets redacted in the log line).
+- [ ] `python3 utztutor_provisioner.py --dry-run ESP32-A4CF12` prints the packet the clicker would receive (secrets redacted in the log line).
 - [ ] Backend: `pytest backend/tests/api/devices` green; `curl -X POST /api/v1/devices/auth` with a wrong secret → 401, unassigned → 403, assigned → 200 with a `session_id`.
 - [ ] One clicker: serial log shows `hello → assigned → nvs ok → reboot → wifi 192.168.8.1xx → auth 200`.
 - [ ] Teacher starts a match on `/maestro/`; the clicker's vote raises `votes_cast` on the host page and `/pantalla/` within one second; reveal shows it in the bars.

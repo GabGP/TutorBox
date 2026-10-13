@@ -32,7 +32,7 @@ This document tracks the technical deliverables, architectural implementations, 
   * **Lesson Concept Table**: all 77 lessons of the three grade apps mapped to the CNB topic the tutor already uses, and to the quiz taxonomy pair where the quiz has that concept.
   * **Event Storage**: migration `013` creates `game_events` with `UNIQUE(client_event_id)`, and `014` adds `misconception` ([Game Events Schema](../database/games.md)).
   * **Staff Summary**: `GET /api/v1/games/events/summary` counts the stored answers in total, per lesson and per phone ([Games API §7](../api/games.md#7-summary-for-staff)).
-  * **Rate Limit**: nginx allows each address 30 event batches a minute after a burst of 20 ([`tutorbox.conf`](../../infra/nginx/tutorbox.conf)).
+  * **Rate Limit**: nginx allows each address 30 event batches a minute after a burst of 20 ([`utztutor.conf`](../../infra/nginx/utztutor.conf)).
   * **Three Grade Apps, Appliance Hosting, Android Wrapper and Class Mode `apps`**: in the repository before Week 6 began (Section 2.B).
 
 ---
@@ -41,7 +41,7 @@ This document tracks the technical deliverables, architectural implementations, 
 
 ### A. Student A (Pilot Scope: Game Error Ingestion & Idempotent Deduplication)
 
-**Design Decision (Pilot, 2026-10-08): ingestion plus classroom browser sync.** The appliance receives events from the copy of the games it serves at `http://tutorbox/tareas/<grade>/`. Sync from the take-home APK is left out: the APK has no `INTERNET` permission, on purpose, and changing that means new signed APKs on every family phone. The endpoint does not depend on that choice, so an APK bridge can be added later without changing it.
+**Design Decision (Pilot, 2026-10-08): ingestion plus classroom browser sync.** The appliance receives events from the copy of the games it serves at `http://utztutor/tareas/<grade>/`. Sync from the take-home APK is left out: the APK has no `INTERNET` permission, on purpose, and changing that means new signed APKs on every family phone. The endpoint does not depend on that choice, so an APK bridge can be added later without changing it.
 
 **Delivered Subsystems:**
 
@@ -71,7 +71,7 @@ This document tracks the technical deliverables, architectural implementations, 
 7. **Staff Summary (`backend/src/api/games/summary.py`, `backend/src/core/db/game_event_summary.py`)**:
    * `GET /api/v1/games/events/summary`, for teachers and admins: answers stored, wrong answers, number of phones, and the count per lesson with its labels.
    * `?install_id=` counts one phone. That is the check of the sync test: the count must equal the taps made on that phone.
-8. **Rate Limit (`infra/nginx/tutorbox.conf`)**:
+8. **Rate Limit (`infra/nginx/utztutor.conf`)**:
    * Each address may post 30 batches a minute after a burst of 20; beyond that nginx answers `429`. A phone posts once or twice per lesson.
    * The reason is the database, not an attacker: every batch takes SQLite's one write lock, which quiz votes also need, so a game stuck in a retry loop must not reach the backend.
    * It covers port 80 only. uvicorn also listens on port 8000, where nginx is not in front. The config has not been loaded on the Jetson yet (`sudo nginx -t`).
@@ -92,8 +92,8 @@ This document tracks the technical deliverables, architectural implementations, 
 
 **What Still Stands Between the Games and Live Data:**
 
-1. **The APK sends nothing, on purpose**: it has no `INTERNET` permission ([Android Wrapper](../../pwa/tareas/android/README.md): *"Nothing leaves the phone"*). Its page runs on `https://appassets.androidplatform.net/`, so a request to `http://tutorbox` is cleartext, cross-origin and mixed content. Sync from the APK needs the permission, a cleartext exception for the appliance, a native bridge in the style of `AndroidTTS`, and new signed APKs.
-2. **The browser copy can send but cannot play offline**: `http://tutorbox/tareas/<grade>/` shares its origin with the API, so it can post with no CORS. Plain HTTP has no service worker, so the page does not open away from the appliance; "play offline, then reconnect" is limited there to a Wi-Fi drop while the page is open. `crypto.randomUUID()` is also absent on plain HTTP, so event ids must be built from `crypto.getRandomValues()`.
+1. **The APK sends nothing, on purpose**: it has no `INTERNET` permission ([Android Wrapper](../../pwa/tareas/android/README.md): *"Nothing leaves the phone"*). Its page runs on `https://appassets.androidplatform.net/`, so a request to `http://utztutor` is cleartext, cross-origin and mixed content. Sync from the APK needs the permission, a cleartext exception for the appliance, a native bridge in the style of `AndroidTTS`, and new signed APKs.
+2. **The browser copy can send but cannot play offline**: `http://utztutor/tareas/<grade>/` shares its origin with the API, so it can post with no CORS. Plain HTTP has no service worker, so the page does not open away from the appliance; "play offline, then reconnect" is limited there to a Wi-Fi drop while the page is open. `crypto.randomUUID()` is also absent on plain HTTP, so event ids must be built from `crypto.getRandomValues()`.
 3. **A game has no Utz'tutor student**: the child's profile is a name, an avatar and an optional parent PIN in `localStorage`, and mode `apps` asks for no login. An event is tied to a `users` row only when the game sends the login token that `/alumno/` keeps under the same origin (`tb_token`). The parent PIN is stored as typed and must never travel with an event.
 4. **Only Primero has an APK in the repository, and it is an old test build**: `pwa/tareas/descargas/` holds `primero.apk`, last built on 2026-09-23 and signed with a debug key (`CN=Android Debug`). The download page hides a grade whose APK is missing. The three APKs must come from one machine with the release keystore (`gradlew publishApk`, [Android Wrapper](../../pwa/tareas/android/README.md)): Android refuses an update signed with another key.
 
@@ -114,7 +114,7 @@ This document tracks the technical deliverables, architectural implementations, 
    * One `Activity` with a `WebView` and one product flavor per grade; the lessons are packed from `../<grade>/public` at build time, and the phone's text-to-speech is exposed as `window.AndroidTTS`.
    * No service worker and no `INTERNET` permission.
 4. **Family Download Page (`pwa/tareas/descargas/`)**: grade menu, install steps in Spanish and the APK links.
-5. **Class Mode `apps` (`pwa/app/src/features/mode/`, [`GET`/`PUT /api/v1/mode`](../api/system.md#classroom-mode))**: the teacher picks "llevar a casa"; student phones show the grade menu (download the app or play it in the browser) with no login, and the classroom screen shows `tutorbox/descargas`.
+5. **Class Mode `apps` (`pwa/app/src/features/mode/`, [`GET`/`PUT /api/v1/mode`](../api/system.md#classroom-mode))**: the teacher picks "llevar a casa"; student phones show the grade menu (download the app or play it in the browser) with no login, and the classroom screen shows `utztutor/descargas`.
 
 **Not Started:**
 
@@ -132,7 +132,7 @@ This document tracks the technical deliverables, architectural implementations, 
 
 1. **Offline-First Game Hosting and Caching Architecture**:
    * One `public/` folder per grade, served by the appliance and packed into the APK, with nothing loaded from outside.
-   * Why an APK and not an installable PWA: browsers run service workers only over HTTPS, and the appliance serves plain `http://tutorbox`.
+   * Why an APK and not an installable PWA: browsers run service workers only over HTTPS, and the appliance serves plain `http://utztutor`.
 2. **Client-Side Event Queuing and Deduplicated Background Synchronization**:
    * The phone delivers at least once: it resends whatever it could not confirm. The appliance stores each id once. Together an event is stored exactly once.
    * Shown in CI today: the same 25 events posted by eight clients at the same time leave 25 rows, with 25 accepted and 175 duplicates across the eight replies.

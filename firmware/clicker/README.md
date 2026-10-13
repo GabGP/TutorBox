@@ -1,6 +1,6 @@
 # ESP32-C3 Hardware Clicker: Build, Flash & Classroom Guide
 
-Four answer buttons, one power button, one light. Turn it on and it joins the `TutorBox` Wi-Fi by itself; when the teacher opens a question the light blinks white and the student presses A, B, C or D.
+Four answer buttons, one power button, one light. Turn it on and it joins the `Utztutor` Wi-Fi by itself; when the teacher opens a question the light blinks white and the student presses A, B, C or D.
 
 <div align="center">
 
@@ -37,12 +37,12 @@ sequenceDiagram
     autonumber
     actor Kid as Student
     participant C as Clicker (ESP32-C3)
-    participant R as GL.iNet "TutorBox" Wi-Fi
+    participant R as GL.iNet "Utztutor" Wi-Fi
     participant T as TutorBox (Jetson, 192.168.8.2)
     actor Teacher
 
     Kid->>C: presses the power button
-    C->>R: joins TutorBox (WPA2), gets 192.168.8.1xx by DHCP
+    C->>R: joins Utztutor (WPA2), gets 192.168.8.1xx by DHCP
     C->>T: POST /api/v1/clicker/checkin (first time: enrolls itself)
     T-->>C: not assigned yet: light blinks magenta
     Teacher->>T: assigns ESP32-A4CF12 to "ana" (once)
@@ -163,7 +163,7 @@ Step by step:
 In `firmware/clicker/clicker/`, copy `secrets.example.h` to **`secrets.h`** and type the real password:
 
 ```cpp
-#define WIFI_SSID "TutorBox"
+#define WIFI_SSID "Utztutor"
 #define WIFI_PASSWORD "the-classroom-passphrase"
 ```
 
@@ -207,7 +207,7 @@ With the USB cable connected (power switch **off**), the Serial Monitor shows:
 =========== TutorBox clicker ===========
 Device id : ESP32-A4CF12   <- write it on the case
 Firmware  : 1.0.0
-Wi-Fi     : TutorBox
+Wi-Fi     : Utztutor
 TutorBox  : http://192.168.8.2
 =========================================
 [clicker] first boot: created this clicker's secret
@@ -217,7 +217,7 @@ TutorBox  : http://192.168.8.2
 ```
 
 1. **Write the device id on a sticker** on the case. The router's client list shows the same last six digits and the hostname `clicker-a4cf12`.
-2. **Assign it to a student**, from any laptop on the `TutorBox` Wi-Fi (the student account must exist):
+2. **Assign it to a student**, from any laptop on the `Utztutor` Wi-Fi (the student account must exist):
    ```bash
    python tools/clickers/clickers.py list
    python tools/clickers/clickers.py assign ESP32-A4CF12 ana
@@ -231,7 +231,7 @@ TutorBox  : http://192.168.8.2
 
 | Light | Meaning | What to do |
 | :--- | :--- | :--- |
-| 🔵 Blue, fast blink | Looking for the `TutorBox` Wi-Fi | Wait. Longer than 30 s: router off, or wrong password in `secrets.h` |
+| 🔵 Blue, fast blink | Looking for the `Utztutor` Wi-Fi | Wait. Longer than 30 s: router off, or wrong password in `secrets.h` |
 | 🔵 Blue, steady | Wi-Fi OK, talking to the TutorBox | Wait |
 | 🔵 Blue, slow blink | Wi-Fi OK but the TutorBox does not answer | Is the Jetson on and the backend running? |
 | 🟣 Magenta, slow blink | Not assigned to a student yet | Teacher: `clickers.py assign` |

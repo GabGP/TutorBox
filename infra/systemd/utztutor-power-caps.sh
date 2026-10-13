@@ -6,7 +6,7 @@
 # MAXN_SUPER values. The caps are read from the 25W block of /etc/nvpmodel.conf, so no clock
 # numbers are copied into this file.
 #
-# Run as root by tutorbox-power.service. DRY_RUN=1 prints what would be written instead.
+# Run as root by utztutor-power.service. DRY_RUN=1 prints what would be written instead.
 set -euo pipefail
 
 CONF=/etc/nvpmodel.conf

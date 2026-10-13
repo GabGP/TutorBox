@@ -6,7 +6,7 @@ import styles from './tutorWall.module.css';
  * The classroom screen in tutor mode: where to join, Q'uq', and live class totals
  * (connected, solved, asking for help). Totals only: the wall shows no names.
  *
- * @param {object} props - `host` of the appliance (e.g. `tutorbox`), `pollingIntervalMs` for tests.
+ * @param {object} props - `host` of the appliance (e.g. `utztutor`), `pollingIntervalMs` for tests.
  */
 export const TutorWall: React.FC<{ host: string; pollingIntervalMs?: number }> = ({ host, pollingIntervalMs }) => {
   const summary = useTutorSummary(pollingIntervalMs);

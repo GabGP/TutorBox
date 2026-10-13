@@ -38,7 +38,7 @@ Authenticates a user using their username and 4–8 digit PIN. On success, issue
 * **Bootstrap account**: on startup the backend seeds one teacher (`SEED_TEACHER_USERNAME` / `SEED_TEACHER_PIN`, default `teacher1` / `1234`) if that username does not exist, so a fresh appliance can host quizzes. Change the PIN before deployment or set `SEED_TEACHER_PIN=` to disable.
 * **Security & Guards**:
   * Protected by the credential lockout, counted per username **and** device address (`login_key`, e.g. `ana@192.168.8.40`), so a student cannot lock the teacher out from another phone. Every 5 wrong PINs lock that pair: 30 s the first time, twice as long each time after, up to 16 min. Only a successful login clears the count. Wrong current PINs on `PATCH /users/me/pin` and `/users/me/username` count in the same budget.
-  * nginx also allows this path 10 requests a minute per address, after a burst of 10 (`infra/nginx/tutorbox.conf`).
+  * nginx also allows this path 10 requests a minute per address, after a burst of 10 (`infra/nginx/utztutor.conf`).
   * Usernames are not secret (signup answers `409` for a taken name), so login does not equalize timing between unknown names and wrong PINs; it still answers the same `401` to both.
   * Uses anti-oracle check ordering (constant-time verification behavior).
 * **Request Body**:

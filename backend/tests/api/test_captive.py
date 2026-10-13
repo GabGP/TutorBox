@@ -7,7 +7,7 @@ from api.captive import PROBE_PATHS, RESERVED_PREFIXES
 from core.config import clear_settings_cache
 from main import CLIENT_MOUNTS
 
-STUDENT_URL = "http://tutorbox/alumno/"
+STUDENT_URL = "http://utztutor/alumno/"
 FOREIGN = {"host": "captive.apple.com"}
 APPLIANCE = {"host": "192.168.8.2"}
 
@@ -65,7 +65,7 @@ def test_unknown_path_on_appliance_host_keeps_json_404(captive_env, temp_db, cli
         "192.168.8.2",
         "192.168.8.2:8000",
         "localhost",
-        "tutorbox",
+        "utztutor",
         "[fd00::2]:80",
     ):
         resp = _get(client, "/some/page", host)
@@ -129,5 +129,5 @@ def test_redirect_url_is_configurable(captive_env, monkeypatch, temp_db, client)
     # The redirect target's own host is the appliance, never a walled-garden hit.
     resp = _get(client, "/some/page", "192.168.8.2")
     assert resp.status_code == 404
-    resp = _get(client, "/some/page", "tutorbox")
+    resp = _get(client, "/some/page", "utztutor")
     assert resp.status_code == 302

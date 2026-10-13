@@ -158,7 +158,7 @@ describe('TutorRoster', () => {
 
   it('lists who is connected and what they are working on', async () => {
     vi.spyOn(tutorApi, 'students').mockResolvedValue(students);
-    render(<TutorRoster host="tutorbox" />);
+    render(<TutorRoster host="utztutor" />);
 
     expect(await screen.findByText('ana')).toBeInTheDocument();
     expect(screen.getByText('1 conectados')).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('TutorRoster', () => {
   it('puts a connected student on the last hint first, marked as needing help', async () => {
     const stuck: TutorStudent = { ...students[1], username: 'carla', online: true, problem: '36 ÷ 4', hint_level: 3 };
     vi.spyOn(tutorApi, 'students').mockResolvedValue([...students, stuck]);
-    render(<TutorRoster host="tutorbox" />);
+    render(<TutorRoster host="utztutor" />);
 
     expect(await screen.findByText('Necesita ayuda')).toBeInTheDocument();
     const names = screen.getAllByRole('listitem').map((item) => item.querySelector('strong')?.textContent);
@@ -186,9 +186,9 @@ describe('TutorRoster', () => {
       .mockResolvedValueOnce([])
       .mockRejectedValueOnce(new ApiError('Sin permiso', 403))
       .mockRejectedValue(new Error('offline'));
-    render(<TutorRoster host="tutorbox" pollingIntervalMs={20} />);
+    render(<TutorRoster host="utztutor" pollingIntervalMs={20} />);
 
-    expect(await screen.findByText('tutorbox/alumno')).toBeInTheDocument();
+    expect(await screen.findByText('utztutor/alumno')).toBeInTheDocument();
     expect(await screen.findByText('Sin permiso')).toBeInTheDocument();
     expect(await screen.findByText('No se pudo cargar la lista.')).toBeInTheDocument();
     expect(list.mock.calls.length).toBeGreaterThan(2);
@@ -198,10 +198,10 @@ describe('TutorRoster', () => {
 describe('TutorWall', () => {
   it('shows where to join and the class totals, without names', async () => {
     vi.spyOn(tutorApi, 'summary').mockResolvedValue({ online: 3, solved: 5, need_help: 1 });
-    render(<TutorWall host="tutorbox" />);
+    render(<TutorWall host="utztutor" />);
 
     expect(screen.getByText('Practica con el tutor')).toBeInTheDocument();
-    expect(screen.getByText('tutorbox/alumno')).toBeInTheDocument();
+    expect(screen.getByText('utztutor/alumno')).toBeInTheDocument();
     expect(screen.getAllByText('–')).toHaveLength(3); // before the first answer
     expect(await screen.findByText('5')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();

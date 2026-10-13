@@ -3,13 +3,13 @@
 # On the Orin Nano Super dev kit, nvpmodel.service fails at boot (it asks for a reboot and gets
 # no answer), so the CPU and GPU max clocks stay at the MAXN_SUPER values. This unit writes the
 # 25W caps itself, after NVIDIA's boot script and nvpmodel have run. What it writes is in
-# infra/systemd/tutorbox-power-caps.sh.
+# infra/systemd/utztutor-power-caps.sh.
 #
 # Install on the Jetson:
-#   chmod +x infra/systemd/tutorbox-power-caps.sh
-#   sudo cp infra/systemd/tutorbox-power.service /etc/systemd/system/
+#   chmod +x infra/systemd/utztutor-power-caps.sh
+#   sudo cp infra/systemd/utztutor-power.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
-#   sudo systemctl enable --now tutorbox-power
+#   sudo systemctl enable --now utztutor-power
 #   cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq   # expect 1344000
 #
 # ADJUST the ExecStart path if the checkout is somewhere else.
@@ -21,7 +21,7 @@ After=nvpower.service nvpmodel.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/home/damarti/Documents/TutorBox/infra/systemd/tutorbox-power-caps.sh
+ExecStart=/home/damarti/Documents/TutorBox/infra/systemd/utztutor-power-caps.sh
 
 [Install]
 WantedBy=multi-user.target

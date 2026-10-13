@@ -31,7 +31,7 @@ Comprehensive technical specification, security architecture, and integration co
 
 The Utz'tutor API runs on the NVIDIA Jetson Orin Nano edge appliance and communicates with the React/Vite Progressive Web Application (PWA) and ESP32 hardware clickers over the local classroom WLAN/Ethernet network.
 
-* **Base URL**: `http://tutorbox` / `http://192.168.8.2` in the classroom (nginx on :80, see [Infra](../../infra/README.md)); `http://127.0.0.1:8000` in local development
+* **Base URL**: `http://utztutor` / `http://192.168.8.2` in the classroom (nginx on :80, see [Infra](../../infra/README.md)); `http://127.0.0.1:8000` in local development
 * **Classroom client (Pilas)**: served by the same process at `/maestro/`, `/alumno/` and `/pantalla/` (see [PWA](../../pwa/README.md))
 * **API v1 Prefix**: `/api/v1` (e.g., `/api/v1/auth/login`, `/api/v1/quiz/generate`)
 * **Unversioned Probes**: `/health`, plus the captive-portal connectivity probes (`/generate_204`, `/hotspot-detect.html`, `/connecttest.txt`, …) answered with a `302` to the student page — see [system.md](system.md)

@@ -18,7 +18,7 @@ def test_captive_portal_defaults(monkeypatch) -> None:
     assert portal == CaptivePortalConfig()
     assert portal.enabled is DEFAULT_CAPTIVE_PORTAL_ENABLED is True
     assert (
-        portal.redirect_url == DEFAULT_CAPTIVE_PORTAL_URL == "http://tutorbox/alumno/"
+        portal.redirect_url == DEFAULT_CAPTIVE_PORTAL_URL == "http://utztutor/alumno/"
     )
 
 

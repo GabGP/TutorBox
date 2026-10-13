@@ -40,7 +40,7 @@ Utz'tutor operates on a local network topology consisting of an isolated Access 
 ```mermaid
 graph TD
     subgraph AP ["Local Access Point"]
-        Router["GL.iNet GL-AR300M16 Router<br/>(SSID: TutorBox - Isolated Local AP)"]
+        Router["GL.iNet GL-AR300M16 Router<br/>(SSID: Utztutor - Isolated Local AP)"]
     end
     subgraph Clients ["Client Layer"]
         Students["Student Devices<br/>(Tablets, Smartphones & ESP32 Clickers)"]
@@ -77,7 +77,7 @@ All components operate **100% offline** without WAN connectivity.
 | Node | Hardware | Role & Responsibilities |
 | :--- | :--- | :--- |
 | **Core AI Appliance** | NVIDIA Jetson Orin Nano (8GB Unified RAM) | Hosts Nginx, the PWA, FastAPI, `llama.cpp`, offline Spanish/K'iche' audio, SymPy, SQLite, and classroom HDMI output. |
-| **Wireless AP** | GL.iNet GL-AR300M16 Router | Isolated local Access Point broadcasting SSID `TutorBox` and handling DHCP. |
+| **Wireless AP** | GL.iNet GL-AR300M16 Router | Isolated local Access Point broadcasting SSID `Utztutor` and handling DHCP. |
 
 ---
 

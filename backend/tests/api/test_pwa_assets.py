@@ -14,7 +14,7 @@ FOREIGN = {"host": "captive.apple.com"}
 def captive_env(monkeypatch):
     """Pins portal settings so developer .env cannot leak into assertions."""
     monkeypatch.setenv("CAPTIVE_PORTAL_ENABLED", "true")
-    monkeypatch.setenv("CAPTIVE_PORTAL_URL", "http://tutorbox/alumno/")
+    monkeypatch.setenv("CAPTIVE_PORTAL_URL", "http://utztutor/alumno/")
     clear_settings_cache()
     yield
     clear_settings_cache()

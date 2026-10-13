@@ -11,7 +11,7 @@ competencia**, 30 lessons.
 
 | Where | URL |
 | :--- | :--- |
-| Utz'tutor classroom (Jetson) | `http://tutorbox/tareas/tercero/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
+| Utz'tutor classroom (Jetson) | `http://utztutor/tareas/tercero/` (mounted in `backend/src/main.py`, `REPO_MOUNTS`) |
 | Any static host | serve `public/` — every path is relative |
 
 There is no APK for Tercero yet: [`../android`](../android/README.md) packs `primero/public` only.

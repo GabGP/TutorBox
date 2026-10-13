@@ -16,16 +16,16 @@ Deployment configurations, systemd service units, and isolated networking setup 
 ## 1. Subsystems & Services
 
 * **Core AI Appliance (NVIDIA Jetson Orin Nano)**:
-  * **Systemd Service Units**: [`systemd/tutorbox-backend.service`](systemd/tutorbox-backend.service) supervises the FastAPI backend (`:8000`, serves the API and the Pilas pages); the `llama.cpp` inference server unit is still to come.
-  * **Classroom screen (kiosk)**: [`kiosk/tutorbox-kiosk.desktop`](kiosk/tutorbox-kiosk.desktop) opens `/pantalla/` full-screen at login once the backend answers `/health`. The Jetson has a screen but no keyboard, so: enable **automatic login** for the display user (Settings → Users), turn off blanking and locking (`gsettings set org.gnome.desktop.session idle-delay 0` and `gsettings set org.gnome.desktop.screensaver lock-enabled false`), and copy the file to `~/.config/autostart/`. The teacher then drives everything from `/maestro/` on a phone, including the class mode (quiz, tutor, take-home) — see [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
-  * **BLE Clicker Provisioner** (`tutorbox-provisioner.service`, planned for Week 7): always-on Bluetooth GATT service that hands ESP32 clickers the classroom Wi-Fi and their device secret — see [ESP32 Clicker Protocol](../docs/architecture/esp32-protocol.md).
-  * **Web Server & Reverse Proxy**: [`nginx/tutorbox.conf`](nginx/tutorbox.conf) publishes the backend on port 80 (`http://tutorbox`, `http://192.168.8.2`) — required because phone captive-portal probes only use port 80. It also limits requests per address on three paths: login, signup and game event batches (the reasons are in the file).
+  * **Systemd Service Units**: [`systemd/utztutor-backend.service`](systemd/utztutor-backend.service) supervises the FastAPI backend (`:8000`, serves the API and the Pilas pages); the `llama.cpp` inference server unit is still to come.
+  * **Classroom screen (kiosk)**: [`kiosk/utztutor-kiosk.desktop`](kiosk/utztutor-kiosk.desktop) opens `/pantalla/` full-screen at login once the backend answers `/health`. The Jetson has a screen but no keyboard, so: enable **automatic login** for the display user (Settings → Users), turn off blanking and locking (`gsettings set org.gnome.desktop.session idle-delay 0` and `gsettings set org.gnome.desktop.screensaver lock-enabled false`), and copy the file to `~/.config/autostart/`. The teacher then drives everything from `/maestro/` on a phone, including the class mode (quiz, tutor, take-home) — see [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
+  * **BLE Clicker Provisioner** (`utztutor-provisioner.service`, planned for Week 7): always-on Bluetooth GATT service that hands ESP32 clickers the classroom Wi-Fi and their device secret — see [ESP32 Clicker Protocol](../docs/architecture/esp32-protocol.md).
+  * **Web Server & Reverse Proxy**: [`nginx/utztutor.conf`](nginx/utztutor.conf) publishes the backend on port 80 (`http://utztutor`, `http://192.168.8.2`) — required because phone captive-portal probes only use port 80. It also limits requests per address on three paths: login, signup and game event batches (the reasons are in the file).
   * **Captive Portal**: [`captive-portal.md`](captive-portal.md) — a phone that joins the Wi-Fi opens the student page automatically (router catch-all DNS + backend probe answers).
   * **Audio Output & TTS**: ALSA/PulseAudio configuration routing offline Spanish TTS and K'iche' native audio output to classroom speakers.
-  * **System Tuning**: 25W clock caps applied at boot by [`systemd/tutorbox-power.service`](systemd/tutorbox-power.service), because nvpmodel's own boot step fails on this board (the unit header explains why). The desktop stays on for now, and `jetson_clocks` is not used: it pins clocks at maximum, which raises sustained current.
+  * **System Tuning**: 25W clock caps applied at boot by [`systemd/utztutor-power.service`](systemd/utztutor-power.service), because nvpmodel's own boot step fails on this board (the unit header explains why). The desktop stays on for now, and `jetson_clocks` is not used: it pins clocks at maximum, which raises sustained current.
 * **Isolated Classroom AP (GL.iNet GL-AR300M16)**:
-  * Local DHCP configuration broadcasting SSID `TutorBox`.
-  * dnsmasq static lease `tutorbox` → `192.168.8.2` and catch-all DNS (every name resolves to the Jetson).
+  * Local DHCP configuration broadcasting SSID `Utztutor`.
+  * dnsmasq static lease `utztutor` → `192.168.8.2` and catch-all DNS (every name resolves to the Jetson).
   * WAN port disabled to guarantee 100% offline security.
 
 ---

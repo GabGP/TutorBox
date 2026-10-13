@@ -1,14 +1,14 @@
 # Utz'tutor backend — FastAPI API + Pilas classroom pages + captive-portal answers.
 #
-# Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/tutorbox.conf)
+# Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/utztutor.conf)
 # publishes it on port 80. The three lines marked ADJUST assume this dev-kit layout
-# (checkout in /home/damarti, run as that user); change them for /opt/tutorbox or another user.
+# (checkout in /home/damarti, run as that user); change them for /opt/utztutor or another user.
 #
 # Install:
-#   sudo cp infra/systemd/tutorbox-backend.service /etc/systemd/system/
+#   sudo cp infra/systemd/utztutor-backend.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
-#   sudo systemctl enable --now tutorbox-backend
-#   systemctl status tutorbox-backend && ss -ltnp | grep ':8000 '
+#   sudo systemctl enable --now utztutor-backend
+#   systemctl status utztutor-backend && ss -ltnp | grep ':8000 '
 #
 # No EnvironmentFile: the app reads <repo>/.env itself (backend/src/core/config/env_loader.py);
 # an EnvironmentFile here would silently override it. Single worker only: SQLite plus

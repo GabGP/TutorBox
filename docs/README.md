@@ -74,7 +74,7 @@ Setup guides and runbooks for offline edge deployment:
 
 * **[Infrastructure Hub](../infra/README.md)**: Overview of classroom hardware topology and networking.
 * **[GL.iNet GL-AR300M16 Initial Setup](../infra/glinet/initial.md)**: 6-step provisioning runbook for isolated classroom AP, static DHCP leases, catch-all DNS, and 4-layer WAN disconnection.
-* **[Captive Portal](../infra/captive-portal.md)**: Why a phone that joins the `TutorBox` Wi-Fi opens `/alumno/` by itself — probe table per OS, backend redirect rules, nginx on :80, systemd unit, limitations, and the phone verification checklist.
+* **[Captive Portal](../infra/captive-portal.md)**: Why a phone that joins the `Utztutor` Wi-Fi opens `/alumno/` by itself — probe table per OS, backend redirect rules, nginx on :80, systemd unit, limitations, and the phone verification checklist.
 * **[Hardware Topology & Memory Budget](architecture/hardware-topology.md)**: Jetson Orin Nano 8GB unified memory allocation across SLM, TTS, FastAPI, and SQLite.
 
 ---

@@ -42,7 +42,7 @@ DEFAULT_TTS_MAX_CHARS: int = 600
 
 # Neural Piper configuration defaults
 DEFAULT_TTS_PIPER_BINARY: str = ""  # empty: auto-detect piper in PATH
-DEFAULT_TTS_PIPER_MODEL_DIR: str = "/opt/tutorbox/models/tts"
+DEFAULT_TTS_PIPER_MODEL_DIR: str = "/opt/utztutor/models/tts"
 DEFAULT_TTS_PIPER_MODEL_ES: str = "es_ES-sharvard-medium.onnx"
 DEFAULT_TTS_PIPER_SPEAKER_ES: int = 1  # 1 = female educator, 0 = male educator
 DEFAULT_TTS_PIPER_MODEL_QUC: str = "quc_Latn-maya-medium.onnx"
@@ -72,4 +72,4 @@ DEFAULT_TTS_QWEN_SPEAKER_FILE: str = ""
 # Captive portal: answer phone connectivity probes with a redirect to the student
 # page so the OS sign-in browser opens it automatically when a device joins the AP.
 DEFAULT_CAPTIVE_PORTAL_ENABLED: bool = True
-DEFAULT_CAPTIVE_PORTAL_URL: str = "http://tutorbox/alumno/"
+DEFAULT_CAPTIVE_PORTAL_URL: str = "http://utztutor/alumno/"
