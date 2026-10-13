@@ -17,13 +17,30 @@ DEFAULT_JOB_COUNT = 4
 UNIX_CUDA_TOOLKIT_DIR = Path("/usr/local/cuda")
 
 
+def has_cuda_toolkit() -> bool:
+    """Reports whether nvcc, CUDA_PATH or the default Unix toolkit folder exists."""
+    nvcc_bin = shutil.which("nvcc")
+    cuda_path = os.environ.get("CUDA_PATH")
+    return bool(nvcc_bin or cuda_path or UNIX_CUDA_TOOLKIT_DIR.is_dir())
+
+
+def _nvcc_outside_path() -> str | None:
+    """Returns the toolkit folder's nvcc when no nvcc is on PATH, else None.
+
+    Linux toolkit packages install nvcc under /usr/local/cuda/bin without adding
+    it to PATH, and CMake looks for the CUDA compiler on PATH only.
+    """
+    if shutil.which("nvcc"):
+        return None
+    toolkit_nvcc = UNIX_CUDA_TOOLKIT_DIR / "bin" / "nvcc"
+    return str(toolkit_nvcc) if toolkit_nvcc.is_file() else None
+
+
 def detect_cuda(use_cuda: bool) -> bool:
     """Reports whether a CUDA toolkit is available, announcing the chosen backend."""
     if not use_cuda:
         return False
-    nvcc_bin = shutil.which("nvcc")
-    cuda_path = os.environ.get("CUDA_PATH")
-    has_cuda = bool(nvcc_bin or cuda_path or UNIX_CUDA_TOOLKIT_DIR.is_dir())
+    has_cuda = has_cuda_toolkit()
     if has_cuda:
         print(
             f"{TAG_OK} CUDA toolkit detected. Compiling with GPU acceleration (-DGGML_CUDA=ON)..."
@@ -51,6 +68,9 @@ def _configure_command(
         "-DLLAMA_BUILD_EXAMPLES=OFF",
         "-DLLAMA_BUILD_SERVER=OFF",
     ]
+    toolkit_nvcc = _nvcc_outside_path() if has_cuda else None
+    if toolkit_nvcc:
+        cmake_config.append(f"-DCMAKE_CUDA_COMPILER={toolkit_nvcc}")
     if ninja_bin:
         cmake_config.extend(["-G", "Ninja"])
         # Belt and suspenders: explicit path so CMake never depends on PATH search.

@@ -4,6 +4,9 @@
 Checks runtime prerequisites (uv, espeak-ng, local llama-server, pnpm) and boots
 the Utz'tutor FastAPI backend & classroom web clients. The steps themselves live
 in tools/launcher/; this file only orders them.
+
+With --prepare it stops before the server starts: the appliance install
+(infra/ansible/jetson.yml) uses that to build everything, and systemd runs the server.
 """
 
 import os
@@ -82,7 +85,11 @@ def main() -> None:
 
     if args.build_llama or args.force_build_llama:
         print(f"{TAG_BUILD} Building Qwen3-TTS daemon binary...")
-        if not build_llama(force=args.force_build_llama, python_bin=py_bin):
+        if not build_llama(
+            force=args.force_build_llama,
+            python_bin=py_bin,
+            require_cuda=args.require_cuda,
+        ):
             print(f"{TAG_FAIL} Failed to build Qwen3-TTS daemon.")
             sys.exit(1)
         print_separator()
@@ -91,8 +98,16 @@ def main() -> None:
         return
 
     if not args.no_build:
-        build_pwa()
+        pwa_ready = build_pwa()
         print_separator()
+        # A normal run still serves the API without the PWA. A prepare run exists
+        # to produce the build, so there a missing bundle is a failure.
+        if args.prepare and not pwa_ready:
+            print(f"{TAG_FAIL} PWA frontend is not built.")
+            sys.exit(1)
+
+    if args.prepare:
+        return
 
     serve(uv_cmd, host=args.host, port=args.port, reload=not args.no_reload)
 

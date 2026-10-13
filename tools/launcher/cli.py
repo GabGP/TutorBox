@@ -43,6 +43,16 @@ def parse_arguments() -> argparse.Namespace:
         help="Download voice models before launching (choices: minimal, kokoro, qwen, all; default: minimal)",
     )
     parser.add_argument(
+        "--require-cuda",
+        action="store_true",
+        help="With --build-llama: fail instead of building for CPU when no CUDA toolkit is found",
+    )
+    parser.add_argument(
         "--check-only", action="store_true", help="Check prerequisites and exit"
+    )
+    parser.add_argument(
+        "--prepare",
+        action="store_true",
+        help="Sync, download, compile and build as the other flags say, then exit without starting the server",
     )
     return parser.parse_args()

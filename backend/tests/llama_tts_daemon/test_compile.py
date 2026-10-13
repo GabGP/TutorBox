@@ -136,6 +136,43 @@ def test_build_binary_configures_then_builds_with_ninja_and_cuda(build_host, cap
     )
 
 
+def test_build_binary_names_the_toolkit_nvcc_when_none_is_on_path(
+    build_host, build_tree, monkeypatch
+):
+    """Verifies an nvcc found only in the toolkit folder is passed as CMAKE_CUDA_COMPILER."""
+    toolkit_dir = build_tree / "usr-local-cuda"
+    toolkit_nvcc = toolkit_dir / "bin" / "nvcc"
+    toolkit_nvcc.parent.mkdir(parents=True)
+    toolkit_nvcc.write_text("", encoding="utf-8")
+    monkeypatch.setattr(compile_step, "UNIX_CUDA_TOOLKIT_DIR", toolkit_dir)
+    compile_step.build_binary(use_cuda=True)
+    configure = _recorded_commands(build_host.run_cmd)[0]
+    assert "-DGGML_CUDA=ON" in configure
+    assert f"-DCMAKE_CUDA_COMPILER={toolkit_nvcc}" in configure
+
+
+def test_build_binary_leaves_the_cuda_compiler_to_cmake_when_nvcc_is_on_path(
+    build_host, build_tree, monkeypatch
+):
+    """Verifies no CMAKE_CUDA_COMPILER is passed when PATH already has an nvcc."""
+    toolkit_dir = build_tree / "usr-local-cuda"
+    toolkit_nvcc = toolkit_dir / "bin" / "nvcc"
+    toolkit_nvcc.parent.mkdir(parents=True)
+    toolkit_nvcc.write_text("", encoding="utf-8")
+    monkeypatch.setattr(compile_step, "UNIX_CUDA_TOOLKIT_DIR", toolkit_dir)
+    build_host.which.return_value = NVCC_BIN
+    compile_step.build_binary(use_cuda=True)
+    configure = _recorded_commands(build_host.run_cmd)[0]
+    assert not any(
+        argument.startswith("-DCMAKE_CUDA_COMPILER") for argument in configure
+    )
+
+
+def test_has_cuda_toolkit_is_false_without_nvcc_variable_or_folder(build_host):
+    """Verifies has_cuda_toolkit is False with no nvcc, CUDA_PATH or toolkit folder."""
+    assert compile_step.has_cuda_toolkit() is False
+
+
 def test_build_binary_without_ninja_uses_default_generator(build_host, capsys):
     """Verifies a build without Ninja drops -G and CMAKE_MAKE_PROGRAM and reports generator: default."""
     build_host.resolve_tool.side_effect = _tool_table(ninja_path=None)

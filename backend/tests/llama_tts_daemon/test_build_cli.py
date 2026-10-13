@@ -35,6 +35,7 @@ def test_defaults_when_no_flags_are_given(monkeypatch):
     arguments = cli.parse_arguments()
     assert arguments.force is False
     assert arguments.cpu_only is False
+    assert arguments.require_cuda is False
 
 
 def test_force_and_cpu_only_flags_are_parsed(monkeypatch):
@@ -84,6 +85,37 @@ def test_cpu_only_flag_disables_cuda_in_the_compile_step(monkeypatch, step_manag
     monkeypatch.setattr(sys, "argv", ["build.py", "--cpu-only"])
     cli.main()
     step_manager.build_binary.assert_called_once_with(use_cuda=False, force=False)
+
+
+def test_require_cuda_with_a_toolkit_runs_the_normal_cuda_build(
+    monkeypatch, step_manager
+):
+    """Verifies --require-cuda changes nothing when a CUDA toolkit is found."""
+    monkeypatch.setattr(sys, "argv", ["build.py", "--require-cuda"])
+    monkeypatch.setattr(cli, "has_cuda_toolkit", lambda: True)
+    cli.main()
+    step_manager.build_binary.assert_called_once_with(use_cuda=True, force=False)
+
+
+def test_require_cuda_without_a_toolkit_stops_before_cloning(
+    monkeypatch, step_manager, capsys
+):
+    """Verifies --require-cuda exits with code 1 before any build step when no toolkit exists."""
+    monkeypatch.setattr(sys, "argv", ["build.py", "--require-cuda"])
+    monkeypatch.setattr(cli, "has_cuda_toolkit", lambda: False)
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main()
+    assert exit_info.value.code == 1
+    assert step_manager.mock_calls == [call.check_prerequisites()]
+    assert "--require-cuda: no CUDA toolkit found" in capsys.readouterr().out
+
+
+def test_require_cuda_and_cpu_only_together_are_rejected(monkeypatch):
+    """Verifies --cpu-only with --require-cuda makes argparse exit with code 2."""
+    monkeypatch.setattr(sys, "argv", ["build.py", "--cpu-only", "--require-cuda"])
+    with pytest.raises(SystemExit) as exit_info:
+        cli.parse_arguments()
+    assert exit_info.value.code == 2
 
 
 def test_successful_run_prints_exactly_the_banner_and_completion_lines(

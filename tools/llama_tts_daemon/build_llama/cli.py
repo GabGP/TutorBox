@@ -3,10 +3,11 @@
 import argparse
 import sys
 
-from tools.llama_tts_daemon.build_llama.compile import build_binary
+from tools.llama_tts_daemon.build_llama.compile import build_binary, has_cuda_toolkit
 from tools.llama_tts_daemon.build_llama.console import (
     BANNER_LINE,
     SEPARATOR_LINE,
+    TAG_FAIL,
     TAG_OK,
 )
 from tools.llama_tts_daemon.build_llama.install import install_artifacts
@@ -25,7 +26,15 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--cpu-only", action="store_true", help="Disable CUDA GPU offloading"
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--require-cuda",
+        action="store_true",
+        help="Fail instead of building for CPU when no CUDA toolkit is found",
+    )
+    arguments = parser.parse_args()
+    if arguments.cpu_only and arguments.require_cuda:
+        parser.error("--cpu-only and --require-cuda cannot be used together")
+    return arguments
 
 
 def main() -> None:
@@ -37,6 +46,11 @@ def main() -> None:
     print(BANNER_LINE)
 
     if not check_prerequisites():
+        sys.exit(1)
+    if args.require_cuda and not has_cuda_toolkit():
+        print(
+            f"{TAG_FAIL} --require-cuda: no CUDA toolkit found (nvcc on PATH, CUDA_PATH or /usr/local/cuda)."
+        )
         sys.exit(1)
 
     clone_upstream(force=args.force)

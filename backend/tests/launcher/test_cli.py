@@ -25,6 +25,8 @@ def test_defaults_when_no_flags_are_given(monkeypatch):
     assert arguments.build_llama is False
     assert arguments.force_build_llama is False
     assert arguments.check_only is False
+    assert arguments.require_cuda is False
+    assert arguments.prepare is False
     assert arguments.download_models is None
 
 
@@ -45,6 +47,8 @@ def test_host_and_port_are_parsed(monkeypatch):
         ("--build-llama", "build_llama"),
         ("--force-build-llama", "force_build_llama"),
         ("--check-only", "check_only"),
+        ("--require-cuda", "require_cuda"),
+        ("--prepare", "prepare"),
     ],
 )
 def test_boolean_flag_sets_its_attribute(monkeypatch, flag, attribute_name):

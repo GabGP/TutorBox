@@ -11,6 +11,7 @@ Usage:
     python tools/llama_tts_daemon/build.py
     python tools/llama_tts_daemon/build.py --force
     python tools/llama_tts_daemon/build.py --cpu-only
+    python tools/llama_tts_daemon/build.py --require-cuda
 """
 
 import sys

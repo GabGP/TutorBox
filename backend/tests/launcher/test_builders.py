@@ -163,6 +163,22 @@ def test_build_llama_without_force_omits_force_flag():
     assert mock_run.call_args[0][0] == ["/mock/python", str(paths.LLAMA_BUILD_SCRIPT)]
 
 
+def test_build_llama_require_cuda_adds_the_flag():
+    """Verifies build_llama with require_cuda passes --require-cuda to the build script."""
+    with (
+        patch("pathlib.Path.is_file", return_value=True),
+        patch("subprocess.run", return_value=_finished(0)) as mock_run,
+    ):
+        assert (
+            builders.build_llama(python_bin="/mock/python", require_cuda=True) is True
+        )
+    assert mock_run.call_args[0][0] == [
+        "/mock/python",
+        str(paths.LLAMA_BUILD_SCRIPT),
+        "--require-cuda",
+    ]
+
+
 def test_build_llama_returns_false_when_script_exits_nonzero():
     """Verifies build_llama returns False when the build script exits non-zero."""
     with (

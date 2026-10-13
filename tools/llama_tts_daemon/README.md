@@ -46,6 +46,9 @@ python tools/llama_tts_daemon/build.py --force
 
 # Force CPU-only build (disables -DGGML_CUDA=ON)
 python tools/llama_tts_daemon/build.py --cpu-only
+
+# Fail instead of falling back to CPU when no CUDA toolkit is found
+python tools/llama_tts_daemon/build.py --require-cuda
 ```
 
 `build.py` is only the entry point. The steps live in the `build_llama/` package next to it:
@@ -71,6 +74,9 @@ python run.py --build-llama
 
 # Clean rebuild before launching
 python run.py --force-build-llama
+
+# Build for the GPU or fail, then exit without launching (what the kit setup runs)
+python run.py --prepare --build-llama --require-cuda
 ```
 
 ---

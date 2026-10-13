@@ -72,7 +72,9 @@ def build_pwa(pnpm_bin: str | None = None) -> bool:
     return True
 
 
-def build_llama(force: bool = False, python_bin: str | None = None) -> bool:
+def build_llama(
+    force: bool = False, python_bin: str | None = None, require_cuda: bool = False
+) -> bool:
     """Invokes tools/llama_tts_daemon/build.py to compile and install the daemon binary."""
     script = LLAMA_BUILD_SCRIPT
     if not script.is_file():
@@ -82,6 +84,8 @@ def build_llama(force: bool = False, python_bin: str | None = None) -> bool:
     cmd = [py_exec, str(script)]
     if force:
         cmd.append("--force")
+    if require_cuda:
+        cmd.append("--require-cuda")
     res = subprocess.run(cmd, cwd=str(ROOT_DIR), check=False)
     return res.returncode == 0
 
