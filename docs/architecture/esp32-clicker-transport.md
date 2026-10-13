@@ -99,11 +99,11 @@ Utz'tutor evaluates three connectivity strategies, with **Factory Fleet Provisio
 
 ```mermaid
 graph TD
-    Factory(["1. Factory Flashing Stage"]):::factory --> FlashNVS["Burn SSID 'Utztutor', WPA2 Key & device_id into NVS Flash"]
+    Factory(["1. Factory Flashing Stage"]):::factory --> FlashNVS["Burn SSID Utz'tutor, WPA2 Key & device_id into NVS Flash"]
 
     FlashNVS --> PowerOn(["2. Classroom Power-On"]):::student
     PowerOn --> Boot["ESP32 Cold Boot (< 0.8s) & Load NVS Credentials"]
-    Boot --> ScanAP{"Utztutor AP<br/>Found within 5s?"}
+    Boot --> ScanAP{"Utz'tutor AP<br/>Found within 5s?"}
 
     ScanAP -- "Yes (Normal Mode)" --> Associate["Auto-Associate via 802.11 b/g/n"]
     Associate --> DHCP["Obtain DHCP Lease (192.168.8.x)"]
@@ -128,11 +128,11 @@ graph TD
 
 ### 1. Primary Strategy: Appliance Factory Provisioning (Zero-Touch)
 * **Pre-Shared Appliance Network**: Every Utz'tutor appliance kit includes a pre-configured router (GL-AR300M16) with fixed network parameters:
-  - **SSID**: `Utztutor`
+  - **SSID**: `Utz'tutor`
   - **WPA2 Pre-Shared Key**: Configured in appliance manufacturing
   - **Backend API**: `http://192.168.8.2/api/v1` (Jetson static lease; see [ESP32 Clicker Protocol](esp32-protocol.md))
 * **Firmware Embedding**: When the batch of 30 clickers is flashed in Week 7, the Wi-Fi credentials, gateway IP, and unique `device_id` (e.g. `"1"`, `"2"`, `"ESP32_01"`) are burned into the ESP32 Non-Volatile Storage (NVS).
-* **Classroom Experience**: The student simply turns on the device switch. The ESP32 boots in $< 0.8\text{s}$, automatically associates to the `Utztutor` AP, and enters the low-power listening loop. **Zero configuration is required in the classroom.**
+* **Classroom Experience**: The student simply turns on the device switch. The ESP32 boots in $< 0.8\text{s}$, automatically associates to the `Utz'tutor` AP, and enters the low-power listening loop. **Zero configuration is required in the classroom.**
 
 ### 2. Secondary Strategy: Captive Portal / BLE Provisioning Fallback
 * If the appliance router SSID or security key is modified:
@@ -244,7 +244,7 @@ The clicker incorporates two separate visual indicators: a **Primary RGB Vote LE
 ### B. Secondary Status LED (Wi-Fi & Power Diagnostics)
 | State | LED Color / Pattern | Duration | Condition |
 | :--- | :--- | :--- | :--- |
-| **Associating to Wi-Fi**| 🔵 **Fast Blinking Blue** | Boot until connected | Searching and associating to `Utztutor` AP. |
+| **Associating to Wi-Fi**| 🔵 **Fast Blinking Blue** | Boot until connected | Searching and associating to `Utz'tutor` AP. |
 | **Wi-Fi Connected** | 🔵 **Solid Blue (3s then OFF)** | 3.0 seconds | DHCP lease acquired; device is online. |
 | **Connection Failed** | 🔴 **Slow Blinking Red** | Continuous | Cannot associate with AP / wrong credentials. |
 | **Low Battery Alert** | 🔴 **Pulsing Red** | Continuous | Battery voltage $< 3.3\text{V}$ ($< 15\%$). |

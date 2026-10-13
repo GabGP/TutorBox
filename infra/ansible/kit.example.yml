@@ -9,8 +9,8 @@
 kit_hostname: utztutor-01
 
 # Wi-Fi the router broadcasts. Two kits within range of each other need different
-# names and different channels (1, 6 or 11).
-wifi_ssid: Utztutor
+# names and different channels (1, 6 or 11). Keep the quotes around a name with an apostrophe.
+wifi_ssid: "Utz'tutor"
 wifi_channel: 6
 wifi_passphrase: "change-me-8-or-more"      # SECRET, 8 to 63 characters
 

@@ -11,7 +11,7 @@
 
 ---
 
-When a phone joins the `Utztutor` Wi-Fi, its browser opens `http://utztutor/alumno/` by itself —
+When a phone joins the `Utz'tutor` Wi-Fi, its browser opens `http://utztutor/alumno/` by itself —
 no address to type, no QR code. This page explains the mechanism, the three pieces that make it
 work, what it can *not* do, and how to verify it.
 

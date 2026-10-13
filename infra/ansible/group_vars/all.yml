@@ -80,7 +80,7 @@ router_user: root
 jetson_ip: 192.168.8.2
 # The name students type: http://<dns_name>/
 dns_name: utztutor
-wifi_ssid: Utztutor
+wifi_ssid: "Utz'tutor"
 wifi_channel: 6           # 1, 6 or 11: survey the room first
 wifi_country: GT
 wifi_htmode: HT20

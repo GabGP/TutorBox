@@ -12,7 +12,7 @@
 ---
 
 Provisioning runbook for the **GL.iNet GL-AR300M16** as the isolated classroom Access Point:
-broadcasting SSID `Utztutor`, serving local DHCP to student devices and ESP32 clickers, with the
+broadcasting SSID `Utz'tutor`, serving local DHCP to student devices and ESP32 clickers, with the
 **WAN path removed at four independent layers** so the appliance cannot reach the internet even if
 someone plugs in a live uplink cable.
 
@@ -33,7 +33,7 @@ someone plugs in a live uplink cable.
 - [1. Hardware & Addressing Plan](#1-hardware--addressing-plan)
 - [2. Recovery & Safety Net (read first)](#2-recovery--safety-net-read-first)
 - [3. Step 1 — First Boot & Admin Hardening](#3-step-1--first-boot--admin-hardening)
-- [4. Step 2 — Wi-Fi: SSID Utztutor](#4-step-2--wi-fi-ssid-utztutor)
+- [4. Step 2 — Wi-Fi: SSID Utz'tutor](#4-step-2--wi-fi-ssid-utztutor)
 - [5. Step 3 — LAN, DHCP & the Jetson Static Lease](#5-step-3--lan-dhcp--the-jetson-static-lease)
 - [6. Step 4 — Kill the WAN Path (4 layers)](#6-step-4--kill-the-wan-path-4-layers)
 - [7. Step 5 — Disable Cloud, Repeater & DNS Leaks](#7-step-5--disable-cloud-repeater--dns-leaks)
@@ -117,9 +117,9 @@ depends on this being right.
 
 ---
 
-## <a id="4-step-2--wi-fi-ssid-utztutor"></a>4. Step 2 — Wi-Fi: SSID Utztutor
+## <a id="4-step-2--wi-fi-ssid-utztutor"></a>4. Step 2 — Wi-Fi: SSID Utz'tutor
 
-**Via the GL.iNet Admin Panel**: *Wireless → 2.4 GHz* → SSID `Utztutor`, security **WPA2-PSK**,
+**Via the GL.iNet Admin Panel**: *Wireless → 2.4 GHz* → SSID `Utz'tutor`, security **WPA2-PSK**,
 passphrase set, SSID visible, then Apply.
 
 **Via SSH (`uci`)** — confirm the AP interface index first, since GL.iNet firmware often defines
@@ -137,7 +137,7 @@ uci set wireless.radio0.channel='6'          # 1, 6 or 11 — survey the room fi
 uci set wireless.radio0.htmode='HT20'        # HT20 is more robust in crowded rooms
 uci set wireless.radio0.country='GT'
 uci set wireless.@wifi-iface[0].mode='ap'
-uci set wireless.@wifi-iface[0].ssid='Utztutor'
+uci set wireless.@wifi-iface[0].ssid="Utz'tutor"
 uci set wireless.@wifi-iface[0].encryption='psk2+ccmp'
 uci set wireless.@wifi-iface[0].key='<classroom-passphrase>'
 uci set wireless.@wifi-iface[0].hidden='0'
@@ -336,7 +336,7 @@ Reboot the router (`reboot`), wait for the LED to settle, then confirm every lin
 requires actually plugging a known-good live internet cable into the WAN port** — a test that
 passes only because no cable is attached proves nothing.
 
-- [ ] SSID `Utztutor` is visible and a phone joins with the WPA2 passphrase.
+- [ ] SSID `Utz'tutor` is visible and a phone joins with the WPA2 passphrase.
 - [ ] The joined phone receives an address in `192.168.8.100–249`: check *Clients* in the admin panel.
 - [ ] The Jetson holds `192.168.8.2`: `ip -brief addr show enP8p1s0` on the Jetson.
 - [ ] From a student phone, `http://192.168.8.2` loads the PWA, and so does `http://utztutor`.

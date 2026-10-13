@@ -54,7 +54,7 @@ sequenceDiagram
     participant Kid as Student
     participant ESP as ESP32 clicker
     participant BT as Jetson provisioner (BLE)
-    participant AP as GL.iNet AP "Utztutor"
+    participant AP as GL.iNet AP "Utz'tutor"
     participant API as FastAPI (:8000)
 
     Kid->>ESP: hold A for 3 s
@@ -160,7 +160,7 @@ All values are UTF-8 JSON, **≤ 512 bytes** (the ATT maximum attribute length).
 
 **`provision`** — read after `hello`. One of:
 ```json
-{"v": 1, "status": "assigned", "ssid": "Utztutor", "psk": "<classroom passphrase>",
+{"v": 1, "status": "assigned", "ssid": "Utz'tutor", "psk": "<classroom passphrase>",
  "api": "http://192.168.8.2/api/v1", "device_id": "ESP32-A4CF12",
  "username": "ana", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
 ```

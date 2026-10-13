@@ -23,7 +23,7 @@ backend session engine is the only source of truth and the pages poll it once pe
 | URL | Who | What it does |
 | :--- | :--- | :--- |
 | `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /api/v1/quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline multi-tier TTS: Qwen3-TTS -> Sherpa -> Piper -> espeak-ng, Spanish). |
-| `/alumno/` | Students | **Opens by itself when a phone joins the `Utztutor` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
+| `/alumno/` | Students | **Opens by itself when a phone joins the `Utz'tutor` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
 | `/pantalla/` | HDMI classroom screen | Question + countdown + vote count, then the correct answer with the aggregate bars. Never per-student votes. |
 | `/` | — | Redirects to `/alumno/` (to `http://utztutor/alumno/` when reached through any other name). |
 
@@ -212,7 +212,7 @@ redirects (`RESERVED_PREFIXES`, `backend/src/api/captive.py`).
 
 ## 4. Architecture & Offline Design
 
-* **Network Delivery**: Static pages served by the appliance over the isolated `Utztutor` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
+* **Network Delivery**: Static pages served by the appliance over the isolated `Utz'tutor` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.
 * **Hardware Agnostic**: Built to communicate via standard HTTP endpoints, seamlessly interoperating alongside physical ESP32 clickers.
 

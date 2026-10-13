@@ -20,7 +20,7 @@ The entire **Utz'tutor** platform operates **100% offline** as an integrated sin
 ```mermaid
 graph TD
     subgraph AP ["Wireless Access Point"]
-        Router["GL.iNet GL-AR300M16 Router<br/>(SSID: Utztutor - Isolated Local AP)"]
+        Router["GL.iNet GL-AR300M16 Router<br/>(SSID: Utz'tutor - Isolated Local AP)"]
     end
 
     subgraph Clients ["Client Layer"]
@@ -59,7 +59,7 @@ graph TD
 | Node | Hardware Specs | Responsibilities & Software |
 | :--- | :--- | :--- |
 | **Core AI Appliance** | **NVIDIA Jetson Orin Nano** (8GB Unified RAM) | Hosts all software services: Nginx reverse proxy, static PWA hosting, FastAPI backend, SLM inference (Ollama on the reference kit), offline Spanish & K'iche' neural TTS, SymPy validation engine, SQLite database, and direct HDMI classroom display/audio. |
-| **Wireless AP** | **GL.iNet GL-AR300M16 Router** | Isolated local router broadcasting SSID `Utztutor` with local DHCP IP assignment for student devices and ESP32 clickers. |
+| **Wireless AP** | **GL.iNet GL-AR300M16 Router** | Isolated local router broadcasting SSID `Utz'tutor` with local DHCP IP assignment for student devices and ESP32 clickers. |
 | **Physical Clickers** | **ESP32 Microcontroller Node** (C3/WROOM) | 4 tactile buttons (A–D), RGB confirmation LED, LiPo/AAA power, and delegated `VoteTransport` packet transmission. (See [ESP32 Clicker Transport](esp32-clicker-transport.md)). |
 
 ---
