@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Automated Build & Patch Tool for Utz'tutor Qwen3-TTS Daemon.
 
-Clones pinned upstream llama.cpp (b11002), applies the persistent daemon patch
-(0001-llama-tts-daemon-mode.patch), compiles the binary with CUDA or CPU,
+Clones pinned upstream llama.cpp (b11002), applies the patches in this folder in order
+(the persistent daemon and the embedding-row lookup), compiles the binary with CUDA or CPU,
 and installs llama-tts-daemon into .cache/bin/llama.cpp/ alongside its MIT license.
 
 The steps themselves live in the build_llama package; this file only starts them.

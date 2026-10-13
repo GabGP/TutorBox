@@ -21,7 +21,12 @@ def build_tree(tmp_path, monkeypatch):
     monkeypatch.setattr(paths, "BUILD_DIR", source_directory / "build")
     monkeypatch.setattr(paths, "CACHE_BIN_DIR", tmp_path / "bin")
     monkeypatch.setattr(
-        paths, "PATCH_FILE", daemon_directory / "0001-llama-tts-daemon-mode.patch"
+        paths,
+        "PATCH_FILES",
+        (
+            daemon_directory / "0001-llama-tts-daemon-mode.patch",
+            daemon_directory / "0002-qwen-tok-embd-rows.patch",
+        ),
     )
     monkeypatch.setattr(paths, "LICENSE_SRC", daemon_directory / "LICENSE-llama-cpp")
     monkeypatch.setattr(paths, "PROJECT_VENV_DIR", tmp_path / "venv")

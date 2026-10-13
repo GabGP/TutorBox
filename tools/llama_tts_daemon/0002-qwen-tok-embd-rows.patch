@@ -1,0 +1,100 @@
+diff --git a/src/llama-ext.h b/src/llama-ext.h
+index 92a759b..dddeb7f 100644
+--- a/src/llama-ext.h
++++ b/src/llama-ext.h
+@@ -132,3 +132,7 @@ LLAMA_API uint32_t        llama_model_target_layer_ids_n(const struct llama_mode
+ // if out is nullptr, returns the number of tokens without writing to out
+ // caller must allocate enough memory for out before calling
+ LLAMA_API uint32_t llama_model_get_tok_embd(const struct llama_model * model, float * out);
++
++// retrieves one row of the token embedding matrix in F32 format (n_embd floats)
++// returns n_embd, or 0 on error (no embeddings, token out of range)
++LLAMA_API uint32_t llama_model_get_tok_embd_row(const struct llama_model * model, llama_token token, float * out);
+diff --git a/src/llama-model.cpp b/src/llama-model.cpp
+index 3b25362..5b9f9b1 100644
+--- a/src/llama-model.cpp
++++ b/src/llama-model.cpp
+@@ -3279,6 +3279,38 @@ uint32_t llama_model_target_layer_ids_n(const struct llama_model * model) {
+     return (uint32_t) model->target_layer_ids.size();
+ }
+ 
++uint32_t llama_model_get_tok_embd_row(const struct llama_model * model, llama_token token, float * out) {
++    const ggml_tensor * tensor = model->tok_embd;
++    if (tensor == nullptr || out == nullptr || token < 0 || (int64_t) token >= tensor->ne[1]) {
++        return 0;
++    }
++
++    const int64_t n_embd   = tensor->ne[0];
++    const size_t  row_size = ggml_row_size(tensor->type, n_embd);
++    const size_t  offset   = (size_t) token * row_size;
++
++    if (tensor->type == GGML_TYPE_F32) {
++        ggml_backend_tensor_get(tensor, out, offset, row_size);
++        return (uint32_t) n_embd;
++    }
++
++    std::vector<uint8_t> buf(row_size);
++    ggml_backend_tensor_get(tensor, buf.data(), offset, row_size);
++
++    const ggml_type_traits * traits = ggml_get_type_traits(tensor->type);
++    if (tensor->type == GGML_TYPE_F16) {
++        ggml_fp16_to_fp32_row((const ggml_fp16_t *) buf.data(), out, n_embd);
++    } else if (tensor->type == GGML_TYPE_BF16) {
++        ggml_bf16_to_fp32_row((const ggml_bf16_t *) buf.data(), out, n_embd);
++    } else if (ggml_is_quantized(tensor->type) && traits->to_float != nullptr) {
++        traits->to_float(buf.data(), out, n_embd);
++    } else {
++        return 0;
++    }
++
++    return (uint32_t) n_embd;
++}
++
+ uint32_t llama_model_get_tok_embd(const struct llama_model * model, float * out) {
+     if (model->vocab.n_tokens() == 0 || model->tok_embd == nullptr) {
+         return 0;
+diff --git a/tools/mtmd/mtmd-helper-gen.cpp b/tools/mtmd/mtmd-helper-gen.cpp
+index 1c58d3a..6fdef4a 100644
+--- a/tools/mtmd/mtmd-helper-gen.cpp
++++ b/tools/mtmd/mtmd-helper-gen.cpp
+@@ -146,9 +146,12 @@ public:
+         }
+ 
+         const int n_e = n_embd;
++        // one row at a time: the whole matrix is n_vocab * n_embd floats, over 1 GiB for this model
+         auto row = [&](llama_token t) {
+-            return std::vector<float>(tok_embd.begin() + (size_t) t * n_e,
+-                                       tok_embd.begin() + (size_t) (t + 1) * n_e);
++            std::vector<float> v((size_t) n_e);
++            const uint32_t n_read = llama_model_get_tok_embd_row(model, t, v.data());
++            GGML_ASSERT(n_read == (uint32_t) n_e);
++            return v;
+         };
+         auto sum_row = [&](llama_token a, llama_token b) {
+             std::vector<float> va = row(a), vb = row(b);
+@@ -350,16 +353,10 @@ private:
+                 return false;
+             }
+         }
+-        const uint32_t n_tok_embd = llama_model_get_tok_embd(model, nullptr);
+-        if (n_tok_embd == 0) {
++        if (llama_model_get_tok_embd(model, nullptr) == 0) {
+             LOG_ERR("mtmd_helper_gen_audio: model has no token embeddings\n");
+             return false;
+         }
+-        tok_embd.resize(n_tok_embd);
+-        if (llama_model_get_tok_embd(model, tok_embd.data()) != n_tok_embd) {
+-            LOG_ERR("mtmd_helper_gen_audio: token embedding copy failed\n");
+-            return false;
+-        }
+         specials_ok = true;
+         return true;
+     }
+@@ -432,7 +429,6 @@ private:
+     llama_token tts_pad    = LLAMA_TOKEN_NULL;
+     llama_token tts_bos    = LLAMA_TOKEN_NULL;
+     llama_token tts_eos    = LLAMA_TOKEN_NULL;
+-    std::vector<float> tok_embd; // whole token embedding matrix, n_vocab * n_embd
+ 
+     // must match hparams.wav_tfm_swa hardcoded in clip.cpp
+     size_t window_frames = 72;

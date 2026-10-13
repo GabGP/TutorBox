@@ -67,6 +67,10 @@ def _configure_command(
         "-DLLAMA_BUILD_TESTS=OFF",
         "-DLLAMA_BUILD_EXAMPLES=OFF",
         "-DLLAMA_BUILD_SERVER=OFF",
+        # The binary and its shared libraries are copied together into
+        # .cache/bin/llama.cpp/, so the binary looks for them in its own folder
+        # ($ORIGIN) instead of in the build folder.
+        "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON",
     ]
     toolkit_nvcc = _nvcc_outside_path() if has_cuda else None
     if toolkit_nvcc:

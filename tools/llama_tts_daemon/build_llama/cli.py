@@ -11,7 +11,7 @@ from tools.llama_tts_daemon.build_llama.console import (
     TAG_OK,
 )
 from tools.llama_tts_daemon.build_llama.install import install_artifacts
-from tools.llama_tts_daemon.build_llama.source import apply_patch, clone_upstream
+from tools.llama_tts_daemon.build_llama.source import apply_patches, clone_upstream
 from tools.llama_tts_daemon.build_llama.toolchain import check_prerequisites
 
 
@@ -54,7 +54,7 @@ def main() -> None:
         sys.exit(1)
 
     clone_upstream(force=args.force)
-    apply_patch(force=args.force)
+    apply_patches(force=args.force)
     build_binary(use_cuda=not args.cpu_only, force=args.force)
     install_artifacts()
 

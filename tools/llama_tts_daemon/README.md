@@ -15,21 +15,36 @@ This directory contains upstream patches applied to [`llama.cpp`](https://github
 
 ## 2. Included Patches
 
+The build applies the patches in the order listed below.
+
 ### `0001-llama-tts-daemon-mode.patch`
 * **Target File**: `tools/tts/tts.cpp`
-* **Purpose**: Adds an interactive line-delimited JSON daemon loop (`--daemon`) to `llama-tts`.
+* **Purpose**: Adds an interactive daemon loop (`--daemon`) to `llama-tts` that speaks a tab-separated line protocol.
 * **Rationale**:
   - In upstream one-shot mode (`llama-tts -m ... -p "..." -o out.wav`), the binary must parse GGUF weights, allocate CUDA VRAM buffers, and initialize the computation graph on **every single speech utterance**, incurring a cold start overhead of ~1.2–1.8 seconds.
   - The `--daemon` mode initializes the 1.7B acoustic model, text tokenizer, and vocoder **once** and remains resident in memory.
-  - It listens on `stdin` for JSON requests and outputs JSON responses to `stdout`:
-    ```json
-    // Request (stdin newline-delimited)
-    {"text": "El perimetro es la suma de los lados.", "out_path": "/path/to/output.wav"}
-
-    // Response (stdout newline-delimited)
-    {"status": "ok", "out_path": "/path/to/output.wav", "duration_ms": 1940}
+  - After loading, the daemon prints one line, `READY`, on `stdout`.
+  - Each request is one line on `stdin` with four tab-separated fields:
+    ```text
+    SYNTH<TAB><language code><TAB><output wav path><TAB><text>
     ```
-  - Eliminates all model-reloading latency, delivering instant response times.
+  - Each request is answered by one line on `stdout`:
+    ```text
+    DONE<TAB>total=<seconds><TAB>prompt_eval=<seconds><TAB>generation=<seconds><TAB>vocoder=<seconds>
+    ERR<TAB><reason>
+    ```
+    where `<reason>` is `set_input_failed`, `prompt_step_failed` or `write_failed`.
+  - The line `QUIT` (or `EXIT`) ends the daemon.
+  - Removes the model reload from every request.
+
+### `0002-qwen-tok-embd-rows.patch`
+* **Target Files**: `src/llama-ext.h`, `src/llama-model.cpp`, `tools/mtmd/mtmd-helper-gen.cpp`
+* **Purpose**: Adds `llama_model_get_tok_embd_row`, which returns one row of the token embedding matrix, and makes the Qwen3-TTS pipeline fetch only the rows a prompt uses.
+* **Rationale**:
+  - Upstream copies the whole token embedding matrix as 32-bit floats for every request (155,008 tokens x 2,048 values, about 1.2 GB).
+  - On the 8 GB Jetson, where CPU and GPU share memory, that pushed each request to about 4.5 GB and the kernel killed the daemon.
+  - With the patch, a request peaks at about 3.4 GB and the prompt step takes about 0.1 s instead of about 1 s.
+  - Measured on 2026-10-13. Every row returned by the new function was compared with the full copy and matched exactly.
 
 ---
 
@@ -57,13 +72,13 @@ python tools/llama_tts_daemon/build.py --require-cuda
 | :--- | :--- |
 | `cli.py` | Command-line flags and the order of the steps |
 | `toolchain.py` | Finds `git`, `cmake` and `ninja` on PATH or in a virtualenv |
-| `source.py` | Clones the pinned release and applies the daemon patch |
+| `source.py` | Clones the pinned release and applies the patches in order |
 | `compile.py` | CUDA detection, CMake configure and build |
 | `cmake_cache.py` | Discards a build folder whose cache no longer matches the generator |
 | `install.py` | Copies the binary, runtime libraries and license into `.cache/bin/llama.cpp/` |
 | `commands.py` | Runs each command, inside `vcvars64.bat` on Windows when needed |
 | `msvc.py`, `environment.py` | MSVC lookup and the venv directories added to PATH |
-| `paths.py`, `console.py` | Build locations and console tags |
+| `paths.py`, `console.py` | Build locations, the patch list and console tags |
 
 Their tests are in `backend/tests/llama_tts_daemon/`.
 
@@ -91,27 +106,31 @@ If compiling manually from source without the helper script:
    cd .cache/build/llama.cpp
    ```
 
-2. **Apply Utz'tutor daemon patch**:
+2. **Apply the Utz'tutor patches, in order**:
    ```bash
    git apply ../../../tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch
+   git apply ../../../tools/llama_tts_daemon/0002-qwen-tok-embd-rows.patch
    ```
 
 3. **Configure & Build with CMake (Multithreaded)**:
    ```bash
    # With NVIDIA CUDA
-   cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -G Ninja
+   cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON -G Ninja
    cmake --build build --target llama-tts --config Release --parallel 16
 
    # CPU Only
-   cmake -B build -DGGML_CUDA=OFF -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -G Ninja
+   cmake -B build -DGGML_CUDA=OFF -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON -G Ninja
    cmake --build build --target llama-tts --config Release --parallel 16
    ```
 
-4. **Install Binaries, DLLs, and License**:
+4. **Install Binaries, Shared Libraries, and License**:
    ```bash
    mkdir -p ../../bin/llama.cpp/
    cp build/bin/llama-tts ../../bin/llama.cpp/llama-tts-daemon
+   # Windows
    cp build/bin/*.dll ../../bin/llama.cpp/
+   # Linux
+   cp build/bin/*.so* ../../bin/llama.cpp/
    cp ../../../tools/llama_tts_daemon/LICENSE-llama-cpp ../../bin/llama.cpp/LICENSE-llama-cpp
    ```
 

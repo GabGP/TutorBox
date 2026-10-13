@@ -1,8 +1,8 @@
-"""Verifies the upstream clone and daemon patch steps of the llama-tts build."""
+"""Verifies the upstream clone and the patch steps of the llama-tts build."""
 
 import subprocess
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -21,6 +21,14 @@ def _write_file(file_path: Path, content: bytes) -> Path:
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_bytes(content)
     return file_path
+
+
+def _write_patch_files() -> tuple[Path, Path]:
+    """Creates both patch files in paths.PATCH_FILES and returns them in order."""
+    daemon_patch, embedding_patch = paths.PATCH_FILES
+    _write_file(daemon_patch, b"daemon patch")
+    _write_file(embedding_patch, b"embedding patch")
+    return daemon_patch, embedding_patch
 
 
 def _fake_git_result(return_code: int) -> subprocess.CompletedProcess:
@@ -42,8 +50,8 @@ def _clone_command(target_dir: Path) -> list[str]:
     ]
 
 
-def _reverse_check_command() -> list[str]:
-    """Returns the git command that checks whether the daemon patch is applied."""
+def _reverse_check_command(patch_file: Path) -> list[str]:
+    """Returns the git command that checks whether the given patch is applied."""
     return [
         "git",
         "-C",
@@ -52,19 +60,19 @@ def _reverse_check_command() -> list[str]:
         "--whitespace=nowarn",
         "--reverse",
         "--check",
-        str(paths.PATCH_FILE),
+        str(patch_file),
     ]
 
 
-def _apply_command() -> list[str]:
-    """Returns the git command that applies the daemon patch to the source tree."""
+def _apply_command(patch_file: Path) -> list[str]:
+    """Returns the git command that applies the given patch to the source tree."""
     return [
         "git",
         "-C",
         str(paths.SOURCE_DIR),
         "apply",
         "--whitespace=nowarn",
-        str(paths.PATCH_FILE),
+        str(patch_file),
     ]
 
 
@@ -137,6 +145,7 @@ def test_clone_upstream_keeps_directory_without_git_and_clones_into_it(
 
 def test_apply_patch_exits_with_code_one_when_patch_file_is_missing(build_tree, capsys):
     """Verifies a missing patch file prints FAIL, exits with code 1 and runs no git."""
+    missing_patch = paths.PATCH_FILES[0]
     with (
         patch(
             SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(0)
@@ -144,59 +153,121 @@ def test_apply_patch_exits_with_code_one_when_patch_file_is_missing(build_tree, 
         patch(RUN_CMD_TARGET) as run_cmd_mock,
         pytest.raises(SystemExit) as exit_info,
     ):
-        source.apply_patch()
+        source.apply_patch(missing_patch)
     assert exit_info.value.code == 1
     subprocess_mock.assert_not_called()
     run_cmd_mock.assert_not_called()
     assert capsys.readouterr().out == (
-        f"{TAG_FAIL} Patch file not found at {paths.PATCH_FILE}\n"
+        f"{TAG_FAIL} Patch file not found at {missing_patch}\n"
     )
 
 
 def test_apply_patch_skips_apply_when_reverse_check_succeeds(build_tree, capsys):
     """Verifies a clean reverse check means the patch is already applied and kept."""
-    _write_file(paths.PATCH_FILE, b"daemon patch")
+    daemon_patch = _write_file(paths.PATCH_FILES[0], b"daemon patch")
     with (
         patch(
             SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(0)
         ) as subprocess_mock,
         patch(RUN_CMD_TARGET) as run_cmd_mock,
     ):
-        source.apply_patch()
+        source.apply_patch(daemon_patch)
     subprocess_mock.assert_called_once_with(
-        _reverse_check_command(), capture_output=True, check=False
+        _reverse_check_command(daemon_patch), capture_output=True, check=False
     )
     run_cmd_mock.assert_not_called()
     assert capsys.readouterr().out == (
-        f"{TAG_OK} Daemon mode patch already cleanly applied.\n"
+        f"{TAG_OK} Patch already applied: {daemon_patch.name}\n"
     )
 
 
 def test_apply_patch_applies_when_reverse_check_fails(build_tree, capsys):
     """Verifies a failing reverse check triggers one forward apply and a success line."""
-    _write_file(paths.PATCH_FILE, b"daemon patch")
+    daemon_patch = _write_file(paths.PATCH_FILES[0], b"daemon patch")
     with (
         patch(SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(1)),
         patch(RUN_CMD_TARGET) as run_cmd_mock,
     ):
-        source.apply_patch()
-    run_cmd_mock.assert_called_once_with(_apply_command())
+        source.apply_patch(daemon_patch)
+    run_cmd_mock.assert_called_once_with(_apply_command(daemon_patch))
     assert capsys.readouterr().out == (
-        f"{TAG_INFO} Applying patch: {paths.PATCH_FILE.name}...\n"
-        f"{TAG_OK} Successfully applied daemon mode patch.\n"
+        f"{TAG_INFO} Applying patch: {daemon_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {daemon_patch.name}\n"
     )
 
 
 def test_apply_patch_force_applies_even_when_reverse_check_succeeds(build_tree, capsys):
     """Verifies force=True re-applies the patch although the reverse check passed."""
-    _write_file(paths.PATCH_FILE, b"daemon patch")
+    daemon_patch = _write_file(paths.PATCH_FILES[0], b"daemon patch")
     with (
         patch(SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(0)),
         patch(RUN_CMD_TARGET) as run_cmd_mock,
     ):
-        source.apply_patch(force=True)
-    run_cmd_mock.assert_called_once_with(_apply_command())
+        source.apply_patch(daemon_patch, force=True)
+    run_cmd_mock.assert_called_once_with(_apply_command(daemon_patch))
     assert capsys.readouterr().out == (
-        f"{TAG_INFO} Applying patch: {paths.PATCH_FILE.name}...\n"
-        f"{TAG_OK} Successfully applied daemon mode patch.\n"
+        f"{TAG_INFO} Applying patch: {daemon_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {daemon_patch.name}\n"
+    )
+
+
+def test_apply_patches_applies_both_patches_in_order(build_tree, capsys):
+    """Verifies apply_patches applies the daemon patch first and the embedding patch second."""
+    daemon_patch, embedding_patch = _write_patch_files()
+    with (
+        patch(SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(1)),
+        patch(RUN_CMD_TARGET) as run_cmd_mock,
+    ):
+        source.apply_patches()
+    assert run_cmd_mock.call_args_list == [
+        call(_apply_command(daemon_patch)),
+        call(_apply_command(embedding_patch)),
+    ]
+    assert capsys.readouterr().out == (
+        f"{TAG_INFO} Applying patch: {daemon_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {daemon_patch.name}\n"
+        f"{TAG_INFO} Applying patch: {embedding_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {embedding_patch.name}\n"
+    )
+
+
+def test_apply_patches_skips_applied_patch_and_still_applies_the_other(
+    build_tree, capsys
+):
+    """Verifies an already applied daemon patch is skipped while the embedding patch is applied."""
+    daemon_patch, embedding_patch = _write_patch_files()
+    with (
+        patch(
+            SUBPROCESS_RUN_TARGET,
+            side_effect=[_fake_git_result(0), _fake_git_result(1)],
+        ),
+        patch(RUN_CMD_TARGET) as run_cmd_mock,
+    ):
+        source.apply_patches()
+    run_cmd_mock.assert_called_once_with(_apply_command(embedding_patch))
+    assert capsys.readouterr().out == (
+        f"{TAG_OK} Patch already applied: {daemon_patch.name}\n"
+        f"{TAG_INFO} Applying patch: {embedding_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {embedding_patch.name}\n"
+    )
+
+
+def test_apply_patches_exits_with_code_one_when_second_patch_is_missing(
+    build_tree, capsys
+):
+    """Verifies a missing embedding patch stops apply_patches with code 1 after the daemon patch."""
+    daemon_patch, embedding_patch = paths.PATCH_FILES
+    _write_file(daemon_patch, b"daemon patch")
+    with (
+        patch(SUBPROCESS_RUN_TARGET, return_value=_fake_git_result(1)),
+        patch(RUN_CMD_TARGET) as run_cmd_mock,
+        pytest.raises(SystemExit) as exit_info,
+    ):
+        source.apply_patches()
+    assert exit_info.value.code == 1
+    run_cmd_mock.assert_called_once_with(_apply_command(daemon_patch))
+    assert capsys.readouterr().out == (
+        f"{TAG_INFO} Applying patch: {daemon_patch.name}...\n"
+        f"{TAG_OK} Applied patch: {daemon_patch.name}\n"
+        f"{TAG_FAIL} Patch file not found at {embedding_patch}\n"
     )

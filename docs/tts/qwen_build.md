@@ -13,7 +13,7 @@ Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish aco
 │                      Utz'tutor Backend                       │
 │  (QwenDaemon / QwenVoiceEngine - FastAPI / Python Process)  │
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Line-delimited JSON
+                               │ Tab-separated lines
                                │ over stdin / stdout
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -45,7 +45,7 @@ Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish aco
 | :--- | :--- |
 | **Upstream Base** | [`ggerganov/llama.cpp`](https://github.com/ggerganov/llama.cpp) |
 | **Pinned Release** | `b11002` (commit `83078fec0`) |
-| **Patch Location** | [`tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch`](../../tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch) |
+| **Patch Location** | [`0001-llama-tts-daemon-mode.patch`](../../tools/llama_tts_daemon/0001-llama-tts-daemon-mode.patch) and [`0002-qwen-tok-embd-rows.patch`](../../tools/llama_tts_daemon/0002-qwen-tok-embd-rows.patch) in `tools/llama_tts_daemon/`, applied in that order |
 | **License** | MIT License ([`tools/llama_tts_daemon/LICENSE-llama-cpp`](../../tools/llama_tts_daemon/LICENSE-llama-cpp)) |
 | **Installation Directory** | `.cache/bin/llama.cpp/` |
 
@@ -69,7 +69,7 @@ Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish aco
 
 ## 4. Automated Build Instructions
 
-Utz'tutor includes a cross-platform Python build tool that handles cloning the pinned upstream release, applying the patch, configuring CMake, building, and installing artifacts:
+Utz'tutor includes a cross-platform Python build tool that handles cloning the pinned upstream release, applying the patches, configuring CMake, building, and installing artifacts:
 
 ```bash
 # Standard automated build (detects CUDA or falls back to CPU, parallel Ninja build)

@@ -108,6 +108,7 @@ def test_build_binary_configures_then_builds_with_ninja_and_cuda(build_host, cap
         "-DLLAMA_BUILD_TESTS=OFF",
         "-DLLAMA_BUILD_EXAMPLES=OFF",
         "-DLLAMA_BUILD_SERVER=OFF",
+        "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON",
         "-G",
         "Ninja",
         f"-DCMAKE_MAKE_PROGRAM={NINJA_BIN}",
@@ -182,7 +183,7 @@ def test_build_binary_without_ninja_uses_default_generator(build_host, capsys):
     assert not any(
         argument.startswith("-DCMAKE_MAKE_PROGRAM") for argument in configure
     )
-    assert configure[-1] == "-DLLAMA_BUILD_SERVER=OFF"
+    assert configure[-1] == "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON"
     assert f"{TAG_INFO} Configuring CMake (jobs: 8, generator: default)...\n" in (
         capsys.readouterr().out
     )

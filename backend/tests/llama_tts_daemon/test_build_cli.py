@@ -19,7 +19,7 @@ def step_manager(monkeypatch):
     step_mocks = {
         "check_prerequisites": Mock(return_value=True),
         "clone_upstream": Mock(),
-        "apply_patch": Mock(),
+        "apply_patches": Mock(),
         "build_binary": Mock(),
         "install_artifacts": Mock(),
     }
@@ -61,7 +61,7 @@ def test_plain_run_calls_each_step_once_in_order(monkeypatch, step_manager):
     assert step_manager.mock_calls == [
         call.check_prerequisites(),
         call.clone_upstream(force=False),
-        call.apply_patch(force=False),
+        call.apply_patches(force=False),
         call.build_binary(use_cuda=True, force=False),
         call.install_artifacts(),
     ]
@@ -74,7 +74,7 @@ def test_force_flag_is_forwarded_to_clone_patch_and_build(monkeypatch, step_mana
     assert step_manager.mock_calls == [
         call.check_prerequisites(),
         call.clone_upstream(force=True),
-        call.apply_patch(force=True),
+        call.apply_patches(force=True),
         call.build_binary(use_cuda=True, force=True),
         call.install_artifacts(),
     ]

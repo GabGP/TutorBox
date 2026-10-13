@@ -1,10 +1,11 @@
-"""Clones the pinned upstream llama.cpp and applies the llama-tts daemon patch."""
+"""Clones the pinned upstream llama.cpp and applies the llama-tts patches in order."""
 
 from __future__ import annotations
 
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from tools.llama_tts_daemon.build_llama import paths
 from tools.llama_tts_daemon.build_llama.commands import run_cmd
@@ -41,10 +42,10 @@ def clone_upstream(force: bool = False) -> None:
         print(f"{TAG_OK} Upstream repository already present at {paths.SOURCE_DIR}")
 
 
-def apply_patch(force: bool = False) -> None:
-    """Applies the Utz'tutor daemon line-protocol patch onto upstream llama.cpp."""
-    if not paths.PATCH_FILE.is_file():
-        print(f"{TAG_FAIL} Patch file not found at {paths.PATCH_FILE}")
+def apply_patch(patch_file: Path, force: bool = False) -> None:
+    """Applies one patch onto upstream llama.cpp, unless it is already applied."""
+    if not patch_file.is_file():
+        print(f"{TAG_FAIL} Patch file not found at {patch_file}")
         sys.exit(1)
 
     # Check if patch is already applied
@@ -57,16 +58,16 @@ def apply_patch(force: bool = False) -> None:
             "--whitespace=nowarn",
             "--reverse",
             "--check",
-            str(paths.PATCH_FILE),
+            str(patch_file),
         ],
         capture_output=True,
         check=False,
     )
     if res.returncode == 0 and not force:
-        print(f"{TAG_OK} Daemon mode patch already cleanly applied.")
+        print(f"{TAG_OK} Patch already applied: {patch_file.name}")
         return
 
-    print(f"{TAG_INFO} Applying patch: {paths.PATCH_FILE.name}...")
+    print(f"{TAG_INFO} Applying patch: {patch_file.name}...")
     run_cmd(
         [
             "git",
@@ -74,7 +75,13 @@ def apply_patch(force: bool = False) -> None:
             str(paths.SOURCE_DIR),
             "apply",
             "--whitespace=nowarn",
-            str(paths.PATCH_FILE),
+            str(patch_file),
         ]
     )
-    print(f"{TAG_OK} Successfully applied daemon mode patch.")
+    print(f"{TAG_OK} Applied patch: {patch_file.name}")
+
+
+def apply_patches(force: bool = False) -> None:
+    """Applies every patch in paths.PATCH_FILES, in order, onto upstream llama.cpp."""
+    for patch_file in paths.PATCH_FILES:
+        apply_patch(patch_file, force=force)
