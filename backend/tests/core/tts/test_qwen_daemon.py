@@ -18,7 +18,7 @@ def _create_mock_popen(stdout_lines: list[str], returncode: int | None = None):
     mock_proc.poll.return_value = returncode
     mock_proc.stdin = MagicMock()
     mock_proc.stderr = MagicMock()
-    mock_proc.stderr.read.return_value = "cuda error log"
+    mock_proc.stderr.readline.side_effect = ["cuda error log\n", ""]
     mock_proc.stdout = MagicMock()
     mock_proc.stdout.readline.side_effect = list(stdout_lines) + [""]
     return mock_proc
@@ -44,7 +44,10 @@ def test_daemon_client_start_not_ready():
     mock_proc = _create_mock_popen(["ERROR_CUDA_INIT\n"])
     with (
         patch("subprocess.Popen", return_value=mock_proc),
-        pytest.raises(TTSUnavailableError, match="Qwen daemon startup failed"),
+        pytest.raises(
+            TTSUnavailableError,
+            match=r"Qwen daemon startup failed: ERROR_CUDA_INIT\. cuda error log",
+        ),
     ):
         QwenDaemonClient(["llama-tts-daemon"], startup_timeout=1.0)
 
@@ -108,7 +111,9 @@ def test_daemon_client_synthesize_unexpected_eof(tmp_path):
     with patch("subprocess.Popen", return_value=mock_proc):
         client = QwenDaemonClient(["llama-tts-daemon"], startup_timeout=1.0)
         out_wav = tmp_path / "test.wav"
-        with pytest.raises(TTSSynthesisError, match="terminated unexpectedly"):
+        with pytest.raises(
+            TTSSynthesisError, match=r"terminated unexpectedly\. cuda error log"
+        ):
             client.synthesize("es", out_wav, "Hola", timeout_seconds=1.0)
 
 
@@ -141,6 +146,13 @@ def test_daemon_client_close_reaps_the_killed_process():
         assert mock_proc.wait.call_count == 2
 
 
+def test_read_stderr_is_empty_when_no_tail_exists():
+    """Before any subprocess is started there is no stderr tail to read."""
+    with patch.object(QwenDaemonClient, "_start"):
+        client = QwenDaemonClient(["llama-tts-daemon"])
+    assert client._read_stderr() == ""
+
+
 def test_daemon_client_leaves_no_zombie_when_startup_fails(monkeypatch):
     """A real child that never answers is killed and reaped, not left defunct."""
     monkeypatch.setattr(daemon_module, "_QUIT_GRACE_SECONDS", 0.05)
@@ -160,3 +172,20 @@ def test_daemon_client_leaves_no_zombie_when_startup_fails(monkeypatch):
 
     # returncode is only set once the exit status was collected (no zombie).
     assert spawned[0].returncode is not None
+
+
+def test_daemon_client_starts_when_child_floods_stderr_before_ready():
+    """A real child that floods stderr past a 64 KiB pipe still reaches READY."""
+    child_script = (
+        "import sys\n"
+        "for _ in range(3000):\n"
+        "    sys.stderr.write('W' * 100 + '\\n')\n"
+        "sys.stderr.flush()\n"
+        "print('READY', flush=True)\n"
+        "sys.stdin.readline()\n"
+    )
+    client = QwenDaemonClient(
+        [sys.executable, "-c", child_script], startup_timeout=10.0
+    )
+    assert client.is_alive()
+    client.close()

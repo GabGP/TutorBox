@@ -8,6 +8,7 @@ import subprocess
 import threading
 from pathlib import Path
 
+from core.tts.engines.qwen.stderr_tail import StderrTail
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 
 __all__ = ["QwenDaemonClient"]
@@ -28,6 +29,7 @@ class QwenDaemonClient:
         self._process: subprocess.Popen[str] | None = None
         self._stdout_queue: queue.Queue[str] = queue.Queue()
         self._reader_thread: threading.Thread | None = None
+        self._stderr_tail: StderrTail | None = None
         self._start()
 
     def _start(self) -> None:
@@ -45,6 +47,7 @@ class QwenDaemonClient:
         except OSError as err:
             raise TTSUnavailableError(f"Failed to spawn Qwen daemon: {err}") from err
 
+        self._stderr_tail = StderrTail(self._process.stderr)
         self._reader_thread = threading.Thread(
             target=self._read_stdout,
             daemon=True,
@@ -72,11 +75,9 @@ class QwenDaemonClient:
             raise TTSUnavailableError(msg) from err
 
     def _read_stderr(self) -> str:
-        return (
-            self._process.stderr.read()
-            if self._process and self._process.stderr
-            else ""
-        )
+        if self._stderr_tail is None:
+            return ""
+        return self._stderr_tail.text()
 
     def is_alive(self) -> bool:
         """Returns True if the daemon subprocess is actively running."""
