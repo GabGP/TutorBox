@@ -300,7 +300,9 @@ Read-only, no `sudo`, no internet. Every check runs even after one fails; the la
 checks that failed. It checks that:
 
 - `nginx`, `utztutor-backend`, `utztutor-power` and `ollama` are running and enabled, and no unit is
-  in the failed state.
+  in the failed state. `nvpmodel` is allowed to be (`known_failed_units`): it fails at boot on this
+  board, and `utztutor-power` applies the 25W clock caps in its place.
+- The 25W clock caps are the ones the kernel reports.
 - The installed nginx site and units are the ones in the repository.
 - `http://localhost/health` answers, a captive-portal probe is redirected to
   `http://<dns_name>/alumno/`, and an unknown API path on a foreign name stays a `404`.

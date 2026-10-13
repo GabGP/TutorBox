@@ -23,11 +23,28 @@
       changed_when: false
       ignore_errors: true
 
-    - name: No unit is in the failed state
+    - name: No unit is in the failed state (apart from known_failed_units)
       ansible.builtin.command: systemctl --failed --no-legend --plain
       register: check_failed_units
       changed_when: false
-      failed_when: check_failed_units.stdout != ''
+      failed_when: >-
+        (check_failed_units.stdout_lines | map('split') | map('first')
+         | reject('in', known_failed_units) | list | length) > 0
+      ignore_errors: true
+
+    # nvpmodel fails at boot on this board, so the caps come from utztutor-power. The script
+    # lists the values it would write; each one is compared with what the kernel reports.
+    - name: The 25W clock caps are applied
+      ansible.builtin.shell: |
+        set -o pipefail
+        DRY_RUN=1 {{ repo_dir | quote }}/infra/systemd/utztutor-power-caps.sh | while read -r _ _ path _ value; do
+          [ "$(cat "$path")" = "$value" ] || echo "$path is $(cat "$path"), want $value"
+        done
+      args:
+        executable: /bin/bash
+      register: check_clock_caps
+      changed_when: false
+      failed_when: check_clock_caps.rc != 0 or check_clock_caps.stdout != ''
       ignore_errors: true
 
     - name: Units under their old names are gone

@@ -36,6 +36,10 @@ disabled_units:
   - dnsmasq
   - isc-dhcp-server
   - isc-dhcp-server6
+# Units allowed to be in the failed state. nvpmodel asks for a reboot at boot and gets no
+# answer on this board; utztutor-power applies the 25W clock caps in its place.
+known_failed_units:
+  - nvpmodel.service
 # Unit and site names used before the rename; removed when found.
 retired_units:
   - tutorbox-backend
