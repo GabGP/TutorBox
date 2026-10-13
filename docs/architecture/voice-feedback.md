@@ -35,7 +35,7 @@ Kokoro remains an experimental opt-in candidate. MeloTTS remains a rejected refe
 
 Utz'tutor uses the **Qwen3-TTS 1.7B Base** model in GGUF format through a persistent, in-memory daemon mode (`llama-tts-daemon --daemon`). The canonical engine identifier is `qwen3-tts`; `qwen-gguf` and `qwen` remain compatibility aliases only.
 
-The local workstation's `llama-tts-daemon --list-devices` reports an NVIDIA CUDA device, and synthesis logs report `using device CUDA0`. The CSV's Qwen result is GPU-backed. By running in persistent daemon mode with an in-memory JSON IPC protocol over stdio, the 1.7B acoustic model and vocoder remain resident in VRAM, eliminating the 1.5s cold reload delay of one-shot CLI invocations.
+The local workstation's `llama-tts-daemon --list-devices` reports an NVIDIA CUDA device, and synthesis logs report `using device CUDA0`. The CSV's Qwen result is GPU-backed. By running in persistent daemon mode with a tab-separated line protocol over stdio, the 1.7B acoustic model and vocoder remain resident in VRAM, eliminating the 1.5s cold reload delay of one-shot CLI invocations.
 
 The deployed **Base** checkpoint has no fixed named-speaker catalog. Utz'tutor exposes it as `base-default`; Base is intended for reference-audio voice cloning, but the current backend does not yet wire a reference audio file into the API. Qwen's separate **CustomVoice** checkpoints provide `Vivian`, `Serena`, `Uncle_Fu`, `Dylan`, `Eric`, `Ryan`, `Aiden`, `Ono_Anna`, and `Sohee`. Those speakers are not selectable in the current Base deployment. See the [official Qwen3-TTS speaker documentation](https://github.com/QwenLM/Qwen3-TTS#custom-voice-generate).
 
@@ -88,17 +88,47 @@ uv run python tools/benchmark/tts/metrics.py --engine qwen3-tts
 uv run python tools/benchmark/tts/ab.py --engines qwen3-tts,sherpa,piper,espeak --repeats 3
 ```
 
+### Jetson Orin Nano measurements (2026-10-13)
+
+Measured on a Jetson Orin Nano 8 GB (Super developer kit) at 25 W clock caps, with all 29 layers offloaded to the GPU, the CUDA build of llama.cpp release `b11002` with both project patches, the model `Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf` with the `Q8_0` audio module (mmproj), and context 1024.
+
+| Configuration | Resident after loading | Peak during a request |
+| :--- | ---: | ---: |
+| Before: llama.cpp default batch 512, no embedding patch (estimated: it could not start on the test Jetson) | about 3.8 GB | about 5.0 GB |
+| Before: batch 128, no embedding patch | about 3.3 GB | about 4.5 GB |
+| Now: batch 128 (`TTS_QWEN_BATCH=128`, the new default) with the embedding-row patch | about 3.3 GB | about 3.4 GB |
+| Embedding-row patch with batch 512 | about 3.8 GB | about 3.9 GB |
+
+- The daemon is ready about 4 to 5 seconds after it starts.
+- The prompt step takes about 0.1 s per request (about 1.0 to 1.4 s before the embedding-row patch).
+- Generation takes about 1.05 times the duration of the audio produced, and the vocoder about 0.4 s. For example, 8 s of audio takes about 8.8 s, and 2.3 s of audio takes about 2.8 s.
+- With everything on the CPU, the same 2.4 s sentence took about 15 s.
+- The audio is returned only when the whole sentence is finished (no streaming).
+- The seed setting does not make the output reproducible on this build: the same sentence came out with different lengths in different runs.
+
+Approximate split of the resident memory (the parts listed add up to about 3.0 GB; the rest is other process memory):
+
+- Model weights: 982 MiB.
+- Vocoder and code-predictor work buffer: 874 MiB.
+- Audio module weights: 426 MiB.
+- CUDA runtime: about 340 MiB.
+- Key-value cache: 112 MiB.
+- Main work buffer: 153 MiB (612 MiB at batch 512).
+- Speaker-encoder work buffer: 141 MiB.
+
 ## 8. Configuration & Appliance Memory Policy
 
-The relevant `.env` settings are `TTS_ENGINE=auto`, `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_CONTEXT`, `TTS_QWEN_THREADS`, `TTS_SHERPA_PROVIDER`, `TTS_SHERPA_THREADS`, `TTS_PIPER_MODEL_DIR`, and `TTS_ESPEAK_BINARY`.
+The relevant `.env` settings are `TTS_ENGINE=auto`, `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_CONTEXT`, `TTS_QWEN_BATCH`, `TTS_QWEN_THREADS`, `TTS_SHERPA_PROVIDER`, `TTS_SHERPA_THREADS`, `TTS_PIPER_MODEL_DIR`, and `TTS_ESPEAK_BINARY`.
 
 `TTS_QWEN_CONTEXT=1024` limits prompt and KV context for short classroom utterances, saving ~325 MB of VRAM over 4096.
 
+`TTS_QWEN_BATCH=128` (the default) is passed to llama-tts as `-b` and `-ub`, which saves about 460 MB against the llama.cpp default of 512.
+
 ### Memory Topologies: PC vs Jetson Orin Nano
 - **Discrete GPU PC**: Host RAM (process tree working set) and GPU VRAM (device memory) are tracked independently. Qwen consumes ~2.97 GB of host memory mapping and ~3.27 GB of VRAM.
-- **NVIDIA Jetson Orin Nano (UMA)**: CPU and GPU share an identical 8 GB LPDDR5 physical memory pool. Consuming ~3.3 GB for Qwen requires lifecycle decoupling from the 3B SLM (~4.7 GB). During question voting periods, the SLM is unloaded before the TTS engine is preloaded, ensuring zero OOM contention.
+- **NVIDIA Jetson Orin Nano (UMA)**: CPU and GPU share an identical 8 GB LPDDR5 physical memory pool. Consuming about 3.3 GB resident for Qwen (about 3.4 GB peak per request) requires lifecycle decoupling from the 3B SLM (~4.7 GB). The intended design unloads the SLM during question voting before the TTS engine is preloaded, but that automatic swap is not built yet (see section 9).
 
-Question generation and speech playback are lifecycle-separated. The application unloads the local SLM before preloading Qwen3-TTS. Sherpa/Piper remain the preferred low-footprint fallbacks for concurrent background operation.
+Question generation and speech playback are meant to be lifecycle-separated. The application does not yet unload the local SLM before preloading Qwen3-TTS: the lifecycle endpoints in section 9 exist, but no quiz flow calls them in sequence, and `POST /api/v1/llm/unload` forwards to a llama-server route that Ollama does not have (Ollama answers 404). Sherpa/Piper remain the preferred low-footprint fallbacks for concurrent background operation.
 
 ## 9. Phased Lifecycle Management Endpoints
 
