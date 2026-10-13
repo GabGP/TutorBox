@@ -1,0 +1,77 @@
+# Build tools installed for the appliance user under ~/.local: uv, Node.js and pnpm,
+# at the pinned versions.
+- name: Read the uv version
+  ansible.builtin.command: uv --version
+  environment:
+    PATH: "{{ tool_path }}"
+  register: uv_found
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Stop when uv is not the pinned version
+  ansible.builtin.assert:
+    that: uv_found.rc == 0 and uv_found.stdout.split()[1] == uv_version
+    fail_msg: >-
+      uv {{ uv_version }} is expected (found: {{ uv_found.stdout | default('none', true) }}).
+      Run ./bootstrap.sh for a first install, or `uv self update {{ uv_version }}`.
+    quiet: true
+
+- name: Read the Node.js version
+  ansible.builtin.command: node --version
+  environment:
+    PATH: "{{ tool_path }}"
+  register: node_found
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Install Node.js {{ node_version }}
+  when: node_found.rc != 0 or node_found.stdout != ('v' ~ node_version)
+  vars:
+    node_arch: "{{ 'arm64' if ansible_facts.architecture == 'aarch64' else 'x64' }}"
+    node_name: "node-v{{ node_version }}-linux-{{ node_arch }}"
+  block:
+    - name: Create the folders for user tools
+      ansible.builtin.file:
+        path: "{{ app_home }}/.local/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: [bin, lib/nodejs]
+
+    - name: Download Node.js {{ node_version }}
+      ansible.builtin.get_url:
+        url: "https://nodejs.org/dist/v{{ node_version }}/{{ node_name }}.tar.xz"
+        dest: "{{ app_home }}/.local/lib/nodejs/{{ node_name }}.tar.xz"
+        checksum: "sha256:https://nodejs.org/dist/v{{ node_version }}/SHASUMS256.txt"
+        mode: "0644"
+
+    - name: Unpack Node.js
+      ansible.builtin.unarchive:
+        src: "{{ app_home }}/.local/lib/nodejs/{{ node_name }}.tar.xz"
+        dest: "{{ app_home }}/.local/lib/nodejs"
+        remote_src: true
+        creates: "{{ app_home }}/.local/lib/nodejs/{{ node_name }}/bin/node"
+
+    - name: Put node, npm and npx on the user's PATH
+      ansible.builtin.file:
+        src: "{{ app_home }}/.local/lib/nodejs/{{ node_name }}/bin/{{ item }}"
+        dest: "{{ app_home }}/.local/bin/{{ item }}"
+        state: link
+        force: true
+      loop: [node, npm, npx]
+
+- name: Read the pnpm version
+  ansible.builtin.command: pnpm --version
+  environment:
+    PATH: "{{ tool_path }}"
+  register: pnpm_found
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Install pnpm {{ pnpm_version }}
+  ansible.builtin.command: npm install --global --prefix {{ app_home }}/.local pnpm@{{ pnpm_version }}
+  environment:
+    PATH: "{{ tool_path }}"
+  when: pnpm_found.rc != 0 or pnpm_found.stdout != pnpm_version

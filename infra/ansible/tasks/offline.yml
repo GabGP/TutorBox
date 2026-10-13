@@ -1,0 +1,12 @@
+# Last step before the classroom, only with --tags offline: after it the Jetson has no
+# internet. Wi-Fi and Bluetooth share one radio, and the appliance is wired to the router.
+- name: Read the Wi-Fi radio state
+  ansible.builtin.command: nmcli radio wifi
+  register: wifi_radio
+  changed_when: false
+  check_mode: false
+
+- name: Turn the Jetson's own Wi-Fi off
+  ansible.builtin.command: nmcli radio wifi off
+  become: true
+  when: wifi_radio.stdout == 'enabled'

@@ -1,0 +1,88 @@
+# The classroom screen: automatic login, a desktop that never blanks or locks, and Firefox
+# full-screen on /pantalla/ as a user service that systemd restarts (infra/kiosk/).
+# Takes effect at the next login, so reboot once after the first run.
+- name: Look for Firefox
+  ansible.builtin.stat:
+    path: /usr/bin/firefox
+  register: firefox_file
+
+- name: Stop when Firefox is missing
+  ansible.builtin.assert:
+    that: firefox_file.stat.exists
+    fail_msg: "/usr/bin/firefox not found. It is part of the JetPack desktop image; install it with `sudo apt install firefox`."
+    quiet: true
+
+- name: Create the Firefox policies folder
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Install the Firefox policies (sound without a click, no first-run pages)
+  ansible.builtin.copy:
+    src: "{{ repo_dir }}/infra/kiosk/firefox-policies.json"
+    dest: /etc/firefox/policies/policies.json
+    mode: "0644"
+  become: true
+
+- name: Make the desktop read system defaults
+  ansible.builtin.copy:
+    content: |
+      user-db:user
+      system-db:local
+    dest: /etc/dconf/profile/user
+    mode: "0644"
+  become: true
+  notify: Update the desktop defaults
+
+- name: Create the folder for desktop defaults
+  ansible.builtin.file:
+    path: /etc/dconf/db/local.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Install the desktop defaults (never blank, never lock)
+  ansible.builtin.copy:
+    src: "{{ repo_dir }}/infra/kiosk/dconf-utztutor-kiosk"
+    dest: /etc/dconf/db/local.d/00-utztutor-kiosk
+    mode: "0644"
+  become: true
+  notify: Update the desktop defaults
+
+- name: Log the appliance user in at boot
+  ansible.builtin.lineinfile:
+    path: /etc/gdm3/custom.conf
+    regexp: '^{{ item.option }}\s*='
+    line: "{{ item.option }}={{ item.value }}"
+    insertafter: '^\[daemon\]'
+  become: true
+  loop:
+    - { option: AutomaticLoginEnable, value: "true" }
+    - { option: AutomaticLogin, value: "{{ app_user }}" }
+
+- name: Create the folders for user units
+  ansible.builtin.file:
+    path: "{{ app_home }}/.config/systemd/user/graphical-session.target.wants"
+    state: directory
+    mode: "0755"
+
+- name: Install the classroom-screen unit
+  ansible.builtin.copy:
+    src: "{{ repo_dir }}/infra/kiosk/utztutor-kiosk.service"
+    dest: "{{ app_home }}/.config/systemd/user/utztutor-kiosk.service"
+    mode: "0644"
+
+# A link, not `systemctl --user enable`: it works with no desktop session open.
+- name: Start the classroom screen with the desktop session
+  ansible.builtin.file:
+    src: "{{ app_home }}/.config/systemd/user/utztutor-kiosk.service"
+    dest: "{{ app_home }}/.config/systemd/user/graphical-session.target.wants/utztutor-kiosk.service"
+    state: link
+    force: "{{ ansible_check_mode }}"   # in check mode the file above is not there yet
+
+- name: Remove the autostart file this unit replaces
+  ansible.builtin.file:
+    path: "{{ app_home }}/.config/autostart/tutorbox-kiosk.desktop"
+    state: absent

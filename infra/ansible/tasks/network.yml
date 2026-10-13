@@ -1,0 +1,21 @@
+# The router answers every DNS name with the Jetson's own address (captive portal). The
+# Jetson must not use that DNS itself (infra/captive-portal.md §6).
+- name: Find the wired connection profile
+  ansible.builtin.command: nmcli -g GENERAL.CONNECTION device show {{ lan_interface }}
+  register: lan_profile
+  changed_when: false
+  check_mode: false
+
+- name: Read whether the wired profile takes DNS from the router
+  ansible.builtin.command: nmcli -g ipv4.ignore-auto-dns,ipv6.ignore-auto-dns connection show {{ lan_profile.stdout | quote }}
+  register: lan_dns
+  changed_when: false
+  check_mode: false
+  when: lan_profile.stdout != ''
+
+- name: Stop the wired profile from using the router's DNS
+  ansible.builtin.shell: |
+    nmcli connection modify {{ lan_profile.stdout | quote }} ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes
+    nmcli device reapply {{ lan_interface }}
+  become: true
+  when: lan_profile.stdout != '' and lan_dns.stdout_lines != ['yes', 'yes']

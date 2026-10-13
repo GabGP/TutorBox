@@ -1,0 +1,80 @@
+# Utz'tutor — set up the Jetson: packages, tools, models, the app, nginx, services, screen.
+#
+#   ansible-playbook jetson.yml --check --diff     # show what would change, change nothing
+#   ansible-playbook jetson.yml -K                 # apply (-K asks for the sudo password)
+#   ansible-playbook jetson.yml -K --tags nginx    # one part only
+#   ansible-playbook jetson.yml -K --tags offline  # last step: turn the Jetson's Wi-Fi off
+#
+# Needs internet, except for the offline step. Safe to run again: a second run changes nothing.
+# Parts (tags): system packages cuda tools ollama app nginx services kiosk network offline
+- name: Utz'tutor Jetson
+  hosts: localhost
+  become: false
+  gather_facts: true
+  pre_tasks:
+    - name: Kit values
+      ansible.builtin.import_tasks: tasks/kit.yml
+      tags: [always]
+  tasks:
+    - name: System
+      ansible.builtin.import_tasks: tasks/system.yml
+      tags: [system]
+    - name: Packages
+      ansible.builtin.import_tasks: tasks/packages.yml
+      tags: [packages]
+    - name: CUDA compiler
+      ansible.builtin.import_tasks: tasks/cuda.yml
+      when: (tts_cuda | bool) and voice_tier in ['qwen', 'all']
+      tags: [cuda]
+    - name: Build tools
+      ansible.builtin.import_tasks: tasks/tools.yml
+      tags: [tools]
+    - name: Model server
+      ansible.builtin.import_tasks: tasks/ollama.yml
+      tags: [ollama]
+    - name: App
+      ansible.builtin.import_tasks: tasks/app.yml
+      tags: [app]
+    - name: Web server
+      ansible.builtin.import_tasks: tasks/nginx.yml
+      tags: [nginx]
+    - name: Services
+      ansible.builtin.import_tasks: tasks/services.yml
+      tags: [services]
+    - name: Classroom screen
+      ansible.builtin.import_tasks: tasks/kiosk.yml
+      when: (kiosk_enabled | bool)
+      tags: [kiosk]
+    - name: Network
+      ansible.builtin.import_tasks: tasks/network.yml
+      tags: [network]
+    - name: Go offline
+      ansible.builtin.import_tasks: tasks/offline.yml
+      tags: [offline, never]
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      become: true
+
+    - name: Reload nginx
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
+      become: true
+
+    - name: Restart the backend
+      ansible.builtin.systemd_service:
+        name: utztutor-backend
+        state: restarted
+      become: true
+      when: not ansible_check_mode
+
+    - name: Apply the clock caps again
+      ansible.builtin.systemd_service:
+        name: utztutor-power
+        state: restarted
+      become: true
+      when: not ansible_check_mode
+
+    - name: Update the desktop defaults
+      ansible.builtin.command: dconf update
+      become: true

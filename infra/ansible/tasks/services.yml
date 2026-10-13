@@ -1,0 +1,75 @@
+# The systemd units that keep the appliance running: the backend and the 25W clock caps.
+# (ollama.service comes from the Ollama installer, tasks/ollama.yml; nginx from its package.)
+- name: Look for units under their old names
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item }}.service"
+  loop: "{{ retired_units }}"
+  register: retired_unit_files
+
+- name: Stop and disable units under their old names
+  ansible.builtin.systemd_service:
+    name: "{{ item.item }}"
+    enabled: false
+    state: stopped
+  become: true
+  loop: "{{ retired_unit_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
+
+- name: Remove units under their old names
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item.item }}.service"
+    state: absent
+  become: true
+  loop: "{{ retired_unit_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
+  notify: Reload systemd
+
+- name: Make the clock-caps script executable
+  ansible.builtin.file:
+    path: "{{ repo_dir }}/infra/systemd/utztutor-power-caps.sh"
+    mode: a+x
+
+- name: Install the backend unit
+  ansible.builtin.template:
+    src: "{{ repo_dir }}/infra/systemd/utztutor-backend.service.j2"
+    dest: /etc/systemd/system/utztutor-backend.service
+    mode: "0644"
+  become: true
+  notify:
+    - Reload systemd
+    - Restart the backend
+
+- name: Install the clock-caps unit
+  ansible.builtin.template:
+    src: "{{ repo_dir }}/infra/systemd/utztutor-power.service.j2"
+    dest: /etc/systemd/system/utztutor-power.service
+    mode: "0644"
+  become: true
+  notify:
+    - Reload systemd
+    - Apply the clock caps again
+
+- name: Load new and changed units
+  ansible.builtin.meta: flush_handlers
+
+- name: Look for the installed units
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item }}.service"
+  loop: [utztutor-power, utztutor-backend]
+  register: installed_units
+
+- name: Start the units now and at every boot
+  ansible.builtin.systemd_service:
+    name: "{{ item.item }}"
+    enabled: true
+    state: started
+  become: true
+  loop: "{{ installed_units.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  # A check run before the first install has not written the unit files.
+  when: item.stat.exists or not ansible_check_mode

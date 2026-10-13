@@ -1,0 +1,67 @@
+# Runs infra/glinet/router.sh on the router over SSH. Set router_mode to verify or apply.
+# Leaves router_count: the number of differences (verify) or changes (apply).
+# The kit's values travel in a private temporary file and on stdin, never on a command line.
+- name: "Router {{ router_mode }}: create a private file for the kit's values"
+  ansible.builtin.tempfile:
+    state: file
+    prefix: utztutor-router-
+  register: router_values_file
+  check_mode: false
+  changed_when: false
+
+- name: "Router {{ router_mode }}"
+  block:
+    - name: "Router {{ router_mode }}: write the kit's values"
+      ansible.builtin.copy:
+        dest: "{{ router_values_file.path }}"
+        mode: "0600"
+        content: |
+          WIFI_SSID={{ wifi_ssid | quote }}
+          WIFI_KEY={{ wifi_passphrase | string | quote }}
+          WIFI_CHANNEL={{ wifi_channel | quote }}
+          WIFI_COUNTRY={{ wifi_country | quote }}
+          WIFI_HTMODE={{ wifi_htmode | quote }}
+          JETSON_IP={{ jetson_ip | quote }}
+          JETSON_MAC={{ ansible_facts[lan_interface].macaddress | quote }}
+          DNS_NAME={{ dns_name | quote }}
+          DHCP_START={{ dhcp_start | quote }}
+          DHCP_LIMIT={{ dhcp_limit | quote }}
+          DHCP_LEASETIME={{ dhcp_leasetime | quote }}
+          DISABLE_SERVICES={{ router_disable_services | join(' ') | quote }}
+      no_log: true
+      check_mode: false
+      changed_when: false
+
+    - name: "Router {{ router_mode }}: run infra/glinet/router.sh on {{ router_ip }}"
+      ansible.builtin.shell: |
+        set -o pipefail
+        cat {{ router_values_file.path | quote }} {{ (repo_dir ~ '/infra/glinet/router.sh') | quote }} \
+          | ssh {{ router_ssh_options }} {{ router_user }}@{{ router_ip }} sh -s {{ router_mode }}
+      args:
+        executable: /bin/bash
+      register: router_run
+      check_mode: false
+      # A network restart on the router can cut the SSH session after the changes are saved.
+      failed_when: >-
+        'RESULT ' not in router_run.stdout
+        and not (router_mode == 'apply' and 'reload  network' in router_run.stdout)
+      changed_when: >-
+        (router_mode == 'apply' and 'change  ' in router_run.stdout)
+        or (router_mode == 'verify' and router_drift_is_a_change | default(false)
+            and 'DRIFT   ' in router_run.stdout)
+  always:
+    - name: "Router {{ router_mode }}: remove the private file"
+      ansible.builtin.file:
+        path: "{{ router_values_file.path }}"
+        state: absent
+      check_mode: false
+      changed_when: false
+
+- name: "Router {{ router_mode }}: count"
+  ansible.builtin.set_fact:
+    router_count: "{{ router_run.stdout | regex_findall('(?m)^(?:DRIFT|change)  ') | length }}"
+    router_output: "{{ router_run.stdout }}"
+
+- name: "Router {{ router_mode }}: result"
+  ansible.builtin.debug:
+    msg: "{{ router_output }}"

@@ -1,0 +1,26 @@
+# Utz'tutor — the values of ONE kit (a Jetson and its router).
+#
+#   cp kit.example.yml kit.yml      # kit.yml is git-ignored: it holds the kit's secrets
+#
+# Only what differs between kits is here. Every other setting, with its default, is in
+# group_vars/all.yml; copy a line from there into kit.yml to change it for this kit.
+
+# Hostname of the Jetson. Number the kits.
+kit_hostname: utztutor-01
+
+# Wi-Fi the router broadcasts. Two kits within range of each other need different
+# names and different channels (1, 6 or 11).
+wifi_ssid: Utztutor
+wifi_channel: 6
+wifi_passphrase: "change-me-8-or-more"      # SECRET, 8 to 63 characters
+
+# First teacher account, created when the backend starts on an empty database.
+teacher_username: teacher1
+teacher_pin: "change-me"                    # SECRET
+
+# ---- A development Jetson -----------------------------------------------------------------
+# Uncomment to keep your own .env and a normal desktop (no auto-login, no full-screen
+# browser), and to skip the GPU build of the Qwen3-TTS daemon.
+# manage_env: false
+# kiosk_enabled: false
+# tts_cuda: false

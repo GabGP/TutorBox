@@ -63,7 +63,7 @@ Utz'tutor uses **Qwen3-TTS 1.7B Base** in GGUF format as its primary Spanish aco
 ### Linux / NVIDIA Jetson Orin Nano
 * **Compiler**: GCC / G++ >= 11 or Clang >= 14.
 * **CMake**: Version >= 3.20 (`sudo apt install cmake ninja-build`).
-* **CUDA Toolkit**: JetPack 6.x (CUDA 12.2 / 12.6 included).
+* **CUDA Toolkit**: JetPack 6.x (CUDA 12.2 / 12.6 included). On JetPack 7 the image has the CUDA runtime only: install the compiler with `sudo apt install cuda-minimal-build-13-2 libcublas-dev-13-2` (the [kit setup](../../infra/ansible/README.md) does this). Without `nvcc` the build falls back to CPU.
 
 ---
 
@@ -80,7 +80,12 @@ python tools/llama_tts_daemon/build.py --force
 
 # CPU-only compilation (forces -DGGML_CUDA=OFF)
 python tools/llama_tts_daemon/build.py --cpu-only
+
+# Fail instead of falling back to CPU when no CUDA toolkit is found
+python tools/llama_tts_daemon/build.py --require-cuda
 ```
+
+When `nvcc` is not on `PATH` but exists in `/usr/local/cuda/bin`, the build passes it to CMake as `CMAKE_CUDA_COMPILER`.
 
 ### Integration with `run.py`
 You can trigger compilation directly through the appliance launcher:
@@ -93,6 +98,9 @@ python run.py --force-build-llama
 
 # Check prerequisites and report daemon binary status
 python run.py --check-only
+
+# Sync, download, build and compile, then exit without starting the server
+python run.py --prepare --download-models all --build-llama --require-cuda
 ```
 
 ---

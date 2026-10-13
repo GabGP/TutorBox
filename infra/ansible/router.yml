@@ -1,0 +1,67 @@
+# Utz'tutor — configure the classroom router (Wi-Fi, DHCP, catch-all DNS, WAN kill).
+#
+#   ansible-playbook router.yml --check    # list every difference, change nothing
+#   ansible-playbook router.yml            # apply, then check again
+#
+# The settings and the reasons are in infra/glinet/initial.md; the script that applies them is
+# infra/glinet/router.sh. No sudo is needed: it runs over SSH as root on the router, with the
+# key installed in README §5. Applying reloads the radio: every phone and clicker reconnects,
+# so do it between classes. No internet is needed.
+- name: Utz'tutor router
+  hosts: localhost
+  become: false
+  gather_facts: true
+  pre_tasks:
+    - name: Kit values
+      ansible.builtin.import_tasks: tasks/kit.yml
+      tags: [always]
+  tasks:
+    - name: Stop when the wired interface is missing
+      ansible.builtin.assert:
+        that: ansible_facts[lan_interface].macaddress is defined
+        fail_msg: "No interface {{ lan_interface }} on this Jetson. Set lan_interface in kit.yml (see `ip -brief link`)."
+        quiet: true
+
+    - name: Stop when the Wi-Fi passphrase is not usable
+      ansible.builtin.assert:
+        that:
+          - wifi_passphrase is defined
+          - (wifi_passphrase | string | length) >= 8
+          - (wifi_passphrase | string | length) <= 63
+          - (wifi_passphrase | string) != 'change-me-8-or-more'
+        fail_msg: "Set wifi_passphrase in kit.yml: 8 to 63 characters, not the placeholder."
+        quiet: true
+      when: not ansible_check_mode
+
+    - name: List the differences (check mode)
+      ansible.builtin.include_tasks: tasks/router_run.yml
+      vars:
+        router_mode: verify
+        router_drift_is_a_change: true
+      when: ansible_check_mode
+
+    - name: Apply
+      when: not ansible_check_mode
+      block:
+        - name: Apply the settings
+          ansible.builtin.include_tasks: tasks/router_run.yml
+          vars:
+            router_mode: apply
+
+        - name: Wait for the router to answer again
+          ansible.builtin.wait_for:
+            host: "{{ router_ip }}"
+            port: 22
+            delay: "{{ 10 if 'reload  ' in router_output else 0 }}"
+            timeout: 180
+
+        - name: Check the result
+          ansible.builtin.include_tasks: tasks/router_run.yml
+          vars:
+            router_mode: verify
+
+        - name: Stop when the router still differs
+          ansible.builtin.assert:
+            that: (router_count | int) == 0
+            fail_msg: "{{ router_count }} setting(s) still differ after applying; see the lines above."
+            success_msg: "The router matches this kit's values."

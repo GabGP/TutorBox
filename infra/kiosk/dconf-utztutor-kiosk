@@ -1,0 +1,13 @@
+# Utz'tutor — desktop defaults for the classroom screen: never blank, never lock.
+# infra/ansible/jetson.yml installs this as /etc/dconf/db/local.d/00-utztutor-kiosk and runs
+# `dconf update`. These are system defaults, so they apply to the auto-login user without a
+# desktop session having to be open during the install.
+
+[org/gnome/desktop/session]
+idle-delay=uint32 0
+
+[org/gnome/desktop/screensaver]
+lock-enabled=false
+
+[org/gnome/settings-daemon/plugins/power]
+sleep-inactive-ac-type='nothing'

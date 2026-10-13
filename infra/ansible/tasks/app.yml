@@ -1,0 +1,76 @@
+# The app itself: its .env, then everything run.py builds (Python environment, PWA, voice
+# models, Qwen3-TTS daemon). run.py --prepare does the building; nothing is copied from it.
+- name: Stop when the teacher PIN is still the placeholder
+  ansible.builtin.assert:
+    that: teacher_pin is defined and (teacher_pin | string) != 'change-me'
+    fail_msg: "Set teacher_pin in kit.yml (or manage_env: false to keep your own .env)."
+    quiet: true
+  when: (manage_env | bool)
+
+- name: Write the app settings (.env)
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ repo_dir }}/.env"
+    mode: "0600"
+  when: (manage_env | bool)
+  no_log: true
+  notify: Restart the backend
+
+# What the last build was made from: the commit, uncommitted changes, and the build options.
+- name: Read the state of the checkout
+  ansible.builtin.shell: |
+    set -o pipefail
+    { git rev-parse HEAD; git diff HEAD; git ls-files --others --exclude-standard; } | sha256sum | cut -d' ' -f1
+  args:
+    chdir: "{{ repo_dir }}"
+    executable: /bin/bash
+  register: checkout_state
+  changed_when: false
+  check_mode: false
+
+- name: Read what the last build was made from
+  ansible.builtin.slurp:
+    src: "{{ repo_dir }}/.cache/prepared"
+  register: prepared_file
+  failed_when: false
+
+- name: Look for the built PWA
+  ansible.builtin.stat:
+    path: "{{ repo_dir }}/.cache/pwa/dist/index.html"
+  register: pwa_bundle
+
+- name: Compare with the last build
+  ansible.builtin.set_fact:
+    build_stamp: "{{ checkout_state.stdout }} {{ voice_tier }} {{ 'cuda' if (tts_cuda | bool) else 'cpu' }}"
+    last_stamp: "{{ (prepared_file.content | b64decode | trim) if prepared_file.content is defined else '' }}"
+    build_daemon: "{{ voice_tier in ['qwen', 'all'] }}"
+
+# Runs when the checkout or the build options changed since the last build, when the PWA
+# is missing, or with -e force_prepare=true.
+- name: Build the app (run.py --prepare)
+  ansible.builtin.command:
+    argv: "{{ ['python3', 'run.py', '--prepare', '--download-models', voice_tier] + daemon_flags }}"
+    chdir: "{{ repo_dir }}"
+  environment:
+    PATH: "{{ tool_path }}"
+    PYTHONPYCACHEPREFIX: "{{ repo_dir }}/.cache/pycache"
+  vars:
+    daemon_flags: "{{ (['--build-llama'] + (['--require-cuda'] if (tts_cuda | bool) else [])) if (build_daemon | bool) else [] }}"
+  when: >-
+    (force_prepare | default(false) | bool) or not pwa_bundle.stat.exists
+    or last_stamp != build_stamp
+  register: prepare_run
+  notify: Restart the backend
+
+- name: Say so when a check run would build the app
+  ansible.builtin.debug:
+    msg: "run.py --prepare would run: the checkout or the build options changed since the last build."
+  when: ansible_check_mode and prepare_run is skipped and prepare_run.skip_reason | default('') is not search('Conditional')
+  changed_when: true
+
+- name: Record what this build was made from
+  ansible.builtin.copy:
+    content: "{{ build_stamp }}\n"
+    dest: "{{ repo_dir }}/.cache/prepared"
+    mode: "0644"
+  when: prepare_run is changed

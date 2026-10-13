@@ -1,0 +1,28 @@
+# Utz'tutor — the classroom screen (/pantalla/) full-screen in Firefox, kept running.
+# The appliance has a screen but no keyboard: the teacher drives it from /maestro/ on a phone.
+#
+# A systemd USER unit, started with the desktop session of the auto-login user. If Firefox
+# crashes or is closed, systemd starts it again.
+#
+# Install or update (infra/ansible/jetson.yml copies this file to ~/.config/systemd/user/,
+# installs the Firefox policies and the no-blanking desktop defaults next to it, and turns on
+# automatic login):
+#   cd infra/ansible && ansible-playbook jetson.yml -K --tags kiosk
+#   systemctl --user status utztutor-kiosk
+
+[Unit]
+Description=Utz'tutor classroom screen (Firefox kiosk)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+# Wait for the backend (nginx :80 -> FastAPI) before opening, so the screen never shows an
+# error page. No start timeout: the backend may take a while after a cold boot.
+TimeoutStartSec=infinity
+ExecStartPre=/bin/sh -c 'until curl -sf http://localhost/health >/dev/null; do sleep 2; done'
+ExecStart=/usr/bin/firefox --kiosk http://localhost/pantalla/
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

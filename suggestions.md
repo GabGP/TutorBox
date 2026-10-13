@@ -85,7 +85,7 @@ Suggested order is at the end.
   - `_evaluate` (`:126-138`) replaces `×` with `*` and calls `sp.sympify("9**9**9")`.
   - The operand cap (`10**9`) and length cap (60) don't help: the operands are `9` and the message is 7 characters.
 - **Proof:** `find_problem("9××9××9")` had not returned after 15 s. A background thread got no CPU time during that window, because the big-integer power holds the GIL.
-- **Why it matters:** the backend runs a single worker (`infra/systemd/utztutor-backend.service`), so every student, the classroom screen and the teacher stall together. Signup is open and the tutor only requires tutor mode, so any student can do this. The unauthenticated route in C1 reaches the same hang with `"9**9**9"` as an option.
+- **Why it matters:** the backend runs a single worker (`infra/systemd/utztutor-backend.service.j2`), so every student, the classroom screen and the teacher stall together. Signup is open and the tutor only requires tutor mode, so any student can do this. The unauthenticated route in C1 reaches the same hang with `"9**9**9"` as an option.
 - **Fix:** C1's `safe_parse` (bounded exponents) covers both. The tutor never needs exponents, though: it only handles `+ − × ÷` and parentheses, which `ast` plus `fractions.Fraction` evaluates exactly without SymPy. A cheap extra guard is to reject any operator that appears twice in a row. Add the test `assert find_problem("9××9××9") is None` with a timeout.
 - **How it was fixed:**
   1. **Reproduced first, and found two more ways in.** On the code after the C1 commit, three student messages got no answer in 25 s (child process, killed at the limit):

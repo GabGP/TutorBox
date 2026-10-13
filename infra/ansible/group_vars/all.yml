@@ -1,0 +1,91 @@
+# Utz'tutor — values shared by every kit. Per-kit values and secrets go in kit.yml
+# (copy kit.example.yml); anything set there replaces the value here.
+
+# ---- Where things are (worked out, not typed) --------------------------------------------
+# The checkout these playbooks run from, and the user who runs them. On a kit that is
+# /opt/utztutor and the user utztutor (README §3).
+repo_dir: "{{ playbook_dir | dirname | dirname }}"
+app_user: "{{ ansible_facts.user_id }}"
+app_home: "{{ ansible_facts.user_dir }}"
+# Tools installed for the user (uv, node, pnpm), then the CUDA compiler, then the system.
+tool_path: "{{ app_home }}/.local/bin:/usr/local/cuda/bin:{{ ansible_facts.env.PATH }}"
+
+# ---- Pinned versions (what the reference Jetson runs) -----------------------------------
+uv_version: "0.12.13"
+node_version: "22.14.0"
+pnpm_version: "12.5.1"
+ollama_version: "0.33.2"
+
+# ---- Jetson -------------------------------------------------------------------------------
+timezone: America/Guatemala
+lan_interface: enP8p1s0
+apt_packages:
+  - nginx-light     # port 80 in front of the backend (infra/nginx/utztutor.conf)
+  - espeak-ng       # offline voice, the fallback of every other TTS engine
+  - git
+  - build-essential # compiles the Qwen3-TTS daemon
+# nvcc, the CUDA runtime headers and cuBLAS: what the Qwen3-TTS daemon needs to build for
+# the GPU. /usr/local/cuda is set up by these packages.
+cuda_packages:
+  - cuda-minimal-build-13-2
+  - libcublas-dev-13-2
+# Units from the base image that fail on every boot and that nothing here uses.
+disabled_units:
+  - dnsmasq
+  - isc-dhcp-server
+  - isc-dhcp-server6
+# Unit and site names used before the rename; removed when found.
+retired_units:
+  - tutorbox-backend
+  - tutorbox-power
+retired_nginx_sites:
+  - default         # Ubuntu's site also claims default_server on :80
+  - tutorbox
+
+# ---- Models -------------------------------------------------------------------------------
+quiz_model: "qwen2.5:3b"
+tutor_model: "hf.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q8_0"
+ollama_models:
+  - "{{ quiz_model }}"
+  - "{{ tutor_model }}"
+# minimal | kokoro | qwen | all (run.py --download-models). qwen and all also build the
+# Qwen3-TTS daemon.
+voice_tier: all
+# Build the Qwen3-TTS daemon for the GPU, and fail if that is not possible.
+tts_cuda: true
+
+# ---- App settings written to <repo>/.env (when manage_env is true) -------------------------
+manage_env: true
+teacher_username: teacher1
+app_env:
+  SLM_BASE_URL: "http://127.0.0.1:11434/v1"
+  SLM_MODEL_NAME: "{{ quiz_model }}"
+  SLM_TEMPERATURE: "0.7"
+  SLM_TIMEOUT_SECONDS: "120.0"
+  TUTOR_MODEL_NAME: "{{ tutor_model }}"
+  CAPTIVE_PORTAL_URL: "http://{{ dns_name }}/alumno/"
+
+# ---- Classroom screen -----------------------------------------------------------------------
+kiosk_enabled: true
+
+# ---- Network --------------------------------------------------------------------------------
+router_ip: 192.168.8.1
+router_user: root
+jetson_ip: 192.168.8.2
+# The name students type: http://<dns_name>/
+dns_name: utztutor
+wifi_ssid: Utztutor
+wifi_channel: 6           # 1, 6 or 11: survey the room first
+wifi_country: GT
+wifi_htmode: HT20
+dhcp_start: 100
+dhcp_limit: 60
+dhcp_leasetime: 4h
+# Router init scripts that look for an internet path (initial.md §7).
+router_disable_services:
+  - gl-cloud
+  - gl_ddns
+router_ssh_options: "-o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new"
+
+# verify.yml: set to true once the kit is in the classroom, to also require Wi-Fi off.
+expect_offline: false

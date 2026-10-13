@@ -5,14 +5,12 @@
 # 25W caps itself, after NVIDIA's boot script and nvpmodel have run. What it writes is in
 # infra/systemd/utztutor-power-caps.sh.
 #
-# Install on the Jetson:
-#   chmod +x infra/systemd/utztutor-power-caps.sh
-#   sudo cp infra/systemd/utztutor-power.service /etc/systemd/system/
-#   sudo systemctl daemon-reload
-#   sudo systemctl enable --now utztutor-power
-#   cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq   # expect 1344000
+# This file is a template: infra/ansible/jetson.yml fills in the checkout path and installs it
+# as /etc/systemd/system/utztutor-power.service.
 #
-# ADJUST the ExecStart path if the checkout is somewhere else.
+# Install or update:
+#   cd infra/ansible && ansible-playbook jetson.yml -K --tags services
+#   cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq   # expect 1344000
 
 [Unit]
 Description=Utz'tutor 25W clock caps
@@ -21,7 +19,7 @@ After=nvpower.service nvpmodel.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/home/damarti/Documents/TutorBox/infra/systemd/utztutor-power-caps.sh
+ExecStart={{ repo_dir }}/infra/systemd/utztutor-power-caps.sh
 
 [Install]
 WantedBy=multi-user.target

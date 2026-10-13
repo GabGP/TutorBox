@@ -259,3 +259,6 @@ benchmark/**/results/
 firmware/clicker/clicker/secrets.h
 firmware/clicker/.pio/
 firmware/clicker/hosttest/.deps/
+
+# Ansible: the values and secrets of one kit (copy infra/ansible/kit.example.yml)
+infra/ansible/kit.yml

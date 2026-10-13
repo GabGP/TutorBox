@@ -111,15 +111,15 @@ makes the curl checks in [§7](#7-verification) runnable on a laptop.
 
 ## <a id="4-port-80-on-the-jetson-nginx--systemd"></a>4. Port 80 on the Jetson (nginx + systemd)
 
-Two files, both with their install commands in their header comments:
+Two files, installed by [`infra/ansible/jetson.yml`](ansible/README.md) (parts `nginx` and `services`):
 
 - [`infra/nginx/utztutor.conf`](nginx/utztutor.conf) — `listen 80 default_server; server_name _;`
   proxying to `127.0.0.1:8000` with `proxy_set_header Host $host` (the backend needs the original
   name to tell appliance from foreign hosts) and `proxy_redirect off` (the backend writes its own
-  `Location`). Remove Ubuntu's `sites-enabled/default`, which also claims `default_server`.
-  **Install `nginx-light` while the Jetson still has an internet uplink** — the classroom has none.
-- [`infra/systemd/utztutor-backend.service`](systemd/utztutor-backend.service) — uvicorn on
-  `0.0.0.0:8000` from this checkout as user `damarti` (three `ADJUST` lines for another layout), single
+  `Location`). Ubuntu's `sites-enabled/default` also claims `default_server`, so the playbook removes it.
+  `nginx-light` is installed while the Jetson still has an internet uplink — the classroom has none.
+- [`infra/systemd/utztutor-backend.service.j2`](systemd/utztutor-backend.service.j2) — uvicorn on
+  `0.0.0.0:8000` from the checkout, as the user who runs the playbook (the template takes both), single
   worker, no `EnvironmentFile` (the app reads `<repo>/.env` itself). Port `8000` stays reachable so dev
   URLs and the planned clicker base URL keep working; `:80` is the classroom-facing address.
 

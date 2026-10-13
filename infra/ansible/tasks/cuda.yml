@@ -1,0 +1,23 @@
+# The CUDA compiler, so the Qwen3-TTS daemon is built for the GPU (tts_cuda).
+# The base image has the CUDA runtime only; without nvcc the daemon build falls back to CPU.
+- name: Install the CUDA build packages
+  ansible.builtin.apt:
+    name: "{{ cuda_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: cuda_packages | difference(ansible_facts.packages.keys()) | length > 0
+
+- name: Look for the CUDA compiler
+  ansible.builtin.stat:
+    path: /usr/local/cuda/bin/nvcc
+  register: nvcc_file
+
+- name: Stop when the CUDA compiler is missing
+  ansible.builtin.assert:
+    that: nvcc_file.stat.exists
+    fail_msg: >-
+      /usr/local/cuda/bin/nvcc does not exist after installing {{ cuda_packages | join(', ') }}.
+      Check cuda_packages in group_vars/all.yml against `apt-cache search cuda-minimal-build`.
+    quiet: true
+  when: not ansible_check_mode

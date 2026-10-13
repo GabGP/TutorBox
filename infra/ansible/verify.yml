@@ -1,0 +1,217 @@
+# Utz'tutor — check a kit against the repo and this kit's values. Changes nothing.
+#
+#   ansible-playbook verify.yml
+#
+# No sudo and no internet needed. Every check runs, even after one fails; the last task
+# lists the ones that failed. Failed checks show as "...ignoring" on the way.
+#
+# Each check registers a variable named check_<something>; the summary collects those.
+- name: Utz'tutor verify
+  hosts: localhost
+  become: false
+  gather_facts: true
+  pre_tasks:
+    - name: Kit values
+      ansible.builtin.import_tasks: tasks/kit.yml
+      tags: [always]
+  tasks:
+    # ---- Services -----------------------------------------------------------------------
+    - name: Services are running and start at boot
+      ansible.builtin.shell: systemctl is-active {{ item }} && systemctl is-enabled {{ item }}
+      loop: [nginx, utztutor-backend, utztutor-power, ollama]
+      register: check_services
+      changed_when: false
+      ignore_errors: true
+
+    - name: No unit is in the failed state
+      ansible.builtin.command: systemctl --failed --no-legend --plain
+      register: check_failed_units
+      changed_when: false
+      failed_when: check_failed_units.stdout != ''
+      ignore_errors: true
+
+    - name: Units under their old names are gone
+      ansible.builtin.stat:
+        path: "/etc/systemd/system/{{ item }}.service"
+      loop: "{{ retired_units }}"
+      register: check_retired_units
+      failed_when: check_retired_units.stat.exists
+      ignore_errors: true
+
+    # ---- Installed files match the repo -------------------------------------------------
+    - name: The installed nginx site is the repo's
+      ansible.builtin.command: cmp -s {{ repo_dir }}/infra/nginx/utztutor.conf /etc/nginx/sites-enabled/utztutor
+      register: check_nginx_site
+      changed_when: false
+      ignore_errors: true
+
+    - name: The installed units are the repo's
+      ansible.builtin.template:
+        src: "{{ repo_dir }}/infra/systemd/{{ item }}.service.j2"
+        dest: "/etc/systemd/system/{{ item }}.service"
+        mode: "0644"
+      check_mode: true
+      loop: [utztutor-backend, utztutor-power]
+      register: check_unit_files
+      failed_when: check_unit_files is changed
+      ignore_errors: true
+
+    # ---- The app answers ----------------------------------------------------------------
+    - name: The backend answers through nginx
+      ansible.builtin.uri:
+        url: http://localhost/health
+        status_code: [200]
+      register: check_health
+      ignore_errors: true
+
+    - name: A captive-portal probe is sent to the student page
+      ansible.builtin.uri:
+        url: http://localhost/hotspot-detect.html
+        headers:
+          Host: captive.apple.com
+        follow_redirects: none
+        status_code: [302]
+      register: check_captive_redirect
+      failed_when: >-
+        check_captive_redirect.status != 302
+        or check_captive_redirect.location | default('') != 'http://' ~ dns_name ~ '/alumno/'
+      ignore_errors: true
+
+    - name: An unknown API path on a foreign name stays a 404
+      ansible.builtin.uri:
+        url: http://localhost/api/v1/nope
+        headers:
+          Host: captive.apple.com
+        follow_redirects: none
+        status_code: [404]
+      register: check_captive_api
+      ignore_errors: true
+
+    # ---- Models and build ---------------------------------------------------------------
+    - name: Ollama has this kit's models
+      ansible.builtin.command: ollama list
+      register: check_ollama_models
+      changed_when: false
+      failed_when: >-
+        check_ollama_models.rc != 0
+        or (ollama_models | unique | reject('in', check_ollama_models.stdout) | list | length) > 0
+      ignore_errors: true
+
+    - name: The launcher finds everything it needs (run.py --check-only)
+      ansible.builtin.command:
+        argv: [python3, run.py, --check-only]
+        chdir: "{{ repo_dir }}"
+      environment:
+        PATH: "{{ tool_path }}"
+        PYTHONPYCACHEPREFIX: "{{ repo_dir }}/.cache/pycache"
+      vars:
+        always_needed: ["espeak-ng not found", "pnpm not found", "SLM engine not detected"]
+        needed_for_all_voices: ["Qwen3-TTS daemon not found", "Missing neural voice models"]
+        complaints: "{{ always_needed + (needed_for_all_voices if voice_tier == 'all' else []) }}"
+      register: check_launcher
+      changed_when: false
+      failed_when: >-
+        check_launcher.rc != 0
+        or (complaints | select('in', check_launcher.stdout) | list | length) > 0
+      ignore_errors: true
+
+    - name: The PWA is built
+      ansible.builtin.stat:
+        path: "{{ repo_dir }}/.cache/pwa/dist/index.html"
+      register: check_pwa
+      failed_when: not check_pwa.stat.exists
+      ignore_errors: true
+
+    - name: The Qwen3-TTS daemon is built for the GPU
+      ansible.builtin.stat:
+        path: "{{ repo_dir }}/.cache/bin/llama.cpp/libggml-cuda.so"
+      register: check_tts_gpu
+      failed_when: not check_tts_gpu.stat.exists
+      when: (tts_cuda | bool) and voice_tier in ['qwen', 'all']
+      ignore_errors: true
+
+    # ---- Network ------------------------------------------------------------------------
+    - name: The Jetson holds its fixed address
+      ansible.builtin.assert:
+        that: (ansible_facts[lan_interface].ipv4.address | default('')) == jetson_ip
+        fail_msg: "{{ lan_interface }} has {{ ansible_facts[lan_interface].ipv4.address | default('no address') }}, expected {{ jetson_ip }}"
+        quiet: true
+      register: check_jetson_address
+      ignore_errors: true
+
+    - name: The Jetson does not take DNS from the router
+      ansible.builtin.shell: |
+        set -o pipefail
+        profile=$(nmcli -g GENERAL.CONNECTION device show {{ lan_interface }})
+        nmcli -g ipv4.ignore-auto-dns,ipv6.ignore-auto-dns connection show "$profile" | tr '\n' ' '
+      args:
+        executable: /bin/bash
+      register: check_jetson_dns
+      changed_when: false
+      failed_when: check_jetson_dns.rc != 0 or check_jetson_dns.stdout | trim != 'yes yes'
+      ignore_errors: true
+
+    - name: The router answers every name with the Jetson's address
+      ansible.builtin.command: nslookup -type=A {{ item }} {{ router_ip }}
+      loop: ["captive.apple.com", "{{ dns_name }}"]
+      register: check_router_dns
+      changed_when: false
+      failed_when: >-
+        check_router_dns.rc != 0 or ('Address: ' ~ jetson_ip) not in check_router_dns.stdout
+      ignore_errors: true
+
+    - name: Read the router's settings
+      ansible.builtin.include_tasks: tasks/router_run.yml
+      vars:
+        router_mode: verify
+
+    - name: The router matches this kit's values
+      ansible.builtin.assert:
+        that: (router_count | int) == 0
+        fail_msg: "{{ router_count }} router setting(s) differ; see the DRIFT lines above."
+        quiet: true
+      register: check_router_settings
+      ignore_errors: true
+
+    # ---- Classroom screen ---------------------------------------------------------------
+    - name: The classroom-screen files are the repo's
+      ansible.builtin.command: cmp -s {{ repo_dir }}/infra/kiosk/{{ item.repo }} {{ item.installed }}
+      loop:
+        - { repo: utztutor-kiosk.service, installed: "{{ app_home }}/.config/systemd/user/graphical-session.target.wants/utztutor-kiosk.service" }
+        - { repo: firefox-policies.json, installed: /etc/firefox/policies/policies.json }
+        - { repo: dconf-utztutor-kiosk, installed: /etc/dconf/db/local.d/00-utztutor-kiosk }
+      loop_control:
+        label: "{{ item.repo }}"
+      register: check_kiosk_files
+      changed_when: false
+      when: (kiosk_enabled | bool)
+      ignore_errors: true
+
+    - name: The appliance user is logged in at boot
+      ansible.builtin.command: grep -qx 'AutomaticLogin={{ app_user }}' /etc/gdm3/custom.conf
+      register: check_kiosk_login
+      changed_when: false
+      when: (kiosk_enabled | bool)
+      ignore_errors: true
+
+    # ---- Offline (only with expect_offline: true) --------------------------------------------------
+    - name: The Jetson's own Wi-Fi is off
+      ansible.builtin.command: nmcli radio wifi
+      register: check_wifi_off
+      changed_when: false
+      failed_when: check_wifi_off.stdout != 'disabled'
+      when: (expect_offline | bool)
+      ignore_errors: true
+
+    # ---- Summary ------------------------------------------------------------------------
+    - name: Summary
+      ansible.builtin.assert:
+        that: failed_checks | length == 0
+        fail_msg: "{{ failed_checks | length }} check(s) failed: {{ failed_checks | join(', ') }}"
+        success_msg: "Every check passed."
+      vars:
+        failed_checks: >-
+          {{ hostvars[inventory_hostname] | dict2items
+             | selectattr('key', 'match', '^check_')
+             | selectattr('value.failed', 'defined') | selectattr('value.failed')
+             | map(attribute='key') | map('regex_replace', '^check_', '') | list }}

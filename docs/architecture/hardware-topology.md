@@ -58,7 +58,7 @@ graph TD
 
 | Node | Hardware Specs | Responsibilities & Software |
 | :--- | :--- | :--- |
-| **Core AI Appliance** | **NVIDIA Jetson Orin Nano** (8GB Unified RAM) | Hosts all software services: Nginx reverse proxy, static PWA hosting, FastAPI backend, `llama.cpp` SLM inference, offline Spanish & K'iche' neural TTS, SymPy validation engine, SQLite database, and direct HDMI classroom display/audio. |
+| **Core AI Appliance** | **NVIDIA Jetson Orin Nano** (8GB Unified RAM) | Hosts all software services: Nginx reverse proxy, static PWA hosting, FastAPI backend, SLM inference (Ollama on the reference kit), offline Spanish & K'iche' neural TTS, SymPy validation engine, SQLite database, and direct HDMI classroom display/audio. |
 | **Wireless AP** | **GL.iNet GL-AR300M16 Router** | Isolated local router broadcasting SSID `Utztutor` with local DHCP IP assignment for student devices and ESP32 clickers. |
 | **Physical Clickers** | **ESP32 Microcontroller Node** (C3/WROOM) | 4 tactile buttons (A–D), RGB confirmation LED, LiPo/AAA power, and delegated `VoteTransport` packet transmission. (See [ESP32 Clicker Transport](esp32-clicker-transport.md)). |
 
@@ -73,7 +73,7 @@ On the **NVIDIA Jetson Orin Nano (8GB)**, CPU and GPU share a single unified LPD
 | Subsystem | Baseline (Idle) | Runtime Buffers & Context | Total Allocation | Technical Details & Assumptions |
 | :--- | :---: | :---: | :---: | :--- |
 | **OS & Kernel Baseline** | 600 MB | 200 MB | **~0.8 GB** | Headless Ubuntu 22.04 LTS (GUI disabled, 25W mode, `jetson_clocks`). |
-| **HDMI Classroom UI** | 400 MB | 200 MB | **~0.6 GB** | Lightweight Chromium kiosk rendering question timer and live voting charts. |
+| **HDMI Classroom UI** | 400 MB | 200 MB | **~0.6 GB** | Firefox kiosk rendering question timer and live voting charts. |
 | **FastAPI + SQLite + Nginx** | 300 MB | 200 MB | **~0.5 GB** | Python 3.11 runtime, SymPy AST engine, SQLite WAL cache, and Nginx proxy. |
 | **Offline Neural TTS (Spanish & K'iche')** | 100 MB | 200 MB | **~0.3 GB co-resident / ~3.3 GB phased** | Lightweight path: ONNX Runtime (`Sherpa-ONNX` +192 MB / `Piper` +202 MB) stays co-resident. Quality path: `Qwen3-TTS 1.7B` (~3.3 GB shared UMA) is lifecycle-decoupled — preload during voting via `POST /api/v1/tts/load` after `POST /api/v1/llm/unload` (see [Voice Feedback](voice-feedback.md)). |
 | **SLM Inference (`llama.cpp`, Gemma 4 A2B `Q4_K_M`)** | 3,800 MB | 900 MB | **~4.7 GB when resident** | Measured Week 4 footprint; never co-resident with Qwen3-TTS on 8 GB UMA. Phased lifecycle: SLM active during generation, unloaded during voting/speech. |

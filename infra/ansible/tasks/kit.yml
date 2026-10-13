@@ -1,0 +1,22 @@
+# Loads this kit's values. Imported first by every playbook.
+- name: Look for kit.yml
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/kit.yml"
+  register: kit_file
+
+- name: Stop when kit.yml is missing
+  ansible.builtin.fail:
+    msg: "No kit.yml in {{ playbook_dir }}. Copy kit.example.yml to kit.yml and edit it."
+  when: not kit_file.stat.exists
+
+- name: Load kit.yml
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/kit.yml"
+
+- name: Stop when run as root
+  ansible.builtin.assert:
+    that: ansible_facts.user_id != 'root'
+    fail_msg: >-
+      Run the playbooks as the appliance user, without sudo. Tasks that need root ask for
+      it themselves (add -K to type the sudo password).
+    quiet: true

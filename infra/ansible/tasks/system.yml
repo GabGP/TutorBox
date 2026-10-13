@@ -1,0 +1,35 @@
+# Hostname, time zone, and base-image units that only fail.
+- name: Set the hostname
+  ansible.builtin.hostname:
+    name: "{{ kit_hostname }}"
+  become: true
+
+- name: Resolve the hostname locally
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1 {{ kit_hostname }}"
+  become: true
+
+- name: Read the time zone
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: timezone_found
+  changed_when: false
+  check_mode: false
+
+- name: Set the time zone
+  ansible.builtin.command: timedatectl set-timezone {{ timezone }}
+  become: true
+  when: timezone_found.stdout != timezone
+
+- name: List the installed units
+  ansible.builtin.service_facts:
+
+- name: Stop and disable base-image units that fail on every boot
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  become: true
+  loop: "{{ disabled_units }}"
+  when: (item ~ '.service') in ansible_facts.services

@@ -1,0 +1,7 @@
+# Utz'tutor — one host: the Jetson these playbooks run on.
+# The router is not an Ansible host (OpenWrt has no Python). router.yml reaches it over SSH
+# from here and runs infra/glinet/router.sh on it.
+all:
+  hosts:
+    localhost:
+      ansible_connection: local

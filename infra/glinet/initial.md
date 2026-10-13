@@ -16,6 +16,14 @@ broadcasting SSID `Utztutor`, serving local DHCP to student devices and ESP32 cl
 **WAN path removed at four independent layers** so the appliance cannot reach the internet even if
 someone plugs in a live uplink cable.
 
+> [!NOTE]
+> §4 to §7 are automated: [`router.sh`](router.sh) applies the same settings, and
+> [`infra/ansible/router.yml`](../ansible/README.md#8-step-6--configure-the-router) runs it with a
+> kit's values (`--check` lists every difference without changing anything). This page remains the
+> explanation of each setting and the manual procedure. §2, §3, the admin-panel items of §7 and the
+> physical checks of §8 are still done by hand. One difference: the script keeps the Jetson's lease
+> in a named section, `dhcp.jetson`, instead of adding an anonymous `host` section.
+
 > [!WARNING]
 > Every step below is performed **without internet access**. Read §2 (Recovery) *before* touching
 > the WAN or firewall configuration — a mistake here locks you out of a router you cannot reach

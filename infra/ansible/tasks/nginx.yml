@@ -1,0 +1,34 @@
+# nginx on port 80 in front of the backend, with the per-address rate limits.
+- name: Install the nginx site
+  ansible.builtin.copy:
+    src: "{{ repo_dir }}/infra/nginx/utztutor.conf"
+    dest: /etc/nginx/sites-available/utztutor
+    mode: "0644"
+  become: true
+  notify: Reload nginx
+
+- name: Enable the nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/utztutor
+    dest: /etc/nginx/sites-enabled/utztutor
+    state: link
+    force: "{{ ansible_check_mode }}"   # in check mode the file above is not there yet
+  become: true
+  notify: Reload nginx
+
+- name: Remove the sites this one replaces
+  ansible.builtin.file:
+    path: "/etc/nginx/{{ item.0 }}/{{ item.1 }}"
+    state: absent
+  become: true
+  loop: "{{ ['sites-enabled'] | product(retired_nginx_sites) | list + ['sites-available'] | product(retired_nginx_sites | difference(['default'])) | list }}"
+  notify: Reload nginx
+
+- name: Start nginx now and at every boot
+  ansible.builtin.systemd_service:
+    name: nginx
+    enabled: true
+    state: started
+  become: true
+  # A check run on a blank Jetson has not installed the package.
+  ignore_errors: "{{ ansible_check_mode }}"

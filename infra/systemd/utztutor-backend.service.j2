@@ -1,13 +1,11 @@
 # Utz'tutor backend — FastAPI API + Pilas classroom pages + captive-portal answers.
 #
 # Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/utztutor.conf)
-# publishes it on port 80. The three lines marked ADJUST assume this dev-kit layout
-# (checkout in /home/damarti, run as that user); change them for /opt/utztutor or another user.
+# publishes it on port 80. This file is a template: infra/ansible/jetson.yml fills in the user
+# and the checkout path, and installs it as /etc/systemd/system/utztutor-backend.service.
 #
-# Install:
-#   sudo cp infra/systemd/utztutor-backend.service /etc/systemd/system/
-#   sudo systemctl daemon-reload
-#   sudo systemctl enable --now utztutor-backend
+# Install or update:
+#   cd infra/ansible && ansible-playbook jetson.yml -K --tags services
 #   systemctl status utztutor-backend && ss -ltnp | grep ':8000 '
 #
 # No EnvironmentFile: the app reads <repo>/.env itself (backend/src/core/config/env_loader.py);
@@ -16,19 +14,19 @@
 
 [Unit]
 Description=Utz'tutor backend (FastAPI + Pilas pages) on :8000
-After=network-online.target
-Wants=network-online.target
+After=network-online.target ollama.service
+# Ollama serves the quiz and tutor models. Wants, not Requires: the seed question bank
+# keeps the class running when the model server is down.
+Wants=network-online.target ollama.service
 
 [Service]
 Type=simple
-# ADJUST the next three lines for a different user or checkout location.
-User=damarti
-WorkingDirectory=/home/damarti/Documents/TutorBox/backend
-ExecStart=/home/damarti/Documents/TutorBox/.cache/venv/bin/python -m uvicorn main:app --app-dir /home/damarti/Documents/TutorBox/backend/src --host 0.0.0.0 --port 8000
+User={{ app_user }}
+WorkingDirectory={{ repo_dir }}/backend
+ExecStart={{ repo_dir }}/.cache/venv/bin/python -m uvicorn main:app --app-dir {{ repo_dir }}/backend/src --host 0.0.0.0 --port 8000
 # Keep ALL __pycache__ under <repo>/.cache/pycache (repo policy). Must be set
 # here (not in .env) because Python reads it at startup, before .env is loaded.
-# ADJUST the path together with ExecStart when relocating the checkout.
-Environment=PYTHONPYCACHEPREFIX=/home/damarti/Documents/TutorBox/.cache/pycache
+Environment=PYTHONPYCACHEPREFIX={{ repo_dir }}/.cache/pycache
 Restart=on-failure
 RestartSec=2
 # The app only writes under <repo>/.cache (SQLite DB, bytecode, caches);

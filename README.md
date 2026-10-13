@@ -109,7 +109,7 @@ TutorBox/
 ├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
 ├── pwa/          # Classroom web clients and static assets
 ├── firmware/     # ESP32-C3 hardware clicker firmware (Arduino / PlatformIO) and PC simulator
-├── infra/        # Systemd, Nginx, captive portal, and router runbooks
+├── infra/        # Ansible kit setup, systemd, Nginx, captive portal, and router runbooks
 ├── tools/        # Launcher modules behind run.py, voice model downloader, offline benchmarks, and llama.cpp TTS daemon build toolchain
 ├── docs/         # Architecture specs, pedagogy, API documentation, and milestones
 └── run.py        # One-command development and appliance startup runner
@@ -130,6 +130,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 `run.py` checks prerequisites (`uv`, `espeak-ng`, neural voice models, local `llama-server`, `pnpm`), compiles the PWA, runs database migrations, seeds the question bank, and starts Uvicorn. If voice models are missing in `.cache/models/tts/`, spoken feedback gracefully falls back to eSpeak-ng; download neural weights using `./run.py --download-models all` (or specific tier: `minimal`, `kokoro`, `qwen`). Qwen3-TTS is discovered from the standard model cache and `llama-tts` locations; set `TTS_QWEN_BINARY` only for a non-standard install.
+
+To build a classroom kit (a Jetson and its router) instead of a development server, follow **[Automated Kit Setup](infra/ansible/README.md)**. It calls `./run.py --prepare`, which builds everything and exits without starting the server.
 
 * **Teacher Host**: `http://localhost:8000/maestro/`
 * **Student Voting**: `http://localhost:8000/alumno/`
