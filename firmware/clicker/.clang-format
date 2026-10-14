@@ -1,0 +1,13 @@
+# The style VS Code's C/C++ extension applies when no style file exists ("Visual
+# Studio" with 2-space indents). Kept here so the editor and clang-format agree.
+BasedOnStyle: LLVM
+UseTab: Never
+IndentWidth: 2
+TabWidth: 2
+BreakBeforeBraces: Allman
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+ColumnLimit: 0
+AccessModifierOffset: -2
+NamespaceIndentation: All
+FixNamespaceComments: false

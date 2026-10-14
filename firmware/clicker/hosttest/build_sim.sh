@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds the PC simulator: the real clicker.ino + Board.cpp + logic, with the ESP32's
-# pins, Wi-Fi and flash replaced by sim/ stand-ins and real HTTP to a Utz'tutor.
+# Builds the PC simulator: the real clicker.ino and all of clicker/src/ (esp32/ too),
+# with the ESP32's pins, Wi-Fi and flash replaced by sim/ stand-ins and real HTTP to a
+# Utz'tutor.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "${ARDUINOJSON_DIR:-}" ]; then
@@ -10,10 +11,10 @@ if [ -z "${ARDUINOJSON_DIR:-}" ]; then
 fi
 mkdir -p "$here/build"
 src="$here/../clicker"
+firmware_sources=$(find "$src/src" -name '*.cpp' | sort)
+# shellcheck disable=SC2086
 g++ -std=gnu++11 -fno-rtti -Wall -Wextra -Werror -O1 \
   -I"$here/sim" -I"$src" -I"$ARDUINOJSON_DIR/src" \
-  "$here"/sim/*.cpp "$src/Board.cpp" \
-  "$src/Buttons.cpp" "$src/StatusLed.cpp" "$src/Protocol.cpp" "$src/ResetGesture.cpp" \
-  "$src/ClickerApp.cpp" \
+  "$here"/sim/*.cpp $firmware_sources \
   -o "$here/build/clicker_sim"
 echo "built $here/build/clicker_sim"
