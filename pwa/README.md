@@ -127,7 +127,7 @@ Inside `pwa/app/`:
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (74 suites, 472 tests)
+pnpm test       # Execute Vitest test suite (79 suites, 519 tests)
 pnpm build      # Build production bundle to dist/
 ```
 
@@ -142,11 +142,19 @@ pnpm build      # Build production bundle to dist/
 
 ### Clickers (teacher header)
 
-The **Clickers** button in the `/maestro/` header (before the settings button) opens the ESP32 clicker fleet in its own sheet, from `src/features/clickers/`. Each row shows the clicker id, the student it votes as (or `Sin alumno`) and `Sin configurar` when it was never set up over Bluetooth. Tapping the id or swiping to **Editar** picks its student; a student who already held another clicker moves to this one. **Info** shows the dates, and **Eliminar** deletes after a hold. The screen never requests or shows a clicker secret: secrets are issued by the Bluetooth provisioner, not from this page.
+The **Clickers** button in the `/maestro/` header (before the settings button) opens the ESP32 clicker fleet in its own sheet, from `src/features/clickers/`.
+
+A clicker that is switched on appears in the list by itself. It is unassigned, and it shows **Nuevo** for 10 minutes after its first contact. The teacher only needs to switch it on and then assign a student. The add form stays for a clicker that should be known before it is switched on.
+
+The list reloads every 5 seconds while the sheet is open and the page is visible. It also reloads at once when the page comes back. A failed reload keeps the list on screen and tries again at the next reload.
+
+Unassigned clickers come first, newest first. Assigned clickers follow. Each row shows the clicker id and the student it votes as, or `Sin alumno`. A clicker added by hand that has never connected shows `Sin conectar`. Tapping the id or swiping to **Editar** picks its student. A student who already held another clicker moves to this one. **Info** shows the dates, and **Eliminar** deletes after a hold.
+
+The screen never requests or shows a clicker secret. Each clicker makes its own secret and the appliance keeps only its digest. `Nuevo` compares the appliance's clock with the browser's, so it is not shown when the two differ by 10 minutes or more; the new clicker is still the first row. See the [firmware README](../firmware/clicker/README.md).
 
 | Endpoint | Used by |
 | :--- | :--- |
-| `GET /api/v1/staff/devices`, `POST /api/v1/staff/devices` | list, add by hardware label |
+| `GET /api/v1/staff/devices` (every 5 s while the sheet is open), `POST /api/v1/staff/devices` | list, add by hardware label |
 | `POST /api/v1/staff/devices/{id}/assign`, `POST /api/v1/staff/devices/{id}/unassign` | Editar: assign or take off the student |
 | `DELETE /api/v1/staff/devices/{id}` | Eliminar (hold to confirm) |
 | `GET /api/v1/staff/users` | student picker (through the roster client) |

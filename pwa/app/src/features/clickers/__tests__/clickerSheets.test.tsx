@@ -13,7 +13,7 @@ import {
   stringIdStudent,
 } from './clickerFixture';
 
-const HINT = 'El clicker vota como el alumno elegido. Cambiarlo no necesita Bluetooth.';
+const HINT = 'El clicker vota como el alumno elegido. Cambiarlo no requiere volver a configurar el clicker.';
 
 /** Opens a row's Info or Editar action from the strip, as a teacher would. */
 async function openFromStrip(deviceId: string, action: 'Ver detalle' | 'Editar') {
@@ -41,7 +41,7 @@ describe('ClickerFleetView Info sheet', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows the student, the added date and the Bluetooth setup date', async () => {
+  it('shows the student, the added date and the first contact date', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-A4CF12' });
@@ -50,9 +50,7 @@ describe('ClickerFleetView Info sheet', () => {
     expect(within(dialog).getByText('ESP32-A4CF12')).toBeInTheDocument();
     expect(factOf(dialog, 'Alumno')).toBe('ana');
     expect(factOf(dialog, 'Agregado')).toBe(formatClickerDate('2026-08-29 14:00:00'));
-    expect(factOf(dialog, 'Configurado por Bluetooth')).toBe(
-      formatClickerDate('2026-08-30 09:15:00')
-    );
+    expect(factOf(dialog, 'Primer contacto')).toBe(formatClickerDate('2026-08-30 09:15:00'));
   });
 
   it('an older backend without secret_issued_at says Todavía no and does not throw', async () => {
@@ -65,20 +63,20 @@ describe('ClickerFleetView Info sheet', () => {
     installFakeFleet({ devices: [olderBackendDevice] });
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-LEGACY' });
-    expect(within(clickerRow('ESP32-LEGACY')).getByText('Sin configurar')).toBeInTheDocument();
+    expect(within(clickerRow('ESP32-LEGACY')).getByText('Sin conectar')).toBeInTheDocument();
     await openFromStrip('ESP32-LEGACY', 'Ver detalle');
     const dialog = screen.getByRole('dialog', { name: 'Detalle clicker ESP32-LEGACY' });
-    expect(factOf(dialog, 'Configurado por Bluetooth')).toBe('Todavía no');
+    expect(factOf(dialog, 'Primer contacto')).toBe('Todavía no');
   });
 
-  it('says Sin alumno and Todavía no for an idle clicker never set up', async () => {
+  it('says Sin alumno and Todavía no for an idle clicker that never connected', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-B7' });
     await openFromStrip('ESP32-B7', 'Ver detalle');
     const dialog = screen.getByRole('dialog', { name: 'Detalle clicker ESP32-B7' });
     expect(factOf(dialog, 'Alumno')).toBe('Sin alumno');
-    expect(factOf(dialog, 'Configurado por Bluetooth')).toBe('Todavía no');
+    expect(factOf(dialog, 'Primer contacto')).toBe('Todavía no');
   });
 });
 

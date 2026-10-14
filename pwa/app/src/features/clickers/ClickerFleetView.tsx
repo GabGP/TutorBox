@@ -7,6 +7,7 @@ import { ClickerAddForm } from './ClickerAddForm';
 import { ClickerEditSheet } from './ClickerEditSheet';
 import { ClickerInfoSheet } from './ClickerInfoSheet';
 import { ClickerRow } from './ClickerRow';
+import { sortClickersForTeacher } from './clickerOrder';
 import styles from './clickers.module.css';
 import type { ClickerDevice } from './clickers.types';
 import { useClickerFleet } from './useClickerFleet';
@@ -20,7 +21,8 @@ const SKELETON_ROWS = 3;
  * the sheets show, so an armed delete never leaks to another row.
  * Escape closes the innermost layer first (a sheet, then an armed delete),
  * never the Clickers sheet behind it.
- * Failures float as error toasts, so the list never shifts.
+ * Failures float as error toasts, so the list never shifts. The list reloads
+ * by itself (see useClickerFleet), so a clicker that switches on appears here.
  */
 export const ClickerFleetView: React.FC = () => {
   const {
@@ -89,6 +91,7 @@ export const ClickerFleetView: React.FC = () => {
       </div>
 
       <ClickerAddForm onRegister={registerClicker} />
+      <p className={styles.addHint}>Los clickers nuevos aparecen solos al encenderlos.</p>
 
       <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
 
@@ -106,9 +109,9 @@ export const ClickerFleetView: React.FC = () => {
           id="clickersList"
           ariaLabel="Clickers"
           isEmpty={devices.length === 0}
-          emptyText="Todavía no hay clickers. Agregue uno con el código de su etiqueta."
+          emptyText="Encienda un clicker: aparece aquí solo."
         >
-          {devices.map((device) => (
+          {sortClickersForTeacher(devices).map((device) => (
             <ClickerRow
               key={device.device_id}
               device={device}

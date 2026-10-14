@@ -5,7 +5,7 @@ import { ClickerFleetView } from '../ClickerFleetView';
 import { CLICKER_ID_ERROR } from '../clickerId';
 import { FLEET_SEED, clickerRow, installFakeFleet } from './clickerFixture';
 
-const EMPTY_TEXT = 'Todavía no hay clickers. Agregue uno con el código de su etiqueta.';
+const EMPTY_TEXT = 'Encienda un clicker: aparece aquí solo.';
 
 function typeClickerId(text: string) {
   fireEvent.change(screen.getByLabelText('Código del clicker'), { target: { value: text } });
@@ -43,26 +43,43 @@ describe('ClickerFleetView list', () => {
     expect(screen.getByText('0 de 0 con alumno')).toBeInTheDocument();
   });
 
-  it('keeps the rows in the order the server returns them', async () => {
-    installFakeFleet({ devices: [...FLEET_SEED].reverse() });
+  it('lists the unassigned clickers first, newest first, then the assigned ones', async () => {
+    installFakeFleet({
+      devices: [
+        { ...FLEET_SEED[0] },
+        { ...FLEET_SEED[1] },
+        { ...FLEET_SEED[1], device_id: 'ESP32-C1', created_at: '2026-10-01 09:00:00' },
+      ],
+    });
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-A4CF12' });
     const faceLabels = screen
       .getAllByLabelText(/^Clicker /)
       .map((face) => face.getAttribute('aria-label'));
-    expect(faceLabels).toEqual(['Clicker ESP32-B7', 'Clicker ESP32-A4CF12']);
+    expect(faceLabels).toEqual([
+      'Clicker ESP32-C1',
+      'Clicker ESP32-B7',
+      'Clicker ESP32-A4CF12',
+    ]);
   });
 
-  it('tags an idle clicker Sin alumno and a never-set-up clicker Sin configurar', async () => {
+  it('tags an idle clicker Sin alumno and a clicker that never connected Sin conectar', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-A4CF12' });
     const idle = within(clickerRow('ESP32-B7'));
     expect(idle.getByText('Sin alumno')).toBeInTheDocument();
-    expect(idle.getByText('Sin configurar')).toBeInTheDocument();
+    expect(idle.getByText('Sin conectar')).toBeInTheDocument();
     const assigned = within(clickerRow('ESP32-A4CF12'));
     expect(assigned.getByText('ana')).toBeInTheDocument();
-    expect(assigned.queryByText('Sin configurar')).not.toBeInTheDocument();
+    expect(assigned.queryByText('Sin conectar')).not.toBeInTheDocument();
+  });
+
+  it('shows the hint about new clickers under the add form', async () => {
+    installFakeFleet();
+    render(<ClickerFleetView />);
+    expect(screen.getByText('Los clickers nuevos aparecen solos al encenderlos.')).toBeInTheDocument();
+    await screen.findByRole('button', { name: 'ESP32-A4CF12' });
   });
 
   it('toasts a failed load with the Spanish fallback', async () => {

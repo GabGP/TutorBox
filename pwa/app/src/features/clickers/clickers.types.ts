@@ -8,8 +8,9 @@ export interface ClickerDevice {
   assigned_username: string | null;
   created_at: string;
   /**
-   * Null = never set up over Bluetooth. Absent from backends that predate the
-   * field: the screen treats absent and null the same way.
+   * The clicker's first contact with the appliance (UTC). Null = added by hand
+   * and never connected. Absent from backends that predate the field: the
+   * screen treats absent and null the same way.
    */
   secret_issued_at?: string | null;
 }

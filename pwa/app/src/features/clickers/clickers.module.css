@@ -22,6 +22,15 @@
   width: 100%;
 }
 
+/* One line under the add form, the same measure as the form. */
+.addHint {
+  max-width: 560px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--mute2);
+}
+
 .addButton:disabled {
   opacity: 0.55;
 }
@@ -102,6 +111,12 @@
 .unassignedTag {
   color: var(--warn2);
   background: var(--warn-bg);
+}
+
+/* Accent tone for "Nuevo": a clicker that connected in the last 10 minutes. */
+.newTag {
+  color: var(--p);
+  background: var(--tint);
 }
 
 /* Armed: the tags keep their space but are not shown; the confirm covers them. */

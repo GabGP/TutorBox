@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import listStyles from '../../shared/styles/lists.module.css';
 import styles from './clickers.module.css';
 import type { ClickerDevice } from './clickers.types';
+import { hasNeverConnected, isNewClicker } from './clickerStatus';
 
 /**
  * Horizontal travel, in px, above which a click on the id is read as the end
@@ -48,8 +49,9 @@ export const ClickerFaceBody: React.FC<ClickerFaceBodyProps> = ({
     device.assigned_user_id === null
       ? `${listStyles.roleTag} ${styles.tagChip} ${styles.unassignedTag}`
       : `${listStyles.roleTag} ${styles.tagChip}`;
-  // Backends that predate secret_issued_at leave it out: treat that like null.
-  const neverSetUp = device.secret_issued_at == null;
+  // Read on every render: the list reloads every few seconds, so the chip ends on time.
+  const showNewChip = isNewClicker(device, Date.now());
+  const showNeverConnectedChip = hasNeverConnected(device);
 
   return (
     <div className={styles.faceBody}>
@@ -77,8 +79,11 @@ export const ClickerFaceBody: React.FC<ClickerFaceBodyProps> = ({
           aria-hidden={armed || undefined}
         >
           <span className={studentTagClass}>{device.assigned_username ?? 'Sin alumno'}</span>
-          {neverSetUp && (
-            <span className={`${listStyles.roleTag} ${styles.tagChip}`}>Sin configurar</span>
+          {showNewChip && (
+            <span className={`${listStyles.roleTag} ${styles.tagChip} ${styles.newTag}`}>Nuevo</span>
+          )}
+          {showNeverConnectedChip && (
+            <span className={`${listStyles.roleTag} ${styles.tagChip}`}>Sin conectar</span>
           )}
         </div>
         {armed && <div className={styles.confirmOverlay}>{confirm}</div>}

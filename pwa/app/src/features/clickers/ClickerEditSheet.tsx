@@ -95,7 +95,7 @@ const ClickerEditForm: React.FC<ClickerEditFormProps> = ({
         </button>
       )}
       <div className={styles.sheetHint}>
-        El clicker vota como el alumno elegido. Cambiarlo no necesita Bluetooth.
+        El clicker vota como el alumno elegido. Cambiarlo no requiere volver a configurar el clicker.
       </div>
     </Sheet>
   );

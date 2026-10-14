@@ -24,7 +24,7 @@ const InfoLine: React.FC<InfoLineProps> = ({ label, value }) => (
 
 /**
  * Read-only detail of one clicker: the student it holds, when it was added,
- * and when it was first set up over Bluetooth (Todavía no until then).
+ * and when it first connected to the appliance (Todavía no until then).
  */
 export const ClickerInfoSheet: React.FC<ClickerInfoSheetProps> = ({ device, onClose }) => {
   if (!device) return null;
@@ -35,7 +35,7 @@ export const ClickerInfoSheet: React.FC<ClickerInfoSheetProps> = ({ device, onCl
         <InfoLine label="Alumno" value={device.assigned_username ?? 'Sin alumno'} />
         <InfoLine label="Agregado" value={formatClickerDate(device.created_at)} />
         <InfoLine
-          label="Configurado por Bluetooth"
+          label="Primer contacto"
           value={
             device.secret_issued_at == null
               ? 'Todavía no'

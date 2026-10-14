@@ -68,17 +68,17 @@ describe('ClickerRow face', () => {
     expect(screen.getByText('Sin alumno')).toBeInTheDocument();
   });
 
-  it('marks a clicker never set up over Bluetooth with Sin configurar', () => {
+  it('marks a clicker that never connected with Sin conectar', () => {
     renderRow(idleDevice);
-    expect(screen.getByText('Sin configurar')).toBeInTheDocument();
+    expect(screen.getByText('Sin conectar')).toBeInTheDocument();
   });
 
-  it('omits Sin configurar once a secret was issued', () => {
+  it('omits Sin conectar once the clicker has connected', () => {
     renderRow(assignedDevice);
-    expect(screen.queryByText('Sin configurar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sin conectar')).not.toBeInTheDocument();
   });
 
-  it('treats a device without secret_issued_at (older backend) like one never set up', () => {
+  it('treats a device without secret_issued_at (older backend) like one that never connected', () => {
     const olderBackendDevice: ClickerDevice = {
       device_id: 'ESP32-LEGACY',
       assigned_user_id: 1,
@@ -86,7 +86,7 @@ describe('ClickerRow face', () => {
       created_at: '2026-08-29 14:00:00',
     };
     renderRow(olderBackendDevice);
-    expect(screen.getByText('Sin configurar')).toBeInTheDocument();
+    expect(screen.getByText('Sin conectar')).toBeInTheDocument();
   });
 
   it('offers Info, Editar and Eliminar in that order, with clicker-specific names', () => {
@@ -110,6 +110,38 @@ describe('ClickerRow face', () => {
     expect(onOpenEdit).toHaveBeenCalledWith(assignedDevice);
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
     expect(onArmDelete).toHaveBeenCalledWith('ESP32-A4CF12');
+  });
+});
+
+describe('ClickerRow new-clicker chip', () => {
+  /** Pins only the clock (Date), so the row's timers and promises still run for real. */
+  function setClockTo(isoTime: string) {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(isoTime));
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('shows Nuevo on an unassigned clicker that connected less than 10 minutes ago', () => {
+    setClockTo('2026-10-13T12:00:00Z');
+    renderRow({ ...idleDevice, secret_issued_at: '2026-10-13 11:55:00' });
+    expect(screen.getByText('Nuevo')).toBeInTheDocument();
+    expect(screen.queryByText('Sin conectar')).not.toBeInTheDocument();
+  });
+
+  it('drops Nuevo once the clicker has been connected for 10 minutes', () => {
+    setClockTo('2026-10-13T12:00:00Z');
+    renderRow({ ...idleDevice, secret_issued_at: '2026-10-13 11:50:00' });
+    expect(screen.queryByText('Nuevo')).not.toBeInTheDocument();
+  });
+
+  it('never shows Nuevo on an assigned clicker, however recent its first contact', () => {
+    setClockTo('2026-10-13T12:00:00Z');
+    renderRow({ ...assignedDevice, secret_issued_at: '2026-10-13 11:59:00' });
+    expect(screen.queryByText('Nuevo')).not.toBeInTheDocument();
   });
 });
 
