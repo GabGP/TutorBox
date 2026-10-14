@@ -1,6 +1,6 @@
-# ESP32 Clicker Protocol — BLE Appliance Provisioning & Voting
+# ESP32 Clicker Protocol — Setup & Voting
 
-How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance itself** (Jetson Orin Nano, Bluetooth always on), proves who it is, and then votes through the same REST API as the student phones.
+How a physical ESP32 clicker gets onto the classroom Wi-Fi, proves who it is, and then votes through the same REST API as the student phones.
 
 <div align="center">
 
@@ -14,10 +14,9 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 ---
 
 > [!NOTE]
-> **Design document for Week 7 (ESP32 Hardware Clickers).** The backend half is built (Student A): migration `015`, `POST /api/v1/staff/devices/{device_id}/secret`, `POST /api/v1/devices/auth`, and the vote label taken from the session. [§6](#6-backend-additions) describes it as built, and the [Devices API](../api/devices.md) is the reference. The firmware (§8) and the Jetson provisioner (§4, §7) are not started (Student B) and remain design.
-> It replaces the "factory flashing" strategy in [ESP32 Clicker Transport §3](esp32-clicker-transport.md#3-wi-fi-ap-association--provisioning-mechanisms)
-> with provisioning over Bluetooth from the appliance; hardware, LED tables and the `VoteTransport`
-> principle from that document still apply and are not repeated here.
+> **Week 7 (ESP32 Hardware Clickers), state on 2026-10-13.** The backend is built: [§6](#6-backend-additions) describes it, and the [Devices API](../api/devices.md) is the reference. The firmware is built in `firmware/clicker/` and calls only the endpoints of §6 ([Clicker Firmware](../../firmware/clicker/README.md)). It passes its tests on a PC against the real backend; it has not run on a real ESP32 yet.
+>
+> **Bluetooth provisioning was dropped on 2026-10-13**, and this document was first written around it. What replaced it: the Wi-Fi name and password are compiled into the firmware, and the device secret is issued by the TutorBox and typed into the clicker over USB. §1, §3, §8, §10 and §11 describe the clicker as built. §4 and §7, and the Bluetooth parts of §2 and §5, are the dropped design, kept as a record: none of that code exists. The hardware is in the [Clicker Firmware guide](../../firmware/clicker/README.md) and the `VoteTransport` principle in [ESP32 Clicker Transport](esp32-clicker-transport.md#3-the-votetransport-seam).
 
 ---
 
@@ -25,10 +24,10 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 - [1. The Idea in One Page](#1-the-idea-in-one-page)
 - [2. What You Need Before Writing Code](#2-what-you-need-before-writing-code)
 - [3. End-to-End Flow](#3-end-to-end-flow)
-- [4. BLE Provisioning Protocol](#4-ble-provisioning-protocol)
+- [4. BLE Provisioning Protocol (dropped)](#4-ble-provisioning-protocol)
 - [5. Trust Model: Why "Bluetooth Always On" Is Safe](#5-trust-model-why-bluetooth-always-on-is-safe)
 - [6. Backend Additions](#6-backend-additions)
-- [7. Jetson Provisioner Service](#7-jetson-provisioner-service)
+- [7. Jetson Provisioner Service (dropped)](#7-jetson-provisioner-service)
 - [8. ESP32 Firmware](#8-esp32-firmware)
 - [9. Network & Capacity Considerations](#9-network--capacity-considerations)
 - [10. Failure Modes & Bring-Up Checklist](#10-failure-modes--bring-up-checklist)
@@ -41,44 +40,46 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi **from the appliance 
 
 | Question | Answer |
 | :--- | :--- |
-| Who is the Bluetooth **server**? | The Jetson. It runs a small always-on service that advertises a `TutorBox` BLE GATT service and answers reads. It never initiates anything. |
-| Who is the Bluetooth **client**? | The ESP32, and only while provisioning. A long press on button **A (3 s)** makes it scan for the `TutorBox` service, connect, exchange two small JSON messages, disconnect, and switch Bluetooth off. |
-| What is in "the packet"? | SSID, WPA2 passphrase, the API base URL, the clicker's `device_id`, and a **device secret** (see below). ~200 bytes of JSON, read from one encrypted GATT characteristic. |
-| Why a device secret? | Voting requires a student bearer token (`POST /api/v1/session/{id}/vote`). A clicker has no PIN, so it exchanges its secret for a token of the student the teacher assigned to it — over Wi-Fi, every boot. Re-assigning the clicker to another child tomorrow needs **no Bluetooth step**. |
-| How often does provisioning happen? | Once per clicker, and again only if the router passphrase changes. Not per class, not per student. |
-| After provisioning? | Pure Wi-Fi + HTTP. The clicker polls `GET /api/v1/session/current` and votes on the same endpoint as a phone. The server labels the vote `hardware`, with the clicker's `device_id`, from the clicker's session token; the body needs only `selected_option`. Host page and HDMI screen need no changes. |
+| How does a clicker know the Wi-Fi? | The name and the WPA2 passphrase are compiled into the firmware from `secrets.h`, a file git ignores. Every clicker of a classroom is flashed with the same build. |
+| How does a clicker prove who it is? | With a **device secret**: 32 hex characters that the TutorBox issues (`POST /api/v1/staff/devices/{device_id}/secret`) and shows once. A teacher types it into the clicker over USB, and the clicker keeps it in flash (§8.2). |
+| Why a device secret? | Voting requires a student bearer token (`POST /api/v1/session/{id}/vote`). A clicker has no PIN, so it exchanges its secret for a token of the student the teacher assigned to it, over Wi-Fi, every boot. Giving the clicker to another child tomorrow needs **no cable**. |
+| How often is a clicker set up? | Flashed once, and again only if the router passphrase changes. Given its secret once, and again only if the secret is replaced or the clicker's flash is erased. Not per class, not per student. |
+| After setup? | Pure Wi-Fi + HTTP. The clicker polls `GET /api/v1/session/current` and votes on the same endpoint as a phone. The server labels the vote `hardware`, with the clicker's `device_id`, from the clicker's session token; the body needs only `selected_option`. Host page and HDMI screen need no changes. |
+| What happened to Bluetooth? | Provisioning from the appliance over BLE was designed (§4, §7) and dropped on 2026-10-13 in favor of static Wi-Fi credentials. None of it was built. |
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Kid as Student
+    participant T as Teacher
     participant ESP as ESP32 clicker
-    participant BT as Jetson provisioner (BLE)
     participant AP as GL.iNet AP "Utz'tutor"
     participant API as FastAPI (:8000)
 
-    Kid->>ESP: hold A for 3 s
-    ESP->>BT: scan → connect → write hello {device_id}
-    BT->>API: GET /staff/devices (is it registered + assigned?)
-    BT->>API: POST /staff/devices/{id}/secret (rotate)
-    ESP->>BT: read provision (encrypted link)
-    BT-->>ESP: {ssid, psk, api, device_id, secret}
-    ESP->>BT: write result {ok:true} → disconnect, BLE off
+    Note over T,ESP: once per clicker, at the teacher's desk
+    T->>API: POST /staff/devices {device_id}, then POST /staff/devices/{id}/secret
+    API-->>T: {secret}, shown once
+    T->>ESP: USB serial line: secret <32 hex>
+    ESP-->>T: clicker-secret stored (kept in flash)
+    Note over ESP,API: every power-on
     ESP->>AP: WPA2 join, DHCP 192.168.8.1xx
     ESP->>API: POST /devices/auth {device_id, secret}
     API-->>ESP: {session_id} (bearer token of the assigned student)
     loop every 1 s
         ESP->>API: GET /session/current
     end
-    Kid->>ESP: presses B
+    loop every 5 s
+        ESP->>API: POST /presence/heartbeat {rssi, battery_pct}
+    end
     ESP->>API: POST /session/{id}/vote {selected_option:"B"}
-    Note over ESP,API: transport_type and device_id, if sent, are ignored, the token labels the vote
     API-->>ESP: 200 → green LED (409 → red: already voted / window closed)
 ```
 
 ---
 
 ## <a id="2-what-you-need-before-writing-code"></a>2. What You Need Before Writing Code
+
+> [!NOTE]
+> The Bluetooth items below (the Jetson's radio and BlueZ, NimBLE on the ESP32, the Wi-Fi the appliance hands out) belong to the design dropped on 2026-10-13. The backend items are as built.
 
 ### Jetson Orin Nano
 - **A Bluetooth radio.** The Developer Kit ships an M.2 Key-E module (Realtek RTL8822CE: Wi-Fi 5 + **Bluetooth 5.0**). Check with `bluetoothctl show` — if no controller is listed, use any BlueZ-supported USB dongle (CSR8510, Intel AX200) rather than fighting the driver.
@@ -88,7 +89,7 @@ sequenceDiagram
 - **A stable API address**: the Jetson holds the static lease `192.168.8.2` (`infra/glinet/initial.md` §5), so the packet can carry `http://192.168.8.2/api/v1` (nginx on :80, [`infra/nginx/utztutor.conf`](../../infra/nginx/utztutor.conf); `:8000` reaches uvicorn directly — either way it is *data in the packet*, not something baked into firmware). The captive portal never redirects `/api/*`, so clickers are unaffected by it.
 
 ### ESP32
-- **ESP32-S2 has no Bluetooth at all** — it cannot be used with this design. Original ESP32 (WROOM-32), ESP32-S3, ESP32-C3 and C6 all have BLE. The C3 / WROOM-32 in the [BOM](esp32-clicker-transport.md#2-hardware-specifications--bill-of-materials) are fine.
+- **ESP32-S2 has no Bluetooth at all** — it cannot be used with this design. Original ESP32 (WROOM-32), ESP32-S3, ESP32-C3 and C6 all have BLE. The ESP32-C3 in the [parts list](../../firmware/clicker/README.md#2-parts-per-clicker) is fine.
 - Use the **NimBLE** stack (Arduino: `NimBLE-Arduino`; ESP-IDF: NimBLE host). Bluedroid costs ~100 KB more RAM and the classic ESP32 needs that RAM for Wi-Fi + TLS-free HTTP.
 - BLE and Wi-Fi share one radio on the ESP32 too. Do not run them together: provision with Wi-Fi off, then `NimBLEDevice::deinit(true)` and reboot into Wi-Fi mode. Simpler than coexistence tuning and frees ~50 KB heap.
 - BLE range is ~10 m indoors. Provisioning is done **next to the appliance** (teacher's desk), never from the back of the room.
@@ -103,38 +104,43 @@ sequenceDiagram
 
 ## <a id="3-end-to-end-flow"></a>3. End-to-End Flow
 
-Clicker lifecycle, as a state machine. LED patterns are the ones in [Clicker Transport §6](esp32-clicker-transport.md#6-visual-feedback--dual-led-state-machines); only the two provisioning states are new.
+Clicker lifecycle, as a state machine. These are the phases of `ClickerApp` (`firmware/clicker/clicker/ClickerApp.h`). The clicker has one RGB light; its patterns are in [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> BOOT
-    BOOT --> WIFI_JOIN: NVS has credentials
-    BOOT --> UNPROVISIONED: NVS empty (status LED slow blue blink)
-    UNPROVISIONED --> PROVISION: hold A 3 s
-    WIFI_JOIN --> PROVISION: hold A 3 s (re-provision)
-    PROVISION --> WIFI_JOIN: packet stored, BLE off, reboot
-    PROVISION --> UNPROVISIONED: not found / busy / unassigned (retry with backoff)
-    WIFI_JOIN --> DEVICE_AUTH: DHCP lease (status LED solid blue 3 s)
-    WIFI_JOIN --> WIFI_FAIL: 3 failed joins (status LED slow red)
-    WIFI_FAIL --> PROVISION: hold A 3 s
-    DEVICE_AUTH --> READY: 200 with session_id
-    DEVICE_AUTH --> UNASSIGNED: 403 unassigned (vote LED red x3 every 10 s)
-    UNASSIGNED --> DEVICE_AUTH: retry every 30 s
-    READY --> ROUND_OPEN: poll sees the round open (new round_id)
-    ROUND_OPEN --> VOTE_SENT: button A-D, vote accepted 200 (green 1.5 s)
-    ROUND_OPEN --> READY: 409 already voted or window closed (red x3)
-    VOTE_SENT --> READY: poll sees the round revealed or the next round
-    READY --> DEVICE_AUTH: any 401 from the vote or the heartbeat (token revoked), re-auth once
+    [*] --> LOOKING_FOR_WIFI
+    LOOKING_FOR_WIFI --> NEEDS_SECRET: Wi-Fi up, no secret in flash
+    LOOKING_FOR_WIFI --> CONNECTING: Wi-Fi up, secret in flash
+    LOOKING_FOR_WIFI --> READY: Wi-Fi back, token still held
+    NEEDS_SECRET --> CONNECTING: secret typed in over USB
+    CONNECTING --> READY: login 200 (token)
+    CONNECTING --> UNASSIGNED: login 403
+    CONNECTING --> REJECTED: login 401, 422 or 429
+    CONNECTING --> SERVER_UNREACHABLE: 3 logins with no answer
+    UNASSIGNED --> READY: login 200, asked every 5 s
+    REJECTED --> CONNECTING: a new secret typed in over USB
+    REJECTED --> READY: after a 429, login 200, asked every 30 s
+    SERVER_UNREACHABLE --> READY: the TutorBox answers again
+    READY --> SERVER_UNREACHABLE: 3 polls with no answer
+    READY --> CONNECTING: 401 on the heartbeat or on a vote
+    READY --> LOOKING_FOR_WIFI: Wi-Fi lost
 ```
 
-Three rules that keep the firmware simple:
-1. **One request in flight at a time.** Buttons are ignored while the vote LED is busy (transmitting / green / red), exactly as the transport spec's debounce rule says.
+Inside `READY`, for each question: the poll sees the round `open` and the light blinks white, a press sends the vote (yellow), `200` shows green for 1.5 s, `409` shows red three times, and the clicker waits for the next round.
+
+Five rules that keep the firmware simple:
+1. **One request in flight at a time.** Buttons are ignored while a vote is being sent.
 2. **The backend is the only clock.** The clicker never runs its own countdown; it votes when the round is `open` and accepts whatever the server answers.
-3. **A heartbeat every 5 seconds while the clicker holds a token.** It is `POST /api/v1/presence/heartbeat` with the bearer token and the Wi-Fi signal and battery (§8.3). A `401` on the heartbeat sends the clicker to `DEVICE_AUTH` at once, so a clicker that the teacher has unassigned shows its red pattern within seconds, not at its next vote.
+3. **A heartbeat every 5 seconds while the clicker holds a token.** It is `POST /api/v1/presence/heartbeat` with the bearer token, the Wi-Fi signal and, when the sense resistors are fitted, the battery (§8.3). A `401` on the heartbeat makes the clicker log in again at once, so a clicker that the teacher has unassigned shows its unassigned light within seconds, not at its next vote.
+4. **A refused secret is not tried again.** Each `401` on the login counts toward the lockout of §6.3, which doubles up to 16 minutes and then refuses the right secret too. After one `401` the clicker waits for a new secret over USB, or for a restart.
+5. **The token outlives a Wi-Fi drop.** It is kept in RAM, never in flash. When Wi-Fi comes back the clicker goes on with the same token; the next heartbeat tells it whether the session ended meanwhile.
 
 ---
 
 ## <a id="4-ble-provisioning-protocol"></a>4. BLE Provisioning Protocol
+
+> [!WARNING]
+> **Dropped on 2026-10-13. Not built.** No clicker and no service speaks this protocol. The section is kept as the record of the design. What the clicker does instead is in [§8.2](#82-usb-setup-link).
 
 ### 4.1 Advertising (what "broadcasting" actually is)
 The Jetson advertises continuously: flags + the 128-bit service UUID + local name `TutorBox`. **The advertisement carries no credentials** — 31 bytes would not fit them and anyone with a phone could read them. Credentials are only readable after connecting and encrypting the link (§4.4). The name lets a human verify with any BLE scanner app that the appliance is alive.
@@ -209,6 +215,9 @@ BlueZ delivers `ReadValue(options)` with `options["device"]`, so a D-Bus impleme
 
 ## <a id="5-trust-model-why-bluetooth-always-on-is-safe"></a>5. Trust Model: Why "Bluetooth Always On" Is Safe
 
+> [!NOTE]
+> The table, and the rules about the provisioning packet, belong to the Bluetooth design dropped on 2026-10-13. The rules about the secret's digest, the token kept in RAM, the token's scope and revocation are as built. Without Bluetooth, the Wi-Fi passphrase is in a clicker's flash from the moment it is flashed, a new router passphrase means flashing every clicker again, and the secret reaches a clicker only over a USB cable.
+
 The radio being always on is only a problem if it hands out something valuable to anyone who asks. It does not:
 
 | Layer | What an attacker with a laptop next to the school gets |
@@ -237,7 +246,7 @@ Built in Week 7 by Student A, backend only. The code is in `backend/migrations/0
 
 1. **Migration `015`, not `011`.** Migrations `011` to `014` were already taken. The three columns are the ones the design asked for.
 2. **The secret is stored as a SHA-256 digest, not bcrypt.** The secret is 128 random bits, so a fast hash is enough: this is the reasoning `auth_session.py` gives for bearer tokens. A public endpoint also does not run bcrypt on every request.
-3. **The vote label comes from the session, not from the body.** The design sent `transport_type: "hardware"` and `device_id` in the vote body. A code review fix (H6 in `suggestions.md`) removed both fields from the request. The server now labels each vote from the caller's session row, so a phone cannot pose as a clicker. The firmware may still send the two fields; the server ignores them.
+3. **The vote label comes from the session, not from the body.** The design sent `transport_type: "hardware"` and `device_id` in the vote body. A code review fix (H6 in `suggestions.md`) removed both fields from the request. The server now labels each vote from the caller's session row, so a phone cannot pose as a clicker. The firmware does not send them.
 4. **Device sessions are stored as digests and expire.** The design said device authentication inserts the session "the same as login" and did not cover expiry. As built, the row holds `token_digest(token)` in `sessions.id`, as login does, and the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`). The token itself is never written to the database.
 5. **The lockout key is per device and address.** The key is `device:<device_id>@<address>`, so a clicker never shares a lockout with a username.
 6. **A clicker's token can only vote and send the heartbeat.** The design gave the clicker "a student bearer token" and did not say what else that token could do. As built, every endpoint except the vote endpoint and the presence heartbeat refuses a session issued to a clicker (§6.6).
@@ -260,7 +269,7 @@ The columns are nullable with no default, so rows that exist before the migratio
 
 ### 6.2 `POST /api/v1/staff/devices/{device_id}/secret`, teacher / admin
 
-Issues a new secret. The design has the provisioner call it on every provisioning (§7.2). Reference: [Devices API](../api/devices.md#post-staff-devices-secret).
+Issues a new secret. It is called once per clicker, during the USB setup (§8.2), and again only to replace a secret. Reference: [Devices API](../api/devices.md#post-staff-devices-secret).
 
 ```json
 {"device_id": "ESP32-A4CF12", "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"}
@@ -312,9 +321,9 @@ A clicker's token votes as its student, but it is not a login. `core/security/au
 
 The refusal is the default: an endpoint added later refuses clickers unless it asks for `get_voter_session`. A revoked or expired token gets `401` before the scope is checked, so the firmware still reads `401` as "authenticate again". `POST /api/v1/games/events` reads an optional login and never refuses a batch; with a clicker's token it stores the events with no student. `GET /api/v1/session/current` is public, so the clicker's runtime calls (§8.3) are unaffected. The token can do two things and nothing else: vote, and send the heartbeat of §6.9. Tests: `backend/tests/api/devices/test_device_token_scope.py` and `backend/tests/core/security/test_auth_session_device.py`.
 
-### 6.7 Configuration (not built)
+### 6.7 Configuration
 
-The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) are not in `.env.example`. They belong with the provisioner (Student B). The lockout values come from the existing `AUTH_MAX_ATTEMPTS` and `AUTH_LOCKOUT_SECONDS`.
+The clickers added no settings. The `PROVISIONER_*` and `CLICKER_*` entries of the first design belonged to the Bluetooth provisioner, which was dropped. The lockout values come from the existing `AUTH_MAX_ATTEMPTS` and `AUTH_LOCKOUT_SECONDS`.
 
 ### 6.8 Known limits
 
@@ -328,7 +337,7 @@ The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) ar
 `POST /api/v1/presence/heartbeat` tells the lobby that a phone or a clicker is connected. Code: `backend/src/api/presence/`. Reference: [Presence API](../api/presence.md).
 
 - **Who is recorded**: a clicker's token records the clicker under its `device_id`, with the `rssi` and `battery_pct` in the body (both optional, ranges -120 to 0 and 0 to 100). A student's login records the phone and ignores any body. A staff login is accepted and recorded nowhere.
-- **Body**: optional. A beat with no body is accepted and clears the clicker's vitals until the next beat that carries them. The designed firmware sends the body every time (§8.3, not written yet).
+- **Body**: optional. A beat with no body is accepted and clears the clicker's vitals until the next beat that carries them. The firmware sends `rssi` every time, and `battery_pct` only when the battery sense resistors are fitted (§8.3).
 - **Timing**: one beat every 5 seconds is expected. `online` means the last beat was 15 seconds ago or less. An entry not heard from for 30 minutes is forgotten.
 - **Storage**: in memory, in the single uvicorn process. A restart empties it, and it fills again within seconds because every client beats.
 - **Clicker with no student**: it has no token, so it cannot beat. The class view lists it under `unassigned_clickers`, with no vitals.
@@ -336,6 +345,9 @@ The provisioner settings from the first design (`PROVISIONER_*`, `CLICKER_*`) ar
 ---
 
 ## <a id="7-jetson-provisioner-service"></a>7. Jetson Provisioner Service
+
+> [!WARNING]
+> **Dropped on 2026-10-13. Not built.** There is no `infra/provisioner/` folder and no provisioner unit. The section is kept as the record of the design.
 
 A separate process (`infra/provisioner/utztutor_provisioner.py`) with its own systemd unit. It is deliberately **not** inside FastAPI: BlueZ needs a GLib main loop, and a BLE stack hiccup must never take the quiz API down.
 
@@ -428,127 +440,51 @@ WantedBy=multi-user.target
 
 ## <a id="8-esp32-firmware"></a>8. ESP32 Firmware
 
-`firmware/clicker/` — PlatformIO, Arduino framework, libraries: `NimBLE-Arduino`, `ArduinoJson`, built-in `WiFi`, `HTTPClient`, `Preferences` (NVS). Pins, debounce and LED patterns per [Clicker Transport §2 and §6](esp32-clicker-transport.md).
+Built in `firmware/clicker/`: Arduino framework, PlatformIO or the Arduino IDE, the `ArduinoJson` library and the core's `WiFi`, `HTTPClient` and `Preferences` (NVS). There is no Bluetooth stack. The build, the wiring and the light patterns are in [Clicker Firmware](../../firmware/clicker/README.md); this section is the firmware's contract with the backend.
 
-### 8.1 NVS layout (namespace `tb`)
-| Key | Type | Notes |
+### 8.1 What the clicker stores
+
+| Where | What | Notes |
 | :--- | :--- | :--- |
-| `ssid`, `psk` | string | from the packet |
-| `api` | string | API base, e.g. `http://192.168.8.2/api/v1` |
-| `dev` | string | `device_id` (also recomputed from MAC; stored for the mismatch check) |
-| `secret` | string | rotated on every provisioning |
-| — | — | the bearer token is **never** written to NVS |
+| Firmware image | Wi-Fi name and passphrase | From `secrets.h` at build time. The API address (`TUTORBOX_URL`, `http://192.168.8.2`) is in `config.h` |
+| NVS, namespace `clicker`, key `secret` | The device secret | Written by the USB setup link (§8.2). Only a new secret replaces it |
+| RAM only | The bearer token | Never written to flash. A restart logs in again |
+| Nowhere | `device_id` | Computed at every boot from the Wi-Fi MAC: `ESP32-` and its last six hex digits, upper case |
 
-### 8.2 Provisioning routine (sketch)
-```cpp
-// hold A for 3 s → provision(); Wi-Fi is off at this point
-bool provision() {
-  NimBLEDevice::init("");
-  NimBLEDevice::setSecurityAuth(false, false, true);          // no bond, no MITM, LE Secure Connections
-  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
-  NimBLEDevice::setMTU(256);
+### 8.2 USB setup link
 
-  NimBLEScan* scan = NimBLEDevice::getScan();
-  scan->setActiveScan(true);
-  NimBLEScanResults found = scan->start(5, false);
-  const NimBLEAdvertisedDevice* jetson = nullptr;
-  for (int i = 0; i < found.getCount(); i++)
-    if (found.getDevice(i).isAdvertisingService(NimBLEUUID(SVC_UUID))) { jetson = &found.getDevice(i); break; }
-  if (!jetson) return fail("no_appliance");
+How the secret of §6.2 reaches the clicker. With the clicker on a USB cable, one line of text is sent to its serial port (115200 baud). Code: `firmware/clicker/clicker/SerialSetup.cpp`.
 
-  NimBLEClient* c = NimBLEDevice::createClient();
-  if (!c->connect(jetson)) return fail("connect");
-  NimBLERemoteService* svc = c->getService(SVC_UUID);
-  svc->getCharacteristic(HELLO_UUID)->writeValue(helloJson(), true);
-  std::string raw = svc->getCharacteristic(PROV_UUID)->readValue();   // encrypt-read → NimBLE pairs, then reads
-  StaticJsonDocument<512> doc;
-  if (deserializeJson(doc, raw) || strcmp(doc["status"] | "", "assigned") != 0 ||
-      strcmp(doc["device_id"] | "", myDeviceId()) != 0) {              // MUST: reject another clicker's packet
-    svc->getCharacteristic(RESULT_UUID)->writeValue("{\"ok\":false,\"err\":\"status\"}", true);
-    c->disconnect(); return fail(doc["status"] | "bad_packet");        // caller retries with 1–5 s backoff
-  }
-  Preferences nvs; nvs.begin("tb", false);
-  nvs.putString("ssid", doc["ssid"].as<const char*>());  nvs.putString("psk", doc["psk"].as<const char*>());
-  nvs.putString("api",  doc["api"].as<const char*>());   nvs.putString("dev", doc["device_id"].as<const char*>());
-  nvs.putString("secret", doc["secret"].as<const char*>());
-  nvs.end();
-  svc->getCharacteristic(RESULT_UUID)->writeValue("{\"ok\":true}", true);
-  c->disconnect();
-  NimBLEDevice::deinit(true);                                 // free the radio and ~50 KB heap
-  ESP.restart();                                              // boots straight into WIFI_JOIN
-  return true;
-}
-```
+| Line sent | The clicker answers | The clicker does |
+| :--- | :--- | :--- |
+| `id` | `clicker-id ESP32-A4CF12` | Nothing else |
+| `secret <32 lowercase hex>` | `clicker-secret stored` | Writes the secret to NVS, forgets its token, and logs in with the new secret |
+| `secret` followed by anything else | `clicker-secret invalid: …` | Nothing |
+| Any other line | `clicker-setup unknown command: …` | Nothing |
 
-### 8.3 Runtime loop (sketch)
+The clicker never prints a secret, and a line longer than a command is dropped whole. Today a person issues the secret in Swagger and types the line in the Serial Monitor ([Clicker Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)). No tool does the two steps yet.
 
-This is a design sketch. `firmware/clicker/` is not written yet.
+### 8.3 Runtime loop
 
-```cpp
-String token;                       // RAM only
-String lastRound, seenRound;        // round_id already voted / last seen open
-uint32_t roundSeenAt = 0;
-uint32_t lastBeat = 0;              // when the last heartbeat was sent
+The clicker sends one request at a time. `ClickerApp::nextRequest` picks it in this order:
 
-bool deviceAuth() {                 // 200 → token; 403 → UNASSIGNED pattern; 401 → wrong secret → re-provision hint
-  HTTPClient http; http.begin(api + "/devices/auth"); http.addHeader("Content-Type", "application/json");
-  int code = http.POST("{\"device_id\":\"" + dev + "\",\"secret\":\"" + secret + "\"}");
-  if (code == 200) { StaticJsonDocument<256> d; deserializeJson(d, http.getString()); token = d["session_id"].as<String>(); }
-  http.end(); return code == 200;
-}
+1. With no token: the login, `POST /api/v1/devices/auth`, if it has a secret that was not refused.
+2. A vote that is waiting: `POST /api/v1/session/{id}/vote` with the token. The `id` is the one the last poll returned.
+3. The heartbeat, when 5 seconds have passed: `POST /api/v1/presence/heartbeat` with the token.
+4. The poll, when 1 second has passed: `GET /api/v1/session/current`, with no token because it is public.
 
-void heartbeat() {                  // every 5 s while a token is held; the lobby shows this clicker
-  HTTPClient http; http.begin(api + "/presence/heartbeat"); http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", "Bearer " + token);
-  int code = http.POST("{\"rssi\":" + String(WiFi.RSSI()) + ",\"battery_pct\":" + String(batteryPct()) + "}");
-  http.end();                                                  // batteryPct(): the ADC divider of §2, 0–100
-  if (code == 401 && !deviceAuth()) token = "";                // revoked: 403 → UNASSIGNED pattern within 5 s; no token, no more beats until the 30 s retry of §3 succeeds
-}
+What the clicker does with each status is listed in [Clicker Firmware §11](../../firmware/clicker/README.md#11-how-the-code-is-organized).
 
-void loop() {
-  if (millis() - lastPoll > 1000) {                            // the backend is the only clock
-    lastPoll = millis();
-    HTTPClient http; http.begin(api + "/session/current");     // 404 = no match yet: stay READY
-    if (http.GET() == 200) {
-      StaticJsonDocument<1024> s; deserializeJson(s, http.getStream());
-      const char* status = s["current_round"]["status"] | "";
-      String rid = s["current_round"]["round_id"] | "";
-      sessionId = s["id"].as<String>();
-      armed = (strcmp(status, "open") == 0 && rid != lastRound);
-      if (armed && rid != seenRound) { seenRound = rid; roundSeenAt = millis(); }
-    } else armed = false;
-    http.end();
-  }
-  if (token.length() > 0 && millis() - lastBeat > 5000) {      // presence: 5 s, with the token
-    lastBeat = millis();
-    heartbeat();
-  }
-  char pressed = readButtonDebounced();                        // 'A'..'D' or 0; ignored while the LED is busy
-  if (pressed && armed) vote(pressed);
-  if (longPressA(3000)) { WiFi.disconnect(true); provision(); }
-}
-
-void vote(char option) {
-  ledYellowBlink();
-  HTTPClient http; http.begin(api + "/session/" + sessionId + "/vote");
-  http.addHeader("Content-Type", "application/json"); http.addHeader("Authorization", "Bearer " + token);
-  int code = http.POST(String("{\"selected_option\":\"") + option + "\",\"transport_type\":\"hardware\",\"device_id\":\"" + dev +
-                       "\",\"response_time_ms\":" + (millis() - roundSeenAt) + "}");
-  http.end();
-  if (code == 200)      { lastRound = seenRound; ledGreen(1500); }
-  else if (code == 401) { if (deviceAuth()) return vote(option); ledRed3(); }   // token revoked → re-auth once
-  else if (code == 403) { ledRed3(); /* unassigned: avisa al maestro */ }
-  else                  { lastRound = seenRound; ledRed3(); }                    // 409: already voted / window closed
-}
-```
 Details worth keeping in mind:
-- The vote body in the sketch still sends `transport_type` and `device_id`. The server ignores both, because it labels the vote from the token, so the firmware can drop them.
-- `WiFi.setSleep(true)` (modem sleep) roughly halves idle current; polling once a second still works.
-- `response_time_ms` is measured from the moment the clicker *saw* the round open, which is up to one poll interval late — good enough for the weekly report, and the same bias as the phones.
-- 30 clickers × 1 poll/s ≈ 30 req/s on `/session/current`: four cheap SQLite reads each, well within the Jetson's budget. If it ever isn't, the upgrade path is one SSE endpoint the clicker subscribes to; the firmware loop above changes only where `armed` is set.
-- The heartbeat sends `rssi` and `battery_pct` only. The `voltage_mv` of the older payload in [Clicker Transport §7](esp32-clicker-transport.md#7-fleet-health-telemetry--teacher-pwa-dashboard) is not read by the server, so the firmware may leave it out.
-- Each clicker sends 12 heartbeats a minute. The 30 clickers of a class send 360 in all, next to the one poll a second per clicker in the loop above. A `204` needs no reply and no retry.
-- Keep the HTTP client on plain `http://` inside the isolated LAN; TLS on a WROOM-32 costs RAM and certificates that nobody can renew offline.
+- The vote body carries `selected_option` and `response_time_ms`, nothing else. The server takes the transport label and the device id from the token.
+- `response_time_ms` is measured from the moment the clicker *saw* the round open, which is up to one poll interval late. That is good enough for the weekly report, and it is the same bias as the phones.
+- The poll's reply carries the question text and, after the reveal, the results. The clicker reads only `id`, `current_round.round_id` and `current_round.status`.
+- The poll does not say who voted. A clicker whose student already answered on a phone, or that was switched off and on during a question, shows white; the press then gets `409` and red.
+- A `409` on the vote is final. The one exception: when a vote got no answer and its retry gets "already voted", the first try had arrived, so the clicker shows green.
+- The heartbeat sends `rssi` every time, and `battery_pct` only when the battery sense resistors are fitted (`PIN_BATTERY_SENSE` in `config.h`). The percentage is a straight line between `BATTERY_EMPTY_MV` and `BATTERY_FULL_MV`.
+- `WiFi.setSleep(true)` (modem sleep, `WIFI_POWER_SAVE` in `config.h`) is on by default; polling once a second still works.
+- 30 clickers × 1 poll/s ≈ 30 req/s on `/session/current`, and 360 heartbeats a minute. If that ever is too much for the Jetson, the upgrade path is one SSE endpoint the clicker subscribes to; the firmware changes only where it learns that a round opened.
+- The HTTP client uses plain `http://` inside the isolated LAN. TLS would cost RAM and certificates that nobody can renew offline.
 
 ---
 
@@ -559,7 +495,7 @@ Details worth keeping in mind:
 | Addresses | Clickers take DHCP leases from `192.168.8.100–249` (150 addresses, the router's default pool). 30 clickers + 20 phones fits, with room for a second class set. |
 | Client isolation | `isolate='1'` on the AP blocks station↔station traffic only. Clickers talk to the Jetson on the **wired** LAN, so isolation costs nothing here and must stay on. |
 | WPA2 only | Keep `psk2+ccmp`. ESP32 WPA3/SAE support exists but is the most common cause of silent join failures on this hardware class. |
-| 2.4 GHz congestion | ESP32 is 2.4 GHz only; `HT20` and an empirically chosen channel (1/6/11) per the router runbook. BLE also lives in 2.4 GHz but only during the seconds of provisioning. |
+| 2.4 GHz congestion | ESP32 is 2.4 GHz only; `HT20` and an empirically chosen channel (1/6/11) per the router runbook. |
 | Join time | Cold boot → DHCP lease ≈ 2–4 s. A cached BSSID/channel in NVS (`WiFi.begin(ssid, psk, channel, bssid)`) cuts it to ≈ 1 s; optional. |
 | Router reboot mid-quiz | Clickers re-associate automatically (`WiFi.setAutoReconnect(true)`); the token survives (it is server-side state), so no re-auth is needed. |
 | No NTP on the LAN | Irrelevant to the clicker: it never compares timestamps. (The Jetson's own clock drift is a separate, documented issue.) |
@@ -572,45 +508,42 @@ Details worth keeping in mind:
 ### Failure modes
 | Symptom | Likely cause | Fix |
 | :--- | :--- | :--- |
-| Clicker never finds `TutorBox` | Jetson adapter blocked/off; provisioner not running; clicker too far | `rfkill list`, `bluetoothctl show`, `systemctl status utztutor-provisioner`; provision at the desk |
-| Read fails with *Authentication Failed* | Stale bond on either side | Design uses no bonding; if a bond exists from experiments: `bluetoothctl remove <clicker MAC>` and erase NVS on the clicker |
-| Read returns 20 bytes / truncated JSON | MTU not negotiated and long reads disabled | Request MTU 256 before the read; keep the packet ≤ 512 B |
-| `status: busy` in a loop | A previous provisioning never wrote `result` | Slot expires after 10 s; check provisioner log |
-| Joins Wi-Fi, then vote LED red every 10 s | Device unassigned (403) | Teacher assigns a student in the roster; clicker re-auths within 30 s |
-| Every vote 401 | The session was revoked (unassign, reassign, delete, a new secret, or its student became a teacher), or it is older than 12 hours | Authenticate again with `POST /api/v1/devices/auth`. If that answers `401`, the secret changed: re-provision (hold A 3 s) |
-| Auth answers `401` | Secret not issued, replaced by another provisioning, or the device id is unknown | Re-provision (hold A 3 s) |
-| Auth answers `429` | Five wrong secrets from this device at this address (30 s, doubling to 16 min) | Wait. The lockout is in memory, so a backend restart clears it |
-| Auth answers `422` | Secret or device id has the wrong shape (the secret is 32 lowercase hex characters) | Packet or NVS bug: check the value the clicker sends |
-| Every vote 409 | Already voted this round / window closed | Expected; first press locks |
-| Nothing joins after a router change | Passphrase rotated | Re-provision the fleet |
+| Clicker never joins the Wi-Fi (blue, fast blink) | Router off, or the wrong name or passphrase in `secrets.h` | The serial log names the reason. Fix `secrets.h` and flash again |
+| Magenta fast blink, log `No secret yet` | The clicker was never set up, or its flash was erased | USB setup (§8.2) |
+| Joins Wi-Fi, then magenta slow blink | Device unassigned (`403`) | Teacher assigns a student in **Clickers**; the clicker logs in within 5 s |
+| A vote or a heartbeat gets `401` | The session was revoked (unassign, reassign, delete, a new secret, or its student became a teacher), or it is older than 12 hours | Nothing: the clicker logs in again with `POST /api/v1/devices/auth` |
+| The login answers `401` | Secret not issued, replaced by a newer one, or the device id is unknown | Register the clicker if needed, then USB setup again. The clicker does not ask again by itself |
+| The login answers `429` | Five wrong secrets from this device at this address (30 s, doubling to 16 min) | Wait: the clicker asks again every 30 s. The lockout is in memory, so a backend restart clears it |
+| The login answers `422` | Secret or device id has the wrong shape (the secret is 32 lowercase hex characters) | The setup link refuses such a secret, so this points at damaged flash: USB setup again |
+| Every vote `409` | Already voted this round / window closed | Expected; first press locks |
+| Nothing joins after a router change | Passphrase changed | Flash the fleet again with the new `secrets.h` |
 | Some clickers get no IP | DHCP pool exhausted | Widen the pool (`infra/glinet/initial.md` §5) |
 
 ### Bring-up checklist (in this order)
-- [ ] `bluetoothctl show` on the Jetson lists a powered controller; `btmon` shows advertising after `systemctl start utztutor-provisioner`.
-- [ ] A phone BLE scanner sees `TutorBox` with service `5f8c0001-…`; reading `provision` from the phone without a `hello` returns `{}` / `busy` — never credentials.
-- [ ] `python3 utztutor_provisioner.py --dry-run ESP32-A4CF12` prints the packet the clicker would receive (secrets redacted in the log line).
 - [ ] Backend: `pytest backend/tests/api/devices` green; `curl -X POST /api/v1/devices/auth` with a wrong secret → 401, unassigned → 403, assigned → 200 with a `session_id`.
-- [ ] One clicker: serial log shows `hello → assigned → nvs ok → reboot → wifi 192.168.8.1xx → auth 200`.
+- [x] Firmware on a PC (2026-10-13): `firmware/clicker/hosttest/run_tests.sh` and `e2e_test.py` pass, the second against the real backend.
+- [ ] One clicker: the serial log shows `Wi-Fi connected`, then `No secret yet`; after the USB setup, `Waiting for the teacher`; after the assignment, `Assigned to <student>: ready to vote`.
 - [ ] Teacher starts a match on `/maestro/`; the clicker's vote raises `votes_cast` on the host page and `/pantalla/` within one second; reveal shows it in the bars.
-- [ ] Unassign the clicker from the roster → its next vote is 401 → it re-auths and gets 403 → red pattern. Re-assign → votes again without any Bluetooth step.
-- [ ] Fleet: 15 clickers provisioned at the desk in under 3 minutes; all 15 vote in a 5-question match with zero lost votes (Week 7 acceptance criterion).
+- [ ] Unassign the clicker from **Clickers** → within 5 s its heartbeat gets 401, it logs in again, gets 403 and shows the unassigned light. Assign it again → it votes again with no cable.
+- [ ] Fleet: all 15 clickers vote in a 5-question match with zero lost votes (Week 7 acceptance criterion).
 
 ---
 
 ## <a id="11-week-7-work-breakdown"></a>11. Week 7 Work Breakdown
 
-In the order each piece unblocks the next:
-
-1. **Backend (Copilot A): done in Week 7** — migration `015`, `api/devices/auth.py` + schemas, `staff/devices/{id}/secret`, revocation in `unassign`/`assign`/`delete`, the vote label, tests (`tests/api/devices/`, `tests/api/staff/`, `tests/api/session/`, `tests/core/`), `docs/api/devices.md` and `docs/database`. The `.env.example` entries were left for the provisioner. Testable with `curl` before any hardware exists.
-2. **Provisioner (Pilot B, ~1 day): not started** — `infra/provisioner/` script + systemd unit + `--dry-run`; verified with a phone BLE scanner app and the checklist above.
-3. **Firmware (Pilot B, ~2 days): not started** — provisioning routine, NVS, runtime loop, LED mapping; one clicker end-to-end against the real backend.
-4. **Fleet test (both, ½ day): simulated in CI, not on hardware** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable). The CI test has no radio. The real-device part is not started.
-5. **Teacher clicker screen (Copilot A): done in Week 7** — the **Clickers** button in the `/maestro/` header opens the fleet in its own sheet (`pwa/app/src/features/clickers/`, not Pilas). It lists `GET /staff/devices` (clicker, assigned student, and `Sin configurar` while `secret_issued_at` is `null`), adds a clicker by the id on its label, and assigns, unassigns and deletes, so the "unregistered → assign → press again" loop never needs Swagger. It never issues or shows a secret; that stays with the provisioner (§7).
+1. **Backend: done** — migration `015`, `api/devices/auth.py` + schemas, `staff/devices/{id}/secret`, revocation in `unassign`/`assign`/`delete`, the vote label, tests (`tests/api/devices/`, `tests/api/staff/`, `tests/api/session/`, `tests/core/`), `docs/api/devices.md` and `docs/database`. The clickers added no `.env.example` entries.
+2. **Provisioner: dropped on 2026-10-13, not built** — there is no `infra/provisioner/`. §4 and §7 keep the design.
+3. **Firmware: built, not yet run on an ESP32** — `firmware/clicker/` was first committed on 2026-10-10 against `/api/v1/clicker/*` endpoints that are no longer in the backend. On 2026-10-13 it was ported to the endpoints of §6, with the USB setup link in place of a secret the clicker made up itself. Its unit tests and its end-to-end test pass on a PC.
+4. **Fleet test: simulated in CI, not on hardware** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable). The CI test has no radio. The real-device part is not started.
+5. **Teacher clicker screen: done** — the **Clickers** button in the `/maestro/` header opens the fleet in its own sheet (`pwa/app/src/features/clickers/`, not Pilas). It lists `GET /staff/devices` (clicker, assigned student, and `Sin configurar` while `secret_issued_at` is `null`), adds a clicker by the id on its label, and assigns, unassigns and deletes. It never issues or shows a secret; that is done during the USB setup (§8.2).
+6. **A tool for the USB setup: not built** — a script that issues the secret and writes it to the clicker's serial port would replace the two manual steps of §8.2.
 
 ---
 
 ## Next Steps
 
-* **[ESP32 Clicker Transport](esp32-clicker-transport.md)**: hardware BOM, pin map, LED state tables and the `VoteTransport` interface this protocol plugs into.
+* **[ESP32 Clicker Transport](esp32-clicker-transport.md)**: a short map of how a clicker's vote reaches the session engine, and the `VoteTransport` seam.
+* **[Clicker Firmware](../../firmware/clicker/README.md)**: parts, pin map, wiring, flashing, USB setup, lights and troubleshooting.
 * **[GL.iNet AP Setup](../../infra/glinet/initial.md)**: the SSID, passphrase, DHCP pool and static lease the packet advertises.
-* **[Devices API](../api/devices.md)** and **[Sessions API](../api/sessions.md)**: the endpoints the clicker and the provisioner call.
+* **[Devices API](../api/devices.md)** and **[Sessions API](../api/sessions.md)**: the endpoints the clicker calls.
+* **[Clicker Firmware](../../firmware/clicker/README.md)**: the build, the wiring, the USB setup, the light patterns and the tests.

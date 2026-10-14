@@ -11,21 +11,22 @@
 
 ---
 
-This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)**. It records the state of the repository on 2026-10-10.
+This document tracks the technical deliverables, architectural implementations, and quality metrics of the **Week 7 Milestone** by **Student A (Copilot: Backend Clicker Transport & Fleet Association Test)** and **Student B (Pilot: ESP32 Clicker Firmware & Physical Assembly)**. In Week 7 Student A worked on both halves, and the BLE provisioner of the first design was dropped on 2026-10-13. It records the state of the repository on 2026-10-10; the firmware and provisioner parts and the backend test figures were updated on 2026-10-13.
 
 ---
 
 ## 1. Executive Summary & Verification Metrics
 
 * **Theme**: *"One More Transport: Integrating hardware without redesigning the system"*
-* **Status**: **Copilot (Student A) Backend Complete & Green · Pilot (Student B) Firmware, Provisioner and Assembly Not Started**
-* **Backend Test Suite**: **2713 / 2713 passing tests** (98 new for the clickers this week: 19 in `tests/core/db/`, 22 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`; plus 8 for the database lock fix, 57 for the lobby presence and 18 for the rule that only students hold a clicker, all below).
+* **Status**: **Backend Complete & Green · Firmware Built and Passing on a PC, Not Yet Run on an ESP32 · BLE Provisioner Dropped · Fleet Assembly Not Started**
+* **Backend Test Suite**: **2755 / 2755 passing tests** on 2026-10-13 (98 new for the clickers this week: 19 in `tests/core/db/`, 22 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`; plus 8 for the database lock fix, 57 for the lobby presence and 18 for the rule that only students hold a clicker, all below).
 * **Frontend Test Suite**: **472 / 472 passing tests** in 74 files (`pnpm test` in `pwa/app/`; this week 95 new in 9 files for the teacher clicker screen and 73 new, with 8 new files, for the lobby's class list). `pnpm typecheck` and `pnpm build` are clean.
-* **Statement Coverage**: **100.00% statement coverage** across all 6,961 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
-* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 8 hooks).
+* **Firmware Test Suite**: **336 / 336 checks** in `firmware/clicker/hosttest/run_tests.sh`, and all 13 steps of `firmware/clicker/hosttest/e2e_test.py`, which runs the real sketch on a PC against the real backend. They need `g++` under Linux, macOS or WSL and are not part of CI.
+* **Statement Coverage**: **100.00% statement coverage** across all 7,011 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
+* **Linter & Formatter**: **0 errors, 0 warnings** from `ruff check` and `ruff format --check` over the scope CI uses. `pre-commit run --all-files` (8 hooks) passes on every file of this milestone. Its whitespace hook still rewrites one file from the TTS work, `tools/llama_tts_daemon/0002-qwen-tok-embd-rows.patch`, whose blank context lines must stay.
 * **Modularity Compliance**: production modules are held to the 150-line ceiling by `tests/test_modularity_policy.py`. The largest new production module is `backend/src/api/presence/store.py` (105 lines).
 * **Acceptance Criteria Status**:
-  * ⏳ **Live 10-question match with at least 10 physical ESP32 clickers and 0 lost votes**: pending hardware. Proven in CI today: 15 simulated clickers and 15 phones, through the real endpoints, play 5 rounds with zero lost votes (`test_session_fleet_hardware.py`). Not proven: a match with physical clickers, which waits for the firmware and the first batch.
+  * ⏳ **Live 10-question match with at least 10 physical ESP32 clickers and 0 lost votes**: pending hardware. Proven in CI today: 15 simulated clickers and 15 phones, through the real endpoints, play 5 rounds with zero lost votes (`test_session_fleet_hardware.py`). Not proven: a match with physical clickers, which waits for the first batch.
   * ⏳ **Fleet benchmark report with connection limits and packet latency (ESP32 vs. web)**: pending hardware. The CI test has no radio, so it says nothing about router association limits or packet latency. The benchmark needs flashed clickers at the router.
 * **Key Milestone Artifacts**:
   * **Clicker Secret**: `POST /api/v1/staff/devices/{device_id}/secret` issues a 32-character secret once. Only its SHA-256 digest is stored ([Devices API](../api/devices.md#post-staff-devices-secret)).
@@ -51,7 +52,7 @@ This document tracks the technical deliverables, architectural implementations, 
 3. **One live token per clicker.** A new authentication revokes the clicker's earlier sessions, so the clicker holds one token at a time.
 4. **A clicker's token can only vote and send the presence heartbeat.** The token votes as the assigned student, but it is not a login. `get_current_session`, which every endpoint depends on directly or through `require_roles`, refuses a session that was issued to a clicker. Only the vote endpoint and the heartbeat ask for `get_voter_session`, which accepts it. The refusal is the default, so an endpoint added later refuses clickers without any extra code. A secret read out of a clicker's flash memory, or a token captured on the classroom Wi-Fi, therefore gives the votes that clicker could already cast and the ability to make it look connected in the lobby, and nothing else. The scope was vote-only until 2026-10-11, when the heartbeat was added.
 5. **Presence comes from a heartbeat, not from the poll.** Phones and clickers wait by polling the public `GET /api/v1/session/current`, which identifies nobody. The lobby needs names, so each client sends an authenticated heartbeat as well, and the poll stays public. The state is kept in memory, as the tutor's roster is: it is live state, and it is rebuilt within seconds of a restart.
-6. **No separate driver class.** The roadmap item "backend `VoteTransport` driver" is built as the label in decision 1. The session engine has no hardware-specific code. The seam is the wire contract, as [Clicker Transport §5](../architecture/esp32-clicker-transport.md#5-abstract-votetransport-architecture-week-3--week-7-bridge) describes.
+6. **No separate driver class.** The roadmap item "backend `VoteTransport` driver" is built as the label in decision 1. The session engine has no hardware-specific code. The seam is the wire contract, as [Clicker Transport §3](../architecture/esp32-clicker-transport.md#3-the-votetransport-seam) describes.
 
 **Delivered Subsystems:**
 
@@ -114,41 +115,46 @@ This document tracks the technical deliverables, architectural implementations, 
 * A `422` response repeats the value that was sent, as FastAPI does by default. Login does the same for a malformed PIN.
 * The lockout counters are in memory, so a backend restart clears them.
 * The fleet test is simulated. It proves the endpoints and the session rules, not the radio, the router's association limit or a clicker's latency.
-* Presence is kept in memory. A backend restart empties it, and it fills again as clients beat. It was exercised with simulated clickers only: no firmware sends the heartbeat yet.
+* Presence is kept in memory. A backend restart empties it, and it fills again as clients beat. The firmware sends the heartbeat, and its end-to-end test on a PC sees the clicker online in the class view. No real clicker has sent one yet.
 * A phone whose screen locks stops beating, so it shows as dropped. That is accurate for voting, but the lobby cannot tell a locked phone from one that left the room.
 * A clicker that was already assigned to a teacher or an admin before 2026-10-11 is not cleaned up by a migration. It gets no new token, and a token it already holds expires within 12 hours, but the Clickers screen shows it with that account until a teacher unassigns it.
 * The teacher clicker screen was checked in a desktop browser at phone size, not on a phone. With a row's actions swiped open and nothing else open, Escape closes the whole Clickers sheet. A clicker row is about 104 px tall, so a phone shows four or five clickers at a time.
 
-**Interface for Student B (Firmware and Provisioner):**
+**Interface for the Firmware (the firmware calls exactly these since 2026-10-13):**
 
 | Call | Request | What the status means |
 | :--- | :--- | :--- |
-| `POST /api/v1/staff/devices/{device_id}/secret` (provisioner, teacher or admin token) | none | `200`: `{device_id, secret}`. Store the secret; it is returned once. `404 "Device not found."`: register the clicker first. `403`: the account is not a teacher or admin, or has a pending PIN change. |
-| `POST /api/v1/devices/auth` | `{"device_id": "...", "secret": "<32 lowercase hex>"}` | `200`: `{session_id, username, device_id}`. Keep `session_id` in RAM and send it as `Authorization: Bearer`. `401 "Invalid device credentials."`: the secret is wrong or was replaced; provision again. `403 "Device is not assigned to any student."`: wait and authenticate again (the design retries every 30 s). `429`: locked out; wait. By default the lockout starts at 30 s and doubles up to 16 min. `422`: malformed packet. |
+| `POST /api/v1/staff/devices/{device_id}/secret` (USB setup, teacher or admin token) | none | `200`: `{device_id, secret}`. Store the secret; it is returned once. `404 "Device not found."`: register the clicker first. `403`: the account is not a teacher or admin, or has a pending PIN change. |
+| `POST /api/v1/devices/auth` | `{"device_id": "...", "secret": "<32 lowercase hex>"}` | `200`: `{session_id, username, device_id}`. Keep `session_id` in RAM and send it as `Authorization: Bearer`. `401 "Invalid device credentials."`: the secret is wrong or was replaced; do the USB setup again, and do not ask again with the same secret. `403 "Device is not assigned to any student."`: wait and authenticate again (the firmware asks every 5 s). `429`: locked out; wait. By default the lockout starts at 30 s and doubles up to 16 min. `422`: malformed body. |
 | `GET /api/v1/session/current` | none | `200`: the live match and its open round. `404 "No active session."`: no match yet. |
 | `POST /api/v1/session/{session_id}/vote` (`session_id` from `GET /api/v1/session/current`) | `{"selected_option": "A"–"D"}`, optional `response_time_ms` | `200`: the vote is recorded. `401 "Invalid or expired session."`: authenticate again, once, then vote again. `409`: already voted in this round, or the round is not open. This is final; do not retry. `422`: the option is not `A` to `D`. `404`: the session or round is not found. |
 | `POST /api/v1/presence/heartbeat`, every 5 seconds while a token is held | `{"rssi": -58, "battery_pct": 88}`, both optional | `204`: recorded; the lobby shows the clicker as connected for the next 15 seconds. `401`: authenticate again; if that answers `403`, drop the token and show the unassigned pattern. `422`: `rssi` outside -120 to 0 or `battery_pct` outside 0 to 100. |
 | Any other endpoint, with the clicker's token | any | `403 "Clicker sessions can only vote."` Only the vote endpoint and the heartbeat accept the token. `GET /api/v1/session/current` is public and needs no token. |
 
-The LED patterns are the ones in [Clicker Transport §6](../architecture/esp32-clicker-transport.md#6-visual-feedback--dual-led-state-machines) and [Clicker Protocol §3](../architecture/esp32-protocol.md#3-end-to-end-flow). This milestone does not change them.
+The light patterns are in [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means).
 
 ---
 
-### B. Student B (Pilot Scope: ESP32 Clicker Firmware, BLE Provisioner & Physical Assembly)
+### B. Student B (Pilot Scope: ESP32 Clicker Firmware & Physical Assembly)
 
-**Design Only (documents, no code in the repository):**
+In Week 7 Student A worked on this half too.
 
-* BLE provisioning from the appliance: the GATT layout, the provisioning packet, and the one-clicker-at-a-time rule ([Clicker Protocol §4 and §7](../architecture/esp32-protocol.md#4-ble-provisioning-protocol)).
-* The trust model, including the secret rotated on every provisioning ([Clicker Protocol §5](../architecture/esp32-protocol.md#5-trust-model-why-bluetooth-always-on-is-safe)).
-* The firmware's provisioning routine, the NVS layout and the runtime loop ([Clicker Protocol §8](../architecture/esp32-protocol.md#8-esp32-firmware)).
+**Built:**
+
+* **ESP32 firmware** in `firmware/clicker/` (ESP32-C3 Super Mini, Arduino framework). It was first committed on 2026-10-10 against `/api/v1/clicker/*` endpoints that are no longer in the backend. On 2026-10-13 it was ported to the interface above, with no backend change: it logs in with `POST /api/v1/devices/auth`, polls `GET /api/v1/session/current`, votes on `POST /api/v1/session/{session_id}/vote` and sends `POST /api/v1/presence/heartbeat` ([Clicker Firmware](../../firmware/clicker/README.md), [Clicker Protocol §8](../architecture/esp32-protocol.md#8-esp32-firmware)).
+* **USB setup link**: the clicker takes its device secret as one line on its USB serial port and keeps it in flash ([Clicker Protocol §8.2](../architecture/esp32-protocol.md#82-usb-setup-link)). The clicker no longer makes up its own secret.
+* **Firmware tests on a PC**: 336 unit checks, and an end-to-end run of the real sketch against the real backend (`firmware/clicker/hosttest/`). The end-to-end run covers the empty flash, the USB setup, the assignment, the class view, three questions, a double press, Wi-Fi loss, a backend outage, an unassignment, a power cycle and a replaced secret.
+
+**Dropped or Removed on 2026-10-13:**
+
+* **Jetson BLE provisioner**, and the Bluetooth half of the firmware ([Clicker Protocol §4 and §7](../architecture/esp32-protocol.md#4-ble-provisioning-protocol)). The Wi-Fi name and password are compiled into the firmware, and the secret arrives over USB. There is no `infra/provisioner/` folder, and the audit actions and the settings the provisioner needed were never added.
+* **`tools/clickers/clickers.py`**, a command-line tool written for the removed `/api/v1/clicker/*` endpoints. The **Clickers** screen on `/maestro/` adds, assigns, unassigns and deletes clickers, and the fleet test in CI replaced its simulator. Its bulk assignment from a CSV file has no replacement.
 
 **Not Started:**
 
-* **ESP32 firmware**: there is no `firmware/` folder, so the PlatformIO project in Clicker Protocol §8 does not exist.
-* **Jetson BLE provisioner**: there is no `infra/provisioner/` folder, and `infra/systemd/` has no provisioner unit.
-* **Provisioner audit actions**: the design logs `device_provisioned` and `device_provision_failed`. Neither is in `VALID_ACTIONS` (`backend/src/core/db/audit.py`), so `record_audit` refuses them. They must be added with the provisioner.
-* **Provisioner settings**: `.env.example` has no `CLICKER_*` or `PROVISIONER_*` entries.
-* **Physical assembly and flashing** of the first clicker batch.
+* **A build and a run on a real ESP32.** Firmware 2.0.0 has run only on a PC, with the pins, the radio and the flash simulated. It has not been compiled with the ESP32 toolchain yet.
+* **A tool for the USB setup.** Today a person issues the secret in Swagger and types it in the Serial Monitor.
+* **Physical assembly and flashing** of the first clicker batch. One clicker is wired on a bench (2026-10-13), without its charger.
 * **Real-device checks**: the bring-up checklist in [Clicker Protocol §10](../architecture/esp32-protocol.md#10-failure-modes--bring-up-checklist) has not been run on any clicker. No clicker has joined the router.
 
 ---
@@ -167,7 +173,7 @@ The LED patterns are the ones in [Clicker Transport §6](../architecture/esp32-c
    * The CI fleet test shows that the session logic holds with 15 clickers and 15 phones: zero lost votes, and one vote per student per round.
    * The radio is not in the test. The fleet benchmark on hardware is the open item, and this defense does not quote a latency figure.
 3. **Reliability and classroom ergonomics**:
-   * When the teacher unassigns or reassigns a clicker, its next vote is refused and it shows the red pattern. Giving it to another student needs no Bluetooth step: the clicker authenticates again with the secret it already holds and votes as the new student. Only a new secret or a deleted clicker needs provisioning again.
+   * When the teacher unassigns or reassigns a clicker, its heartbeat is refused within 5 seconds, it logs in again, and it shows the unassigned light. Giving it to another student needs no cable: the clicker authenticates again with the secret it already holds and votes as the new student. Only a new secret or a deleted clicker needs the USB setup again.
    * The first press locks per student per round across transports. A child who votes on a clicker and then on a phone gets `409`.
 4. **Known limits, stated before the jury asks**:
    * A clicker's token can only vote and send the presence heartbeat, so a secret copied out of a clicker gives nothing but that clicker's votes and its line in the lobby. The vote endpoint does not check a pending PIN rotation.

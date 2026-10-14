@@ -1,345 +1,91 @@
-# ESP32 Hardware Clicker Architecture & Transport Specification
+# ESP32 Clicker Transport
 
-Comprehensive engineering specification for the **Utz'tutor Physical Clicker Subsystem**, detailing hardware design, network transport, AP association, telemetry monitoring, teacher pairing lifecycle, and the abstract `VoteTransport` interface.
+How a physical clicker's vote reaches the session engine. This page is a short map. The parts, the wiring, the flashing steps, the lights and the troubleshooting are in the [Clicker Firmware guide](../../firmware/clicker/README.md).
 
 <div align="center">
 
 | 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
-📍 [Docs](../README.md) › **Architecture** › **ESP32 Clicker Transport** • **Related:** [Hardware Topology](hardware-topology.md) • [Three Modes](three-modes.md) • [Database Schema](../database/README.md)
+📍 [Docs](../README.md) › **Architecture** › **ESP32 Clicker Transport** • **Related:** [Clicker Firmware](../../firmware/clicker/README.md) • [ESP32 Clicker Protocol](esp32-protocol.md) • [Devices API](../api/devices.md) • [Hardware Topology](hardware-topology.md)
 
 </div>
 
 ---
 
-> [!NOTE]
-> **Work in Progress & Tentative Engineering Blueprint**:
-> This document represents an evolving architectural specification prepared ahead of the hardware development milestones. The interface contracts, transport protocols, telemetry payloads, and hardware benchmarks will be expanded and refined during **Week 3 (Session Engine & Abstract Transport)** and finalized in **Week 7 (ESP32 Hardware Clickers & Fleet Testing)**.
-
----
-
 ## Table of Contents
-- [1. Subsystem Overview & Pedagogical Purpose](#1-subsystem-overview--pedagogical-purpose)
-- [2. Hardware Specifications & Bill of Materials](#2-hardware-specifications--bill-of-materials)
-- [3. Wi-Fi AP Association & Provisioning Mechanisms](#3-wi-fi-ap-association--provisioning-mechanisms)
-- [4. End-to-End Communication Flow & Pairing Model](#4-end-to-end-communication-flow--pairing-model)
-- [5. Abstract `VoteTransport` Architecture (Week 3 & Week 7 Bridge)](#5-abstract-votetransport-architecture-week-3--week-7-bridge)
-- [6. Visual Feedback & Dual LED State Machines](#6-visual-feedback--dual-led-state-machines)
-- [7. Fleet Health Telemetry & Teacher PWA Dashboard](#7-fleet-health-telemetry--teacher-pwa-dashboard)
-- [8. Concurrency, Latency & Edge Case Resilience](#8-concurrency-latency--edge-case-resilience)
-- [9. Implementation Roadmap & Milestones](#9-implementation-roadmap--milestones)
-- [Next Steps](#next-steps)
+- [1. What a Clicker Is](#1-what-a-clicker-is)
+- [2. How a Vote Travels](#2-how-a-vote-travels)
+- [3. The `VoteTransport` Seam](#3-the-votetransport-seam)
+- [4. Where the Details Are](#4-where-the-details-are)
+- [5. Designed and Not Built](#5-designed-and-not-built)
 
 ---
 
-## <a id="1-subsystem-overview--pedagogical-purpose"></a>1. Subsystem Overview & Pedagogical Purpose
+## <a id="1-what-a-clicker-is"></a>1. What a Clicker Is
 
-In rural and primary classroom environments (grades 1–6, ages 6–12), asking students to type alphanumeric usernames and PINs on small screens is a significant pedagogical friction point.
+A clicker is a handheld with four answer buttons (A, B, C, D), a power button and one RGB light, built on an ESP32-C3 Super Mini. It is for the **Classroom Quiz Mode**, for young students who should not have to type a username and a PIN on a small screen.
 
-The **Utz'tutor Physical Clicker Subsystem** provides a dedicated, tactile 4-button hardware alternative (A, B, C, D) for the **Classroom Quiz Mode**:
-* **Zero Student Setup**: Students pick up their numbered clicker (e.g. `#5`) and immediately participate.
-* **Delegated Authorization**: The teacher links clicker IDs to student accounts via the Teacher PWA in seconds.
-* **Dual Feedback Loop**: Both the handheld RGB LED and the classroom HDMI projector visually confirm vote ingestion.
-* **Centralized Fleet Health**: Battery levels and connectivity are automatically reported to the teacher's dashboard, removing hardware management cognitive load from young students.
-* **Decoupled Engine**: Built on the abstract `VoteTransport` interface, allowing the session engine to process votes identically regardless of whether the source is a mobile web client (PWA) or an ESP32 hardware clicker.
+The teacher assigns each clicker to a student in **Clickers** on `/maestro/`. The clicker then votes as that student until it is reassigned.
 
 ---
 
-## <a id="2-hardware-specifications--bill-of-materials"></a>2. Hardware Specifications & Bill of Materials
+## <a id="2-how-a-vote-travels"></a>2. How a Vote Travels
 
-```mermaid
-graph LR
-    subgraph ESP32Node ["ESP32 Physical Clicker Node"]
-        MCU["ESP32-C3 / WROOM-32<br/>(2.4GHz 802.11 b/g/n Wi-Fi)"]
-        BtnA["Button A (GPIO 18)"]
-        BtnB["Button B (GPIO 19)"]
-        BtnC["Button C (GPIO 21)"]
-        BtnD["Button D (GPIO 22)"]
-        VoteLED["Vote RGB LED<br/>(GPIO 8)"]
-        NetLED["Wi-Fi / Status LED<br/>(GPIO 9)"]
-        BattDiv["Battery ADC Divider<br/>(GPIO 0 / ADC1)"]
-        Power["3.7V 500mAh LiPo / 2x AAA<br/>+ TP4056 Charger & 3.3V LDO"]
+The clicker uses the same REST API as the phones, over the classroom Wi-Fi. The backend has no clicker-only vote path.
 
-        BtnA --> MCU
-        BtnB --> MCU
-        BtnC --> MCU
-        BtnD --> MCU
-        MCU --> VoteLED
-        MCU --> NetLED
-        BattDiv --> MCU
-        Power --> BattDiv
-        Power --> MCU
-    end
-```
-
-### Component Breakdown:
-| Component | Specification | Purpose |
+| Step | What the clicker does | Reference |
 | :--- | :--- | :--- |
-| **Microcontroller (MCU)** | ESP32-C3-MINI-1 or ESP32-WROOM-32D | 160MHz RISC-V/Xtensa core, 2.4GHz Wi-Fi, ultra-low power deep sleep. |
-| **Input Buttons** | 4x Momentary Tactile Push Buttons (12mm) | Physical options A, B, C, D with 200ms software debounce. |
-| **Vote / Feedback LED** | 1x Common-Cathode RGB LED or WS2812B (GPIO 8) | Handheld voting status (transmitting, confirmed, error). |
-| **Status / Wi-Fi LED** | 1x Dedicated Blue/Red LED (GPIO 9) | AP association progress and local hardware fault indicator. |
-| **Battery Sense (ADC)** | 2x 100kΩ resistor divider to ADC (GPIO 0) | Measures battery voltage ($3.0\text{V} - 4.2\text{V}$) for telemetry. |
-| **Power & Charging** | 3.7V 500mAh LiPo battery + TP4056 USB-C module | 8+ hours of continuous classroom active usage per charge. |
-| **Physical Enclosure** | 3D-printed PLA / Injection Molded Case | Durable casing with visible laser-engraved/sticker number (e.g. `1`..`30`). |
+| Wi-Fi | Joins `Utz'tutor` with the name and password compiled into its firmware. | [Firmware §6](../../firmware/clicker/README.md#6-install-the-software-and-flash) |
+| Login | Sends `POST /api/v1/devices/auth` with its device id and its secret. The answer is a token that votes as the assigned student. | [Devices API](../api/devices.md#post-devices-auth) |
+| Wait | Polls `GET /api/v1/session/current` every second to see whether a question is open. | [Sessions API](../api/sessions.md#get-session-current) |
+| Vote | Sends `POST /api/v1/session/{session_id}/vote`, the endpoint the phones use. | [Sessions API](../api/sessions.md#post-session-vote) |
+| Presence | Sends `POST /api/v1/presence/heartbeat` every 5 seconds with its signal and battery level, so the lobby lists it as connected. | [Presence API](../api/presence.md#post-presence-heartbeat) |
+
+Two things are set once per clicker:
+
+* **Device id.** The clicker computes it from its MAC address (`ESP32-A4CF12`).
+* **Device secret.** The TutorBox issues it once and stores only its SHA-256 digest. A person types it into the clicker over USB ([Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)).
 
 ---
 
-## <a id="3-wi-fi-ap-association--provisioning-mechanisms"></a>3. Wi-Fi AP Association & Provisioning Mechanisms
+## <a id="3-the-votetransport-seam"></a>3. The `VoteTransport` Seam
 
-A common question in offline hardware design is: **How does each physical clicker connect to the appliance's local Wi-Fi Access Point without a screen or keyboard?**
+The guardrail is that the session engine knows nothing about how a vote arrived. Early diagrams drew this as a Python class hierarchy (`VoteTransport`, with one subclass per client). That was not built: an ESP32 and a phone browser are separate machines and cannot share a Python object.
 
-> [!IMPORTANT]
-> **Superseded for Week 7**: the chosen primary strategy is **BLE provisioning from the appliance** — the Jetson's
-> Bluetooth stays on and hands each clicker the Wi-Fi credentials and a device secret on a button press. See
-> [ESP32 Clicker Protocol](esp32-protocol.md). Factory flashing below remains the documented fallback.
+The seam is the wire contract, `POST /api/v1/session/{session_id}/vote`:
 
-Utz'tutor evaluates three connectivity strategies, with **Factory Fleet Provisioning** serving as the primary design:
+* **The server labels each vote from the caller's session.** A token issued to a clicker records `hardware` with that clicker's id. Any other token records `web`. The request body cannot choose the label.
+* **The session engine has no hardware code.** No file under `backend/src/modes/` changed when the clickers were added.
+* **The first press locks across transports.** A student who votes on a clicker and then on a phone gets `409`.
+* **A clicker's token can only vote and send the heartbeat.** Every other endpoint refuses it with `403` ([Clicker Token Revocation](../api/devices.md#clicker-token-revocation) lists what ends the token).
 
-```mermaid
-graph TD
-    Factory(["1. Factory Flashing Stage"]):::factory --> FlashNVS["Burn SSID Utz'tutor, WPA2 Key & device_id into NVS Flash"]
-
-    FlashNVS --> PowerOn(["2. Classroom Power-On"]):::student
-    PowerOn --> Boot["ESP32 Cold Boot (< 0.8s) & Load NVS Credentials"]
-    Boot --> ScanAP{"Utz'tutor AP<br/>Found within 5s?"}
-
-    ScanAP -- "Yes (Normal Mode)" --> Associate["Auto-Associate via 802.11 b/g/n"]
-    Associate --> DHCP["Obtain DHCP Lease (192.168.8.x)"]
-    DHCP --> Ready(["3. Online & Ready for Voting"]):::success
-
-    ScanAP -- "No (Fallback Mode)" --> SoftAP["Launch Config Soft-AP 'TutorBox-Clicker-Setup'"]
-    SoftAP --> TeacherPortal["Teacher Configures New Wi-Fi via PWA Portal"]
-    TeacherPortal --> SaveNVS["Save New Credentials to NVS & Auto-Reboot"]
-    SaveNVS --> Boot
-
-    subgraph EspNowOption ["Alternative Protocol: ESP-NOW (Week 7 Evaluation)"]
-        RawPress["Student Press -> Raw 2.4GHz Radio Packet"]
-        JetsonDongle["ESP32 USB Receiver Dongle on Jetson"]
-        FastApiPipe["Forward directly to FastAPI Session Engine (< 5ms)"]
-        RawPress --> JetsonDongle --> FastApiPipe
-    end
-
-    classDef factory fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b;
-    classDef student fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
-    classDef success fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
-```
-
-### 1. Primary Strategy: Appliance Factory Provisioning (Zero-Touch)
-* **Pre-Shared Appliance Network**: Every Utz'tutor appliance kit includes a pre-configured router (GL-AR300M16) with fixed network parameters:
-  - **SSID**: `Utz'tutor`
-  - **WPA2 Pre-Shared Key**: Configured in appliance manufacturing
-  - **Backend API**: `http://192.168.8.2/api/v1` (Jetson static lease; see [ESP32 Clicker Protocol](esp32-protocol.md))
-* **Firmware Embedding**: When the batch of 30 clickers is flashed in Week 7, the Wi-Fi credentials, gateway IP, and unique `device_id` (e.g. `"1"`, `"2"`, `"ESP32_01"`) are burned into the ESP32 Non-Volatile Storage (NVS).
-* **Classroom Experience**: The student simply turns on the device switch. The ESP32 boots in $< 0.8\text{s}$, automatically associates to the `Utz'tutor` AP, and enters the low-power listening loop. **Zero configuration is required in the classroom.**
-
-### 2. Secondary Strategy: Captive Portal / BLE Provisioning Fallback
-* If the appliance router SSID or security key is modified:
-  - If the ESP32 fails to connect after 5 seconds, it enters provisioning mode (blinking blue).
-  - It hosts a temporary setup soft-AP (`TutorBox-Clicker-Config`) allowing the teacher or administrator to update network credentials once from a mobile phone browser.
-
-### 3. Alternative Protocol: ESP-NOW Direct Radio Broadcast (Week 7 Exploration)
-* **How It Works**: ESP-NOW is a connectionless 2.4GHz protocol developed by Espressif that transmits raw peer-to-peer radio packets without Wi-Fi association or IP stack overhead.
-* **Benefits**:
-  - Eliminates Wi-Fi association times (transmission takes $< 5\text{ms}$).
-  - Bypasses router client association limits (supports 100+ concurrent clickers without saturating the router's DHCP pool).
-  - A small ESP32 USB dongle connected to the Jetson Orin Nano receives raw radio packets and forwards them to FastAPI via local serial or loopback.
+`backend/tests/api/session/test_session_fleet_hardware.py` checks this with 15 simulated clickers and 15 phones in the same match.
 
 ---
 
-## <a id="4-end-to-end-communication-flow--pairing-model"></a>4. End-to-End Communication Flow & Pairing Model
+## <a id="4-where-the-details-are"></a>4. Where the Details Are
 
-Utz'tutor utilizes a **Teacher-Delegated Trust Model** to eliminate student authentication barriers on hardware clickers while maintaining strict tenant isolation.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Teacher as Teacher (PWA Portal)
-    participant API as FastAPI Backend (:8000)
-    participant DB as SQLite DB (`devices`)
-    actor Student as Student (Clicker #1)
-    participant ESP32 as ESP32 Clicker
-    participant Screen as Classroom HDMI Display
-
-    Note over Teacher,DB: Step 1: Teacher Pairing (In-Band Auth)
-    Teacher->>API: POST /api/v1/staff/devices/1/assign {"user_id": 12} (Bearer Token)
-    API->>DB: UPDATE devices SET assigned_user_id = 12 WHERE device_id = '1'
-    API-->>Teacher: 200 OK {"device_id": "1", "assigned_user_id": 12, "assigned_username": "juan_p"}
-
-    Note over Student,Screen: Step 2: Quiz Turn & Voting + Telemetry
-    Teacher->>API: POST /api/v1/session/{id}/start (Voting Window Opens)
-    API->>Screen: Render Question & A-D Options on HDMI Display (/pantalla/)
-    Student->>ESP32: Presses Button 'B'
-    ESP32->>ESP32: Vote LED = BLINK YELLOW (TX in-flight)
-    ESP32->>API: POST /api/v1/session/{id}/vote {"selected_option": "B", "response_time_ms": 1200.0} (clicker token)
-    API->>DB: INSERT INTO quiz_session_votes (round_id, student_id, selected_option, transport_type, device_id, ...)
-    Note over API: The token labels the vote as hardware, device '1', student 12. transport_type and device_id in the body, if sent, are ignored
-    Note over API: Enforces first-press lock (UNIQUE round_id, student_id)
-    API-->>ESP32: 200 OK {"vote_id": "...", "selected_option": "B", "student_id": 12, ...}
-    ESP32->>ESP32: Vote LED = SOLID GREEN (1.5s)
-    API->>Screen: Update live aggregate turnout count
-    API->>Teacher: Live turnout update on /maestro/ console
-```
+| Topic | Document |
+| :--- | :--- |
+| Parts, pin map, wiring, power | [Clicker Firmware §2 to §5](../../firmware/clicker/README.md#2-parts-per-clicker) |
+| Flashing, USB setup, assigning a student | [Clicker Firmware §6 and §7](../../firmware/clicker/README.md#6-install-the-software-and-flash) |
+| What each light means | [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means) |
+| Bench test and troubleshooting | [Clicker Firmware §9 and §10](../../firmware/clicker/README.md#9-bench-test-checklist) |
+| Code layout, and what the clicker does with each HTTP status | [Clicker Firmware §11](../../firmware/clicker/README.md#11-how-the-code-is-organized) |
+| Firmware tests on a PC | [Clicker Firmware §12](../../firmware/clicker/README.md#12-testing-without-hardware) |
+| Setup and voting protocol, failure modes | [ESP32 Clicker Protocol](esp32-protocol.md) |
+| Register, assign, secret and login endpoints | [Devices API](../api/devices.md) |
+| Lobby presence, signal and battery | [Presence API](../api/presence.md) |
+| What is built and what waits for hardware | [Week 7 Milestone](../milestones/week-7-esp32-clickers.md) |
 
 ---
 
-## <a id="5-abstract-votetransport-architecture-week-3--week-7-bridge"></a>5. Abstract `VoteTransport` Architecture (Week 3 & Week 7 Bridge)
+## <a id="5-designed-and-not-built"></a>5. Designed and Not Built
 
-To enforce **System Guardrail #5 (Hardware-Agnostic Transport)**, voting logic is decoupled from client implementations:
+Earlier versions of this page described these. None of them exists in the code.
 
-```mermaid
-classDiagram
-    class VoteTransport {
-        <<interface>>
-        +record_vote(session_id: str, vote_data: dict) VoteResult
-        +get_transport_name() str
-    }
-
-    class PwaWebTransport {
-        +session_auth: SessionAuth
-        +record_vote(session_id: str, vote_data: dict) VoteResult
-    }
-
-    class Esp32HardwareTransport {
-        +device_registry: DeviceRegistry
-        +record_vote(session_id: str, vote_data: dict) VoteResult
-    }
-
-    class QuizSessionEngine {
-        -active_transports: list[VoteTransport]
-        -votes_by_user: dict[int, str]
-        +process_incoming_vote(user_id: int, choice: str)
-        +compute_distribution() VoteDistribution
-        +check_51_percent_threshold() DistractorIntervention
-    }
-
-    VoteTransport <|-- PwaWebTransport
-    VoteTransport <|-- Esp32HardwareTransport
-    QuizSessionEngine --> VoteTransport
-```
-
-> [!NOTE]
-> **Architectural Decision (Week 3 Evaluation): Wire Protocol Seam vs. In-Process OOP Abstraction**
-> While early design diagrams envisioned an in-memory Python class hierarchy (`VoteTransport` OOP interface), distributed heterogeneous clients (ESP32 microcontrollers running embedded C++ and student smartphones running JavaScript PWA) operate over physical network boundaries and cannot share an in-memory Python runtime.
->
-> Therefore, the **Wire Protocol contract (`POST /api/v1/session/{id}/vote`)** serves as the true hardware-agnostic transport layer. The server does not read `transport_type` or `device_id` from the payload: it labels each vote from the caller's session, as `hardware` with the clicker's id for a clicker's token and as `web` otherwise. Clients therefore cannot choose their transport, and no in-process OOP boilerplate is needed to keep client implementations apart from server state.
->
-> This architecture is formally validated in Week 3 via an automated 15-client concurrent test match (`test_session_concurrency.py`), proving 100% first-press lock enforcement and 0 lost votes under simultaneous mixed web and hardware traffic. See [ESP32 Clicker Protocol](esp32-protocol.md) for the complete provisioning and HTTP voting flow.
-
----
-
-## <a id="6-visual-feedback--dual-led-state-machines"></a>6. Visual Feedback & Dual LED State Machines
-
-The clicker incorporates two separate visual indicators: a **Primary RGB Vote LED** (front-facing for student quiz feedback) and a **Secondary Status LED** (for connection and power diagnostics).
-
-### A. Primary RGB Vote LED (Quiz Feedback)
-| State | LED Color / Pattern | Duration | Trigger Condition |
-| :--- | :--- | :--- | :--- |
-| **Idle / Standby** | `OFF` | Continuous | Waiting for student button press. |
-| **Transmitting** | 🟡 **Blinking Yellow** (100ms) | Until HTTP response | Button pressed, transmitting packet. |
-| **Vote Confirmed** | 🟢 **Solid Green** | 1.5 seconds | Server returned `200 OK` (`{"status": "recorded"}`). |
-| **Error / Rejected** | 🔴 **Blinking Red** (3x 150ms) | ~1.0 second | Server returned `401` (session revoked, see §8.3), `409` (voting closed or already voted), or network timeout. |
-
-### B. Secondary Status LED (Wi-Fi & Power Diagnostics)
-| State | LED Color / Pattern | Duration | Condition |
-| :--- | :--- | :--- | :--- |
-| **Associating to Wi-Fi**| 🔵 **Fast Blinking Blue** | Boot until connected | Searching and associating to `Utz'tutor` AP. |
-| **Wi-Fi Connected** | 🔵 **Solid Blue (3s then OFF)** | 3.0 seconds | DHCP lease acquired; device is online. |
-| **Connection Failed** | 🔴 **Slow Blinking Red** | Continuous | Cannot associate with AP / wrong credentials. |
-| **Low Battery Alert** | 🔴 **Pulsing Red** | Continuous | Battery voltage $< 3.3\text{V}$ ($< 15\%$). |
-| **Charging (USB-C)** | 🟢 **Solid Green** (TP4056 LED) | While plugged in | Charging via 5V USB-C. |
-
----
-
-## <a id="7-fleet-health-telemetry--teacher-pwa-dashboard"></a>7. Fleet Health Telemetry & Teacher PWA Dashboard
-
-While the physical clicker has local LED warnings, **primary school students should not be responsible for diagnosing battery or network issues**.
-
-Instead, Utz'tutor transmits real-time telemetry from every clicker directly to the **Teacher PWA Fleet Dashboard**:
-
-**Status (2026-10-11).** Built on the server:
-
-* The heartbeat `POST /api/v1/presence/heartbeat` is sent every **5 seconds**, not every 60. Its body carries `rssi` and `battery_pct`, both optional. A clicker's vote token is the one that sends it, and it can vote and beat and nothing else ([Presence API](../api/presence.md), [Devices API](../api/devices.md#post-devices-auth)).
-* The class view `GET /api/v1/presence/class` gives the lobby each student's phone and clicker status (`online`, `dropped` or `absent`), the clicker's signal level (`good`, `fair`, `weak`), its last RSSI and battery, and the clickers that have no student.
-
-Still planned, not built:
-
-* The clicker firmware that sends the heartbeat. `firmware/clicker/` is not written, and the sketch in [Protocol §8.3](esp32-protocol.md#83-runtime-loop-sketch) is a design only.
-* `voltage_mv` in the payload below. The server does not read it.
-* A low-battery flag. The server does not compute the 20% warning; the lobby screen decides how to show the `battery_pct` it receives.
-
-### 1. In-Flight Telemetry Payload
-Whenever a vote or the 5-second heartbeat is sent, the ESP32 includes hardware vitals (the heartbeat carries `battery_pct` and `rssi` only, see the status above):
-```json
-{
-  "device_id": "1",
-  "choice": "B",
-  "battery_pct": 88,
-  "voltage_mv": 3950,
-  "rssi": -55
-}
-```
-
-### 2. Teacher Fleet Health View (PWA UI)
-In the Teacher Device Management view (`GET /devices`), the teacher sees a live status grid:
-
-| Clicker # | Assigned Student | Status | Battery Level | Signal (RSSI) | Quick Action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`#01`** | Juan Pérez | 🟢 Online | 🔋 88% | 📶 -55 dBm *(Good)* | `[Unpair]` |
-| **`#02`** | María Gómez | 🟢 Online | 🔋 92% | 📶 -48 dBm *(Strong)* | `[Unpair]` |
-| **`#03`** | Carlos Ruiz | 🟢 Online | 🪫 14% *(Low Alert)* | 📶 -62 dBm *(Moderate)* | `[Unpair]` |
-| **`#04`** | *(Unassigned)* | ⚪ Standby | 🔋 100% | 📶 -50 dBm *(Strong)* | `[Pair Student]` |
-| **`#05`** | Ana Morales | 🔴 Offline | ❓ Unknown | ❌ No Signal | `[Unpair]` |
-
-* **Low-Battery Proactive Alerts**: If a clicker drops below $20\%$, the teacher sees a yellow warning icon and can swap the unit before starting a quiz.
-* **Signal Quality (RSSI)**: Detects if a student is sitting in a Wi-Fi blind spot in the classroom.
-* **Zero Student Confusion**: Students only interact with the simple 4 buttons and the green confirmation light.
-
----
-
-## <a id="8-concurrency-latency--edge-case-resilience"></a>8. Concurrency, Latency & Edge Case Resilience
-
-### 1. Button Debounce & Lockout
-* Clicker firmware enforces a **200ms hardware debounce** timer to eliminate contact bounce jitter.
-* While transmitting or showing solid green, further button presses are ignored until the LED cycle completes.
-
-### 2. First-Press Locking (No In-Window Overrides)
-* First press locks: a student can only submit one vote per question round. Any second press in the same round is rejected with `409 Conflict` at the engine level and via `UNIQUE(round_id, student_id)` at the database layer. Firmware must treat `409` as final (red blink) and not retry as an update.
-
-### 3. Unassigned Clicker Defense
-* Unassigning a clicker revokes its session. Its next vote is rejected with `401 Unauthorized` (`{"detail": "Invalid or expired session."}`). When the clicker authenticates again, `POST /api/v1/devices/auth` answers `403 Forbidden` (`{"detail": "Device is not assigned to any student."}`), and the clicker blinks red 3 times to prompt the student to notify the teacher. See [Clicker Token Revocation](../api/devices.md#clicker-token-revocation).
-
-### 4. Router AP Capacity & Connection Budget
-* The **GL-AR300M16 router** handles up to 30 simultaneous 802.11 b/g/n Wi-Fi stations on the 2.4GHz band.
-* ESP32 firmware utilizes static IP assignment or cached DHCP leases to maintain connection latency under **150ms** per vote packet.
-
----
-
-## <a id="9-implementation-roadmap--milestones"></a>9. Implementation Roadmap & Milestones
-
-```mermaid
-gantt
-    title Hardware Clicker & Voting Subsystem Timeline
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
-    section Week 1 (Completed)
-    Database Migration 007 (devices table) :done, w1_1, 2026-08-23, 2026-08-30
-    Staff Device REST Endpoints (/devices) :done, w1_2, 2026-08-23, 2026-08-30
-    100% Quality Gate Verification         :done, w1_3, 2026-08-23, 2026-08-30
-    section Week 3
-    Abstract VoteTransport Interface       :active, w3_1, 2026-09-06, 2026-09-09
-    Quiz Session Engine (>51% Rule)        :w3_2, 2026-09-09, 2026-09-13
-    section Week 7
-    ESP32 PlatformIO C++ Firmware          :w7_1, 2026-10-04, 2026-10-07
-    Esp32HardwareTransport Driver          :w7_2, 2026-10-07, 2026-10-09
-    Router AP Fleet Stress Test (15+ devs) :w7_3, 2026-10-09, 2026-10-11
-```
-
----
-
-## Next Steps
-
-* **[Hardware Devices API Spec](../api/devices.md)**: Explore the `/staff/devices` and student pairing endpoint specifications.
-* **[Database Schema Reference](../database/README.md)**: Review table definitions and ER relationships.
-* **[Hardware Topology](hardware-topology.md)**: Explore overall edge appliance hardware and RAM budgets.
+* **Bluetooth provisioning from the appliance.** It was designed in [ESP32 Clicker Protocol](esp32-protocol.md) and dropped on 2026-10-13.
+* **A setup soft-AP** that the clicker would open when it cannot find the classroom Wi-Fi.
+* **ESP-NOW** with a USB receiver on the Jetson.
+* **A `voltage_mv` field** in the heartbeat. The clicker sends `rssi` and `battery_pct`.

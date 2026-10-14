@@ -241,7 +241,8 @@ Assigning the same student to the same clicker again revokes nothing. These even
 
 ## Related Specifications
 
-* **[ESP32 Clicker Transport Architecture](../architecture/esp32-clicker-transport.md)**: Hardware schematics, pairing flow, and LED state machines.
+* **[ESP32 Clicker Transport](../architecture/esp32-clicker-transport.md)**: How a clicker's vote reaches the session engine.
+* **[Clicker Firmware](../../firmware/clicker/README.md)**: Parts, wiring, flashing, USB setup and what each light means.
 * **[ESP32 Clicker Protocol](../architecture/esp32-protocol.md)**: The provisioning design the secret belongs to. Its §6 describes the endpoints as built.
 * **[Database Schema & ER Model](../database/README.md)**: `devices` table specifications and indexes.
 * **[Quiz Match & Voting Sessions](sessions.md)**: How a clicker's vote is labelled and stored.

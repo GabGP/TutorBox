@@ -122,4 +122,4 @@ An entry that has not beaten for 30 minutes is forgotten: it is removed on the n
 
 * **[Hardware Devices API](devices.md)**: The clicker secret, the clicker login and the clicker token.
 * **[Quiz Match & Voting](sessions.md)**: The vote, which a clicker's token also uses.
-* **[ESP32 Clicker Transport](../architecture/esp32-clicker-transport.md)**: The clicker's vitals and the lobby's use of them.
+* **[ESP32 Clicker Transport](../architecture/esp32-clicker-transport.md)**: How a clicker logs in, votes and sends this heartbeat.
