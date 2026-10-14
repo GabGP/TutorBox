@@ -11,6 +11,7 @@ class Preferences {
   bool isKey(const char* key);
   String getString(const char* key, String defaultValue = String());
   size_t putString(const char* key, const char* value);
+  bool remove(const char* key);
 
  private:
   std::string path_;

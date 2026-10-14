@@ -37,7 +37,7 @@ The clicker uses the same REST API as the phones, over the classroom Wi-Fi. The 
 | Step | What the clicker does | Reference |
 | :--- | :--- | :--- |
 | Wi-Fi | Joins `Utz'tutor` with the name and password compiled into its firmware. | [Firmware §6](../../firmware/clicker/README.md#6-install-the-software-and-flash) |
-| Login | Sends `POST /api/v1/devices/auth` with its device id and its secret. The answer is a token that votes as the assigned student. | [Devices API](../api/devices.md#post-devices-auth) |
+| Login | Sends `POST /api/v1/devices/auth` with its device id and the secret it made itself. The first login registers the clicker; after that the answer is a token that votes as the assigned student. | [Devices API](../api/devices.md#post-devices-auth) |
 | Wait | Polls `GET /api/v1/session/current` every second to see whether a question is open. | [Sessions API](../api/sessions.md#get-session-current) |
 | Vote | Sends `POST /api/v1/session/{session_id}/vote`, the endpoint the phones use. | [Sessions API](../api/sessions.md#post-session-vote) |
 | Presence | Sends `POST /api/v1/presence/heartbeat` every 5 seconds with its signal and battery level, so the lobby lists it as connected. | [Presence API](../api/presence.md#post-presence-heartbeat) |
@@ -45,7 +45,7 @@ The clicker uses the same REST API as the phones, over the classroom Wi-Fi. The 
 Two things are set once per clicker:
 
 * **Device id.** The clicker computes it from its MAC address (`ESP32-A4CF12`).
-* **Device secret.** The TutorBox issues it once and stores only its SHA-256 digest. A person types it into the clicker over USB ([Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)).
+* **Device secret.** The clicker makes it on its first boot and keeps it in its flash. The TutorBox keeps only the SHA-256 digest of the first one it receives ([Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)).
 
 ---
 
@@ -69,13 +69,13 @@ The seam is the wire contract, `POST /api/v1/session/{session_id}/vote`:
 | Topic | Document |
 | :--- | :--- |
 | Parts, pin map, wiring, power | [Clicker Firmware §2 to §5](../../firmware/clicker/README.md#2-parts-per-clicker) |
-| Flashing, USB setup, assigning a student | [Clicker Firmware §6 and §7](../../firmware/clicker/README.md#6-install-the-software-and-flash) |
+| Flashing, first power-on, assigning a student | [Clicker Firmware §6 and §7](../../firmware/clicker/README.md#6-install-the-software-and-flash) |
 | What each light means | [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means) |
 | Bench test and troubleshooting | [Clicker Firmware §9 and §10](../../firmware/clicker/README.md#9-bench-test-checklist) |
 | Code layout, and what the clicker does with each HTTP status | [Clicker Firmware §11](../../firmware/clicker/README.md#11-how-the-code-is-organized) |
 | Firmware tests on a PC | [Clicker Firmware §12](../../firmware/clicker/README.md#12-testing-without-hardware) |
 | Setup and voting protocol, failure modes | [ESP32 Clicker Protocol](esp32-protocol.md) |
-| Register, assign, secret and login endpoints | [Devices API](../api/devices.md) |
+| Assign, delete, enrollment and login endpoints | [Devices API](../api/devices.md) |
 | Lobby presence, signal and battery | [Presence API](../api/presence.md) |
 | What is built and what waits for hardware | [Week 7 Milestone](../milestones/week-7-esp32-clickers.md) |
 

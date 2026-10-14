@@ -1,6 +1,6 @@
 # ESP32-C3 Hardware Clicker: Build, Flash & Classroom Guide
 
-Four answer buttons, one power button, one light. Turn it on and it joins the `Utz'tutor` Wi-Fi by itself; when the teacher opens a question the light blinks white and the student presses A, B, C or D.
+Four answer buttons, one power button, one light. Turn it on and it makes its own secret the first time, joins the `Utz'tutor` Wi-Fi by itself, and waits for the teacher to assign it to a student. When the teacher opens a question the light blinks white and the student presses A, B, C or D.
 
 <div align="center">
 
@@ -20,7 +20,7 @@ Four answer buttons, one power button, one light. Turn it on and it joins the `U
 - [4. Pin Map](#4-pin-map)
 - [5. Wiring](#5-wiring)
 - [6. Install the Software and Flash](#6-install-the-software-and-flash)
-- [7. First Power-On, USB Setup and Assigning a Student](#7-first-power-on-and-assigning-a-student)
+- [7. First Power-On and Assigning a Student](#7-first-power-on-and-assigning-a-student)
 - [8. What the Light Means](#8-what-the-light-means)
 - [9. Bench Test Checklist](#9-bench-test-checklist)
 - [10. Troubleshooting](#10-troubleshooting)
@@ -41,12 +41,13 @@ sequenceDiagram
     participant T as TutorBox (Jetson, 192.168.8.2)
     actor Teacher
 
-    Teacher->>T: registers ESP32-A4CF12, issues its secret, assigns it to "ana" (once)
-    Teacher->>C: types the secret over USB (once)
-    Kid->>C: presses the power button
+    Kid->>C: switches it on (the first time it makes its own secret)
     C->>R: joins Utz'tutor (WPA2), gets 192.168.8.1xx by DHCP
     C->>T: POST /api/v1/devices/auth {device_id, secret}
-    T-->>C: a token that votes as ana
+    T-->>C: 403: enrolled, no student yet (the box keeps a digest of the secret)
+    Teacher->>T: assigns the clicker to "ana" in Clickers (once)
+    C->>T: POST /api/v1/devices/auth {device_id, secret}
+    T-->>C: 200: a token that votes as ana
     loop every second
         C->>T: GET /api/v1/session/current
         T-->>C: is a question open?
@@ -61,7 +62,8 @@ sequenceDiagram
 ```
 
 * **The clicker speaks the same API as the phones.** It logs in, polls the public match state and votes on the same endpoint. The server labels the vote `hardware`, with the clicker's id, from the clicker's token.
-* **Two things are set once per clicker.** The Wi-Fi name and password are flashed with the firmware (§6). The clicker's own secret is issued by the TutorBox and typed in over USB (§7). Each clicker names itself from its MAC address (`ESP32-A4CF12`).
+* **Two things are set once per clicker.** The Wi-Fi name and password are flashed with the firmware (§6). The clicker makes its own secret the first time it is switched on, and keeps it in flash (§7). Each clicker names itself from its MAC address (`ESP32-A4CF12`).
+* **The first login registers the clicker.** The TutorBox adds the clicker to its list at that login and keeps only a digest of the secret. Nobody types anything in.
 * **The teacher assigns each clicker to a student.** It then votes as that student until it is reassigned. Reassigning needs no USB cable: the clicker logs in again and gets a token for the new student.
 * **The router needs no changes.** It already serves DHCP to `192.168.8.100–249` and keeps the Jetson at `192.168.8.2` ([GL.iNet runbook §5](../../infra/glinet/initial.md#5-step-3--lan-dhcp--the-jetson-static-lease)).
 
@@ -204,37 +206,55 @@ Put the board in download mode by hand: **hold BOOT, tap RST, release BOOT**, th
 
 ---
 
-## <a id="7-first-power-on-and-assigning-a-student"></a>7. First Power-On, USB Setup and Assigning a Student
+## <a id="7-first-power-on-and-assigning-a-student"></a>7. First Power-On and Assigning a Student
 
-With the USB cable connected (power switch **off**), the Serial Monitor shows:
+Each clicker is set up once, at the teacher's desk. Nothing is typed in, and no tool or cable is needed.
 
-```text
-=========== TutorBox clicker ===========
-Device id : ESP32-A4CF12   <- write it on the case
-Firmware  : 2.0.0
-Wi-Fi     : Utz'tutor
-TutorBox  : http://192.168.8.2
-=========================================
-[clicker] no secret in flash yet: this clicker needs USB setup
-[wifi] connected: IP 192.168.8.112, signal -54 dBm
-[ESP32-A4CF12] Wi-Fi connected
-[ESP32-A4CF12] No secret yet: set ESP32-A4CF12 up over USB (README: USB setup)
-```
+1. **Switch it on** with its power switch. The first time, the clicker makes its own secret and keeps it in flash. It joins `Utz'tutor` and logs in. The TutorBox has never seen this id, so it adds the clicker to its list with no student, and the light blinks magenta slowly.
 
-The light blinks magenta fast. Three steps follow, once per clicker.
+   With the USB cable (switch the clicker off before you plug it in, §5), the Serial Monitor shows this:
 
-1. **Write the device id on a sticker** on the case. The router's client list shows the same last six digits and the hostname `clicker-a4cf12`.
-2. **Register it.** On `/maestro/`, open **Clickers** and add the clicker by the id on its sticker. It is listed as `Sin configurar` until it has a secret.
-3. **USB setup: issue its secret and type it in.** The TutorBox shows a secret once and keeps only its hash.
-   * Open Swagger at `http://192.168.8.2:8000/docs` from a laptop on the `Utz'tutor` Wi-Fi. Log in with `POST /api/v1/auth/login` as a teacher, press **Authorize**, then call `POST /api/v1/staff/devices/{device_id}/secret`. Copy the 32 characters of `secret`.
-   * In the Serial Monitor, send this line and press Enter:
-     ```text
-     secret 3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e
-     ```
-   * The clicker answers `clicker-secret stored`, keeps the secret in flash, and logs in. It never prints the secret back. Sending `id` makes it answer `clicker-id ESP32-A4CF12`.
-4. **Assign it to a student** in the same **Clickers** sheet. Within 5 seconds the log says `Assigned to ana: ready to vote` and the light changes to a short green blip. The lobby on `/maestro/` lists the clicker as connected.
+   ```text
+   =========== TutorBox clicker ===========
+   Device id : ESP32-A4CF12   <- write it on the case
+   Firmware  : 2.1.0
+   Wi-Fi     : Utz'tutor
+   TutorBox  : http://192.168.8.2
+   =========================================
+   [clicker] first boot: created this clicker's secret
+   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.0: looking for Wi-Fi
+   [wifi] connected: IP 192.168.8.112, signal -54 dBm
+   [ESP32-A4CF12] Wi-Fi connected
+   [ESP32-A4CF12] Logging in to the TutorBox
+   [ESP32-A4CF12] Connected, but not assigned. Assign ESP32-A4CF12 to a student in Clickers on /maestro/
+   ```
 
-Issuing a new secret replaces the old one at once. Do it again only when a clicker shows magenta fast blink with `refused this clicker's secret` in its log (§10).
+2. **Find its id in Clickers.** On `/maestro/`, open **Clickers**. The new clicker is listed under its id, such as `ESP32-A4CF12`, with a **Nuevo** chip for its first 10 minutes. It appears within about 5 seconds of the switch-on. Its info sheet shows **Primer contacto**, the time of that first login.
+   * **Without a serial monitor:** switch the clickers on one at a time and watch for the new row with the **Nuevo** chip. Write that clicker's id on its sticker.
+   * The router's client list shows the last six hex digits of the id too, with the hostname `clicker-a4cf12`.
+   * You can also add a clicker by hand, with the id from its sticker. Until the clicker connects, its row says **Sin conectar**. The clicker takes over that row at its first login.
+
+3. **Assign it to a student.** In the same row, choose the student and assign. Within 5 seconds the log says `Assigned to ana: ready to vote`, the light gives a short green blip, and the lobby on `/maestro/` lists the clicker as connected.
+
+The clicker keeps its student until the teacher unassigns or reassigns it. Giving it to another child needs no cable: the clicker logs in again within 5 seconds.
+
+### Deleting a clicker's row
+
+Deleting a clicker in **Clickers** makes the TutorBox forget it. Its next login enrolls its secret again, unassigned, and the row comes back with the **Nuevo** chip. For a clicker that was not reset, nothing else is needed: assign it again. To remove a clicker for good, switch it off before you delete its row.
+
+### The reset gesture
+
+Use it when the TutorBox keeps a different secret for the clicker (§8, the fast magenta blink).
+
+1. **Hold A and D** while you switch the clicker on, and keep both down for **5 seconds**. The light is steady magenta while you hold.
+2. When the 5 seconds are up, the light turns **white for one second**. The clicker has forgotten its secret, and the log says `reset: this clicker will make a new secret`. Then it makes a new one and logs in with it.
+3. In **Clickers**, delete the clicker's row. Then press any button on the clicker: it enrolls the new secret and shows as unassigned. Assign it to the student again.
+
+The rules:
+
+* The gesture is only checked when the clicker is switched on, before its Wi-Fi starts. If A and D are not both down at that moment, the gesture is off until the next power-on. A press during a lesson cannot trigger it.
+* Let go of either button before 5 seconds and nothing happens: the clicker starts with its old secret. One button held alone does nothing. Holding B or C as well does not stop it.
+* A clicker that the TutorBox has never seen does not need a reset. Its first login enrolls its secret there. This is also how a clicker that was made for another TutorBox joins a new one: switch it on, and assign it.
 
 ---
 
@@ -245,14 +265,16 @@ Issuing a new secret replaces the old one at once. Do it again only when a click
 | 🔵 Blue, fast blink | Looking for the `Utz'tutor` Wi-Fi | Wait. Longer than 30 s: router off, or wrong password in `secrets.h` |
 | 🔵 Blue, steady | Wi-Fi OK, logging in to the TutorBox | Wait |
 | 🔵 Blue, slow blink | Wi-Fi OK but the TutorBox does not answer | Is the Jetson on and the backend running? |
-| 🟣 Magenta, slow blink | Not assigned to a student yet | Teacher: assign it in **Clickers** on `/maestro/` |
-| 🟣 Magenta, fast blink | No secret yet, or the TutorBox refused the secret | USB setup (§7) |
+| 🟣 Magenta, slow blink | Enrolled, not assigned to a student yet | Teacher: assign it in **Clickers** on `/maestro/` |
+| 🟣 Magenta, fast blink | The TutorBox refused this clicker's secret: it keeps another one for this id | Teacher: delete the clicker in **Clickers**, then press any button (§7) |
+| 🟣 Magenta, steady | A and D are held at power-on: the reset gesture is running | Keep them down for 5 s, or let go to cancel (§7) |
+| ⚪ White, one second | The reset is done: a new secret is made | Nothing. If the light then blinks fast magenta, delete the row and press a button (§7) |
 | 🟢 Short green blip every 3 s | On and ready; no question open | Nothing |
 | ⚪ **White, slow blink** | **A question is open: answer now** | **Press A, B, C or D** |
 | 🟡 Yellow | Sending the answer | Wait |
 | 🟢 Green for 1.5 s | Answer counted | Wait for the next question |
 | 🔴 Red ×3 | Not accepted: already answered, time is up, or no question | Wait for the next question |
-| 🟣 Magenta ×3 | Pressed while the clicker needs the teacher | Tell the teacher |
+| 🟣 Magenta ×3 | Pressed while the clicker needs the teacher (not assigned, or refused) | Tell the teacher. On a refused clicker, the press also asks the TutorBox once more |
 
 The first answer counts: a second press in the same question is refused (red). The clicker cannot see that its student already answered on a phone, so the light stays white; the press is then refused (red).
 
@@ -270,14 +292,15 @@ The first answer counts: a second press in the same question is refused (red). T
      }
    }
    ```
-2. **Firmware.** Flash the clicker, watch the log reach `No secret yet` (magenta, fast blink).
-3. **USB setup** (§7): the log reaches `Waiting for the teacher` (magenta, slow blink).
+2. **First power-on.** Switch the clicker on: the log reaches `first boot: created this clicker's secret`, then `Connected, but not assigned` (magenta, slow blink).
+3. **Find its id** (§7): within 5 seconds its row appears in **Clickers** with a `Nuevo` chip. Write the id on the case.
 4. **Assign** it (§7): green blip, and the lobby on `/maestro/` shows it connected.
 5. **Buttons.** Start a quiz on `/maestro/`: white. Press each button in a different question: the log prints `Button B: sending vote` and `Vote B counted`, and the vote count on `/pantalla/` goes up.
 6. **Double press.** Press again in the same question: red ×3.
 7. **Unassign** it in **Clickers**: within 5 seconds the light goes back to magenta, slow blink.
-8. **Battery.** Unplug USB, switch on from the battery: same behavior, no USB setup needed again.
+8. **Battery.** Unplug USB, switch on from the battery: same behavior, and no new setup.
 9. **Recovery.** Switch the router off and on: blue fast blink, then back to ready by itself.
+10. **Reset.** Hold A and D for 5 seconds at switch-on: magenta, then white for one second. The light then blinks fast magenta, because the TutorBox still has the old secret. Delete the row in **Clickers**, press any button, and assign the clicker again.
 
 ---
 
@@ -294,10 +317,13 @@ The first answer counts: a second press in the same question is refused (red). T
 | Connects and drops again and again | Super Mini radio brown-out | Keep `WIFI_LOW_TX_POWER 1`, add the 100 µF capacitor, keep wires away from the ceramic antenna |
 | Blue slow blink, log `Login failed (-1 …)` or `TutorBox did not answer (-1)` | Jetson off, backend down, or wrong `TUTORBOX_URL` | Open `http://192.168.8.2/health` from a phone on the same Wi-Fi |
 | Log `TutorBox has no clicker login (HTTP 404)` | The Jetson runs an older backend | Update the backend (needs migration 015) |
-| Magenta fast blink, log `No secret yet` | The clicker was never set up, or its flash was erased | USB setup (§7) |
-| Magenta fast blink, log `refused this clicker's secret (HTTP 401 …)` | A newer secret was issued, the clicker was deleted, or it was never registered | Register it if needed, then USB setup (§7). The clicker does not ask again by itself: every refused login counts toward a lockout |
+| Magenta slow blink, log `Connected, but not assigned` | Enrolled, no student yet | Teacher: assign it in **Clickers** on `/maestro/` (§7) |
+| Magenta fast blink, log `refused this clicker's secret (HTTP 401 …)` | The TutorBox keeps another secret for this id: the clicker was reset, its row was kept while a new secret was made, or someone else claimed the id first (§13) | Delete the clicker in **Clickers**, then press any button (§7). The clicker does not ask again by itself: every refused login counts toward a lockout |
+| Magenta fast blink, log `refused this clicker's secret (HTTP 422 …)` | The login was not the right shape: damaged flash | Hold A and D at switch-on (§7), then delete the row and press a button |
 | Log `TutorBox locked this clicker out` | Five refused logins from this clicker (30 s, doubling up to 16 minutes) | Wait: it asks again every 30 s. A backend restart clears the lockout |
-| Typed `secret …`, the answer is `clicker-secret invalid` | The line is not `secret`, one space, 32 lowercase hex characters | Copy the value again, with no quotes |
+| Log `first boot: created this clicker's secret, but flash did not keep it` | Flash refused the write. The secret works until power-off; after that the clicker makes another, which the TutorBox refuses once it has the first one | Flash the firmware once more (§6). If the log says it again, the board's flash is faulty |
+| Reset gesture did nothing | A or D let go before 5 s, or only one of them held | Hold A and D together for the full 5 seconds |
+| Log `reset: flash did not erase the old secret` | Flash refused the erase: the clicker keeps its secret | Repeat the reset. If it happens again, the board's flash is faulty |
 | Presses do nothing at all | Button wired to the wrong legs | Use diagonally opposite legs; check with a multimeter |
 | One button counts twice or "by itself" | Long or loose wires picking up noise | Shorter wires; a 100 nF capacitor across the button |
 | White never appears although a quiz runs | The clicker is unassigned, or the round already timed out | Check **Clickers** on `/maestro/`; start the next question |
@@ -309,9 +335,9 @@ The first answer counts: a second press in the same question is refused (red). T
 
 ```mermaid
 graph LR
-    INO["clicker.ino<br/>setup() / loop()"] --> BOARD["Board.cpp<br/>pins, Wi-Fi, HTTP, flash"]
+    INO["clicker.ino<br/>setup() / loop()"] --> BOARD["Board.cpp<br/>pins, Wi-Fi, HTTP, flash, the secret"]
     INO --> BTN["Buttons.cpp<br/>debounce, interrupt taps"]
-    INO --> SETUP["SerialSetup.cpp<br/>USB setup link"]
+    INO --> RESET["ResetGesture.cpp<br/>A and D held at power-on"]
     INO --> APP["ClickerApp.cpp<br/>state machine: what to send,<br/>which light"]
     APP --> LED["StatusLed.cpp<br/>colors and blink patterns"]
     APP --> PROTO["Protocol.cpp<br/>JSON (ArduinoJson)"]
@@ -320,12 +346,12 @@ graph LR
 
 | File | What it does |
 | :--- | :--- |
-| `clicker/config.h` | Everything you may change: TutorBox address, pins, LED type, battery range, radio settings |
+| `clicker/config.h` | Everything you may change: TutorBox address, pins, LED type, battery range, radio settings, the reset hold time |
 | `clicker/secrets.example.h` | Template for `secrets.h` (Wi-Fi name and password) |
-| `clicker/clicker.ino` | The loop: Wi-Fi → USB setup link → buttons → one network request → lights |
-| `clicker/Board.cpp` | The only file that touches hardware: Wi-Fi, HTTP keep-alive, the secret in NVS, interrupts, LEDs |
+| `clicker/clicker.ino` | Start-up: the reset check, Wi-Fi, the secret. Then the loop: Wi-Fi → buttons → one network request → lights |
+| `clicker/Board.cpp` | The only file that touches hardware: Wi-Fi, HTTP keep-alive, the secret in NVS (made once, then kept), interrupts, LEDs |
+| `clicker/ResetGesture.cpp` | The rule for the reset gesture: A and D held from power-on for the hold time. No Arduino calls |
 | `clicker/ClickerApp.cpp` | The rules: log in, poll every second, heartbeat every 5 s, vote only when a question is open, retries, light patterns |
-| `clicker/SerialSetup.cpp` | The two USB commands, `id` and `secret <32 hex>` |
 | `clicker/Buttons.cpp` | Clean presses from bouncy buttons; a tap during a network call still counts |
 | `clicker/StatusLed.cpp`, `clicker/Protocol.cpp` | LED timing and the JSON wire format |
 | `platformio.ini` | PlatformIO build (Arduino IDE users ignore it) |
@@ -338,12 +364,12 @@ What the clicker does with each answer:
 | Call | Answer | The clicker |
 | :--- | :--- | :--- |
 | Login | `200` | Keeps the token in RAM, sends a heartbeat, starts polling |
-| Login | `403` | Magenta slow blink; asks again every 5 s |
-| Login | `401`, `422` | Magenta fast blink; asks again only after a new secret arrives over USB, or a restart |
+| Login | `403` | Magenta slow blink; asks again every 5 s. The first login also lands here, after it enrolls the secret |
+| Login | `401`, `422` | Magenta fast blink; no timer. A button press asks once more, and so does a restart |
 | Login | `429` | Magenta fast blink; asks again every 30 s |
 | Poll | `404` | No match is running: ready, green blip |
 | Poll, login | no answer, `5xx` | Asks again every 2 s; after 3 in a row, blue slow blink |
-| Heartbeat | `401` | Its session ended (unassigned, reassigned, deleted, new secret, or 12 hours old): logs in again |
+| Heartbeat | `401` | Its session ended (unassigned, reassigned, deleted, or 12 hours old): logs in again |
 | Vote | `409`, `404` | Red ×3; the question is done for this clicker. Green only if a retry gets "already voted", which proves the first try arrived |
 | Vote | `401` | Logs in again, then sends the same vote |
 | Vote | no answer, `5xx` | Sends the same vote again, up to 3 tries, 250 ms apart |
@@ -359,8 +385,8 @@ bash firmware/clicker/hosttest/run_tests.sh     # unit tests of the clicker logi
 python firmware/clicker/hosttest/e2e_test.py    # the whole firmware against a real backend
 ```
 
-* `run_tests.sh` compiles `Buttons`, `StatusLed`, `Protocol`, `SerialSetup` and `ClickerApp` with the ESP32 2.x core's own flags (`-std=gnu++11 -fno-rtti`, warnings as errors) and runs 336 checks.
-* `e2e_test.py` compiles the **real** `clicker.ino` and `Board.cpp` against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the USB serial port simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class: empty flash, USB setup, assign, the lobby's class list, three questions, a double press, a 1 ms tap, Wi-Fi loss, a server outage, unassign and assign again, a power cycle, and a replaced secret. It also checks that nothing the clicker prints carries a secret or a token. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
+* `run_tests.sh` compiles `Buttons`, `StatusLed`, `Protocol`, `ResetGesture` and `ClickerApp` with the ESP32 2.x core's own flags (`-std=gnu++11 -fno-rtti`, warnings as errors) and runs 342 checks.
+* `e2e_test.py` compiles the **real** `clicker.ino` and `Board.cpp` against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the random number generator simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class in nine steps: the first power-on makes the secret and enrolls the clicker, the teacher assigns it, the lobby's class list, three questions with a double press, a very short tap, Wi-Fi loss and a server outage, unassign and assign again, a power cycle, a deletion, the reset gesture (a refused login, then a press that enrolls the new secret), a hold let go early, and one button held alone. It also checks that nothing the clicker prints carries a secret or a token. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
 * The fleet of 15 simulated clickers and 15 phones is a backend test: `backend/tests/api/session/test_session_fleet_hardware.py`.
 
 The stand-ins only mirror the Arduino-ESP32 function signatures; the real check is still building for the board (§6).
@@ -369,8 +395,8 @@ The stand-ins only mirror the Arduino-ESP32 function signatures; the real check 
 
 ## <a id="13-known-limits"></a>13. Known Limits
 
-* **The Wi-Fi password lives in the firmware.** Changing the router passphrase means re-flashing every clicker. Provisioning over Bluetooth was designed ([esp32-protocol.md](../../docs/architecture/esp32-protocol.md)) and dropped on 2026-10-13.
-* **USB setup is done by hand.** Issuing the secret in Swagger and typing it in the Serial Monitor (§7) takes about a minute per clicker. No tool does it yet.
+* **The Wi-Fi password lives in the firmware.** Changing the router passphrase means re-flashing every clicker, and a classroom on another router or passphrase needs every clicker flashed again. Provisioning over Bluetooth was designed ([esp32-protocol.md](../../docs/architecture/esp32-protocol.md)) and dropped on 2026-10-13.
 * **Each clicker's secret sits in plain flash.** Someone holding a clicker and a USB cable could read it and vote as that one student. ESP32 flash encryption is the hardening step.
+* **Anyone on the classroom Wi-Fi can add clickers.** The first login of an unknown id adds a row, up to the fleet cap of 100. An id can be claimed before the real clicker's first contact; the real clicker is then refused until the teacher deletes that row (§7).
 * **The clicker does not know that its student already answered.** `GET /api/v1/session/current` is public and says nothing about who voted. After a vote on a phone, or after the clicker is switched off and on during a question, the light is white and the press is refused.
 * **No deep sleep yet.** A clicker left on drains its battery overnight; the latching switch is the off button. Measure battery life in the fleet test.

@@ -12,14 +12,23 @@
 
 class Board {
  public:
-  // Pins, button interrupts, identity (device id + the secret in flash) and Wi-Fi.
+  // Pins, button interrupts, identity (device id) and the start-up banner. The radio
+  // and the secret come later, in the order of clicker.ino's setup().
   void begin();
 
   const char* deviceId() const { return deviceId_; }
-  // The secret the TutorBox issued to this clicker, "" until it is set up over USB.
+  // The secret this clicker logs in with: 32 hex characters that it made itself
+  // (loadOrCreateSecret). "" until loadOrCreateSecret() has run.
   const char* secret() const { return secret_; }
-  // Keeps a new secret in flash, so it survives power-off. False if flash refused it.
-  bool storeSecret(const char* secret);
+
+  // Starts the Wi-Fi radio. Call once, after begin() and the reset gesture check.
+  void startWifi();
+  // Reads the secret from flash, or makes one the first time (a restart keeps it).
+  // Call after startWifi(): esp_random() is only truly random while the radio is on.
+  void loadOrCreateSecret();
+  // Erases the stored secret: the next loadOrCreateSecret() makes a new one. False if
+  // flash refused the erase, and then the old secret is kept.
+  bool resetSecret();
 
   bool wifiConnected() const;
   // Keeps Wi-Fi alive: re-joins after 20 s offline, restarts after 3 minutes.
@@ -31,9 +40,6 @@ class Board {
   void readButtons(bool pressed[ButtonBank::kCount],
                    uint32_t edges[ButtonBank::kCount]) const;
 
-  // The next byte typed on the USB serial port, or -1 when there is none.
-  int readSerialByte();
-
   // Sends the request to TUTORBOX_URL + path. Returns the HTTP status, or a negative
   // HTTPClient error when the server could not be reached. `reply` gets the body.
   int send(const ClickerApp::Request& request, String& reply);
@@ -42,9 +48,6 @@ class Board {
   void showStatus(bool on);
 
  private:
-  void loadSecret();
-  void startWifi();
-
   char deviceId_[16];
   char hostname_[24];
   char secret_[protocol::kSecretSize];

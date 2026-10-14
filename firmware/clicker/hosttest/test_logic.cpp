@@ -8,7 +8,7 @@
 #include "Buttons.h"
 #include "ClickerApp.h"
 #include "Protocol.h"
-#include "SerialSetup.h"
+#include "ResetGesture.h"
 #include "StatusLed.h"
 
 static int gFailures = 0;
@@ -156,6 +156,9 @@ static const char* kLoggedIn =
     "{\"session_id\":\"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\"username\":\"ana\","
     "\"device_id\":\"ESP32-T\"}";
 static const char* kUnassigned = "{\"detail\":\"Device is not assigned to any student.\"}";
+static const char* kRefused = "{\"detail\":\"Invalid device credentials.\"}";
+static const char* kLockedOut =
+    "{\"detail\":\"Too many failed login attempts. Please try again later.\"}";
 static const char* kNoSession = "{\"detail\":\"No active session.\"}";
 
 // GET /session/current as the backend sends it, question text included.
@@ -264,47 +267,60 @@ static void test_protocol() {
 }
 
 // ---------------------------------------------------------------------------
-// SerialSetup
+// ResetGesture
 // ---------------------------------------------------------------------------
 
-// Types `text` on the setup link and returns what its last character produced.
-static SerialSetup::Command type(SerialSetup& link, const std::string& text) {
-  SerialSetup::Command last = SerialSetup::Command::None;
-  for (size_t i = 0; i < text.size(); i++) last = link.feed(text[i]);
-  return last;
-}
+typedef ResetGesture::Result Gesture;
 
-static void test_serial_setup() {
-  printf("SerialSetup\n");
-  SerialSetup link;
-  const std::string secretLine = std::string("secret ") + kSecret;
+static void test_reset_gesture() {
+  printf("ResetGesture\n");
+  const uint32_t kHoldMs = 5000;
 
-  CHECK(type(link, "id") == SerialSetup::Command::None);  // no Enter yet
-  CHECK(link.feed('\n') == SerialSetup::Command::Identify);
-  CHECK(link.feed('i') == SerialSetup::Command::None);
-  CHECK(link.feed('d') == SerialSetup::Command::None);
-  CHECK(link.feed('\r') == SerialSetup::Command::Identify);  // Windows line ending:
-  CHECK(link.feed('\n') == SerialSetup::Command::None);      // its "\n" is not a line
+  // Held from power-on: running until the hold time, decided exactly then.
+  ResetGesture held(kHoldMs);
+  CHECK(held.update(true, true, 1000) == Gesture::Holding);
+  CHECK(held.update(true, true, 5999) == Gesture::Holding);    // 4999 ms: not yet
+  CHECK(held.update(true, true, 6000) == Gesture::Confirmed);  // exactly 5000 ms
+  CHECK(held.update(true, true, 6100) == Gesture::Idle);       // decided: once only
+  CHECK(held.update(false, false, 7000) == Gesture::Idle);
 
-  CHECK(type(link, secretLine + "\n") == SerialSetup::Command::Secret);
-  CHECK(strcmp(link.secret(), kSecret) == 0);
-  link.forget();
-  CHECK(link.secret()[0] == '\0');
+  // A let go before the hold time is cancelled, and it does not start again.
+  ResetGesture letGoA(kHoldMs);
+  CHECK(letGoA.update(true, true, 0) == Gesture::Holding);
+  CHECK(letGoA.update(true, true, 4999) == Gesture::Holding);
+  CHECK(letGoA.update(false, true, 4999) == Gesture::Cancelled);  // A let go
+  CHECK(letGoA.update(true, true, 5000) == Gesture::Idle);
+  CHECK(letGoA.update(true, true, 20000) == Gesture::Idle);
 
-  CHECK(type(link, "secret\n") == SerialSetup::Command::BadSecret);
-  CHECK(type(link, "secret 1234\n") == SerialSetup::Command::BadSecret);
-  CHECK(type(link, "secret  0123456789abcdef0123456789abcde\n") ==
-        SerialSetup::Command::BadSecret);  // two spaces
-  CHECK(type(link, secretLine + "0\n") == SerialSetup::Command::BadSecret);
-  CHECK(link.secret()[0] == '\0');  // a refused line leaves no secret behind
+  // D let go before the hold time: cancelled too.
+  ResetGesture letGoD(kHoldMs);
+  CHECK(letGoD.update(true, true, 0) == Gesture::Holding);
+  CHECK(letGoD.update(true, false, 2000) == Gesture::Cancelled);
+  CHECK(letGoD.update(true, true, 2500) == Gesture::Idle);
 
-  CHECK(type(link, "hello\n") == SerialSetup::Command::Unknown);
-  CHECK(type(link, "ID\n") == SerialSetup::Command::Unknown);
+  // One millisecond before the hold time is still a cancel.
+  ResetGesture almost(kHoldMs);
+  CHECK(almost.update(true, true, 0) == Gesture::Holding);
+  CHECK(almost.update(true, false, 4999) == Gesture::Cancelled);
 
-  // A line longer than any command is dropped whole, even if it starts like one.
-  CHECK(type(link, secretLine + std::string(100, 'f') + "\n") ==
-        SerialSetup::Command::Unknown);
-  CHECK(type(link, "id\n") == SerialSetup::Command::Identify);  // and the link recovers
+  // One button alone at power-on: nothing, and pressing the other later does not start it.
+  ResetGesture alone(kHoldMs);
+  CHECK(alone.update(true, false, 0) == Gesture::Idle);
+  CHECK(alone.update(true, true, 100) == Gesture::Idle);
+  CHECK(alone.update(true, true, 6000) == Gesture::Idle);
+
+  // A and D pressed after start-up (a press during a lesson): never armed.
+  ResetGesture later(kHoldMs);
+  CHECK(later.update(false, false, 0) == Gesture::Idle);
+  CHECK(later.update(true, true, 100) == Gesture::Idle);
+  CHECK(later.update(true, true, 6000) == Gesture::Idle);
+
+  // millis() wraps around after 49 days: the hold still counts across the wrap.
+  ResetGesture wrap(kHoldMs);
+  const uint32_t start = 0xFFFFFFF0u;
+  CHECK(wrap.update(true, true, start) == Gesture::Holding);
+  CHECK(wrap.update(true, true, start + 4999) == Gesture::Holding);
+  CHECK(wrap.update(true, true, start + 5000) == Gesture::Confirmed);  // wraps to 0x1378
 }
 
 // ---------------------------------------------------------------------------
@@ -338,7 +354,7 @@ static bool poll(ClickerApp& app, uint32_t now, int status, const std::string& b
 
 // Powers on with a secret, joins Wi-Fi and logs in; no match is running.
 static void login(ClickerApp& app, uint32_t now) {
-  app.begin("ESP32-T", "2.0.0", kSecret, captureLog, now);
+  app.begin("ESP32-T", "2.1.0", kSecret, captureLog, now);
   app.setWifi(true, now);
   CHECK(answer(app, now, Kind::Auth, 200, kLoggedIn));
   CHECK(answer(app, now, Kind::Heartbeat, 204, ""));
@@ -346,59 +362,11 @@ static void login(ClickerApp& app, uint32_t now) {
   CHECK(app.phase() == Phase::Ready);
 }
 
-static void test_app_needs_secret() {
-  printf("ClickerApp: no secret yet, USB setup\n");
-  gLog.clear();
-  ClickerApp app;
-  app.begin("ESP32-T", "2.0.0", "", captureLog, 0);
-  ClickerApp::Request req;
-
-  app.setWifi(true, 1000);
-  CHECK(app.phase() == Phase::NeedsSecret);
-  CHECK(logged("No secret yet: set ESP32-T up over USB"));
-  CHECK(!app.nextRequest(1000, req));    // nothing to log in with
-  CHECK(!app.nextRequest(600000, req));  // ever
-  CHECK(app.ledColor(1000) == StatusLed::Magenta);
-  CHECK(app.ledColor(1160) == StatusLed::Off);  // fast blink
-  app.onButton('A', 2000);
-  CHECK(logged("this clicker needs the teacher"));
-  CHECK(app.ledColor(2000) == StatusLed::Magenta);
-
-  app.setSecret("not a secret", 3000);  // ignored
-  CHECK(app.phase() == Phase::NeedsSecret);
-  app.setSecret(kSecret, 3000);
-  CHECK(logged("New secret stored"));
-  CHECK(app.phase() == Phase::Connecting);
-  CHECK(app.nextRequest(3000, req));
-  CHECK(req.kind == Kind::Auth && req.post && req.bearer == nullptr);
-  CHECK(strcmp(req.path, "/api/v1/devices/auth") == 0);
-  CHECK(strcmp(req.body,
-               "{\"device_id\":\"ESP32-T\","
-               "\"secret\":\"0123456789abcdef0123456789abcdef\"}") == 0);
-
-  // Flash held something that is not a secret: same as none.
-  ClickerApp damaged;
-  damaged.begin("ESP32-T", "2.0.0", "ffff", captureLog, 0);
-  damaged.setWifi(true, 0);
-  CHECK(damaged.phase() == Phase::NeedsSecret);
-
-  // The secret arrives before Wi-Fi does: it logs in once Wi-Fi is up.
-  ClickerApp early;
-  early.begin("ESP32-T", "2.0.0", "", captureLog, 0);
-  early.setSecret(kSecret, 100);
-  CHECK(early.phase() == Phase::LookingForWifi);
-  CHECK(!early.nextRequest(100, req));
-  early.setWifi(true, 200);
-  CHECK(early.phase() == Phase::Connecting);
-  CHECK(early.nextRequest(200, req) && req.kind == Kind::Auth);
-  CHECK(!logged(kSecret));  // the secret is never written to the log
-}
-
 static void test_app_logs_in_and_waits_for_teacher() {
   printf("ClickerApp: Wi-Fi, login, unassigned, assigned\n");
   gLog.clear();
   ClickerApp app;
-  app.begin("ESP32-T", "2.0.0", kSecret, captureLog, 0);
+  app.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
   ClickerApp::Request req;
 
   CHECK(!app.nextRequest(0, req));  // no Wi-Fi, no network work
@@ -415,7 +383,7 @@ static void test_app_logs_in_and_waits_for_teacher() {
 
   app.onResponse(Kind::Auth, 403, kUnassigned, 1010);
   CHECK(app.phase() == Phase::Unassigned);
-  CHECK(logged("Waiting for the teacher to assign ESP32-T"));
+  CHECK(logged("Assign ESP32-T to a student in Clickers on /maestro/"));
   CHECK(app.ledColor(1010) == StatusLed::Magenta);
   CHECK(app.ledColor(2020) == StatusLed::Off);  // slow blink
   app.onButton('A', 1500);                      // pressing now: magenta x3, nothing sent
@@ -648,11 +616,95 @@ static void test_app_session_ended() {
   CHECK(app.phase() == Phase::Ready && app.armed());
 }
 
-static void test_app_server_problems() {
-  printf("ClickerApp: server down, refused secret, lockout\n");
+// A refused login is never retried on a timer. A button press asks once more, and a
+// restart asks once, as the first boot does. Every refused login counts toward the
+// lockout, so each request here is one that a person asked for.
+static void test_app_refused_login() {
+  printf("ClickerApp: refused login, asked again only by a button press\n");
   gLog.clear();
   ClickerApp app;
-  app.begin("ESP32-T", "2.0.0", kSecret, captureLog, 0);
+  app.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
+  app.setWifi(true, 0);
+  ClickerApp::Request req;
+
+  // The boot asks once, and the refusal is shown.
+  CHECK(answer(app, 0, Kind::Auth, 401, kRefused));
+  CHECK(app.phase() == Phase::Rejected);
+  CHECK(logged("refused this clicker's secret (HTTP 401 Invalid device credentials.)"));
+  CHECK(logged("Fix: delete ESP32-T in Clickers on /maestro/, then press any button"));
+  CHECK(!logged("USB") && !logged("Swagger"));
+  CHECK(app.ledColor(0) == StatusLed::Magenta && app.ledColor(160) == StatusLed::Off);
+
+  // No timer: not after a minute, not after an hour, not when Wi-Fi comes back.
+  CHECK(!app.nextRequest(60000, req));
+  CHECK(!app.nextRequest(3600000, req));
+  app.setWifi(false, 3600001);
+  app.setWifi(true, 3600500);
+  CHECK(app.phase() == Phase::Rejected);
+  CHECK(!app.nextRequest(3600500, req));
+
+  // A press asks once: one login, and a 401 again stops it there.
+  app.onButton('B', 4000000);
+  CHECK(logged("Button B: asking the TutorBox again"));
+  CHECK(app.ledColor(4000000) == StatusLed::Magenta);
+  CHECK(app.nextRequest(4000000, req) && req.kind == Kind::Auth);
+  CHECK(!app.nextRequest(4000001, req));  // one request at a time
+  app.onResponse(req.kind, 401, kRefused, 4000010);
+  CHECK(app.phase() == Phase::Rejected);
+  CHECK(!app.nextRequest(4010000, req));
+  CHECK(!app.nextRequest(4500000, req));
+
+  // A wrong shape (422) is refused the same way, and the next press asks once more.
+  app.onButton('C', 5000000);
+  CHECK(answer(app, 5000000, Kind::Auth, 422, "{\"detail\":[{\"msg\":\"bad\"}]}"));
+  CHECK(app.phase() == Phase::Rejected);
+  CHECK(!app.nextRequest(9000000, req));
+
+  // The teacher deleted the row: the next press enrolls the clicker, 403, unassigned.
+  app.onButton('D', 6000);
+  CHECK(answer(app, 6000, Kind::Auth, 403, kUnassigned));
+  CHECK(app.phase() == Phase::Unassigned);
+  CHECK(logged("Assign ESP32-T to a student in Clickers on /maestro/"));
+  CHECK(!app.nextRequest(6001, req));  // asks every 5 s from now on
+  app.onButton('A', 6100);             // a press while unassigned sends nothing
+  CHECK(!app.nextRequest(6100, req));
+
+  // The teacher assigns it: the next login gets a token.
+  CHECK(answer(app, 11000, Kind::Auth, 200, kLoggedIn));
+  CHECK(app.phase() == Phase::Ready);
+  CHECK(!logged(kSecret) && !logged(kToken));
+
+  // A lockout answers 429: the clicker asks again by itself every 30 s, and a press
+  // in the lockout asks once more (the TutorBox answers 429 again, and the timer goes on).
+  ClickerApp locked;
+  locked.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
+  locked.setWifi(true, 0);
+  CHECK(answer(locked, 0, Kind::Auth, 401, kRefused));
+  locked.onButton('A', 1000);
+  CHECK(answer(locked, 1000, Kind::Auth, 429, kLockedOut));
+  CHECK(locked.phase() == Phase::Rejected);
+  CHECK(logged("locked this clicker out"));
+  CHECK(!locked.nextRequest(30999, req));
+  locked.onButton('B', 31000);
+  CHECK(answer(locked, 31000, Kind::Auth, 429, kLockedOut));
+  CHECK(!locked.nextRequest(60999, req));
+  CHECK(answer(locked, 61000, Kind::Auth, 200, kLoggedIn));  // the timer, not a press
+  CHECK(locked.phase() == Phase::Ready);
+
+  // A restart asks once more, as the first boot did.
+  ClickerApp restarted;
+  restarted.begin("ESP32-T", "2.1.0", kSecret, captureLog, 90000);
+  restarted.setWifi(true, 90000);
+  CHECK(answer(restarted, 90000, Kind::Auth, 401, kRefused));
+  CHECK(!restarted.nextRequest(900000, req));
+  CHECK(!logged(kSecret) && !logged(kToken));
+}
+
+static void test_app_server_problems() {
+  printf("ClickerApp: server down, the TutorBox answers again, logged in then silent\n");
+  gLog.clear();
+  ClickerApp app;
+  app.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
   app.setWifi(true, 0);
   ClickerApp::Request req;
 
@@ -670,41 +722,7 @@ static void test_app_server_problems() {
   CHECK(logged("no clicker login"));
   CHECK(answer(app, 8000, Kind::Auth, 200, "garbage"));
   CHECK(logged("Login reply was not understood"));
-
-  // A refused secret: one try, then silence. More tries would only lock it out.
-  CHECK(answer(app, 10000, Kind::Auth, 401,
-               "{\"detail\":\"Invalid device credentials.\"}"));
-  CHECK(app.phase() == Phase::Rejected);
-  CHECK(logged("refused this clicker's secret (HTTP 401 Invalid device credentials.)"));
-  CHECK(logged("Fix: set ESP32-T up again over USB"));
-  CHECK(app.ledColor(10000) == StatusLed::Magenta);
-  CHECK(!app.nextRequest(12000, req));
-  CHECK(!app.nextRequest(3600000, req));
-  app.setWifi(false, 3600001);  // not even after Wi-Fi comes back
-  app.setWifi(true, 3600500);
-  CHECK(app.phase() == Phase::Rejected);
-  CHECK(!app.nextRequest(3600500, req));
-
-  // A new secret over USB: it tries again. The TutorBox had locked it out: it waits.
-  const uint32_t t = 3700000;
-  app.setSecret("ffffffffffffffffffffffffffffffff", t);
-  CHECK(app.phase() == Phase::Connecting);
-  CHECK(app.nextRequest(t, req) && req.kind == Kind::Auth);
-  CHECK(strstr(req.body, "ffffffffffffffffffffffffffffffff") != nullptr);
-  app.onResponse(req.kind, 429, "{\"detail\":\"Too many failed login attempts.\"}", t);
-  CHECK(app.phase() == Phase::Rejected);
-  CHECK(logged("locked this clicker out"));
-  CHECK(!app.nextRequest(t + 29999, req));
-  CHECK(answer(app, t + 30000, Kind::Auth, 200, kLoggedIn));
-  CHECK(app.phase() == Phase::Ready);
-
-  // A secret of the wrong shape (422) is refused like a wrong one.
-  ClickerApp other;
-  other.begin("ESP32-T", "2.0.0", kSecret, captureLog, 0);
-  other.setWifi(true, 0);
-  CHECK(answer(other, 0, Kind::Auth, 422, "{\"detail\":[{\"msg\":\"bad\"}]}"));
-  CHECK(other.phase() == Phase::Rejected);
-  CHECK(!other.nextRequest(60000, req));
+  CHECK(!logged(kSecret));
 
   // Logged in, then the TutorBox stops answering: blue slow blink, and it recovers.
   gLog.clear();
@@ -727,12 +745,12 @@ int main() {
   test_buttons();
   test_led();
   test_protocol();
-  test_serial_setup();
-  test_app_needs_secret();
+  test_reset_gesture();
   test_app_logs_in_and_waits_for_teacher();
   test_app_votes();
   test_app_vote_errors();
   test_app_session_ended();
+  test_app_refused_login();
   test_app_server_problems();
   printf("\n%d checks, %d failures\n", gChecks, gFailures);
   return gFailures == 0 ? 0 : 1;

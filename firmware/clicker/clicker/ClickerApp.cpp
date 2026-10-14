@@ -97,25 +97,21 @@ void ClickerApp::setVitals(int rssi, int batteryPct) {
   batteryPct_ = batteryPct;
 }
 
-void ClickerApp::setSecret(const char* secret, uint32_t nowMs) {
-  if (!protocol::isSecret(secret)) return;
-  copyText(secret_, sizeof(secret_), secret);
-  dropToken();
-  loginRefused_ = false;
-  failures_ = 0;
-  if (votePending_) cancelVote(StatusLed::Red, nowMs);
-  logf("New secret stored");
-  if (wifi_) startLogin(nowMs);
-}
-
 void ClickerApp::onButton(char option, uint32_t nowMs) {
   if (votePending_) return;  // one vote in flight at a time
   if (phase_ != Phase::Ready) {
-    const bool teacher = phase_ == Phase::Unassigned || phase_ == Phase::Rejected ||
-                         phase_ == Phase::NeedsSecret;
+    const bool teacher = phase_ == Phase::Unassigned || phase_ == Phase::Rejected;
     led_.blink(teacher ? StatusLed::Magenta : StatusLed::Red, 3, nowMs);
-    logf("Button %c ignored: %s", option,
-         teacher ? "this clicker needs the teacher (see README)" : "not connected yet");
+    if (phase_ == Phase::Rejected) {
+      // The only thing that asks a refused clicker again. Every refused login counts
+      // toward the lockout, so a press is one login, never a timer.
+      loginRefused_ = false;
+      nextAuthAt_ = nowMs;
+      logf("Button %c: asking the TutorBox again", option);
+    } else {
+      logf("Button %c ignored: %s", option,
+           teacher ? "this clicker needs the teacher (see README)" : "not connected yet");
+    }
     return;
   }
   if (!armed()) {
@@ -156,9 +152,7 @@ bool ClickerApp::nextRequest(uint32_t nowMs, Request& out) {
 
   if (token_[0] == '\0') {
     // No token: the only thing to do is log in, when that can still work.
-    if (secret_[0] == '\0' || loginRefused_ || !reached(nowMs, nextAuthAt_)) {
-      return false;
-    }
+    if (loginRefused_ || !reached(nowMs, nextAuthAt_)) return false;
     out.kind = RequestKind::Auth;
     copyText(out.path, sizeof(out.path), protocol::kAuthPath);
     protocol::authBody(out.body, sizeof(out.body), deviceId_, secret_);
@@ -199,7 +193,6 @@ StatusLed::Color ClickerApp::ledColor(uint32_t nowMs) {
     case Phase::ServerUnreachable:
       led_.setPattern(StatusLed::Blue, 1000, 1000, nowMs);
       break;
-    case Phase::NeedsSecret:
     case Phase::Rejected:
       led_.setPattern(StatusLed::Magenta, 150, 150, nowMs);
       break;
@@ -236,8 +229,6 @@ const char* ClickerApp::phaseName() const {
       return "connecting";
     case Phase::ServerUnreachable:
       return "server-unreachable";
-    case Phase::NeedsSecret:
-      return "needs-secret";
     case Phase::Rejected:
       return "rejected";
     case Phase::Unassigned:
@@ -276,7 +267,8 @@ void ClickerApp::onAuth(int status, const char* body, uint32_t nowMs) {
 
   if (status == 403) {
     if (phase_ != Phase::Unassigned) {
-      logf("Connected. Waiting for the teacher to assign %s to a student", deviceId_);
+      logf("Connected, but not assigned. Assign %s to a student in Clickers on /maestro/",
+           deviceId_);
     }
     enter(Phase::Unassigned);
     failures_ = 0;
@@ -284,13 +276,14 @@ void ClickerApp::onAuth(int status, const char* body, uint32_t nowMs) {
     return;
   }
   if (status == 401 || status == 422) {
-    // A refused secret counts against this clicker on the TutorBox, and enough of
-    // them lock it out for up to 16 minutes: do not ask again with the same secret.
+    // A refused login counts against this clicker on the TutorBox, and enough of them
+    // lock it out for up to 16 minutes. So there is no timer: a button press asks once
+    // more, and so does a restart.
     loginRefused_ = true;
     enter(Phase::Rejected);
     failures_ = 0;
     logf("TutorBox refused this clicker's secret (HTTP %d %s)", status, detail);
-    logf("Fix: set %s up again over USB (README: USB setup)", deviceId_);
+    logf("Fix: delete %s in Clickers on /maestro/, then press any button", deviceId_);
     return;
   }
   if (status == 429) {
@@ -406,11 +399,6 @@ void ClickerApp::onVote(int status, const char* body, uint32_t nowMs) {
 }
 
 void ClickerApp::startLogin(uint32_t nowMs) {
-  if (secret_[0] == '\0') {
-    enter(Phase::NeedsSecret);
-    logf("No secret yet: set %s up over USB (README: USB setup)", deviceId_);
-    return;
-  }
   if (loginRefused_) {
     enter(Phase::Rejected);
     return;

@@ -2,6 +2,12 @@
 
 #include <Preferences.h>
 
+#if __has_include(<esp_random.h>)
+#include <esp_random.h>  // Arduino-ESP32 3.x (2.0.x has it too, through esp_system.h)
+#else
+#include <esp_system.h>  // Arduino-ESP32 2.0.x builds without esp_random.h
+#endif
+
 #include "config.h"
 
 namespace {
@@ -38,6 +44,20 @@ void onWifiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
              reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
     Serial.println("[wifi] hint: check WIFI_PASSWORD in secrets.h");
   }
+}
+
+// The secret this clicker makes for itself: 128 random bits as 32 lowercase hex
+// characters. esp_random() reads the hardware random number generator.
+void makeSecret(char* out) {
+  static const char kHexDigits[] = "0123456789abcdef";
+  const size_t kWords = (protocol::kSecretSize - 1) / 8;  // one 32-bit word = 8 digits
+  for (size_t word = 0; word < kWords; word++) {
+    const uint32_t randomWord = esp_random();
+    for (size_t digit = 0; digit < 8; digit++) {
+      out[word * 8 + digit] = kHexDigits[(randomWord >> (28 - 4 * digit)) & 0xF];
+    }
+  }
+  out[protocol::kSecretSize - 1] = '\0';
 }
 
 }  // namespace
@@ -78,8 +98,7 @@ void Board::begin() {
   Serial.printf("TutorBox  : %s\n", TUTORBOX_URL);
   Serial.println("=========================================");
 
-  loadSecret();
-  startWifi();
+  secret_[0] = '\0';  // loadOrCreateSecret() fills it in
   http_.setReuse(true);  // keep one TCP connection open: faster votes, less battery
 }
 
@@ -98,33 +117,42 @@ void Board::startWifi() {
   lastJoinAttempt_ = offlineSince_;
 }
 
-void Board::loadSecret() {
-  // The TutorBox issues the secret and keeps only its hash. It reaches this clicker
-  // over USB (SerialSetup.h) and stays in flash until a new one replaces it.
-  secret_[0] = '\0';
+void Board::loadOrCreateSecret() {
+  // The clicker makes its own secret, once. It stays in flash, so every later boot
+  // logs in with the same one. The secret is printed nowhere.
   Preferences prefs;
   prefs.begin("clicker", false);
   String saved = prefs.isKey("secret") ? prefs.getString("secret") : String();
-  prefs.end();
   if (protocol::isSecret(saved.c_str())) {
+    prefs.end();
     strncpy(secret_, saved.c_str(), sizeof(secret_) - 1);
     secret_[sizeof(secret_) - 1] = '\0';
     Serial.println("[clicker] secret found in flash");
+    return;
+  }
+
+  makeSecret(secret_);
+  const bool kept = prefs.putString("secret", secret_) == strlen(secret_);
+  prefs.end();
+  if (kept) {
+    Serial.println("[clicker] first boot: created this clicker's secret");
   } else {
-    Serial.println("[clicker] no secret in flash yet: this clicker needs USB setup");
+    // The secret works until power-off. After that the clicker makes another one, and
+    // the TutorBox refuses it: see the README, troubleshooting.
+    Serial.println(
+        "[clicker] first boot: created this clicker's secret, but flash did not keep "
+        "it: it will not survive power-off");
   }
 }
 
-bool Board::storeSecret(const char* secret) {
-  if (!protocol::isSecret(secret)) return false;
+bool Board::resetSecret() {
   Preferences prefs;
   prefs.begin("clicker", false);
-  const bool saved = prefs.putString("secret", secret) == strlen(secret);
+  // A key that is not there has nothing to erase.
+  const bool erased = !prefs.isKey("secret") || prefs.remove("secret");
   prefs.end();
-  if (!saved) return false;
-  strncpy(secret_, secret, sizeof(secret_) - 1);
-  secret_[sizeof(secret_) - 1] = '\0';
-  return true;
+  secret_[0] = '\0';  // loadOrCreateSecret() makes the new one after the radio starts
+  return erased;
 }
 
 bool Board::wifiConnected() const { return WiFi.status() == WL_CONNECTED; }
@@ -169,8 +197,6 @@ void Board::readButtons(bool pressed[ButtonBank::kCount],
     edges[i] = gEdges[i];
   }
 }
-
-int Board::readSerialByte() { return Serial.available() > 0 ? Serial.read() : -1; }
 
 int Board::send(const ClickerApp::Request& request, String& reply) {
   reply = String();

@@ -33,7 +33,7 @@ struct SessionView {
   char roundId[kRoundIdSize];  // "" when the match has no round yet
 };
 
-// True for exactly 32 lowercase hex characters, the shape the TutorBox issues.
+// True for exactly 32 lowercase hex characters, the shape the clicker makes for itself.
 bool isSecret(const char* text);
 
 // Battery voltage as 0..100, straight line between empty and full. -1 if mv < 0.

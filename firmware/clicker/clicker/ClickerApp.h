@@ -17,8 +17,7 @@ class ClickerApp {
     LookingForWifi,     // blue, fast blink
     Connecting,         // blue, steady: Wi-Fi up, logging in to the TutorBox
     ServerUnreachable,  // blue, slow blink: Wi-Fi up but the TutorBox does not answer
-    NeedsSecret,        // magenta, fast blink: no secret in flash yet (USB setup)
-    Rejected,           // magenta, fast blink: the TutorBox refused the secret
+    Rejected,           // magenta, fast blink: the TutorBox refused the login
     Unassigned,         // magenta, slow blink: the teacher has not assigned it yet
     Ready               // working: green blip, white when a question is open
   };
@@ -46,15 +45,13 @@ class ClickerApp {
   static const uint32_t kVoteRetryMs = 250;
 
   ClickerApp();
-  // `secret` is what flash holds: "" on a clicker that was never set up.
+  // `secret` is the clicker's own, from Board::loadOrCreateSecret().
   void begin(const char* deviceId, const char* firmware, const char* secret, LogFn log,
              uint32_t nowMs);
 
   // ---- what happened ----
   void setWifi(bool connected, uint32_t nowMs);
   void setVitals(int rssi, int batteryPct);
-  // A new secret arrived over USB: forget the token and log in with it.
-  void setSecret(const char* secret, uint32_t nowMs);
   void onButton(char option, uint32_t nowMs);
   void onResponse(RequestKind kind, int status, const char* body, uint32_t nowMs);
 
@@ -95,7 +92,7 @@ class ClickerApp {
 
   char secret_[protocol::kSecretSize];
   char token_[protocol::kTokenSize];  // RAM only: a restart logs in again
-  bool loginRefused_;                 // the secret got a 401: wait for a new one
+  bool loginRefused_;                 // the TutorBox refused the login: a press asks again
   uint32_t nextAuthAt_;
   uint32_t nextPollAt_;
   uint32_t nextBeatAt_;

@@ -16,6 +16,6 @@ src="$here/../clicker"
 g++ -std=gnu++11 -fno-rtti -Wall -Wextra -Werror -O1 \
   -I"$src" -I"$ARDUINOJSON_DIR/src" \
   "$here/test_logic.cpp" "$src/Buttons.cpp" "$src/StatusLed.cpp" \
-  "$src/Protocol.cpp" "$src/SerialSetup.cpp" "$src/ClickerApp.cpp" \
+  "$src/Protocol.cpp" "$src/ResetGesture.cpp" "$src/ClickerApp.cpp" \
   -o "$here/build/test_logic"
 "$here/build/test_logic"

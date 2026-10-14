@@ -1,60 +1,64 @@
 // =============================================================================
 //  TutorBox clicker: ESP32-C3 firmware
 //
-//  Power on -> joins the TutorBox Wi-Fi by itself -> logs in with its secret.
-//  When the teacher opens a question the LED blinks white: press A, B, C or D.
-//  Yellow = sending, green = counted, red x3 = not accepted.
+//  Power on -> makes its own secret the first time -> joins the TutorBox Wi-Fi by
+//  itself -> logs in with that secret. The teacher assigns it to a student in
+//  Clickers on /maestro/. When a question is open the LED blinks white: press A, B, C
+//  or D. Yellow = sending, green = counted, red x3 = not accepted.
 //
 //  First time? Read firmware/clicker/README.md (wiring, flashing, LED meanings).
 //  Settings: config.h. Wi-Fi password: secrets.h (copy secrets.example.h).
-//  The clicker's own secret arrives over USB: README, section "USB setup".
+//  Reset: hold A and D while switching it on, for 5 seconds (README, section 7).
 // =============================================================================
 #include "Board.h"
 #include "Buttons.h"
 #include "ClickerApp.h"
-#include "SerialSetup.h"
+#include "ResetGesture.h"
 #include "config.h"
 
 static Board board;
 static ButtonBank buttons;
 static ClickerApp app;
-static SerialSetup setupLink;
 
 static void logLine(const char* line) {
   Serial.printf("[%s] %s\n", board.deviceId(), line);
 }
 
-// The USB setup link (SerialSetup.h). Its answers start with "clicker-" so the
-// tool can tell them from the log. The secret is never printed.
-static void handleSetupLink(uint32_t now) {
-  for (int c = board.readSerialByte(); c >= 0; c = board.readSerialByte()) {
-    switch (setupLink.feed(static_cast<char>(c))) {
-      case SerialSetup::Command::Identify:
-        Serial.printf("clicker-id %s\n", board.deviceId());
-        break;
-      case SerialSetup::Command::Secret:
-        if (board.storeSecret(setupLink.secret())) {
-          app.setSecret(board.secret(), now);
-          Serial.println("clicker-secret stored");
-        } else {
-          Serial.println("clicker-secret failed: flash did not keep it");
-        }
-        setupLink.forget();
-        break;
-      case SerialSetup::Command::BadSecret:
-        Serial.println("clicker-secret invalid: it is 32 lowercase hex characters");
-        break;
-      case SerialSetup::Command::Unknown:
-        Serial.println("clicker-setup unknown command: use id, or secret <32 hex>");
-        break;
-      case SerialSetup::Command::None:
-        break;
+// Holding A and D from power-on (ResetGesture.h). It runs before Wi-Fi starts, so the
+// light is the only thing that shows it: magenta while held, white for a second once
+// the secret is forgotten.
+static void resetIfHeld() {
+  ResetGesture gesture(RESET_HOLD_MS);
+  ResetGesture::Result result = ResetGesture::Result::Idle;
+  do {
+    bool pressed[ButtonBank::kCount];
+    uint32_t edges[ButtonBank::kCount];
+    board.readButtons(pressed, edges);
+    result = gesture.update(pressed[0], pressed[3], millis());  // 0 = A, 3 = D
+    if (result == ResetGesture::Result::Holding) {
+      board.showColor(StatusLed::Magenta);
+      delay(2);
+    }
+  } while (result == ResetGesture::Result::Holding);
+
+  if (result == ResetGesture::Result::Confirmed) {
+    board.showColor(StatusLed::White);
+    delay(1000);
+    if (board.resetSecret()) {
+      logLine("reset: this clicker will make a new secret");
+    } else {
+      logLine("reset: flash did not erase the old secret, so it keeps it");
     }
   }
+  board.showColor(StatusLed::Off);
 }
 
 void setup() {
-  board.begin();
+  board.begin();  // pins, button interrupts, device id, banner
+  resetIfHeld();
+  // The radio first: esp_random() is only truly random while it is on.
+  board.startWifi();
+  board.loadOrCreateSecret();  // this clicker's own secret: made once, kept in flash
   app.begin(board.deviceId(), FIRMWARE_VERSION, board.secret(), logLine, millis());
 }
 
@@ -76,24 +80,21 @@ void loop() {
   }
   app.setWifi(wifi, now);
 
-  // 2. USB: a secret may arrive while the clicker sits on the teacher's desk.
-  handleSetupLink(now);
-
-  // 3. Buttons: a clean press becomes 'A'..'D'.
+  // 2. Buttons: a clean press becomes 'A'..'D'.
   bool pressed[ButtonBank::kCount];
   uint32_t edges[ButtonBank::kCount];
   board.readButtons(pressed, edges);
   const char option = buttons.update(pressed, edges, now);
   if (option != 0) app.onButton(option, now);
 
-  // 4. Network: at most one request per loop (login, poll, heartbeat or vote).
+  // 3. Network: at most one request per loop (login, poll, heartbeat or vote).
   ClickerApp::Request request;
   if (app.nextRequest(now, request)) {
     const int status = board.send(request, reply);
     app.onResponse(request.kind, status, reply.c_str(), millis());
   }
 
-  // 5. Lights.
+  // 4. Lights.
   board.showColor(app.ledColor(millis()));
   board.showStatus(app.statusLedOn(millis()));
 

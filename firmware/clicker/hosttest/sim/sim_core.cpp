@@ -3,13 +3,15 @@
 // Pins, Wi-Fi and flash are simulated; HTTP is real, so the clicker talks to an actual
 // TutorBox backend. Driven by text commands on stdin, one per line:
 //   press A | tap A | hold A | release A | wifi off | wifi on | quit
-//   serial <text>   types <text> and Enter on the clicker's USB serial port
 // It prints the firmware's serial log plus "LED <color>" whenever the RGB LED changes.
+// Commands are read while the firmware runs and also while it waits in delay() (its
+// reset check waits there), so a test can release a button in the middle of that wait.
 //
 // Environment:
 //   CLICKER_SIM_SERVER  host:port to send HTTP to instead of TUTORBOX_URL's host
 //   CLICKER_SIM_MAC     12 hex digits (default 240AC4A4CF12 -> ESP32-A4CF12)
 //   CLICKER_SIM_NVS     file standing in for flash (default build/nvs-<mac>.txt)
+//   CLICKER_SIM_HELD    buttons held down from power-on, e.g. "AD" (default: none)
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <poll.h>
@@ -20,9 +22,9 @@
 #include <chrono>
 #include <cerrno>
 #include <cstdlib>
-#include <deque>
 #include <fstream>
 #include <map>
+#include <random>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -33,6 +35,7 @@
 #include "Preferences.h"
 #include "WiFi.h"
 #include "config.h"
+#include "esp_random.h"
 
 HardwareSerial Serial;
 EspClass ESP;
@@ -42,6 +45,8 @@ void setup();
 void loop();
 
 namespace {
+
+void pumpInput();  // runs the commands that have arrived and ends the timed presses
 
 const auto kStart = std::chrono::steady_clock::now();
 int gLevel[32];
@@ -53,7 +58,13 @@ bool gWifiStarted = false;
 bool gWifiUp = false;
 unsigned long gWifiUpAt = 0;
 std::vector<WiFiEventFuncCb> gWifiHandlers;
-std::deque<char> gSerialIn;  // bytes "typed" on the USB serial port, not read yet
+std::string gPendingInput;  // stdin bytes not yet split into lines
+struct Release {
+  int pin;
+  unsigned long at;
+};
+std::vector<Release> gReleases;  // presses that end by themselves: "press" is 120 ms
+std::string gLastColor = "Off";
 
 uint64_t simMac() {
   const char* text = getenv("CLICKER_SIM_MAC");
@@ -89,6 +100,23 @@ void updateWifi() {
              up ? 0 : WIFI_REASON_NO_AP_FOUND);
 }
 
+const char* colorName(int red, int green, int blue) {
+  static const char* names[8] = {"Off",  "Red",     "Green", "Yellow",
+                                 "Blue", "Magenta", "Cyan",  "White"};
+  const int on = LED_COMMON_ANODE ? LOW : HIGH;
+  const int bits = (red == on ? 1 : 0) | (green == on ? 2 : 0) | (blue == on ? 4 : 0);
+  return names[bits];
+}
+
+void reportLed() {
+  const std::string color = colorName(gLevel[PIN_LED_RED], gLevel[PIN_LED_GREEN],
+                                      gLevel[PIN_LED_BLUE]);
+  if (color != gLastColor) {
+    gLastColor = color;
+    ::printf("LED %s\n", color.c_str());
+  }
+}
+
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -101,12 +129,15 @@ unsigned long millis() {
                                         .count());
 }
 
-void delay(uint32_t ms) { std::this_thread::sleep_for(std::chrono::milliseconds(ms)); }
-
-void pinMode(uint8_t pin, uint8_t mode) {
-  gMode[pin] = mode;
-  if (mode == INPUT_PULLUP) gLevel[pin] = HIGH;
+void delay(uint32_t ms) {
+  const auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+  do {
+    pumpInput();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  } while (std::chrono::steady_clock::now() < until);
 }
+
+void pinMode(uint8_t pin, uint8_t mode) { gMode[pin] = mode; }
 
 void digitalWrite(uint8_t pin, uint8_t val) { gLevel[pin] = val ? HIGH : LOW; }
 
@@ -123,16 +154,13 @@ uint32_t analogReadMilliVolts(uint8_t pin) {
   return 1950;
 }
 
-void HardwareSerial::begin(unsigned long baud) { (void)baud; }
-
-int HardwareSerial::available() { return static_cast<int>(gSerialIn.size()); }
-
-int HardwareSerial::read() {
-  if (gSerialIn.empty()) return -1;
-  const char c = gSerialIn.front();
-  gSerialIn.pop_front();
-  return static_cast<unsigned char>(c);
+// The host's random source: each simulated clicker makes a different secret.
+uint32_t esp_random(void) {
+  static std::random_device device;
+  return device();
 }
+
+void HardwareSerial::begin(unsigned long baud) { (void)baud; }
 
 size_t HardwareSerial::printf(const char* format, ...) {
   va_list args;
@@ -330,6 +358,14 @@ std::map<std::string, std::string> loadPrefs(const std::string& path) {
   }
   return values;
 }
+
+void savePrefs(const std::string& path, const std::map<std::string, std::string>& values) {
+  std::ofstream out(path.c_str());
+  for (std::map<std::string, std::string>::const_iterator it = values.begin();
+       it != values.end(); ++it) {
+    out << it->first << "=" << it->second << "\n";
+  }
+}
 }  // namespace
 
 bool Preferences::begin(const char* name, bool readOnly, const char* partition_label) {
@@ -355,106 +391,95 @@ String Preferences::getString(const char* key, String defaultValue) {
 size_t Preferences::putString(const char* key, const char* value) {
   std::map<std::string, std::string> values = loadPrefs(path_);
   values[key] = value;
-  std::ofstream out(path_.c_str());
-  for (std::map<std::string, std::string>::iterator it = values.begin();
-       it != values.end(); ++it) {
-    out << it->first << "=" << it->second << "\n";
-  }
+  savePrefs(path_, values);
   return strlen(value);
 }
 
+bool Preferences::remove(const char* key) {
+  std::map<std::string, std::string> values = loadPrefs(path_);
+  if (values.erase(key) == 0) return false;
+  savePrefs(path_, values);
+  return true;
+}
+
 // ---------------------------------------------------------------------------
-// Simulator main loop
+// Simulator: stdin commands, timed presses, the LED report
 // ---------------------------------------------------------------------------
 
 namespace {
 
-const char* colorName(int red, int green, int blue) {
-  static const char* names[8] = {"Off",  "Red",     "Green", "Yellow",
-                                 "Blue", "Magenta", "Cyan",  "White"};
-  const int on = LED_COMMON_ANODE ? LOW : HIGH;
-  const int bits = (red == on ? 1 : 0) | (green == on ? 2 : 0) | (blue == on ? 4 : 0);
-  return names[bits];
+void runCommand(const std::string& line) {
+  std::istringstream words(line);
+  std::string verb, arg;
+  words >> verb >> arg;
+  const int pin = arg.empty() ? -1 : pinFor(arg[0]);
+  ::printf("SIM < %s\n", line.c_str());
+  if (verb == "quit") {
+    fflush(stdout);
+    exit(0);
+  } else if (verb == "wifi") {
+    simSetWifi(arg == "on");
+  } else if (pin >= 0 && verb == "press") {
+    firePressEdge(pin);  // a normal press: down for 120 ms
+    Release release = {pin, millis() + 120};
+    gReleases.push_back(release);
+  } else if (pin >= 0 && verb == "tap") {
+    firePressEdge(pin);  // so short that loop() never sees the pin LOW
+    gLevel[pin] = HIGH;
+  } else if (pin >= 0 && verb == "hold") {
+    firePressEdge(pin);
+  } else if (pin >= 0 && verb == "release") {
+    gLevel[pin] = HIGH;
+  }
 }
 
-struct Release {
-  int pin;
-  unsigned long at;
-};
+// Reads what the test has typed, runs the complete commands, ends the timed presses and
+// reports the LED. Called before every loop() and from every delay().
+void pumpInput() {
+  pollfd input;
+  input.fd = 0;
+  input.events = POLLIN;
+  if (poll(&input, 1, 0) > 0) {
+    char chunk[256];
+    const ssize_t n = read(0, chunk, sizeof(chunk));
+    if (n <= 0) exit(0);  // the test closed our stdin: the clicker is switched off
+    gPendingInput.append(chunk, static_cast<size_t>(n));
+  }
+  size_t newline;
+  while ((newline = gPendingInput.find('\n')) != std::string::npos) {
+    const std::string line = gPendingInput.substr(0, newline);
+    gPendingInput.erase(0, newline + 1);
+    runCommand(line);
+  }
+  for (size_t i = 0; i < gReleases.size();) {
+    if (millis() >= gReleases[i].at) {
+      gLevel[gReleases[i].pin] = HIGH;
+      gReleases.erase(gReleases.begin() + static_cast<long>(i));
+    } else {
+      i++;
+    }
+  }
+  reportLed();
+}
 
 }  // namespace
 
 int main() {
-  for (int i = 0; i < 32; i++) gLevel[i] = HIGH;
   setvbuf(stdout, nullptr, _IOLBF, 0);
+  for (int i = 0; i < 32; i++) gLevel[i] = HIGH;  // buttons up
+  // The LED starts dark: a common cathode is dark when LOW, a common anode when HIGH.
+  gLevel[PIN_LED_RED] = gLevel[PIN_LED_GREEN] = gLevel[PIN_LED_BLUE] =
+      LED_COMMON_ANODE ? HIGH : LOW;
+  // CLICKER_SIM_HELD=AD: those buttons are down from power-on (the reset gesture test).
+  const char* held = getenv("CLICKER_SIM_HELD");
+  for (const char* letter = held ? held : ""; *letter != '\0'; letter++) {
+    const int pin = pinFor(*letter);
+    if (pin >= 0) gLevel[pin] = LOW;
+  }
   setup();
-
-  std::vector<Release> releases;
-  std::string lastColor;
-  std::string pending;  // stdin bytes not yet split into lines
-  bool running = true;
-  while (running) {
-    pollfd input;
-    input.fd = 0;
-    input.events = POLLIN;
-    if (poll(&input, 1, 0) > 0) {
-      char chunk[256];
-      const ssize_t n = read(0, chunk, sizeof(chunk));
-      if (n <= 0) running = false;
-      if (n > 0) pending.append(chunk, static_cast<size_t>(n));
-    }
-    size_t newline;
-    while ((newline = pending.find('\n')) != std::string::npos) {
-      const std::string line = pending.substr(0, newline);
-      pending.erase(0, newline + 1);
-      std::istringstream words(line);
-      std::string verb, arg;
-      words >> verb >> arg;
-      const int pin = arg.empty() ? -1 : pinFor(arg[0]);
-      if (verb == "serial") {
-        // Not echoed: a line typed here may carry the clicker's secret.
-        const std::string typed = line.size() > 7 ? line.substr(7) : std::string();
-        ::printf("SIM < serial (%u characters)\n",
-                 static_cast<unsigned>(typed.size()));
-        gSerialIn.insert(gSerialIn.end(), typed.begin(), typed.end());
-        gSerialIn.push_back('\n');
-        continue;
-      }
-      ::printf("SIM < %s\n", line.c_str());
-      if (verb == "quit") {
-        running = false;
-      } else if (verb == "wifi") {
-        simSetWifi(arg == "on");
-      } else if (pin >= 0 && verb == "press") {
-        firePressEdge(pin);  // a normal press: down for 120 ms
-        Release r = {pin, millis() + 120};
-        releases.push_back(r);
-      } else if (pin >= 0 && verb == "tap") {
-        firePressEdge(pin);  // so short that loop() never sees the pin LOW
-        gLevel[pin] = HIGH;
-      } else if (pin >= 0 && verb == "hold") {
-        firePressEdge(pin);
-      } else if (pin >= 0 && verb == "release") {
-        gLevel[pin] = HIGH;
-      }
-    }
-    for (size_t i = 0; i < releases.size();) {
-      if (millis() >= releases[i].at) {
-        gLevel[releases[i].pin] = HIGH;
-        releases.erase(releases.begin() + static_cast<long>(i));
-      } else {
-        i++;
-      }
-    }
-
+  for (;;) {
+    pumpInput();
     loop();
-
-    const std::string color = colorName(gLevel[PIN_LED_RED], gLevel[PIN_LED_GREEN],
-                                        gLevel[PIN_LED_BLUE]);
-    if (color != lastColor) {
-      lastColor = color;
-      ::printf("LED %s\n", color.c_str());
-    }
   }
   return 0;
 }

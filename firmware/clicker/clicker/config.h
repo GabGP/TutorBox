@@ -59,4 +59,9 @@
 // Modem sleep saves battery between check-ins. Set 0 if votes ever feel slow.
 #define WIFI_POWER_SAVE 1
 
-#define FIRMWARE_VERSION "2.0.0"
+// ---- Reset gesture ----------------------------------------------------------------
+// Hold A and D while switching the clicker on, and keep them down this long (ms): the
+// clicker forgets its secret and makes a new one. Let go sooner and nothing happens.
+#define RESET_HOLD_MS 5000
+
+#define FIRMWARE_VERSION "2.1.0"
