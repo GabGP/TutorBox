@@ -12,7 +12,7 @@ mkdir -p "$here/build"
 src="$here/../clicker"
 g++ -std=gnu++11 -fno-rtti -Wall -Wextra -Werror -O1 \
   -I"$here/sim" -I"$src" -I"$ARDUINOJSON_DIR/src" \
-  "$here/sim/sim_core.cpp" "$here/sim/sim_sketch.cpp" "$src/Board.cpp" \
+  "$here"/sim/*.cpp "$src/Board.cpp" \
   "$src/Buttons.cpp" "$src/StatusLed.cpp" "$src/Protocol.cpp" "$src/ResetGesture.cpp" \
   "$src/ClickerApp.cpp" \
   -o "$here/build/clicker_sim"

@@ -19,16 +19,17 @@
 #define FALLING 0x02
 #define ARDUINO_ISR_ATTR
 
-class String {
- public:
+class String
+{
+public:
   String() {}
-  String(const char* text) : s_(text ? text : "") {}  // NOLINT: implicit like Arduino
-  String(const std::string& text) : s_(text) {}       // NOLINT
-  const char* c_str() const { return s_.c_str(); }
+  String(const char *text) : s_(text ? text : "") {} // NOLINT: implicit like Arduino
+  String(const std::string &text) : s_(text) {}      // NOLINT
+  const char *c_str() const { return s_.c_str(); }
   unsigned int length() const { return static_cast<unsigned int>(s_.size()); }
-  bool operator==(const char* other) const { return s_ == other; }
+  bool operator==(const char *other) const { return s_ == other; }
 
- private:
+private:
   std::string s_;
 };
 
@@ -37,20 +38,22 @@ void delay(uint32_t ms);
 void pinMode(uint8_t pin, uint8_t mode);
 void digitalWrite(uint8_t pin, uint8_t val);
 int digitalRead(uint8_t pin);
-void attachInterruptArg(uint8_t pin, void (*)(void*), void* arg, int mode);
+void attachInterruptArg(uint8_t pin, void (*)(void *), void *arg, int mode);
 uint32_t analogReadMilliVolts(uint8_t pin);
 
-class HardwareSerial {
- public:
+class HardwareSerial
+{
+public:
   void begin(unsigned long baud);
-  size_t printf(const char* format, ...) __attribute__((format(printf, 2, 3)));
-  size_t println(const char* text);
+  size_t printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
+  size_t println(const char *text);
   size_t println();
 };
 extern HardwareSerial Serial;
 
-class EspClass {
- public:
+class EspClass
+{
+public:
   uint64_t getEfuseMac();
   void restart();
 };

@@ -13,21 +13,22 @@
 #define HTTPC_ERROR_NOT_CONNECTED (-4)
 #define HTTPC_ERROR_READ_TIMEOUT (-11)
 
-class HTTPClient {
- public:
-  bool begin(WiFiClient& client, String url);
+class HTTPClient
+{
+public:
+  bool begin(WiFiClient &client, String url);
   void end(void);
   void setReuse(bool reuse);
   void setConnectTimeout(int32_t connectTimeout);
   void setTimeout(uint16_t timeout);
-  void addHeader(const String& name, const String& value, bool first = false,
+  void addHeader(const String &name, const String &value, bool first = false,
                  bool replace = true);
   int GET();
-  int POST(uint8_t* payload, size_t size);
+  int POST(uint8_t *payload, size_t size);
   String getString(void);
 
- private:
-  int perform(const char* method, const uint8_t* payload, size_t size);
+private:
+  int perform(const char *method, const uint8_t *payload, size_t size);
 
   std::string host_;
   int port_ = 80;
@@ -37,5 +38,5 @@ class HTTPClient {
   uint16_t timeoutMs_ = 5000;
   bool reuse_ = false;
   int status_ = 0;
-  bool bodyUntilClose_ = false;  // the reply had no Content-Length and was not chunked
+  bool bodyUntilClose_ = false; // the reply had no Content-Length and was not chunked
 };

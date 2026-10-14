@@ -6,10 +6,11 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-uint32_t esp_random(void);
+  uint32_t esp_random(void);
 
 #ifdef __cplusplus
 }

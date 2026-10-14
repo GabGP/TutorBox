@@ -4,15 +4,16 @@
 
 #include "Arduino.h"
 
-class Preferences {
- public:
-  bool begin(const char* name, bool readOnly = false, const char* partition_label = NULL);
+class Preferences
+{
+public:
+  bool begin(const char *name, bool readOnly = false, const char *partition_label = NULL);
   void end();
-  bool isKey(const char* key);
-  String getString(const char* key, String defaultValue = String());
-  size_t putString(const char* key, const char* value);
-  bool remove(const char* key);
+  bool isKey(const char *key);
+  String getString(const char *key, String defaultValue = String());
+  size_t putString(const char *key, const char *value);
+  bool remove(const char *key);
 
- private:
+private:
   std::string path_;
 };
