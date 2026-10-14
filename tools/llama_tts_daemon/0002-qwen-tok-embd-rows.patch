@@ -17,7 +17,7 @@ index 3b25362..5b9f9b1 100644
 @@ -3279,6 +3279,38 @@ uint32_t llama_model_target_layer_ids_n(const struct llama_model * model) {
      return (uint32_t) model->target_layer_ids.size();
  }
- 
+
 +uint32_t llama_model_get_tok_embd_row(const struct llama_model * model, llama_token token, float * out) {
 +    const ggml_tensor * tensor = model->tok_embd;
 +    if (tensor == nullptr || out == nullptr || token < 0 || (int64_t) token >= tensor->ne[1]) {
@@ -59,7 +59,7 @@ index 1c58d3a..6fdef4a 100644
 +++ b/tools/mtmd/mtmd-helper-gen.cpp
 @@ -146,9 +146,12 @@ public:
          }
- 
+
          const int n_e = n_embd;
 +        // one row at a time: the whole matrix is n_vocab * n_embd floats, over 1 GiB for this model
          auto row = [&](llama_token t) {
@@ -95,6 +95,6 @@ index 1c58d3a..6fdef4a 100644
      llama_token tts_bos    = LLAMA_TOKEN_NULL;
      llama_token tts_eos    = LLAMA_TOKEN_NULL;
 -    std::vector<float> tok_embd; // whole token embedding matrix, n_vocab * n_embd
- 
+
      // must match hparams.wav_tfm_swa hardcoded in clip.cpp
      size_t window_frames = 72;
