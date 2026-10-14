@@ -11,8 +11,8 @@ from core.logging import (
     ACCESS_LOG_FORMAT,
     APP_LOG_FORMAT,
     ProbeFilter,
-    TutorBoxAccessFormatter,
-    TutorBoxFormatter,
+    UtzTutorAccessFormatter,
+    UtzTutorFormatter,
     setup_logging,
 )
 from core.logging.setup import QUIET_THIRD_PARTY_LOGGERS
@@ -70,9 +70,9 @@ def _make_record(path: str) -> logging.LogRecord:
     )
 
 
-def test_tutorbox_formatter_includes_timestamp_and_levelprefix():
-    """Verifies that TutorBoxFormatter outputs timestamp, levelprefix, and module name."""
-    formatter = TutorBoxFormatter(fmt=APP_LOG_FORMAT, use_colors=False)
+def test_utztutor_formatter_includes_timestamp_and_levelprefix():
+    """Verifies that UtzTutorFormatter outputs timestamp, levelprefix, and module name."""
+    formatter = UtzTutorFormatter(fmt=APP_LOG_FORMAT, use_colors=False)
     record = logging.LogRecord(
         name="core.test",
         level=logging.INFO,
@@ -88,9 +88,9 @@ def test_tutorbox_formatter_includes_timestamp_and_levelprefix():
     assert "Sample log event" in formatted
 
 
-def test_tutorbox_access_formatter_includes_timestamp_and_request_line():
-    """Verifies that TutorBoxAccessFormatter formats HTTP access records correctly."""
-    formatter = TutorBoxAccessFormatter(fmt=ACCESS_LOG_FORMAT, use_colors=False)
+def test_utztutor_access_formatter_includes_timestamp_and_request_line():
+    """Verifies that UtzTutorAccessFormatter formats HTTP access records correctly."""
+    formatter = UtzTutorAccessFormatter(fmt=ACCESS_LOG_FORMAT, use_colors=False)
     record = logging.LogRecord(
         name="uvicorn.access",
         level=logging.INFO,
@@ -246,7 +246,7 @@ def test_setup_logging_leaves_foreign_uvicorn_handlers_alone():
     assert not any(isinstance(f, ProbeFilter) for f in shared.filters)
     # Normal records must still format through the untouched foreign handler.
     record = logging.LogRecord(
-        name="tutorbox",
+        name="utztutor",
         level=logging.INFO,
         pathname="",
         lineno=0,
@@ -277,7 +277,7 @@ def test_setup_logging_creates_stream_handler_if_none_present():
     assert len(root.handlers) >= 1
 
 
-def test_logging_config_uses_tutorbox_formatters():
+def test_logging_config_uses_utztutor_formatters():
     """Verifies logging_config.json loads and uses Utz'tutor formatter classes."""
     config_path = Path(__file__).resolve().parents[3] / "logging_config.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
@@ -285,8 +285,8 @@ def test_logging_config_uses_tutorbox_formatters():
 
     uv_error = logging.getLogger("uvicorn.error")
     assert uv_error.handlers, "uvicorn.error must have handlers from dictConfig"
-    assert isinstance(uv_error.handlers[0].formatter, TutorBoxFormatter)
+    assert isinstance(uv_error.handlers[0].formatter, UtzTutorFormatter)
 
     access_logger = logging.getLogger("uvicorn.access")
     assert access_logger.handlers
-    assert isinstance(access_logger.handlers[0].formatter, TutorBoxAccessFormatter)
+    assert isinstance(access_logger.handlers[0].formatter, UtzTutorAccessFormatter)

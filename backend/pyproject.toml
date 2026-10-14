@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project]
-name = "tutorbox-backend"
+name = "utztutor-backend"
 version = "0.1.0"
 description = "Utz'tutor FastAPI Backend & AI Socratic Engine"
 readme = "README.md"

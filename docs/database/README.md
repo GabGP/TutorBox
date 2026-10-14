@@ -24,7 +24,9 @@ Technical specification, Entity-Relationship model, and indexing architecture fo
 
 ## <a id="1-engine-configuration--pragmas"></a>1. Engine Configuration & Pragmas
 
-Utz'tutor utilizes a local SQLite database (`tutorbox.db`) optimized for high-concurrency, offline edge execution on the NVIDIA Jetson Orin Nano (supporting 15–20 concurrent classroom users).
+Utz'tutor utilizes a local SQLite database (`utztutor.db`) optimized for high-concurrency, offline edge execution on the NVIDIA Jetson Orin Nano (supporting 15–20 concurrent classroom users).
+
+The file was called `tutorbox.db` before the rename to Utz'tutor. At start-up, when `DATABASE_PATH` is not set and `utztutor.db` does not exist yet, the backend moves an old `tutorbox.db` to `utztutor.db` once ([`legacy_database.py`](../../backend/src/core/db/legacy_database.py)). If SQLite cannot take the old file out of WAL mode (another process has it open), the start-up stops instead of creating an empty `utztutor.db`. A `DATABASE_PATH` that names the old file keeps using that file.
 
 All database connections initialized via `get_db_connection()` in [`backend/src/core/db/database.py`](../../backend/src/core/db/database.py) execute the following runtime configuration:
 

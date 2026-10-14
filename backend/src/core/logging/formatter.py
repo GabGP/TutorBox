@@ -8,7 +8,7 @@ SERVER_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(message)s"
 ACCESS_LOG_FORMAT = '%(asctime)s %(levelprefix)s %(client_addr)-21s - "%(request_line)s" %(status_code)s'
 
 
-class TutorBoxFormatter(ColourizedFormatter):
+class UtzTutorFormatter(ColourizedFormatter):
     """Application and server log formatter with ISO timestamps and colored level prefix."""
 
     def __init__(
@@ -24,7 +24,7 @@ class TutorBoxFormatter(ColourizedFormatter):
         )
 
 
-class TutorBoxAccessFormatter(AccessFormatter):
+class UtzTutorAccessFormatter(AccessFormatter):
     """HTTP access log formatter with ISO timestamps, colored status codes, and request details."""
 
     def __init__(

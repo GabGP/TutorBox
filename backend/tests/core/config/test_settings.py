@@ -113,10 +113,10 @@ def test_database_settings_env_overrides(monkeypatch) -> None:
 
 def test_database_settings_relative_and_memory(monkeypatch) -> None:
     """Verifies that relative DATABASE_PATH resolves to PROJECT_ROOT and :memory: is kept."""
-    monkeypatch.setenv("DATABASE_PATH", ".cache/db/tutorbox.db")
+    monkeypatch.setenv("DATABASE_PATH", ".cache/db/utztutor.db")
     clear_settings_cache()
     assert get_settings().database.database_path == str(
-        (PROJECT_ROOT / ".cache/db/tutorbox.db").resolve()
+        (PROJECT_ROOT / ".cache/db/utztutor.db").resolve()
     )
 
     monkeypatch.setenv("DATABASE_PATH", ":memory:")

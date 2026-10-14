@@ -134,7 +134,7 @@ Canonical schema — `backend/schemas/v1/quiz_question.schema.json`, verbatim:
   "title": "QuizQuestion",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tutorbox.local/schemas/v1/quiz_question.schema.json",
+  "$id": "https://utztutor.local/schemas/v1/quiz_question.schema.json",
   "version": "1.0.0",
   "description": "Canonical versioned contract schema for Utz'tutor diagnostic multiple-choice quiz questions."
 }

@@ -5,7 +5,7 @@ from typing import Any
 from modes.quiz.contracts.models import QuizQuestion
 
 SCHEMA_VERSION: str = "1.0.0"
-SCHEMA_ID: str = "https://tutorbox.local/schemas/v1/quiz_question.schema.json"
+SCHEMA_ID: str = "https://utztutor.local/schemas/v1/quiz_question.schema.json"
 JSON_SCHEMA_DRAFT: str = "https://json-schema.org/draft/2020-12/schema"
 
 

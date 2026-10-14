@@ -179,8 +179,8 @@ Follow these sequential steps when adding or modifying database schemas:
 
 * **Edge Appliance Backup**: Before applying experimental migrations on physical hardware (Jetson Orin Nano), execute a WAL checkpoint and database backup:
   ```bash
-  sqlite3 tutorbox.db "PRAGMA wal_checkpoint(TRUNCATE);"
-  cp tutorbox.db tutorbox.db.bak
+  sqlite3 utztutor.db "PRAGMA wal_checkpoint(TRUNCATE);"
+  cp utztutor.db utztutor.db.bak
   ```
 * **Migration Table Reversion**: If a migration fails during application bootstrap, SQLite transactions roll back automatically. To manually revert a version entry during development:
   ```sql

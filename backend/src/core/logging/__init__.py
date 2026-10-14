@@ -6,8 +6,8 @@ from core.logging.formatter import (
     APP_LOG_FORMAT,
     DEFAULT_DATE_FORMAT,
     SERVER_LOG_FORMAT,
-    TutorBoxAccessFormatter,
-    TutorBoxFormatter,
+    UtzTutorAccessFormatter,
+    UtzTutorFormatter,
 )
 from core.logging.setup import setup_logging
 
@@ -18,7 +18,7 @@ __all__ = [
     "PROBE_PATHS",
     "SERVER_LOG_FORMAT",
     "ProbeFilter",
-    "TutorBoxAccessFormatter",
-    "TutorBoxFormatter",
+    "UtzTutorAccessFormatter",
+    "UtzTutorFormatter",
     "setup_logging",
 ]

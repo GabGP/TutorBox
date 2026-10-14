@@ -3,13 +3,13 @@
   "disable_existing_loggers": false,
   "formatters": {
     "default": {
-      "()": "core.logging.formatter.TutorBoxFormatter",
+      "()": "core.logging.formatter.UtzTutorFormatter",
       "fmt": "%(asctime)s %(levelprefix)s %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S",
       "use_colors": null
     },
     "access": {
-      "()": "core.logging.formatter.TutorBoxAccessFormatter",
+      "()": "core.logging.formatter.UtzTutorAccessFormatter",
       "fmt": "%(asctime)s %(levelprefix)s %(client_addr)-21s - \"%(request_line)s\" %(status_code)s",
       "datefmt": "%Y-%m-%d %H:%M:%S",
       "use_colors": null

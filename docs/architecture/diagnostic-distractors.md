@@ -213,7 +213,7 @@ All seed questions are automatically verified and seeded into SQLite on applianc
 
 Every multiple-choice diagnostic quiz question in Utz'tutor is governed by an immutable JSON Schema contract (Draft 2020-12):
 * **Schema Version**: `1.0.0`
-* **Canonical Schema URI (`$id`)**: `https://tutorbox.local/schemas/v1/quiz_question.schema.json`
+* **Canonical Schema URI (`$id`)**: `https://utztutor.local/schemas/v1/quiz_question.schema.json`
 * **Static Repository Artifact**: `backend/schemas/v1/quiz_question.schema.json`
 * **Dynamic Inspection Endpoint**: `GET /api/v1/quiz/schema` (public, unauthenticated)
 * **Anti-Drift CI Gate**: Automated unit tests (`backend/tests/modes/quiz/contracts/test_schema.py`) strictly guarantee that Pydantic contract definitions, static repository schema files, and API endpoints remain 100% synchronized.

@@ -13,7 +13,7 @@ def test_get_quiz_schema_success(client: TestClient):
     assert schema_payload["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert (
         schema_payload["$id"]
-        == "https://tutorbox.local/schemas/v1/quiz_question.schema.json"
+        == "https://utztutor.local/schemas/v1/quiz_question.schema.json"
     )
     assert schema_payload["version"] == "1.0.0"
     assert schema_payload["title"] == "QuizQuestion"

@@ -14,6 +14,7 @@ from api.router import root_router
 from core.config import load_env_file
 from core.config.constants import PROJECT_ROOT
 from core.db.database import get_db_path
+from core.db.legacy_database import adopt_legacy_database
 from core.db.migrations import apply_migrations
 from core.db.seed_users import seed_teacher
 from core.logging import setup_logging
@@ -24,7 +25,7 @@ load_env_file()
 setup_logging()
 configure_onnxruntime_dll_paths()
 
-logger = logging.getLogger("tutorbox")
+logger = logging.getLogger("utztutor")
 
 
 # Classroom web client (React PWA build output) served same-origin so pages call /api/v1 directly.
@@ -88,6 +89,7 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Initializing Utz'tutor backend appliance...")
     db_path = get_db_path()
+    adopt_legacy_database(db_path)
     logger.info("Running database migrations on %s...", db_path)
     apply_migrations(db_path)
     logger.info("Database migrations complete.")

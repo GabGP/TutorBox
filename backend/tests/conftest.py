@@ -17,8 +17,8 @@ os.environ.setdefault("PWA_STATIC_DIR", "pwa/pilas")
 # A test that asks for `client` before its database fixture starts the app on the
 # default database. Every pytest-xdist worker gets its own file for that, so the
 # workers never migrate and seed one shared database at the same time, and no test
-# run writes to the developer's .cache/db/tutorbox.db.
-_WORKER_DATABASE_DIR = tempfile.mkdtemp(prefix="tutorbox-tests-")
+# run writes to the developer's .cache/db/utztutor.db.
+_WORKER_DATABASE_DIR = tempfile.mkdtemp(prefix="utztutor-tests-")
 os.environ["DATABASE_PATH"] = os.path.join(_WORKER_DATABASE_DIR, "default.db")
 atexit.register(shutil.rmtree, _WORKER_DATABASE_DIR, ignore_errors=True)
 

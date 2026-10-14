@@ -25,7 +25,7 @@ def test_parse_db_path_absolute(tmp_path: Path) -> None:
 
 def test_parse_db_path_relative() -> None:
     """Verifies that relative paths are normalized against PROJECT_ROOT."""
-    rel_path = ".cache/db/tutorbox.db"
+    rel_path = ".cache/db/utztutor.db"
     expected = str((PROJECT_ROOT / rel_path).resolve())
     assert parse_db_path(rel_path) == expected
 

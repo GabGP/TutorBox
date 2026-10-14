@@ -12,8 +12,8 @@ from core.logging.formatter import (
     APP_LOG_FORMAT,
     DEFAULT_DATE_FORMAT,
     SERVER_LOG_FORMAT,
-    TutorBoxAccessFormatter,
-    TutorBoxFormatter,
+    UtzTutorAccessFormatter,
+    UtzTutorFormatter,
 )
 
 QUIET_THIRD_PARTY_LOGGERS: tuple[str, ...] = (
@@ -25,13 +25,13 @@ QUIET_THIRD_PARTY_LOGGERS: tuple[str, ...] = (
     "httpx",
 )
 
-_ROOT_HANDLER_MARKER = "_tutorbox_managed"
+_ROOT_HANDLER_MARKER = "_utztutor_managed"
 
 
 def _is_managed_handler(handler: logging.Handler) -> bool:
     """Only touch unset or Uvicorn-family formatters; leave foreign (pytest/user) alone.
 
-    TutorBoxAccessFormatter requires 5-arg access records and crashes on normal
+    UtzTutorAccessFormatter requires 5-arg access records and crashes on normal
     log records, so it must never be applied to shared handlers (e.g. pytest's
     LogCaptureHandler attached to both root and uvicorn loggers).
     """
@@ -58,17 +58,17 @@ def setup_logging(
         else os.getenv("LOG_SUPPRESS_PROBES", "false").lower() in ("true", "1", "yes")
     )
 
-    app_formatter = TutorBoxFormatter(
+    app_formatter = UtzTutorFormatter(
         fmt=APP_LOG_FORMAT,
         datefmt=DEFAULT_DATE_FORMAT,
         use_colors=use_colors,
     )
-    server_formatter = TutorBoxFormatter(
+    server_formatter = UtzTutorFormatter(
         fmt=SERVER_LOG_FORMAT,
         datefmt=DEFAULT_DATE_FORMAT,
         use_colors=use_colors,
     )
-    access_formatter = TutorBoxAccessFormatter(
+    access_formatter = UtzTutorAccessFormatter(
         fmt=ACCESS_LOG_FORMAT,
         datefmt=DEFAULT_DATE_FORMAT,
         use_colors=use_colors,

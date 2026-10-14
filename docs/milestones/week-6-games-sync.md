@@ -81,7 +81,7 @@ This document tracks the technical deliverables, architectural implementations, 
    * `test_games_summary_api.py` (8 tests) and `test_game_event_summary.py` (8): counts, the filter by phone, the roles and the cap on the lesson list.
    * `test_misconception.py` (21 tests) and `test_game_event_migration_014.py` (3): the slug rule, storage on wrong answers only, and the new column.
    * `test_events.py` (32 tests), `test_ingest.py` (16), `test_labels.py` (124), `test_game_event_repository.py` (10) and `test_game_event_migration_013.py` (9).
-   * **Test isolation**: every pytest-xdist worker now starts the app on its own default database (`tests/conftest.py`). Before, tests that asked for `client` ahead of their database fixture all started the app on `.cache/db/tutorbox.db`, and on a fresh checkout the workers ran the migrations there at the same time. That was the one-off `sqlite3.IntegrityError` in `tests/api/tts/test_lifecycle.py`.
+   * **Test isolation**: every pytest-xdist worker now starts the app on its own default database (`tests/conftest.py`). Before, tests that asked for `client` ahead of their database fixture all started the app on `.cache/db/tutorbox.db` (now `utztutor.db`), and on a fresh checkout the workers ran the migrations there at the same time. That was the one-off `sqlite3.IntegrityError` in `tests/api/tts/test_lifecycle.py`.
 
 **Interface Contract Provided by Student A for Student B's Queue:** [Games API §6](../api/games.md), the steps a game follows to record, send and forget events.
 

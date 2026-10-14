@@ -187,7 +187,7 @@ uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000
 
 On the appliance this command is supervised by [`infra/systemd/utztutor-backend.service.j2`](../infra/systemd/utztutor-backend.service.j2), and [`infra/nginx/utztutor.conf`](../infra/nginx/utztutor.conf) publishes it on port 80 (`http://utztutor`), which the captive portal requires — see [Captive Portal](../infra/captive-portal.md).
 
-The database `tutorbox.db` will be initialized inside `.cache/db/` and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
+The database `utztutor.db` will be initialized inside `.cache/db/` and migrated automatically on startup. Use the `DATABASE_PATH` environment variable to configure a custom SQLite file location.
 
 ---
 

@@ -4,7 +4,9 @@ from pathlib import Path
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
 
-DEFAULT_DB_PATH: str = str(PROJECT_ROOT / ".cache" / "db" / "tutorbox.db")
+DEFAULT_DB_PATH: str = str(PROJECT_ROOT / ".cache" / "db" / "utztutor.db")
+# Name used before the rename to Utz'tutor; moved by core/db/legacy_database.py.
+LEGACY_DB_PATH: str = str(PROJECT_ROOT / ".cache" / "db" / "tutorbox.db")
 DEFAULT_BUSY_TIMEOUT_MS: int = 5000
 
 DEFAULT_BCRYPT_ROUNDS: int = 12

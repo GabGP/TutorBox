@@ -70,7 +70,7 @@ def test_database_tables_exist(temp_db):
 
 def test_default_db_path_points_to_root_cache_dir(monkeypatch):
     """
-    Test that get_db_path defaults to <repo-root>/.cache/db/tutorbox.db when env var is unset.
+    Test that get_db_path defaults to <repo-root>/.cache/db/utztutor.db when env var is unset.
     """
     from pathlib import Path
 
@@ -79,7 +79,7 @@ def test_default_db_path_points_to_root_cache_dir(monkeypatch):
     monkeypatch.delenv("DATABASE_PATH", raising=False)
     resolved_path = get_db_path()
     assert resolved_path == DEFAULT_DB_PATH
-    expected_suffix = str(Path(".cache") / "db" / "tutorbox.db")
+    expected_suffix = str(Path(".cache") / "db" / "utztutor.db")
     assert resolved_path.endswith(expected_suffix)
 
 

@@ -42,7 +42,7 @@ def sample_dict() -> dict:
 
 def test_schema_constants_and_metadata():
     assert SCHEMA_VERSION == "1.0.0"
-    assert SCHEMA_ID == "https://tutorbox.local/schemas/v1/quiz_question.schema.json"
+    assert SCHEMA_ID == "https://utztutor.local/schemas/v1/quiz_question.schema.json"
     assert JSON_SCHEMA_DRAFT == "https://json-schema.org/draft/2020-12/schema"
 
     schema = get_quiz_question_json_schema()
