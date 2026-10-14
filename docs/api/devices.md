@@ -15,7 +15,9 @@ Technical specification for physical ESP32 clicker registration, inventory manag
 
 ## Endpoint Overview
 
-These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)); it never calls the secret endpoint, which is for the Bluetooth provisioner. A clicker proves itself with a secret that staff issue to it, and trades that secret for a session of its assigned student at the public `POST /api/v1/devices/auth` endpoint. That session can vote and send the presence heartbeat ([Presence API](presence.md)), and nothing else.
+These endpoints govern the appliance's hardware inventory, allowing teachers and administrators to register physical 4-button ESP32 clickers and assign them to specific student accounts for classroom voting. The teacher page uses the list, register, assign, unassign and delete endpoints from its **Clickers** sheet ([PWA](../../pwa/README.md)).
+
+A clicker makes its own secret. Its first login at the public `POST /api/v1/devices/auth` endpoint enrolls that secret, and every later login must send the same one. A login gives a session of the clicker's assigned student. That session can vote and send the presence heartbeat ([Presence API](presence.md)), and nothing else. Staff never issue a secret.
 
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :---: | :--- |
@@ -23,9 +25,8 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 | `POST` | `/api/v1/staff/devices` | Teacher, Admin | Register a new clicker hardware ID into the fleet |
 | `POST` | `/api/v1/staff/devices/{device_id}/assign` | Teacher, Admin | Pair a physical clicker to a student account |
 | `POST` | `/api/v1/staff/devices/{device_id}/unassign` | Teacher, Admin | Unpair a physical clicker from any student |
-| `POST` | `/api/v1/staff/devices/{device_id}/secret` | Teacher, Admin | Issue a new secret for a clicker; its active sessions are revoked |
 | `DELETE` | `/api/v1/staff/devices/{device_id}` | Teacher, Admin | Remove a clicker identifier from the fleet |
-| `POST` | `/api/v1/devices/auth` | Public | Trade a clicker's secret for a session of its assigned student, which can only vote and send the presence heartbeat |
+| `POST` | `/api/v1/devices/auth` | Public | Enroll a clicker's secret on its first contact, then trade the secret for a session of its assigned student, which can only vote and send the presence heartbeat |
 
 ---
 
@@ -35,7 +36,7 @@ These endpoints govern the appliance's hardware inventory, allowing teachers and
 
 List all registered physical clickers, their creation timestamps, and current assigned student metadata.
 
-`secret_issued_at` is the time the clicker's current secret was issued, and it stays `null` until a secret is issued. The secret itself and its digest (`devices.secret_hash`) are never returned.
+`secret_issued_at` is the time the clicker's secret was first stored, at its first contact with `POST /api/v1/devices/auth`. It stays `null` until then. The secret itself and its digest (`devices.secret_hash`) are never returned.
 
 * **Authorization**: Teacher, Admin
 * **Responses**:
@@ -87,7 +88,7 @@ Registers a new physical clicker identifier into the appliance fleet.
     }
     ```
   * `403 Forbidden`: Caller is a student or has a pending PIN rotation.
-  * `409 Conflict`: `device_id` is already registered.
+  * `409 Conflict`: `device_id` is already registered. A clicker that has made its first contact is already registered.
   * `422 Unprocessable Entity`: `device_id` is empty or invalid format.
 
 ---
@@ -158,35 +159,9 @@ Removes a physical clicker identifier from the appliance database completely. It
 
 ---
 
-### <a id="post-staff-devices-secret"></a>`POST /api/v1/staff/devices/{device_id}/secret`
-
-Issues a new secret for a physical clicker. The clicker sends this secret to `POST /api/v1/devices/auth`. A new secret replaces the old one at once, so the old one is refused from then on.
-
-* **Authorization**: Teacher, Admin
-* **Path Parameters**:
-  * `device_id` (`string`, required): Unique device identifier.
-* **Responses**:
-  * `200 OK`:
-    ```json
-    {
-      "device_id": "ESP32-A4CF12",
-      "secret": "3f9c2a8e6b1d4c7f0a5e9d3b8c2f6a1e"
-    }
-    ```
-  * `401 Unauthorized`: `"Missing or malformed Authorization header."` when no bearer token is sent; `"Invalid session token."` when the token is not a UUID; `"Invalid or expired session."` for an unknown, revoked or expired token.
-  * `403 Forbidden`: `"Insufficient permissions."` for a student; `"PIN change required."` while a PIN rotation is pending.
-  * `404 Not Found`: `"Device not found."`.
-* **Notes**:
-  * The secret is 32 lowercase hex characters (16 random bytes) and is returned once. The database keeps only its SHA-256 digest (`devices.secret_hash`) and the time it was issued (`devices.secret_issued_at`).
-  * Issuing a secret revokes the clicker's active sessions. A clicker that was logged in must authenticate again with the new secret.
-  * An unassigned clicker can be issued a secret.
-  * The audit log records `device_secret_issued`, with the caller as actor and the clicker's assigned student as target. The target is empty when the clicker is unassigned.
-
----
-
 ### <a id="post-devices-auth"></a>`POST /api/v1/devices/auth`
 
-A clicker has no PIN. It trades its secret for a session of the student it is assigned to. The session can only vote and send the presence heartbeat (see **Voting only** below). The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
+A clicker has no PIN. It makes a secret and sends it on every login. The first login enrolls the secret (see **Enrollment** below). A login with the right secret gives a session of the student the clicker is assigned to. The session can only vote and send the presence heartbeat (see **Voting only** below). The endpoint is public: it takes no bearer token, and it is rate-limited per device and address (see **Lockout** below).
 
 * **Authorization**: Public
 * **Request Body**:
@@ -197,7 +172,7 @@ A clicker has no PIN. It trades its secret for a session of the student it is as
   }
   ```
   * `device_id` (`string`, required): 1 to 32 characters from `A-Z`, `a-z`, `0-9`, `_`, `.` and `-`.
-  * `secret` (`string`, required): exactly 32 lowercase hex characters.
+  * `secret` (`string`, required): exactly 32 lowercase hex characters, made by the clicker from 16 random bytes (for example `secrets.token_hex(16)`).
 * **Responses**:
   * `200 OK`:
     ```json
@@ -208,17 +183,24 @@ A clicker has no PIN. It trades its secret for a session of the student it is as
     }
     ```
     `session_id` is a bearer token that votes as the assigned student, sent as `Authorization: Bearer <session_id>`. The database keeps only its digest.
-  * `401 Unauthorized`: `"Invalid device credentials."` An unknown device, a device that has no secret, and a wrong secret all get this same response.
-  * `403 Forbidden`: `"Device is not assigned to any student."` The secret is right, but the clicker is unassigned, its student's account is deleted, or the account it points to is not a student's. This is not counted as a failed attempt, so a clicker waiting for the teacher can retry.
+  * `401 Unauthorized`: `"Invalid device credentials."` A wrong secret gets this, and so does an unknown device when the fleet is full (see **Enrollment**). Both get the same response.
+  * `403 Forbidden`: `"Device is not assigned to any student."` The secret is right, but the clicker is unassigned, its student's account is deleted, or the account it points to is not a student's. This includes a clicker's first contact, which enrolls it and then finds no student. This is not counted as a failed attempt, so a clicker waiting for the teacher can retry.
   * `422 Unprocessable Entity`: the body breaks the rules above. The response lists each invalid field and repeats the value sent, as FastAPI does by default (login does the same for a malformed PIN).
   * `429 Too Many Requests`: `"Too many failed login attempts. Please try again later."`
 * **Notes**:
+  * **Enrollment (first contact)**: the first secret a device sends is kept as trust on first use. The database stores only its SHA-256 digest (`devices.secret_hash`), and the time it was stored (`devices.secret_issued_at`).
+    * An unknown device id gets a new row with that secret, so the clicker joins the fleet with no student. Its first login answers `403`.
+    * A device that a teacher added by hand, with no secret yet, is claimed by the first secret it sends. The login then goes on as normal: `403` when no student is assigned, `200` when one is.
+    * A device that already has a secret is never overwritten by a login. A different secret gets `401`.
+    * The fleet holds at most 100 clickers. An unknown id past that cap is not enrolled and gets `401`. A hand-added id can still be claimed, because its row already exists.
+    * Each enrollment writes an audit row, `device_enrolled`, with no actor (see [Valid Audit Action Strings](../database/core.md#valid-audit-action-strings)).
+  * **Accepted costs**: anyone on the classroom Wi-Fi can add rows, up to the cap. Anyone who knows a clicker's id can enroll it, or claim it if a teacher added it by hand, before the real clicker's first contact. The real clicker is then refused with `401`. Deleting that row fixes it, and the real clicker enrolls on its next contact. An unknown id is no longer answered like a wrong secret: before the cap it is enrolled, and once the fleet is full it gets the same `401` as a wrong secret. The cap is checked just before the insert, not inside it, so two first contacts that arrive together at the last slot can both enroll.
   * **Lockout**: each wrong secret counts against the key `device:<device_id>@<address>`, where `<address>` is the client address, as for login. After `AUTH_MAX_ATTEMPTS` wrong secrets (5 in `.env.example`) the key is locked for `AUTH_LOCKOUT_SECONDS` (30 in `.env.example`). Each later lockout lasts twice as long as the one before, up to 16 minutes. A locked device gets `429` even with the right secret. A successful authentication clears the count. The key never shares a lockout with a username. The counters are kept in memory, so a backend restart clears them.
   * **One live token**: a successful authentication revokes the clicker's earlier sessions, so a clicker holds one token at a time.
   * **Expiry**: the token expires 12 hours after it was issued (`SESSION_TTL_HOURS`), like any login. The clicker authenticates again when a vote or a heartbeat returns `401`.
   * **Voting only**: the token is accepted by `POST /api/v1/session/{session_id}/vote` and by `POST /api/v1/presence/heartbeat` ([Presence API](presence.md#post-presence-heartbeat)), and by no other endpoint. Everywhere else it gets `403 Forbidden` with `"Clicker sessions can only vote."`: the profile, the PIN and username changes, logout, the tutor, the class view and every staff endpoint. A revoked or expired token gets `401` first, as on the vote endpoint. `POST /api/v1/games/events`, which takes an optional login and never refuses a batch, stores events sent with a clicker's token with no student. The rule is the default in `get_current_session` (`backend/src/core/security/auth_session.py`), so an endpoint added later refuses clickers unless it asks for `get_voter_session`.
   * The vote endpoint labels a vote cast with this token as `hardware`, with the clicker's `device_id`. See [Sessions API](sessions.md#post-session-vote).
-  * Neither the secret nor the token is written to the logs.
+  * Neither the secret nor the token is written to the logs. Only the digest of the secret is stored.
 
 ---
 
@@ -230,10 +212,11 @@ A clicker's active sessions, the ones issued to it by `POST /api/v1/devices/auth
 * the clicker is assigned to a different student;
 * its student is moved to another clicker, which revokes the clicker the student left;
 * its student becomes a teacher or an admin (`PATCH /api/v1/staff/users/{user_id}/role`), which also unassigns the clicker, because only students hold one;
-* the clicker is deleted (`DELETE /api/v1/staff/devices/{device_id}`);
-* a new secret is issued (`POST /api/v1/staff/devices/{device_id}/secret`).
+* the clicker is deleted (`DELETE /api/v1/staff/devices/{device_id}`).
 
-After a revocation the clicker's next vote or heartbeat is refused with `401`. The heartbeat, sent every 5 seconds, is what makes an unassigned clicker show its red pattern within seconds. When it authenticates again it gets `403` while it has no student, a new session for the student it has now, or `401` when its secret was replaced or the clicker was deleted.
+After a revocation the clicker's next vote or heartbeat is refused with `401`. The heartbeat, sent every 5 seconds, is what makes an unassigned clicker show its red pattern within seconds. When it authenticates again it gets `403` while it has no student, a new session for the student it has now, or `401` when its secret does not match the one on record.
+
+There is no secret rotation. To replace a clicker's secret, reset the clicker so it makes a new one, and delete its row (`DELETE /api/v1/staff/devices/{device_id}`). Its next first contact enrolls the new secret.
 
 Assigning the same student to the same clicker again revokes nothing. These events never end a phone or browser login, including a phone login of the same student. A student's own PIN or username change ends only the session it was made from. A staff PIN reset, or the deletion of the student's account, ends all of the student's sessions, the clicker's included.
 
@@ -242,7 +225,7 @@ Assigning the same student to the same clicker again revokes nothing. These even
 ## Related Specifications
 
 * **[ESP32 Clicker Transport](../architecture/esp32-clicker-transport.md)**: How a clicker's vote reaches the session engine.
-* **[Clicker Firmware](../../firmware/clicker/README.md)**: Parts, wiring, flashing, USB setup and what each light means.
+* **[Clicker Firmware](../../firmware/clicker/README.md)**: Parts, wiring, flashing, the first power-on, the reset gesture and what each light means.
 * **[ESP32 Clicker Protocol](../architecture/esp32-protocol.md)**: The provisioning design the secret belongs to. Its §6 describes the endpoints as built.
 * **[Database Schema & ER Model](../database/README.md)**: `devices` table specifications and indexes.
 * **[Quiz Match & Voting Sessions](sessions.md)**: How a clicker's vote is labelled and stored.

@@ -1,4 +1,4 @@
-"""Week 7 clicker credentials and the login sessions issued to a clicker.
+"""Week 7 clicker credentials, first-contact enrollment and the login sessions of a clicker.
 
 Receives digests already computed by the caller: never a secret or a bearer token.
 """
@@ -8,11 +8,12 @@ from dataclasses import dataclass
 
 __all__ = [
     "DeviceCredentials",
+    "count_devices",
     "create_device_session",
+    "enroll_or_claim_device",
     "get_device_credentials",
     "release_clicker_of_user",
     "revoke_device_sessions",
-    "store_device_secret",
 ]
 
 
@@ -21,7 +22,7 @@ class DeviceCredentials:
     """What device authentication needs to know about one clicker."""
 
     device_id: str
-    # None until a secret has been issued.
+    # None until the clicker's first contact stores its secret.
     secret_hash: str | None
     # None when unassigned, or when the assigned account is deleted or is not a
     # student's.
@@ -56,18 +57,29 @@ def get_device_credentials(
     )
 
 
-def store_device_secret(
+def count_devices(conn: sqlite3.Connection) -> int:
+    """Returns how many clickers are in the fleet, enrolled or not."""
+    row = conn.execute("SELECT COUNT(*) AS device_count FROM devices").fetchone()
+    return int(row["device_count"])
+
+
+def enroll_or_claim_device(
     conn: sqlite3.Connection, device_id: str, secret_hash: str
 ) -> bool:
-    """Stores the digest of a newly issued clicker secret, replacing any previous one.
+    """Stores the digest of a clicker's first secret, for a new id or a hand-added one.
 
-    Returns True when a row was updated and False when the device does not exist.
-    The caller commits.
+    A new id gets a row. An id that exists with no secret yet, because a teacher added
+    it by hand, is claimed. An id that already has a secret is left alone, so two
+    simultaneous first contacts cannot both win. Returns True when a row was inserted
+    or claimed. The caller commits.
     """
     cursor = conn.execute(
-        "UPDATE devices SET secret_hash = ?, secret_issued_at = CURRENT_TIMESTAMP "
-        "WHERE device_id = ?",
-        (secret_hash, device_id),
+        "INSERT INTO devices (device_id, secret_hash, secret_issued_at) "
+        "VALUES (?, ?, CURRENT_TIMESTAMP) "
+        "ON CONFLICT(device_id) DO UPDATE SET "
+        "secret_hash = excluded.secret_hash, secret_issued_at = CURRENT_TIMESTAMP "
+        "WHERE devices.secret_hash IS NULL",
+        (device_id, secret_hash),
     )
     return cursor.rowcount == 1
 

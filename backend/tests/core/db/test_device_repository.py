@@ -1,14 +1,15 @@
-"""Clicker secrets and device-bound sessions (core/db/device_repository.py)."""
+"""Clicker enrollment and device-bound sessions (core/db/device_repository.py)."""
 
 import sqlite3
 
 from core.db.database import get_db_connection
 from core.db.device_repository import (
     DeviceCredentials,
+    count_devices,
     create_device_session,
+    enroll_or_claim_device,
     get_device_credentials,
     revoke_device_sessions,
-    store_device_secret,
 )
 from tests.conftest import get_user_id, required
 
@@ -70,10 +71,10 @@ def test_get_device_credentials_reports_unassigned_device_without_secret(staff_d
     )
 
 
-def test_get_device_credentials_returns_the_stored_secret_hash(staff_db):
+def test_get_device_credentials_returns_the_enrolled_secret_hash(staff_db):
     _, conn = staff_db
     insert_device(conn, "CLICKER_01")
-    store_device_secret(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
+    enroll_or_claim_device(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
     conn.commit()
 
     credentials = required(get_device_credentials(conn, "CLICKER_01"))
@@ -111,63 +112,83 @@ def test_get_device_credentials_reads_deleted_student_as_unassigned(staff_db):
     )
 
 
-def test_store_device_secret_sets_hash_and_issue_time(staff_db):
+def test_count_devices_is_zero_for_an_empty_fleet(staff_db):
+    _, conn = staff_db
+
+    assert count_devices(conn) == 0
+
+
+def test_count_devices_counts_hand_added_and_enrolled_clickers(staff_db):
     _, conn = staff_db
     insert_device(conn, "CLICKER_01")
-
-    was_updated = store_device_secret(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
+    insert_device(conn, "CLICKER_02")
+    enroll_or_claim_device(conn, "CLICKER_03", FIRST_SECRET_DIGEST)
     conn.commit()
 
-    row = conn.execute(
-        "SELECT secret_hash, secret_issued_at FROM devices WHERE device_id = 'CLICKER_01'"
-    ).fetchone()
-    assert was_updated is True
-    assert row["secret_hash"] == FIRST_SECRET_DIGEST
-    assert row["secret_issued_at"] is not None
+    assert count_devices(conn) == 3
 
 
-def test_store_device_secret_replaces_the_previous_hash(staff_db):
-    _, conn = staff_db
-    insert_device(conn, "CLICKER_01")
-    store_device_secret(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
-
-    store_device_secret(conn, "CLICKER_01", SECOND_SECRET_DIGEST)
-    conn.commit()
-
-    credentials = required(get_device_credentials(conn, "CLICKER_01"))
-    assert credentials.secret_hash == SECOND_SECRET_DIGEST
-
-
-def test_store_device_secret_returns_false_and_writes_nothing_for_unknown_device(
+def test_enroll_or_claim_device_inserts_a_new_device_with_digest_and_issue_time(
     staff_db,
 ):
     _, conn = staff_db
-    insert_device(conn, "CLICKER_01")
 
-    was_updated = store_device_secret(conn, "NO_SUCH_CLICKER", FIRST_SECRET_DIGEST)
+    was_stored = enroll_or_claim_device(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
     conn.commit()
 
-    stored_hash_count = conn.execute(
-        "SELECT COUNT(*) FROM devices WHERE secret_hash IS NOT NULL"
-    ).fetchone()[0]
-    assert was_updated is False
-    assert stored_hash_count == 0
+    row = conn.execute(
+        "SELECT secret_hash, secret_issued_at, assigned_user_id "
+        "FROM devices WHERE device_id = 'CLICKER_01'"
+    ).fetchone()
+    assert was_stored is True
+    assert row["secret_hash"] == FIRST_SECRET_DIGEST
+    assert row["secret_issued_at"] is not None
+    assert row["assigned_user_id"] is None
 
 
-def test_store_device_secret_leaves_the_commit_to_the_caller(staff_db):
+def test_enroll_or_claim_device_claims_a_hand_added_device_and_keeps_its_student(
+    staff_db,
+):
+    _, conn = staff_db
+    student_id = get_user_id(conn, "student1")
+    insert_device(conn, "CLICKER_01", student_id)
+
+    was_claimed = enroll_or_claim_device(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
+    conn.commit()
+
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
+    assert was_claimed is True
+    assert credentials.secret_hash == FIRST_SECRET_DIGEST
+    assert credentials.assigned_user_id == student_id
+
+
+def test_enroll_or_claim_device_refuses_to_overwrite_an_existing_secret(staff_db):
+    _, conn = staff_db
+    enroll_or_claim_device(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
+    conn.commit()
+
+    was_overwritten = enroll_or_claim_device(conn, "CLICKER_01", SECOND_SECRET_DIGEST)
+    conn.commit()
+
+    assert was_overwritten is False
+    credentials = required(get_device_credentials(conn, "CLICKER_01"))
+    assert credentials.secret_hash == FIRST_SECRET_DIGEST
+    assert count_devices(conn) == 1
+
+
+def test_enroll_or_claim_device_leaves_the_commit_to_the_caller(staff_db):
     db_path, conn = staff_db
-    insert_device(conn, "CLICKER_01")
-    store_device_secret(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
+    enroll_or_claim_device(conn, "CLICKER_01", FIRST_SECRET_DIGEST)
 
     other_conn = get_db_connection(db_path)
     try:
-        seen_before_commit = required(get_device_credentials(other_conn, "CLICKER_01"))
+        seen_before_commit = get_device_credentials(other_conn, "CLICKER_01")
         conn.commit()
         seen_after_commit = required(get_device_credentials(other_conn, "CLICKER_01"))
     finally:
         other_conn.close()
 
-    assert seen_before_commit.secret_hash is None
+    assert seen_before_commit is None
     assert seen_after_commit.secret_hash == FIRST_SECRET_DIGEST
 
 

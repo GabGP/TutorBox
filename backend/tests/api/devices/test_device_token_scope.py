@@ -8,8 +8,6 @@ import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 
-from core.db.device_repository import store_device_secret
-from core.security import token_digest
 from tests.api.clicker_support import clicker_token_is_live
 from tests.conftest import auth_headers, get_user_id
 
@@ -36,12 +34,14 @@ GAME_EVENT = {
 def clicker_headers(
     client: TestClient, conn: sqlite3.Connection, student_username: str
 ) -> dict[str, str]:
-    """Registers a clicker for the student and logs it in at the real endpoint."""
+    """Assigns the clicker to the student and logs it in at the real endpoint.
+
+    The first login enrolls SECRET for the hand-added row, as a clicker's first contact does.
+    """
     conn.execute(
         "INSERT INTO devices (device_id, assigned_user_id) VALUES (?, ?)",
         (DEVICE_ID, get_user_id(conn, student_username)),
     )
-    store_device_secret(conn, DEVICE_ID, token_digest(SECRET))
     conn.commit()
     response = client.post(AUTH_URL, json={"device_id": DEVICE_ID, "secret": SECRET})
     assert response.status_code == 200, response.text

@@ -5,6 +5,7 @@ Seeding writes students and questions straight to the database. The only direct 
 are the stored vote rows, for the student and transport label of each vote.
 """
 
+import secrets
 import sqlite3
 import threading
 from collections.abc import Sequence
@@ -25,6 +26,8 @@ PHONE_USERNAME_PREFIX = "fleet_phone"
 # Clicker number 1 gets ESP32-0000A1, the first id in the real format.
 CLICKER_DEVICE_ID_OFFSET = 0xA0
 DEVICE_AUTH_URL = "/api/v1/devices/auth"
+# Each simulated clicker makes 16 random bytes, which it sends as 32 hex characters.
+CLICKER_SECRET_RANDOM_BYTES = 16
 OPTIONS = ("A", "B", "C", "D")
 CORRECT_OPTION = "A"
 DISTRACTOR_OPTION = "B"
@@ -51,7 +54,7 @@ class StudentAccount:
 class Clicker:
     student_id: int
     device_id: str
-    # Shown once by the teacher; kept so the clicker can authenticate again.
+    # Made by the clicker itself and kept by it; the server keeps only the digest.
     secret: str
     # Bearer headers of the session its latest authentication issued.
     headers: dict[str, str]
@@ -148,18 +151,16 @@ def provision_clicker(
     student: StudentAccount,
     device_id: str,
 ) -> Clicker:
-    """Registers, assigns and issues a secret to a clicker, then logs it in."""
-    registered = client.post(
-        "/api/v1/staff/devices", json={"device_id": device_id}, headers=teacher_headers
-    )
-    assert registered.status_code == 201, registered.text
+    """Lets the clicker enroll its own secret, the teacher assigns it, then it logs in.
+
+    The first contact enrolls the secret and is refused as unassigned. Staff never
+    see the secret.
+    """
+    secret = secrets.token_hex(CLICKER_SECRET_RANDOM_BYTES)
+    first_contact = authenticate_clicker(client, device_id, secret)
+    assert first_contact.status_code == 403, first_contact.text
     assigned = assign_device(client, teacher_headers, device_id, student.student_id)
     assert assigned.status_code == 200, assigned.text
-    issued = client.post(
-        f"/api/v1/staff/devices/{device_id}/secret", headers=teacher_headers
-    )
-    assert issued.status_code == 200, issued.text
-    secret = issued.json()["secret"]
     authenticated = authenticate_clicker(client, device_id, secret)
     assert authenticated.status_code == 200, authenticated.text
     return Clicker(

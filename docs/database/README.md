@@ -69,8 +69,8 @@ erDiagram
         TEXT device_id PK "Hardware clicker ID (e.g. '1', 'ESP32_01')"
         INTEGER assigned_user_id UK "REFERENCES users(id) ON DELETE SET NULL"
         TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
-        TEXT secret_hash "SHA-256 of the clicker secret, NULL until issued"
-        TIMESTAMP secret_issued_at "NULL until a secret is issued"
+        TEXT secret_hash "SHA-256 of the clicker secret, NULL until its first contact"
+        TIMESTAMP secret_issued_at "first contact, NULL until then"
     }
 
     sessions {
@@ -215,7 +215,7 @@ Detailed data dictionaries, column constraints, and data lifecycle policies are 
 
 | Subsystem Domain | Specification Document | Included Tables | Core Policies & Invariants |
 | :--- | :--- | :--- | :--- |
-| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion<br>• Clicker sessions revoked on unassign, reassign, delete and new secret |
+| **Core Identity & Fleet** | **[core.md](core.md)** | `users`<br>`sessions`<br>`devices`<br>`audit_logs`<br>`appliance_state` | • Soft-deletion with username freeing<br>• Last-admin protection guard<br>• Hardware clicker unlinking on deletion<br>• Clicker sessions revoked on unassign, reassign and delete |
 | **Mode 1: Quiz & Sessions** | **[quiz.md](quiz.md)** | `quiz_questions`<br>`quiz_generation_logs`<br>`quiz_sessions`<br>`quiz_session_rounds`<br>`quiz_session_votes` | • Strict first-press locking (`UNIQUE(round_id, student_id)`)<br>• Question soft-deletion telemetry preservation<br>• Monotonic timer round progression |
 | **Mode 2: Socratic Dialogue** | **[dialogue.md](dialogue.md)** | `turn_logs` | • SymPy math AST evaluation and containment flag<br>• Deterministic 4-level hint escalation tracking ($0$ to $3$)<br>• Concept, error type and scaffolding strategy labels per turn |
 | **Mode 3: Offline Games** | **[games.md](games.md)** | `game_events` | • One row per answer tapped, stored once per client event id (`UNIQUE(client_event_id)`)<br>• CNB topic and quiz taxonomy labels per event, and the misconception when the game names it<br>• Events survive the deletion of their student |

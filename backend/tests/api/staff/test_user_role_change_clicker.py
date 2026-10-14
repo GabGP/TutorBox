@@ -7,8 +7,6 @@ clicker was issued stops working.
 import pytest
 from fastapi.testclient import TestClient
 
-from core.db.device_repository import store_device_secret
-from core.security import token_digest
 from tests.api.clicker_support import clicker_token_is_live
 from tests.api.staff.test_device_revocation import (
     CLICKER_A,
@@ -75,8 +73,10 @@ def test_clicker_of_a_new_teacher_cannot_authenticate_again(staff_db, client):
     student_id = get_user_id(conn, "student1")
     register_clicker(client, teacher_headers, CLICKER_A)
     assign_clicker(client, teacher_headers, CLICKER_A, student_id)
-    store_device_secret(conn, CLICKER_A, token_digest(SECRET))
-    conn.commit()
+    first_contact = client.post(
+        "/api/v1/devices/auth", json={"device_id": CLICKER_A, "secret": SECRET}
+    )
+    assert first_contact.status_code == 200, first_contact.text
 
     change_role(client, teacher_headers, student_id, "teacher")
 

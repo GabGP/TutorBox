@@ -1,8 +1,10 @@
 """Public clicker login: a device's secret in, a bearer token for its student out.
 
-A clicker holds no PIN. It proves itself with the secret staff issued to it and gets
-an ordinary login session for the student it is assigned to. Its lockout key starts
-with "device:", so a clicker never shares a lockout with a username.
+A clicker holds no PIN. It proves itself with a secret it made itself. The first
+secret a device sends is kept (enrollment, see enrollment.py), and every later login
+must send that same secret. The login gives an ordinary session for the student the
+clicker is assigned to. Its lockout key starts with "device:", so a clicker never
+shares a lockout with a username.
 """
 
 import hmac
@@ -12,6 +14,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Request, status
 
+from api.devices.enrollment import enroll_if_new
 from api.devices.schemas import DeviceAuthRequest, DeviceAuthResponse
 from core.db.database import get_db
 from core.db.device_repository import (
@@ -40,8 +43,9 @@ def _verify_device_secret(
 ) -> DeviceCredentials:
     """Returns the clicker's credentials when the secret is right, otherwise raises 401.
 
-    An unknown device, a device without a secret and a wrong secret are refused
-    alike: same status, same detail, same failure recorded.
+    A wrong secret and an unknown device are refused alike: same status, same detail,
+    same failure recorded. enroll_if_new runs first, so an unknown device is refused
+    here only when the fleet is full, and a device with no secret has one by now.
     """
     credentials = get_device_credentials(conn, payload.device_id)
     if (
@@ -71,14 +75,16 @@ def authenticate_device(
     """
     Trades a clicker's secret for a login session of the student it is assigned to.
 
-    Wrong secrets lock out this device on this address (login_key). A device with
-    the right secret but no student assigned gets 403 and is not counted as a
-    failure, so a clicker waiting for the teacher can retry every 30 seconds.
+    The first secret sent for a device is enrolled (trust on first use). Wrong
+    secrets lock out this device on this address (login_key). A device with the
+    right secret but no student assigned gets 403 and is not counted as a failure,
+    so a clicker waiting for the teacher can retry every 5 seconds.
     """
     limit_key = login_key(f"device:{payload.device_id}", http)
     check_rate_limit(limit_key)
 
     with get_db() as conn:
+        enroll_if_new(conn, payload.device_id, token_digest(payload.secret))
         credentials = _verify_device_secret(conn, limit_key, payload)
         # The id and the username come from the same joined row: both or neither.
         if (

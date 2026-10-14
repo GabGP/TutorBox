@@ -46,7 +46,8 @@ class DeviceItem(BaseModel):
     assigned_user_id: int | None = None
     assigned_username: str | None = None
     created_at: str
-    # When the current secret was issued; None while the clicker has none.
+    # When the clicker's secret was first stored, at its first contact with
+    # POST /devices/auth; None while the clicker has never made contact.
     secret_issued_at: str | None = None
 
 
@@ -70,12 +71,6 @@ class AssignDeviceResponse(BaseModel):
     device_id: str
     assigned_user_id: int
     assigned_username: str
-
-
-class DeviceSecretResponse(BaseModel):
-    device_id: str
-    # Returned once, at issuance; the server keeps only its digest.
-    secret: str
 
 
 class AuditLogsResponse(BaseModel):
