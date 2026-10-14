@@ -143,6 +143,44 @@ describe('useSpeechPlayback Hook', () => {
     localStorage.removeItem('tb_voice');
   });
 
+  it('fetches a fresh clip for round 0 of a new session instead of replaying the old one', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl')
+      .mockResolvedValueOnce('blob:session-one')
+      .mockResolvedValueOnce('blob:session-two');
+
+    const { result, rerender } = renderHook(
+      ({ sessionId }) => useSpeechPlayback(sessionId, 'es'),
+      { initialProps: { sessionId: 's1' } }
+    );
+
+    await act(async () => {
+      await result.current.prefetch(0);
+    });
+    await act(async () => {
+      await result.current.speak(0);
+    });
+    expect(mockPlayer.src).toBe('blob:session-one');
+    act(() => {
+      mockPlayer.onended?.();
+    });
+
+    act(() => {
+      rerender({ sessionId: 's2' });
+    });
+    expect(result.current.state).toBe('idle');
+
+    await act(async () => {
+      await result.current.prefetch(0);
+    });
+    await act(async () => {
+      await result.current.speak(0);
+    });
+
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenCalledTimes(2);
+    expect(speechApi.getSpeechBlobUrl).toHaveBeenLastCalledWith('s2', 'es');
+    expect(mockPlayer.src).toBe('blob:session-two');
+  });
+
   it('dedupes concurrent speak calls into a single fetch', async () => {
     let resolveFetch!: (url: string) => void;
     const gate = new Promise<string>((resolve) => {

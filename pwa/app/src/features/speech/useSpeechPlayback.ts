@@ -22,7 +22,7 @@ function waitForNextPaint(): Promise<void> {
 }
 
 /**
- * Speech playback orchestration: voice-keyed blob cache (useVoiceCache) plus
+ * Speech playback orchestration: session- and voice-keyed blob cache (useVoiceCache) plus
  * audio element control (useAudioPlayer), with run/generation tokens that
  * invalidate stale fetches and plays. Pre-fetches WAV blobs on round close
  * and bypasses mobile autoplay blocks.
@@ -36,7 +36,10 @@ export function useSpeechPlayback(
   const [currentRound, setCurrentRound] = useState<number>(-1);
 
   const activeVoiceKey = getSpeechVoiceKey(language);
-  const [prevVoiceKey, setPrevVoiceKey] = useState(activeVoiceKey);
+  // Round indexes restart at 0 in every session, so a clip is only reusable
+  // within the session and voice that produced it.
+  const clipIdentity = `${sessionId ?? ''}|${activeVoiceKey}`;
+  const [prevClipIdentity, setPrevClipIdentity] = useState(clipIdentity);
 
   const {
     prefetch,
@@ -68,17 +71,17 @@ export function useSpeechPlayback(
     currentRoundRef.current = currentRound;
   }, [state, currentRound]);
 
-  // Reset cached clip and preparation state when the saved voice changes.
-  // This must run before child reveal effects can autoplay after Settings
-  // closes; a passive effect lets autoplay race the old clip and skip the
-  // preparation state.
+  // Reset cached clip and preparation state when the session or the saved
+  // voice changes. This must run before child reveal effects can autoplay
+  // after Settings closes; a passive effect lets autoplay race the old clip
+  // and skip the preparation state.
   useLayoutEffect(() => {
-    if (prevVoiceKey !== activeVoiceKey) {
+    if (prevClipIdentity !== clipIdentity) {
       bumpGeneration();
       activeRunRef.current += 1;
       stopPlayer(peekUrl());
       busyRef.current = false;
-      setPrevVoiceKey(activeVoiceKey);
+      setPrevClipIdentity(clipIdentity);
       setState('idle');
       setMessage('');
       drop();
@@ -86,8 +89,9 @@ export function useSpeechPlayback(
       clearInFlight();
     }
   }, [
+    clipIdentity,
+    prevClipIdentity,
     activeVoiceKey,
-    prevVoiceKey,
     bumpGeneration,
     stopPlayer,
     peekUrl,
