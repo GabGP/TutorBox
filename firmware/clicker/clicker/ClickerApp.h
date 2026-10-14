@@ -1,4 +1,4 @@
-// The clicker's brain: what to send to the TutorBox, and what the LED should show.
+// The clicker's brain: what to send to the Utz'tutor, and what the LED should show.
 //
 // It never touches pins, Wi-Fi or HTTP itself. clicker.ino feeds it what happened
 // (Wi-Fi up? which button? what did the server answer?) and does what it asks.
@@ -15,9 +15,9 @@ class ClickerApp {
  public:
   enum class Phase : uint8_t {
     LookingForWifi,     // blue, fast blink
-    Connecting,         // blue, steady: Wi-Fi up, logging in to the TutorBox
-    ServerUnreachable,  // blue, slow blink: Wi-Fi up but the TutorBox does not answer
-    Rejected,           // magenta, fast blink: the TutorBox refused the login
+    Connecting,         // blue, steady: Wi-Fi up, logging in to the Utz'tutor
+    ServerUnreachable,  // blue, slow blink: Wi-Fi up but the Utz'tutor does not answer
+    Rejected,           // magenta, fast blink: the Utz'tutor refused the login
     Unassigned,         // magenta, slow blink: the teacher has not assigned it yet
     Ready               // working: green blip, white when a question is open
   };
@@ -34,7 +34,7 @@ class ClickerApp {
 
   typedef void (*LogFn)(const char* line);
 
-  // How often it talks to the TutorBox, by situation (milliseconds).
+  // How often it talks to the Utz'tutor, by situation (milliseconds).
   static const uint32_t kPollEveryMs = 1000;
   static const uint32_t kHeartbeatEveryMs = 5000;
   static const uint32_t kRetryEveryMs = 2000;
@@ -92,7 +92,7 @@ class ClickerApp {
 
   char secret_[protocol::kSecretSize];
   char token_[protocol::kTokenSize];  // RAM only: a restart logs in again
-  bool loginRefused_;                 // the TutorBox refused the login: a press asks again
+  bool loginRefused_;                 // the Utz'tutor refused the login: a press asks again
   uint32_t nextAuthAt_;
   uint32_t nextPollAt_;
   uint32_t nextBeatAt_;

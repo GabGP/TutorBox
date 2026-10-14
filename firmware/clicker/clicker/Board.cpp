@@ -91,11 +91,11 @@ void Board::begin() {
   snprintf(hostname_, sizeof(hostname_), "clicker-%02x%02x%02x", b3, b4, b5);
 
   Serial.println();
-  Serial.println("=========== TutorBox clicker ===========");
+  Serial.println("=========== Utz'tutor clicker ===========");
   Serial.printf("Device id : %s   <- write it on the case\n", deviceId_);
   Serial.printf("Firmware  : %s\n", FIRMWARE_VERSION);
   Serial.printf("Wi-Fi     : %s\n", WIFI_SSID);
-  Serial.printf("TutorBox  : %s\n", TUTORBOX_URL);
+  Serial.printf("Utz'tutor : %s\n", UTZTUTOR_URL);
   Serial.println("=========================================");
 
   secret_[0] = '\0';  // loadOrCreateSecret() fills it in
@@ -138,7 +138,7 @@ void Board::loadOrCreateSecret() {
     Serial.println("[clicker] first boot: created this clicker's secret");
   } else {
     // The secret works until power-off. After that the clicker makes another one, and
-    // the TutorBox refuses it: see the README, troubleshooting.
+    // the Utz'tutor refuses it: see the README, troubleshooting.
     Serial.println(
         "[clicker] first boot: created this clicker's secret, but flash did not keep "
         "it: it will not survive power-off");
@@ -201,7 +201,7 @@ void Board::readButtons(bool pressed[ButtonBank::kCount],
 int Board::send(const ClickerApp::Request& request, String& reply) {
   reply = String();
   char url[160];
-  snprintf(url, sizeof(url), "%s%s", TUTORBOX_URL, request.path);
+  snprintf(url, sizeof(url), "%s%s", UTZTUTOR_URL, request.path);
   http_.setConnectTimeout(1500);
   http_.setTimeout(2500);
   if (!http_.begin(client_, url)) return HTTPC_ERROR_CONNECTION_REFUSED;

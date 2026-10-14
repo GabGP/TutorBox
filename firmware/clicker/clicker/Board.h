@@ -40,7 +40,7 @@ class Board {
   void readButtons(bool pressed[ButtonBank::kCount],
                    uint32_t edges[ButtonBank::kCount]) const;
 
-  // Sends the request to TUTORBOX_URL + path. Returns the HTTP status, or a negative
+  // Sends the request to UTZTUTOR_URL + path. Returns the HTTP status, or a negative
   // HTTPClient error when the server could not be reached. `reply` gets the body.
   int send(const ClickerApp::Request& request, String& reply);
 

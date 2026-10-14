@@ -4,7 +4,7 @@ Four answer buttons, one power button, one light. Turn it on and it makes its ow
 
 <div align="center">
 
-| 🏠 [TutorBox](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
+| 🏠 [Utz'tutor](../../README.md) | 📚 [Docs](../../docs/README.md) | ⚙️ [Backend](../../backend/README.md) | 📱 [PWA](../../pwa/README.md) | 🔌 [Infra](../../infra/README.md) |
 | :---: | :---: | :---: | :---: | :---: |
 
 📍 [Docs](../../docs/README.md) › **Clicker Firmware** • **Related:** [Devices API](../../docs/api/devices.md) • [Presence API](../../docs/api/presence.md) • [ESP32 Clicker Transport](../../docs/architecture/esp32-clicker-transport.md) • [GL.iNet AP Setup](../../infra/glinet/initial.md)
@@ -38,7 +38,7 @@ sequenceDiagram
     actor Kid as Student
     participant C as Clicker (ESP32-C3)
     participant R as GL.iNet "Utz'tutor" Wi-Fi
-    participant T as TutorBox (Jetson, 192.168.8.2)
+    participant T as Utz'tutor (Jetson, 192.168.8.2)
     actor Teacher
 
     Kid->>C: switches it on (the first time it makes its own secret)
@@ -63,7 +63,7 @@ sequenceDiagram
 
 * **The clicker speaks the same API as the phones.** It logs in, polls the public match state and votes on the same endpoint. The server labels the vote `hardware`, with the clicker's id, from the clicker's token.
 * **Two things are set once per clicker.** The Wi-Fi name and password are flashed with the firmware (§6). The clicker makes its own secret the first time it is switched on, and keeps it in flash (§7). Each clicker names itself from its MAC address (`ESP32-A4CF12`).
-* **The first login registers the clicker.** The TutorBox adds the clicker to its list at that login and keeps only a digest of the secret. Nobody types anything in.
+* **The first login registers the clicker.** The Utz'tutor adds the clicker to its list at that login and keeps only a digest of the secret. Nobody types anything in.
 * **The teacher assigns each clicker to a student.** It then votes as that student until it is reassigned. Reassigning needs no USB cable: the clicker logs in again and gets a token for the new student.
 * **The router needs no changes.** It already serves DHCP to `192.168.8.100–249` and keeps the Jetson at `192.168.8.2` ([GL.iNet runbook §5](../../infra/glinet/initial.md#5-step-3--lan-dhcp--the-jetson-static-lease)).
 
@@ -174,7 +174,7 @@ In `firmware/clicker/clicker/`, copy `secrets.example.h` to **`secrets.h`** and 
 #define WIFI_PASSWORD "the-classroom-passphrase"
 ```
 
-`secrets.h` is git-ignored, so the classroom password never reaches GitHub. The TutorBox address (`TUTORBOX_URL`, default `http://192.168.8.2`) and the pins are in `config.h`.
+`secrets.h` is git-ignored, so the classroom password never reaches GitHub. The Utz'tutor address (`UTZTUTOR_URL`, default `http://192.168.8.2`) and the pins are in `config.h`.
 
 ### Option A: Arduino IDE 2 (easiest)
 
@@ -210,22 +210,22 @@ Put the board in download mode by hand: **hold BOOT, tap RST, release BOOT**, th
 
 Each clicker is set up once, at the teacher's desk. Nothing is typed in, and no tool or cable is needed.
 
-1. **Switch it on** with its power switch. The first time, the clicker makes its own secret and keeps it in flash. It joins `Utz'tutor` and logs in. The TutorBox has never seen this id, so it adds the clicker to its list with no student, and the light blinks magenta slowly.
+1. **Switch it on** with its power switch. The first time, the clicker makes its own secret and keeps it in flash. It joins `Utz'tutor` and logs in. The Utz'tutor has never seen this id, so it adds the clicker to its list with no student, and the light blinks magenta slowly.
 
    With the USB cable (switch the clicker off before you plug it in, §5), the Serial Monitor shows this:
 
    ```text
-   =========== TutorBox clicker ===========
+   =========== Utz'tutor clicker ===========
    Device id : ESP32-A4CF12   <- write it on the case
-   Firmware  : 2.1.1
+   Firmware  : 2.1.2
    Wi-Fi     : Utz'tutor
-   TutorBox  : http://192.168.8.2
+   Utz'tutor : http://192.168.8.2
    =========================================
    [clicker] first boot: created this clicker's secret
-   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.1: looking for Wi-Fi
+   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.2: looking for Wi-Fi
    [wifi] connected: IP 192.168.8.112, signal -54 dBm
    [ESP32-A4CF12] Wi-Fi connected
-   [ESP32-A4CF12] Logging in to the TutorBox
+   [ESP32-A4CF12] Logging in to the Utz'tutor
    [ESP32-A4CF12] Connected, but not assigned. Assign ESP32-A4CF12 to a student in Clickers on /maestro/
    ```
 
@@ -240,11 +240,11 @@ The clicker keeps its student until the teacher unassigns or reassigns it. Givin
 
 ### Deleting a clicker's row
 
-Deleting a clicker in **Clickers** makes the TutorBox forget it. Its next login enrolls its secret again, unassigned, and the row comes back with the **Nuevo** chip. For a clicker that was not reset, nothing else is needed: assign it again. To remove a clicker for good, switch it off before you delete its row.
+Deleting a clicker in **Clickers** makes the Utz'tutor forget it. Its next login enrolls its secret again, unassigned, and the row comes back with the **Nuevo** chip. For a clicker that was not reset, nothing else is needed: assign it again. To remove a clicker for good, switch it off before you delete its row.
 
 ### The reset gesture
 
-Use it when the TutorBox keeps a different secret for the clicker (§8, the fast magenta blink).
+Use it when the Utz'tutor keeps a different secret for the clicker (§8, the fast magenta blink).
 
 1. **Hold A and D** while you switch the clicker on, and keep both down for **5 seconds**. The light is steady magenta while you hold.
 2. When the 5 seconds are up, the light turns **white for one second**. The clicker has forgotten its secret, and the log says `reset: this clicker will make a new secret`. Then it makes a new one and logs in with it.
@@ -254,7 +254,7 @@ The rules:
 
 * The gesture is only checked when the clicker is switched on, before its Wi-Fi starts. If A and D are not both down at that moment, the gesture is off until the next power-on. A press during a lesson cannot trigger it.
 * Let go of either button before 5 seconds and nothing happens: the clicker starts with its old secret. One button held alone does nothing. Holding B or C as well does not stop it.
-* A clicker that the TutorBox has never seen does not need a reset. Its first login enrolls its secret there. This is also how a clicker that was made for another TutorBox joins a new one: switch it on, and assign it.
+* A clicker that the Utz'tutor has never seen does not need a reset. Its first login enrolls its secret there. This is also how a clicker that was made for another Utz'tutor joins a new one: switch it on, and assign it.
 
 ---
 
@@ -263,10 +263,10 @@ The rules:
 | Light | Meaning | What to do |
 | :--- | :--- | :--- |
 | 🔵 Blue, fast blink | Looking for the `Utz'tutor` Wi-Fi | Wait. Longer than 30 s: router off, or wrong password in `secrets.h` |
-| 🔵 Blue, steady | Wi-Fi OK, logging in to the TutorBox | Wait |
-| 🔵 Blue, slow blink | Wi-Fi OK but the TutorBox does not answer | Is the Jetson on and the backend running? |
+| 🔵 Blue, steady | Wi-Fi OK, logging in to the Utz'tutor | Wait |
+| 🔵 Blue, slow blink | Wi-Fi OK but the Utz'tutor does not answer | Is the Jetson on and the backend running? |
 | 🟣 Magenta, slow blink | Enrolled, not assigned to a student yet | Teacher: assign it in **Clickers** on `/maestro/` |
-| 🟣 Magenta, fast blink | The TutorBox refused this clicker's secret: it keeps another one for this id | Teacher: delete the clicker in **Clickers**, then press any button (§7) |
+| 🟣 Magenta, fast blink | The Utz'tutor refused this clicker's secret: it keeps another one for this id | Teacher: delete the clicker in **Clickers**, then press any button (§7) |
 | 🟣 Magenta, steady | A and D are held at power-on: the reset gesture is running | Keep them down for 5 s, or let go to cancel (§7) |
 | ⚪ White, one second | The reset is done: a new secret is made | Nothing. If the light then blinks fast magenta, delete the row and press a button (§7) |
 | 🟢 Short green blip every 3 s | On and ready; no question open | Nothing |
@@ -274,7 +274,7 @@ The rules:
 | 🟡 Yellow | Sending the answer | Wait |
 | 🟢 Green for 1.5 s | Answer counted | Wait for the next question |
 | 🔴 Red ×3 | Not accepted: already answered, time is up, or no question | Wait for the next question |
-| 🟣 Magenta ×3 | Pressed while the clicker needs the teacher (not assigned, or refused) | Tell the teacher. On a refused clicker, the press also asks the TutorBox once more |
+| 🟣 Magenta ×3 | Pressed while the clicker needs the teacher (not assigned, or refused) | Tell the teacher. On a refused clicker, the press also asks the Utz'tutor once more |
 
 The first answer counts: a second press in the same question is refused (red). The clicker cannot see that its student already answered on a phone, so the light stays white; the press is then refused (red).
 
@@ -300,7 +300,7 @@ The first answer counts: a second press in the same question is refused (red). T
 7. **Unassign** it in **Clickers**: within 5 seconds the light goes back to magenta, slow blink.
 8. **Battery.** Unplug USB, switch on from the battery: same behavior, and no new setup.
 9. **Recovery.** Switch the router off and on: blue fast blink, then back to ready by itself.
-10. **Reset.** Hold A and D for 5 seconds at switch-on: magenta, then white for one second. The light then blinks fast magenta, because the TutorBox still has the old secret. Delete the row in **Clickers**, press any button, and assign the clicker again.
+10. **Reset.** Hold A and D for 5 seconds at switch-on: magenta, then white for one second. The light then blinks fast magenta, because the Utz'tutor still has the old secret. Delete the row in **Clickers**, press any button, and assign the clicker again.
 
 ---
 
@@ -314,15 +314,15 @@ The first answer counts: a second press in the same question is refused (red). T
 | Serial Monitor empty | *USB CDC On Boot* disabled | Enable it and upload again; baud 115200 |
 | Stuck on blue fast blink, log says `reason 201 (NO_AP_FOUND)` | SSID wrong or router off | Check `WIFI_SSID`, power the router |
 | Log says `reason 15` or `AUTH_FAIL` | Wrong Wi-Fi password | Fix `WIFI_PASSWORD`, re-flash |
-| Online in **Clickers** and the lobby, then dropped, again and again; never white; the log goes silent for about a minute at a time | Firmware 2.1.0 or older: it read the heartbeat's empty `204` reply and waited for the TutorBox to close the connection (about a minute behind nginx), with no polls or votes meanwhile | Flash 2.1.1 or newer (§6) |
+| Online in **Clickers** and the lobby, then dropped, again and again; never white; the log goes silent for about a minute at a time | Firmware 2.1.0 or older: it read the heartbeat's empty `204` reply and waited for the Utz'tutor to close the connection (about a minute behind nginx), with no polls or votes meanwhile | Flash 2.1.1 or newer (§6) |
 | Connects and drops again and again | Super Mini radio brown-out | Keep `WIFI_LOW_TX_POWER 1`, add the 100 µF capacitor, keep wires away from the ceramic antenna |
-| Blue slow blink, log `Login failed (-1 …)` or `TutorBox did not answer (-1)` | Jetson off, backend down, or wrong `TUTORBOX_URL` | Open `http://192.168.8.2/health` from a phone on the same Wi-Fi |
-| Log `TutorBox has no clicker login (HTTP 404)` | The Jetson runs an older backend | Update the backend (needs migration 015) |
+| Blue slow blink, log `Login failed (-1 …)` or `Utz'tutor did not answer (-1)` | Jetson off, backend down, or wrong `UTZTUTOR_URL` | Open `http://192.168.8.2/health` from a phone on the same Wi-Fi |
+| Log `Utz'tutor has no clicker login (HTTP 404)` | The Jetson runs an older backend | Update the backend (needs migration 015) |
 | Magenta slow blink, log `Connected, but not assigned` | Enrolled, no student yet | Teacher: assign it in **Clickers** on `/maestro/` (§7) |
-| Magenta fast blink, log `refused this clicker's secret (HTTP 401 …)` | The TutorBox keeps another secret for this id: the clicker was reset, its row was kept while a new secret was made, or someone else claimed the id first (§13) | Delete the clicker in **Clickers**, then press any button (§7). The clicker does not ask again by itself: every refused login counts toward a lockout |
+| Magenta fast blink, log `refused this clicker's secret (HTTP 401 …)` | The Utz'tutor keeps another secret for this id: the clicker was reset, its row was kept while a new secret was made, or someone else claimed the id first (§13) | Delete the clicker in **Clickers**, then press any button (§7). The clicker does not ask again by itself: every refused login counts toward a lockout |
 | Magenta fast blink, log `refused this clicker's secret (HTTP 422 …)` | The login was not the right shape: damaged flash | Hold A and D at switch-on (§7), then delete the row and press a button |
-| Log `TutorBox locked this clicker out` | Five refused logins from this clicker (30 s, doubling up to 16 minutes) | Wait: it asks again every 30 s. A backend restart clears the lockout |
-| Log `first boot: created this clicker's secret, but flash did not keep it` | Flash refused the write. The secret works until power-off; after that the clicker makes another, which the TutorBox refuses once it has the first one | Flash the firmware once more (§6). If the log says it again, the board's flash is faulty |
+| Log `Utz'tutor locked this clicker out` | Five refused logins from this clicker (30 s, doubling up to 16 minutes) | Wait: it asks again every 30 s. A backend restart clears the lockout |
+| Log `first boot: created this clicker's secret, but flash did not keep it` | Flash refused the write. The secret works until power-off; after that the clicker makes another, which the Utz'tutor refuses once it has the first one | Flash the firmware once more (§6). If the log says it again, the board's flash is faulty |
 | Reset gesture did nothing | A or D let go before 5 s, or only one of them held | Hold A and D together for the full 5 seconds |
 | Log `reset: flash did not erase the old secret` | Flash refused the erase: the clicker keeps its secret | Repeat the reset. If it happens again, the board's flash is faulty |
 | Presses do nothing at all | Button wired to the wrong legs | Use diagonally opposite legs; check with a multimeter |
@@ -342,12 +342,12 @@ graph LR
     INO --> APP["ClickerApp.cpp<br/>state machine: what to send,<br/>which light"]
     APP --> LED["StatusLed.cpp<br/>colors and blink patterns"]
     APP --> PROTO["Protocol.cpp<br/>JSON (ArduinoJson)"]
-    BOARD -->|"devices/auth, session/current,<br/>session/{id}/vote, presence/heartbeat"| API[("TutorBox backend")]
+    BOARD -->|"devices/auth, session/current,<br/>session/{id}/vote, presence/heartbeat"| API[("Utz'tutor backend")]
 ```
 
 | File | What it does |
 | :--- | :--- |
-| `clicker/config.h` | Everything you may change: TutorBox address, pins, LED type, battery range, radio settings, the reset hold time |
+| `clicker/config.h` | Everything you may change: Utz'tutor address, pins, LED type, battery range, radio settings, the reset hold time |
 | `clicker/secrets.example.h` | Template for `secrets.h` (Wi-Fi name and password) |
 | `clicker/clicker.ino` | Start-up: the reset check, Wi-Fi, the secret. Then the loop: Wi-Fi → buttons → one network request → lights |
 | `clicker/Board.cpp` | The only file that touches hardware: Wi-Fi, HTTP keep-alive, the secret in NVS (made once, then kept), interrupts, LEDs |

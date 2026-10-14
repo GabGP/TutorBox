@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the PC simulator: the real clicker.ino + Board.cpp + logic, with the ESP32's
-# pins, Wi-Fi and flash replaced by sim/ stand-ins and real HTTP to a TutorBox.
+# pins, Wi-Fi and flash replaced by sim/ stand-ins and real HTTP to a Utz'tutor.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "${ARDUINOJSON_DIR:-}" ]; then

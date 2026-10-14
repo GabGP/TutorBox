@@ -1,7 +1,7 @@
 // =============================================================================
-//  TutorBox clicker: ESP32-C3 firmware
+//  Utz'tutor clicker: ESP32-C3 firmware
 //
-//  Power on -> makes its own secret the first time -> joins the TutorBox Wi-Fi by
+//  Power on -> makes its own secret the first time -> joins the Utz'tutor Wi-Fi by
 //  itself -> logs in with that secret. The teacher assigns it to a student in
 //  Clickers on /maestro/. When a question is open the LED blinks white: press A, B, C
 //  or D. Yellow = sending, green = counted, red x3 = not accepted.

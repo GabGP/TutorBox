@@ -1,5 +1,5 @@
 // PC stand-in for the Arduino-ESP32 HTTPClient (signatures as in 2.0.17 / 3.3.x).
-// Speaks real HTTP/1.1 over a socket, so the firmware talks to a real TutorBox.
+// Speaks real HTTP/1.1 over a socket, so the firmware talks to a real Utz'tutor.
 #pragma once
 
 #include <string>

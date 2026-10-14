@@ -1,14 +1,14 @@
 // Runs the real clicker firmware (clicker.ino + Board.cpp + logic) on a PC.
 //
 // Pins, Wi-Fi and flash are simulated; HTTP is real, so the clicker talks to an actual
-// TutorBox backend. Driven by text commands on stdin, one per line:
+// Utz'tutor backend. Driven by text commands on stdin, one per line:
 //   press A | tap A | hold A | release A | wifi off | wifi on | quit
 // It prints the firmware's serial log plus "LED <color>" whenever the RGB LED changes.
 // Commands are read while the firmware runs and also while it waits in delay() (its
 // reset check waits there), so a test can release a button in the middle of that wait.
 //
 // Environment:
-//   CLICKER_SIM_SERVER  host:port to send HTTP to instead of TUTORBOX_URL's host
+//   CLICKER_SIM_SERVER  host:port to send HTTP to instead of UTZTUTOR_URL's host
 //   CLICKER_SIM_MAC     12 hex digits (default 240AC4A4CF12 -> ESP32-A4CF12)
 //   CLICKER_SIM_NVS     file standing in for flash (default build/nvs-<mac>.txt)
 //   CLICKER_SIM_HELD    buttons held down from power-on, e.g. "AD" (default: none)

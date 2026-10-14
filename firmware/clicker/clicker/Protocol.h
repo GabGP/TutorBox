@@ -1,4 +1,4 @@
-// The clicker <-> TutorBox wire format (docs/api/devices.md, sessions.md, presence.md).
+// The clicker <-> Utz'tutor wire format (docs/api/devices.md, sessions.md, presence.md).
 //
 // Four calls, all JSON. The clicker speaks the same API as the phones:
 //   POST /api/v1/devices/auth         its secret in, a token for its student out
@@ -53,11 +53,11 @@ size_t voteBody(char* out, size_t cap, char option, uint32_t responseMs);
 size_t votePath(char* out, size_t cap, const char* sessionId);
 
 // Reads the token (and the student's username, for the log) from a login reply.
-// False if the reply is not the JSON the TutorBox sends, or the token does not fit.
+// False if the reply is not the JSON the Utz'tutor sends, or the token does not fit.
 bool parseAuth(const char* json, char* token, size_t tokenCap, char* username,
                size_t usernameCap);
 
-// Parses GET /session/current. False if it is not the JSON the TutorBox sends.
+// Parses GET /session/current. False if it is not the JSON the Utz'tutor sends.
 bool parseSession(const char* json, SessionView& view);
 
 // Copies the "detail" message of an error reply, for the serial log. False if none.

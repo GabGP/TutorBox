@@ -1,4 +1,4 @@
-"""End-to-end test: the real clicker firmware, run on a PC, against a real TutorBox.
+"""End-to-end test: the real clicker firmware, run on a PC, against a real Utz'tutor.
 
 Starts the backend (uvicorn, throwaway database), starts the simulated clicker
 (build_sim.sh), then plays a classroom: the clicker makes its own secret and enrolls
@@ -217,7 +217,7 @@ def stored_secret(nvs: str) -> str | None:
 
 
 def stored_digest(db_path: str) -> str | None:
-    """The digest of the clicker's secret on the TutorBox, or None if it has no row."""
+    """The digest of the clicker's secret on the Utz'tutor, or None if it has no row."""
     conn = sqlite3.connect(db_path)
     try:
         row = conn.execute(
@@ -266,7 +266,7 @@ def main() -> int:
     if not SIM.exists():
         subprocess.run(["bash", str(HERE / "build_sim.sh")], check=True)
     work = Path(tempfile.mkdtemp(prefix="clicker-e2e-"))
-    db_path, nvs = str(work / "tutorbox.db"), str(work / "nvs.txt")
+    db_path, nvs = str(work / "utztutor.db"), str(work / "nvs.txt")
     port = free_port()
     backend, api = Backend(db_path, port), Api(port)
     clickers: list[Clicker] = []
@@ -287,7 +287,7 @@ def main() -> int:
         return seen if seen and seen["status"] == "online" else None
 
     try:
-        print("TutorBox clicker end-to-end test")
+        print("Utz'tutor clicker end-to-end test")
         backend.start()
         api.login()
         student = api.call(
@@ -378,13 +378,13 @@ def main() -> int:
         clicker.expect("Wi-Fi connected again")
         clicker.quiet("Logging in", 1.5)
 
-        step("3e. TutorBox goes down: blue slow blink; back up: recovers by itself")
+        step("3e. Utz'tutor goes down: blue slow blink; back up: recovers by itself")
         backend.stop()
         for _ in range(3):
-            clicker.expect(r"TutorBox did not answer \(-1\)")
+            clicker.expect(r"Utz'tutor did not answer \(-1\)")
         clicker.expect(r"status: server-unreachable", timeout=20)
         backend.start()
-        clicker.expect("TutorBox answers again", timeout=10)
+        clicker.expect("Utz'tutor answers again", timeout=10)
 
         step("3f. question 3 after the outage: A counted")
         for action in ("close", "reveal", "next"):
@@ -397,7 +397,7 @@ def main() -> int:
 
         step("4. unassign, then assign again: it notices within 5 s and is ready again")
         api.call("POST", f"/staff/devices/{DEVICE}/unassign")
-        clicker.expect("TutorBox ended this clicker's session")
+        clicker.expect("Utz'tutor ended this clicker's session")
         clicker.expect(rf"Connected, but not assigned\. Assign {DEVICE}")
         clicker.send("press A")
         clicker.expect("Button A ignored: this clicker needs the teacher")
@@ -417,7 +417,7 @@ def main() -> int:
 
         step("6. the teacher deletes it while it runs: its next login enrolls it again")
         api.call("DELETE", f"/staff/devices/{DEVICE}")
-        clicker.expect("TutorBox ended this clicker's session")
+        clicker.expect("Utz'tutor ended this clicker's session")
         clicker.expect(rf"Connected, but not assigned\. Assign {DEVICE}")
         assert not any("refused" in line for line in clicker.printed)
         assert stored_digest(db_path) == digest_first  # same secret, same digest
@@ -430,7 +430,7 @@ def main() -> int:
         clicker.expect("LED White", timeout=12)  # 5 s held, then white for 1 s
         clicker.expect("reset: this clicker will make a new secret")
         clicker.expect("first boot: created this clicker's secret")
-        clicker.expect(r"TutorBox refused this clicker's secret \(HTTP 401")
+        clicker.expect(r"Utz'tutor refused this clicker's secret \(HTTP 401")
         clicker.expect(rf"Fix: delete {DEVICE} in Clickers on /maestro/")
         secret_reset = stored_secret(nvs)
         assert secret_reset and SECRET_SHAPE.match(secret_reset), secret_reset
@@ -441,7 +441,7 @@ def main() -> int:
         step("7b. the teacher deletes the row, a press: it enrolls the new secret")
         api.call("DELETE", f"/staff/devices/{DEVICE}")
         clicker.send("press B")
-        clicker.expect("Button B: asking the TutorBox again")
+        clicker.expect("Button B: asking the Utz'tutor again")
         clicker.expect(rf"Connected, but not assigned\. Assign {DEVICE}")
         digest_reset = stored_digest(db_path)
         assert digest_reset and digest_reset != digest_first

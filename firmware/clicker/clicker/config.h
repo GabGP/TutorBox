@@ -1,5 +1,5 @@
 // =============================================================================
-//  TutorBox clicker: settings
+//  Utz'tutor clicker: settings
 //  Change these if your wiring or network differs from firmware/clicker/README.md
 // =============================================================================
 #pragma once
@@ -10,13 +10,13 @@
 #if __has_include("secrets.h")
 #include "secrets.h"
 #else
-#error "Missing secrets.h: copy secrets.example.h to secrets.h (same folder) and type the TutorBox Wi-Fi password in it."
+#error "Missing secrets.h: copy secrets.example.h to secrets.h (same folder) and type the Utz'tutor Wi-Fi password in it."
 #endif
 
-// ---- Where the TutorBox lives --------------------------------------------------
+// ---- Where the Utz'tutor lives -------------------------------------------------
 // The Jetson keeps this address on the classroom network (infra/glinet/initial.md
 // section 5); nginx answers on port 80. No trailing slash.
-#define TUTORBOX_URL "http://192.168.8.2"
+#define UTZTUTOR_URL "http://192.168.8.2"
 
 // ---- Answer buttons ---------------------------------------------------------------
 // Each button connects its pin to GND when pressed. The chip's internal pull-up
@@ -64,4 +64,4 @@
 // clicker forgets its secret and makes a new one. Let go sooner and nothing happens.
 #define RESET_HOLD_MS 5000
 
-#define FIRMWARE_VERSION "2.1.1"
+#define FIRMWARE_VERSION "2.1.2"

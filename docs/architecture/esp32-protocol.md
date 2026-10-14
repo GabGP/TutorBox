@@ -14,9 +14,9 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi, proves who it is, an
 ---
 
 > [!NOTE]
-> **Week 7 (ESP32 Hardware Clickers), state on 2026-10-13.** The backend is built: [§6](#6-backend-additions) describes it, and the [Devices API](../api/devices.md) is the reference. The firmware is built in `firmware/clicker/`, version 2.1.1, and calls only the endpoints of §6 ([Clicker Firmware](../../firmware/clicker/README.md)). It makes its own secret on its first boot and enrolls it at its first login (§8.2). It passes its tests on a PC, the unit tests and the end-to-end test against the real backend, and it builds with PlatformIO. On 2026-10-13 one board got version 2.0.0, which still had the USB setup link, then 2.1.0, which enrolled itself on the Jetson but dropped in and out of the lobby and could not vote (§10), then 2.1.1, which fixes that. The bring-up checklist of §10 is not recorded yet.
+> **Week 7 (ESP32 Hardware Clickers), state on 2026-10-13.** The backend is built: [§6](#6-backend-additions) describes it, and the [Devices API](../api/devices.md) is the reference. The firmware is built in `firmware/clicker/`, version 2.1.2, and calls only the endpoints of §6 ([Clicker Firmware](../../firmware/clicker/README.md)). It makes its own secret on its first boot and enrolls it at its first login (§8.2). It passes its tests on a PC, the unit tests and the end-to-end test against the real backend, and it builds with PlatformIO. On 2026-10-13 one board got version 2.0.0, which still had the USB setup link, then 2.1.0, which enrolled itself on the Jetson but dropped in and out of the lobby and could not vote (§10), then 2.1.1, which fixes that. The bring-up checklist of §10 is not recorded yet.
 >
-> **Bluetooth provisioning was dropped on 2026-10-13**, and this document was first written around it. What replaced it: the Wi-Fi name and password are compiled into the firmware, and the clicker makes its own device secret. The TutorBox keeps a digest of it from the first login. §1, §3, §6, §8, §10 and §11 describe the clicker as built. §4 and §7, and the Bluetooth parts of §2 and §5, are the dropped design, kept as a record: none of that code exists. The hardware is in the [Clicker Firmware guide](../../firmware/clicker/README.md) and the `VoteTransport` principle in [ESP32 Clicker Transport](esp32-clicker-transport.md#3-the-votetransport-seam).
+> **Bluetooth provisioning was dropped on 2026-10-13**, and this document was first written around it. What replaced it: the Wi-Fi name and password are compiled into the firmware, and the clicker makes its own device secret. The Utz'tutor keeps a digest of it from the first login. §1, §3, §6, §8, §10 and §11 describe the clicker as built. §4 and §7, and the Bluetooth parts of §2 and §5, are the dropped design, kept as a record: none of that code exists. The hardware is in the [Clicker Firmware guide](../../firmware/clicker/README.md) and the `VoteTransport` principle in [ESP32 Clicker Transport](esp32-clicker-transport.md#3-the-votetransport-seam).
 
 ---
 
@@ -41,7 +41,7 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi, proves who it is, an
 | Question | Answer |
 | :--- | :--- |
 | How does a clicker know the Wi-Fi? | The name and the WPA2 passphrase are compiled into the firmware from `secrets.h`, a file git ignores. Every clicker of a classroom is flashed with the same build. |
-| How does a clicker prove who it is? | With a **device secret**: 32 hex characters that the clicker makes itself on its first boot, keeps in its flash, and sends at each login. The TutorBox keeps only the SHA-256 digest of the first one it receives (§6.2, §8.2). |
+| How does a clicker prove who it is? | With a **device secret**: 32 hex characters that the clicker makes itself on its first boot, keeps in its flash, and sends at each login. The Utz'tutor keeps only the SHA-256 digest of the first one it receives (§6.2, §8.2). |
 | Why a device secret? | Voting requires a student bearer token (`POST /api/v1/session/{id}/vote`). A clicker has no PIN, so it exchanges its secret for a token of the student the teacher assigned to it, over Wi-Fi, every boot. Giving the clicker to another child tomorrow needs **no cable**. |
 | How often is a clicker set up? | Flashed once, and again only if the router passphrase changes. Nothing else: the first login registers the clicker, and the teacher assigns it to a student in **Clickers**. Not per class, not per student. |
 | After setup? | Pure Wi-Fi + HTTP. The clicker polls `GET /api/v1/session/current` and votes on the same endpoint as a phone. The server labels the vote `hardware`, with the clicker's `device_id`, from the clicker's session token; the body needs only `selected_option`. Host page and HDMI screen need no changes. |
@@ -121,7 +121,7 @@ stateDiagram-v2
     REJECTED --> UNASSIGNED: a press asks, login 403 (enrolled again)
     REJECTED --> REJECTED: a press asks again, 401 or 422, no timer
     REJECTED --> READY: after a 429, login 200, asked every 30 s
-    SERVER_UNREACHABLE --> READY: the TutorBox answers again
+    SERVER_UNREACHABLE --> READY: the Utz'tutor answers again
     READY --> SERVER_UNREACHABLE: 3 polls with no answer
     READY --> CONNECTING: 401 on the heartbeat or on a vote
     READY --> LOOKING_FOR_WIFI: Wi-Fi lost
@@ -144,7 +144,7 @@ Five rules that keep the firmware simple:
 > **Dropped on 2026-10-13. Not built.** No clicker and no service speaks this protocol. The section is kept as the record of the design. What the clicker does instead is in [§8.2](#82-the-secret-and-the-reset-gesture).
 
 ### 4.1 Advertising (what "broadcasting" actually is)
-The Jetson advertises continuously: flags + the 128-bit service UUID + local name `TutorBox`. **The advertisement carries no credentials** — 31 bytes would not fit them and anyone with a phone could read them. Credentials are only readable after connecting and encrypting the link (§4.4). The name lets a human verify with any BLE scanner app that the appliance is alive.
+The Jetson advertises continuously: flags + the 128-bit service UUID + local name `Utz'tutor`. **The advertisement carries no credentials** — 31 bytes would not fit them and anyone with a phone could read them. Credentials are only readable after connecting and encrypting the link (§4.4). The name lets a human verify with any BLE scanner app that the appliance is alive.
 
 ### 4.2 GATT layout
 
@@ -223,14 +223,14 @@ The radio being always on is only a problem if it hands out something valuable t
 
 | Layer | What an attacker with a laptop next to the school gets |
 | :--- | :--- |
-| Advertisement | The name `TutorBox` and a UUID. |
+| Advertisement | The name `Utz'tutor` and a UUID. |
 | Connect + `hello` with a made-up `device_id` | The device is auto-registered (`POST /staff/devices`, capped at 100 rows) and `provision` says `unregistered`. No Wi-Fi passphrase. The teacher sees an unknown clicker appear in the roster and simply never assigns it. |
 | Guess a registered but unassigned `device_id` | `unassigned`. Still no passphrase. |
 | Guess an **assigned** `device_id` (printed on a real clicker's label) | The Wi-Fi passphrase of an isolated LAN with no internet, plus a device secret that is **rotated on every provisioning** — so the real clicker's next provisioning invalidates it. This is the residual risk, and it is equivalent to reading the passphrase off the router's sticker. |
 
 Rules that follow from this:
 - Credentials go **only** to devices with `assigned_user_id` set — the teacher's assignment *is* the trust decision, and it is already an audited staff action.
-- The device secret is stored as a **SHA-256 digest**, the way bearer tokens are stored, not with bcrypt like PINs. It is 128 random bits, so a fast hash is enough, and the public `POST /api/v1/devices/auth` must not run bcrypt on every request. The clicker makes it on its first boot and sends it only at its logins. The TutorBox keeps the digest of the first one it receives. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
+- The device secret is stored as a **SHA-256 digest**, the way bearer tokens are stored, not with bcrypt like PINs. It is 128 random bits, so a fast hash is enough, and the public `POST /api/v1/devices/auth` must not run bcrypt on every request. The clicker makes it on its first boot and sends it only at its logins. The Utz'tutor keeps the digest of the first one it receives. It never appears in logs — same "zero plaintext credential leakage" rule as PINs and tokens.
 - The student bearer token obtained with the secret lives **only in clicker RAM**; a reboot re-authenticates.
 - That token can **only vote and send the presence heartbeat** (§6.6). A secret dumped from a clicker's flash, or a token captured on the classroom Wi-Fi, casts the votes that clicker could already cast, can make that clicker look connected in the lobby, and opens nothing else of the student's account.
 - Unassigning, reassigning or deleting a clicker revokes its active sessions at once (§6.4). A clicker taken away from a child gets `401` on its next vote, and `403` when it authenticates again.
@@ -364,7 +364,7 @@ pip install bluezero                                   # or: bless — either wr
 
 ### 7.2 Behaviour
 1. Register a `NoInputNoOutput` agent (`org.bluez.AgentManager1`) and make it default, so Just Works pairing needs no console.
-2. Publish the service from §4.2 and start advertising (`LEAdvertisingManager1`, local name `TutorBox`, service UUID included).
+2. Publish the service from §4.2 and start advertising (`LEAdvertisingManager1`, local name `Utz'tutor`, service UUID included).
 3. On `hello`: parse → validate `device_id` against the regex → if the slot is busy, set `provision` to `busy` → else
    `GET /staff/devices`; unknown → `POST /staff/devices` and `unregistered`; no `assigned_user_id` → `unassigned`;
    otherwise `POST /staff/devices/{id}/secret` and set the `assigned` packet with SSID/PSK/API base from the env file. Claim the slot for 10 s.
@@ -444,23 +444,23 @@ Built in `firmware/clicker/`: Arduino framework, PlatformIO or the Arduino IDE, 
 
 | Where | What | Notes |
 | :--- | :--- | :--- |
-| Firmware image | Wi-Fi name and passphrase | From `secrets.h` at build time. The API address (`TUTORBOX_URL`, `http://192.168.8.2`) is in `config.h` |
+| Firmware image | Wi-Fi name and passphrase | From `secrets.h` at build time. The API address (`UTZTUTOR_URL`, `http://192.168.8.2`) is in `config.h` |
 | NVS, namespace `clicker`, key `secret` | The device secret | Made by the clicker on its first boot (§8.2). The reset gesture erases it |
 | RAM only | The bearer token | Never written to flash. A restart logs in again |
 | Nowhere | `device_id` | Computed at every boot from the Wi-Fi MAC: `ESP32-` and its last six hex digits, upper case |
 
 ### 8.2 The secret and the reset gesture
 
-The clicker makes its own secret, once. The TutorBox learns its digest at the first login (§6.2). Code: `firmware/clicker/clicker/Board.cpp` (`loadOrCreateSecret`, `resetSecret`), `ResetGesture.cpp` (the reset rule) and `clicker.ino` (the check at start-up).
+The clicker makes its own secret, once. The Utz'tutor learns its digest at the first login (§6.2). Code: `firmware/clicker/clicker/Board.cpp` (`loadOrCreateSecret`, `resetSecret`), `ResetGesture.cpp` (the reset rule) and `clicker.ino` (the check at start-up).
 
 | When | What the clicker does |
 | :--- | :--- |
 | First boot, nothing in NVS | Makes 128 random bits with `esp_random()`, after the Wi-Fi radio has started, and writes them to NVS as 32 lowercase hex characters. Logs `first boot: created this clicker's secret`. |
 | Every later boot | Reads the same secret from NVS. Logs `secret found in flash`. |
-| Flash refuses the write | Keeps the secret in RAM and logs that it will not survive power-off. The next boot makes another one, which the TutorBox refuses once it has the first one from a login (§6.2). |
+| Flash refuses the write | Keeps the secret in RAM and logs that it will not survive power-off. The next boot makes another one, which the Utz'tutor refuses once it has the first one from a login (§6.2). |
 | Reset gesture: A and D held from power-on for `RESET_HOLD_MS` (5 s) | Erases the NVS secret, and the new one is made after the radio starts. Logs `reset: this clicker will make a new secret`. Letting go of either button first cancels it. One button alone does nothing. |
 
-The reset gesture is only checked before Wi-Fi starts, so a press during a lesson cannot trigger it. While it runs the light shows a steady magenta, and it turns white for one second when the secret is forgotten. A reset does not touch the TutorBox: its row keeps the old digest, so the next login is refused (`401`) until the teacher deletes the row (§6.4). The steps for the teacher are in the [Clicker Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student).
+The reset gesture is only checked before Wi-Fi starts, so a press during a lesson cannot trigger it. While it runs the light shows a steady magenta, and it turns white for one second when the secret is forgotten. A reset does not touch the Utz'tutor: its row keeps the old digest, so the next login is refused (`401`) until the teacher deletes the row (§6.4). The steps for the teacher are in the [Clicker Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student).
 
 The clicker never prints its secret or its token, in any log line or error message.
 
@@ -468,7 +468,7 @@ The clicker never prints its secret or its token, in any log line or error messa
 
 The clicker sends one request at a time. `ClickerApp::nextRequest` picks it in this order:
 
-1. With no token: the login, `POST /api/v1/devices/auth`, unless the TutorBox refused the last one. A refused clicker asks again only after a button press, or after a restart.
+1. With no token: the login, `POST /api/v1/devices/auth`, unless the Utz'tutor refused the last one. A refused clicker asks again only after a button press, or after a restart.
 2. A vote that is waiting: `POST /api/v1/session/{id}/vote` with the token. The `id` is the one the last poll returned.
 3. The heartbeat, when 5 seconds have passed: `POST /api/v1/presence/heartbeat` with the token.
 4. The poll, when 1 second has passed: `GET /api/v1/session/current`, with no token because it is public.
@@ -511,18 +511,18 @@ Details worth keeping in mind:
 | Clicker never joins the Wi-Fi (blue, fast blink) | Router off, or the wrong name or passphrase in `secrets.h` | The serial log names the reason. Fix `secrets.h` and flash again |
 | Joins Wi-Fi, then magenta slow blink | Enrolled, device unassigned (`403`) | Teacher assigns a student in **Clickers**; the clicker logs in within 5 s |
 | A vote or a heartbeat gets `401` | The session was revoked (unassign, reassign, delete, or its student became a teacher), or it is older than 12 hours | Nothing: the clicker logs in again with `POST /api/v1/devices/auth` |
-| The login answers `401` | The TutorBox keeps another secret for this id: the clicker was reset, or its row was kept while a new secret was made | Delete the row in **Clickers**, then press any button on the clicker. The clicker does not ask again by itself |
+| The login answers `401` | The Utz'tutor keeps another secret for this id: the clicker was reset, or its row was kept while a new secret was made | Delete the row in **Clickers**, then press any button on the clicker. The clicker does not ask again by itself |
 | A new clicker gets `401` and never appears in **Clickers** | The fleet already holds 100 clickers (§6.2) | Delete the rows of clickers that are not used any more |
 | The login answers `429` | Five wrong secrets from this device at this address (30 s, doubling to 16 min) | Wait: the clicker asks again every 30 s. The lockout is in memory, so a backend restart clears it |
 | The login answers `422` | Secret or device id has the wrong shape (the clicker makes only 32 lowercase hex characters) | This points at damaged flash: reset the clicker (firmware README §7), then delete its row and press a button |
-| Online, then dropped, again and again; the light never turns white | Firmware 2.1.0: 2.1.0 read the body of the heartbeat's `204` reply, which has no length, so the HTTP library waited for the TutorBox to close the kept-open connection: about a minute behind nginx, with no polls, heartbeats or votes meanwhile | Flash 2.1.1 or newer |
+| Online, then dropped, again and again; the light never turns white | Firmware 2.1.0: 2.1.0 read the body of the heartbeat's `204` reply, which has no length, so the HTTP library waited for the Utz'tutor to close the kept-open connection: about a minute behind nginx, with no polls, heartbeats or votes meanwhile | Flash 2.1.1 or newer |
 | Every vote `409` | Already voted this round / window closed | Expected; first press locks |
 | Nothing joins after a router change | Passphrase changed | Flash the fleet again with the new `secrets.h` |
 | Some clickers get no IP | DHCP pool exhausted | Widen the pool (`infra/glinet/initial.md` §5) |
 
 ### Bring-up checklist (in this order)
 - [ ] Backend: `pytest backend/tests/api/devices` green; `curl -X POST /api/v1/devices/auth`: an unknown id → `403` (enrolled), the same id with a wrong secret → `401`, assigned → `200` with a `session_id`.
-- [x] Firmware on a PC (2026-10-13, version 2.1.1): `firmware/clicker/hosttest/run_tests.sh` (342 checks) and `e2e_test.py` pass, the second against the real backend.
+- [x] Firmware on a PC (2026-10-13, version 2.1.2): `firmware/clicker/hosttest/run_tests.sh` (342 checks) and `e2e_test.py` pass, the second against the real backend.
 - [ ] One clicker: the serial log shows `first boot: created this clicker's secret`, `Wi-Fi connected`, then `Connected, but not assigned`; after the assignment, `Assigned to <student>: ready to vote`; after a power-off and on, `secret found in flash` and the same student.
 - [ ] Reset gesture: hold A and D for 5 s at switch-on: the log says `reset: this clicker will make a new secret`, the light goes white, the box refuses the new secret (`refused`); delete the row, press a button, and assign it again.
 - [ ] Teacher starts a match on `/maestro/`; the clicker's vote raises `votes_cast` on the host page and `/pantalla/` within one second; reveal shows it in the bars.
@@ -535,7 +535,7 @@ Details worth keeping in mind:
 
 1. **Backend: done** — migration `015`, `api/devices/auth.py` + `enrollment.py` + schemas, revocation in `unassign`/`assign`/`delete`, the vote label, tests (`tests/api/devices/`, `tests/api/staff/`, `tests/api/session/`, `tests/core/`), `docs/api/devices.md` and `docs/database`. The clickers added no `.env.example` entries.
 2. **Provisioner: dropped on 2026-10-13, not built** — there is no `infra/provisioner/`. §4 and §7 keep the design.
-3. **Firmware: version 2.1.1 uploaded to one ESP32-C3, bring-up checks open** — `firmware/clicker/` was first committed on 2026-10-10 against `/api/v1/clicker/*` endpoints that are no longer in the backend. On 2026-10-13 it was ported to the endpoints of §6. Version 2.1.0 then dropped the USB setup link: the clicker makes its own secret, the first login enrolls it, and a reset gesture was added. Its unit tests and its end-to-end test pass on a PC, and the PlatformIO build for the board succeeds. On the board, 2.1.0 enrolled itself and then dropped in and out of the lobby: 2.1.0 read the body of the heartbeat's `204` reply, which has no length, so the HTTP library waited for the TutorBox to close the kept-open connection: about a minute behind nginx, with no polls, heartbeats or votes meanwhile. Version 2.1.1 skips the body of a `204`, and the end-to-end test now fails on any reply read that way.
+3. **Firmware: version 2.1.1 uploaded to one ESP32-C3, bring-up checks open** — `firmware/clicker/` was first committed on 2026-10-10 against `/api/v1/clicker/*` endpoints that are no longer in the backend. On 2026-10-13 it was ported to the endpoints of §6. Version 2.1.0 then dropped the USB setup link: the clicker makes its own secret, the first login enrolls it, and a reset gesture was added. Its unit tests and its end-to-end test pass on a PC, and the PlatformIO build for the board succeeds. On the board, 2.1.0 enrolled itself and then dropped in and out of the lobby: 2.1.0 read the body of the heartbeat's `204` reply, which has no length, so the HTTP library waited for the Utz'tutor to close the kept-open connection: about a minute behind nginx, with no polls, heartbeats or votes meanwhile. Version 2.1.1 skips the body of a `204`, and the end-to-end test now fails on any reply read that way.
 4. **Fleet test: simulated in CI, not on hardware** — 15+ clickers, router association limits, latency comparison ESP32 vs. PWA (roadmap Week 7 deliverable). The CI test has no radio. The real-device part is not started.
 5. **Teacher clicker screen: done** — the **Clickers** button in the `/maestro/` header opens the fleet in its own sheet (`pwa/app/src/features/clickers/`, not Pilas). It lists `GET /staff/devices` (the clicker, its assigned student, a `Nuevo` chip for 10 minutes after its first contact, and `Sin conectar` while `secret_issued_at` is `null`), adds a clicker by hand, and assigns, unassigns and deletes. It never issues or shows a secret: the clicker makes its own (§8.2).
 6. **No USB setup tool.** It is not needed: the clicker makes its own secret, and its first login enrolls it (§8.2).

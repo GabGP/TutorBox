@@ -45,7 +45,7 @@ The clicker uses the same REST API as the phones, over the classroom Wi-Fi. The 
 Two things are set once per clicker:
 
 * **Device id.** The clicker computes it from its MAC address (`ESP32-A4CF12`).
-* **Device secret.** The clicker makes it on its first boot and keeps it in its flash. The TutorBox keeps only the SHA-256 digest of the first one it receives ([Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)).
+* **Device secret.** The clicker makes it on its first boot and keeps it in its flash. The Utz'tutor keeps only the SHA-256 digest of the first one it receives ([Firmware §7](../../firmware/clicker/README.md#7-first-power-on-and-assigning-a-student)).
 
 ---
 

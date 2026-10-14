@@ -80,7 +80,7 @@ void ClickerApp::setWifi(bool connected, uint32_t nowMs) {
   }
   failures_ = 0;
   if (token_[0] != '\0') {
-    // The token outlives a Wi-Fi drop. If the TutorBox ended it meanwhile, the
+    // The token outlives a Wi-Fi drop. If the Utz'tutor ended it meanwhile, the
     // heartbeat sent right now gets a 401 and the clicker logs in again.
     logf("Wi-Fi connected again");
     enter(Phase::Ready);
@@ -107,7 +107,7 @@ void ClickerApp::onButton(char option, uint32_t nowMs) {
       // toward the lockout, so a press is one login, never a timer.
       loginRefused_ = false;
       nextAuthAt_ = nowMs;
-      logf("Button %c: asking the TutorBox again", option);
+      logf("Button %c: asking the Utz'tutor again", option);
     } else {
       logf("Button %c ignored: %s", option,
            teacher ? "this clicker needs the teacher (see README)" : "not connected yet");
@@ -276,13 +276,13 @@ void ClickerApp::onAuth(int status, const char* body, uint32_t nowMs) {
     return;
   }
   if (status == 401 || status == 422) {
-    // A refused login counts against this clicker on the TutorBox, and enough of them
+    // A refused login counts against this clicker on the Utz'tutor, and enough of them
     // lock it out for up to 16 minutes. So there is no timer: a button press asks once
     // more, and so does a restart.
     loginRefused_ = true;
     enter(Phase::Rejected);
     failures_ = 0;
-    logf("TutorBox refused this clicker's secret (HTTP %d %s)", status, detail);
+    logf("Utz'tutor refused this clicker's secret (HTTP %d %s)", status, detail);
     logf("Fix: delete %s in Clickers on /maestro/, then press any button", deviceId_);
     return;
   }
@@ -290,13 +290,13 @@ void ClickerApp::onAuth(int status, const char* body, uint32_t nowMs) {
     enter(Phase::Rejected);
     failures_ = 0;
     nextAuthAt_ = nowMs + kLockedOutEveryMs;
-    logf("TutorBox locked this clicker out after refused logins: asking again in 30 s");
+    logf("Utz'tutor locked this clicker out after refused logins: asking again in 30 s");
     return;
   }
 
   nextAuthAt_ = nowMs + kRetryEveryMs;
   if (status == 404) {
-    logf("TutorBox has no clicker login (HTTP 404): update the backend");
+    logf("Utz'tutor has no clicker login (HTTP 404): update the backend");
   } else if (status == 200) {
     logf("Login reply was not understood");
   } else {
@@ -311,7 +311,7 @@ void ClickerApp::onPoll(int status, const char* body, uint32_t nowMs) {
   if (running || status == 404) {  // 404: no match is running, which is normal
     failures_ = 0;
     nextPollAt_ = nowMs + kPollEveryMs;
-    if (phase_ != Phase::Ready) logf("TutorBox answers again");
+    if (phase_ != Phase::Ready) logf("Utz'tutor answers again");
     enter(Phase::Ready);
     if (running) {
       updateRound(view, nowMs);
@@ -324,7 +324,7 @@ void ClickerApp::onPoll(int status, const char* body, uint32_t nowMs) {
   if (status == 200) {
     logf("Session reply was not understood");
   } else {
-    logf("TutorBox did not answer (%d)", status);
+    logf("Utz'tutor did not answer (%d)", status);
   }
   countFailure();
 }
@@ -332,7 +332,7 @@ void ClickerApp::onPoll(int status, const char* body, uint32_t nowMs) {
 void ClickerApp::onHeartbeat(int status, const char* body, uint32_t nowMs) {
   if (status == 401) {
     // Unassigned, reassigned, deleted, a new secret, or 12 hours passed.
-    logf("TutorBox ended this clicker's session: logging in again");
+    logf("Utz'tutor ended this clicker's session: logging in again");
     dropToken();
     startLogin(nowMs);
     return;
@@ -403,7 +403,7 @@ void ClickerApp::startLogin(uint32_t nowMs) {
     enter(Phase::Rejected);
     return;
   }
-  logf("Logging in to the TutorBox");
+  logf("Logging in to the Utz'tutor");
   enter(Phase::Connecting);
   nextAuthAt_ = nowMs;
 }

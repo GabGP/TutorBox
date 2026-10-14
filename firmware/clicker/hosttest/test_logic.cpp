@@ -594,7 +594,7 @@ static void test_app_session_ended() {
   // The heartbeat is what tells a clicker that the teacher took it away.
   CHECK(answer(app, 5000, Kind::Heartbeat, 401,
                "{\"detail\":\"Invalid or expired session.\"}"));
-  CHECK(logged("TutorBox ended this clicker's session"));
+  CHECK(logged("Utz'tutor ended this clicker's session"));
   CHECK(app.phase() == Phase::Connecting && !app.armed());
   CHECK(answer(app, 5000, Kind::Auth, 403, kUnassigned));
   CHECK(app.phase() == Phase::Unassigned);
@@ -645,7 +645,7 @@ static void test_app_refused_login() {
 
   // A press asks once: one login, and a 401 again stops it there.
   app.onButton('B', 4000000);
-  CHECK(logged("Button B: asking the TutorBox again"));
+  CHECK(logged("Button B: asking the Utz'tutor again"));
   CHECK(app.ledColor(4000000) == StatusLed::Magenta);
   CHECK(app.nextRequest(4000000, req) && req.kind == Kind::Auth);
   CHECK(!app.nextRequest(4000001, req));  // one request at a time
@@ -675,7 +675,7 @@ static void test_app_refused_login() {
   CHECK(!logged(kSecret) && !logged(kToken));
 
   // A lockout answers 429: the clicker asks again by itself every 30 s, and a press
-  // in the lockout asks once more (the TutorBox answers 429 again, and the timer goes on).
+  // in the lockout asks once more (the Utz'tutor answers 429 again, and the timer goes on).
   ClickerApp locked;
   locked.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
   locked.setWifi(true, 0);
@@ -701,7 +701,7 @@ static void test_app_refused_login() {
 }
 
 static void test_app_server_problems() {
-  printf("ClickerApp: server down, the TutorBox answers again, logged in then silent\n");
+  printf("ClickerApp: server down, the Utz'tutor answers again, logged in then silent\n");
   gLog.clear();
   ClickerApp app;
   app.begin("ESP32-T", "2.1.0", kSecret, captureLog, 0);
@@ -724,7 +724,7 @@ static void test_app_server_problems() {
   CHECK(logged("Login reply was not understood"));
   CHECK(!logged(kSecret));
 
-  // Logged in, then the TutorBox stops answering: blue slow blink, and it recovers.
+  // Logged in, then the Utz'tutor stops answering: blue slow blink, and it recovers.
   gLog.clear();
   ClickerApp running;
   login(running, 0);
@@ -736,7 +736,7 @@ static void test_app_server_problems() {
   CHECK(logged("Session reply was not understood"));
   CHECK(running.phase() == Phase::ServerUnreachable);
   CHECK(poll(running, 7000, 200, session("s_d", "s_d_r0", "open")));
-  CHECK(logged("TutorBox answers again"));
+  CHECK(logged("Utz'tutor answers again"));
   CHECK(running.phase() == Phase::Ready && running.armed());
   CHECK(!logged(kSecret) && !logged(kToken));
 }
