@@ -3,9 +3,9 @@ import { resolve } from 'path';
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
-function tutorboxRouterPlugin(): Plugin {
+function utztutorRouterPlugin(): Plugin {
   return {
-    name: 'tutorbox-router-plugin',
+    name: 'utztutor-router-plugin',
     closeBundle() {
       const outDir = resolve(import.meta.dirname, '../../.cache/pwa/dist');
       const indexHtml = resolve(outDir, 'index.html');
@@ -26,7 +26,7 @@ function tutorboxRouterPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tutorboxRouterPlugin()],
+  plugins: [react(), utztutorRouterPlugin()],
   base: '/',
   cacheDir: resolve(import.meta.dirname, '../../.cache/pwa/vite'),
   build: {

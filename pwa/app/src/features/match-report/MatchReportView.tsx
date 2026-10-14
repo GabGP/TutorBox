@@ -107,7 +107,7 @@ export const MatchReportView: React.FC<MatchReportViewProps> = ({
           id="export"
           className={styles.exportBtn}
           href={csvUri}
-          download="reporte-tutorbox.csv"
+          download="reporte-utztutor.csv"
         >
           Guardar reporte del grupo
         </a>
