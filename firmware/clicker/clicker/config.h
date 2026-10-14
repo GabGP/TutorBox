@@ -64,4 +64,4 @@
 // clicker forgets its secret and makes a new one. Let go sooner and nothing happens.
 #define RESET_HOLD_MS 5000
 
-#define FIRMWARE_VERSION "2.1.0"
+#define FIRMWARE_VERSION "2.1.1"

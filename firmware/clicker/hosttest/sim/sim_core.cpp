@@ -267,7 +267,7 @@ bool HTTPClient::begin(WiFiClient& client, String url) {
 }
 
 void HTTPClient::end(void) { headers_.clear(); }
-void HTTPClient::setReuse(bool reuse) { (void)reuse; }
+void HTTPClient::setReuse(bool reuse) { reuse_ = reuse; }
 void HTTPClient::setConnectTimeout(int32_t connectTimeout) { (void)connectTimeout; }
 void HTTPClient::setTimeout(uint16_t timeout) { timeoutMs_ = timeout; }
 
@@ -286,6 +286,8 @@ int HTTPClient::POST(uint8_t* payload, size_t size) {
 
 int HTTPClient::perform(const char* method, const uint8_t* payload, size_t size) {
   body_.clear();
+  status_ = 0;
+  bodyUntilClose_ = false;
   if (!gWifiUp) return HTTPC_ERROR_NOT_CONNECTED;
   addrinfo hints;
   memset(&hints, 0, sizeof(hints));
@@ -338,10 +340,27 @@ int HTTPClient::perform(const char* method, const uint8_t* payload, size_t size)
     return HTTPC_ERROR_READ_TIMEOUT;
   }
   body_ = response.substr(split + 4);
-  return atoi(response.c_str() + 9);
+  status_ = atoi(response.c_str() + 9);
+  std::string head = response.substr(0, split);
+  for (size_t i = 0; i < head.size(); i++) head[i] = static_cast<char>(tolower(head[i]));
+  bodyUntilClose_ = head.find("\r\ncontent-length:") == std::string::npos &&
+                    head.find("\r\ntransfer-encoding:") == std::string::npos;
+  return status_;
 }
 
-String HTTPClient::getString(void) { return String(body_); }
+// This fake closes every connection, so it always has the whole body. The real one
+// keeps the connection open (setReuse) and, for a reply with no length, reads until the
+// server closes it: about a minute behind nginx, with the clicker frozen meanwhile.
+// That is reported here so e2e_test.py can fail on it.
+String HTTPClient::getString(void) {
+  if (reuse_ && bodyUntilClose_) {
+    ::printf("SIM HTTPClient trap: getString() on HTTP %d with no length would wait "
+             "for the server to close the connection\n",
+             status_);
+    fflush(stdout);
+  }
+  return String(body_);
+}
 
 // ---------------------------------------------------------------------------
 // Preferences: key=value lines in a file

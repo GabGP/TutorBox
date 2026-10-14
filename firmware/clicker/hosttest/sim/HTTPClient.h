@@ -35,4 +35,7 @@ class HTTPClient {
   std::vector<std::string> headers_;
   std::string body_;
   uint16_t timeoutMs_ = 5000;
+  bool reuse_ = false;
+  int status_ = 0;
+  bool bodyUntilClose_ = false;  // the reply had no Content-Length and was not chunked
 };

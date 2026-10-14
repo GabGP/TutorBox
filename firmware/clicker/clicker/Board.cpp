@@ -218,7 +218,10 @@ int Board::send(const ClickerApp::Request& request, String& reply) {
   } else {
     status = http_.GET();
   }
-  if (status > 0) reply = http_.getString();
+  // A 204 (the heartbeat's answer) has no body and no Content-Length. Asked for the
+  // body anyway, HTTPClient reads until the server closes the connection we keep open:
+  // about a minute with nginx, with no polls, heartbeats or votes meanwhile.
+  if (status > 0 && status != 204) reply = http_.getString();
   http_.end();
   return status;
 }

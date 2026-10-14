@@ -479,6 +479,12 @@ def main() -> int:
             assert not any(secret in line for secret in secrets), line
             assert not TOKEN_SHAPE.search(line), line
 
+        step("10. no reply was read in a way that freezes the real HTTPClient")
+        # The heartbeat's 204 has no length: reading its body on the kept-open
+        # connection waits for nginx to close it, about a minute (sim_core.cpp).
+        for line in (line for c in clickers for line in c.printed):
+            assert "HTTPClient trap" not in line, line
+
         print("PASS: all clicker end-to-end steps")
         return 0
     finally:

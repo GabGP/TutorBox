@@ -217,12 +217,12 @@ Each clicker is set up once, at the teacher's desk. Nothing is typed in, and no 
    ```text
    =========== TutorBox clicker ===========
    Device id : ESP32-A4CF12   <- write it on the case
-   Firmware  : 2.1.0
+   Firmware  : 2.1.1
    Wi-Fi     : Utz'tutor
    TutorBox  : http://192.168.8.2
    =========================================
    [clicker] first boot: created this clicker's secret
-   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.0: looking for Wi-Fi
+   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.1: looking for Wi-Fi
    [wifi] connected: IP 192.168.8.112, signal -54 dBm
    [ESP32-A4CF12] Wi-Fi connected
    [ESP32-A4CF12] Logging in to the TutorBox
@@ -314,6 +314,7 @@ The first answer counts: a second press in the same question is refused (red). T
 | Serial Monitor empty | *USB CDC On Boot* disabled | Enable it and upload again; baud 115200 |
 | Stuck on blue fast blink, log says `reason 201 (NO_AP_FOUND)` | SSID wrong or router off | Check `WIFI_SSID`, power the router |
 | Log says `reason 15` or `AUTH_FAIL` | Wrong Wi-Fi password | Fix `WIFI_PASSWORD`, re-flash |
+| Online in **Clickers** and the lobby, then dropped, again and again; never white; the log goes silent for about a minute at a time | Firmware 2.1.0 or older: it read the heartbeat's empty `204` reply and waited for the TutorBox to close the connection (about a minute behind nginx), with no polls or votes meanwhile | Flash 2.1.1 or newer (§6) |
 | Connects and drops again and again | Super Mini radio brown-out | Keep `WIFI_LOW_TX_POWER 1`, add the 100 µF capacitor, keep wires away from the ceramic antenna |
 | Blue slow blink, log `Login failed (-1 …)` or `TutorBox did not answer (-1)` | Jetson off, backend down, or wrong `TUTORBOX_URL` | Open `http://192.168.8.2/health` from a phone on the same Wi-Fi |
 | Log `TutorBox has no clicker login (HTTP 404)` | The Jetson runs an older backend | Update the backend (needs migration 015) |
@@ -386,7 +387,7 @@ python firmware/clicker/hosttest/e2e_test.py    # the whole firmware against a r
 ```
 
 * `run_tests.sh` compiles `Buttons`, `StatusLed`, `Protocol`, `ResetGesture` and `ClickerApp` with the ESP32 2.x core's own flags (`-std=gnu++11 -fno-rtti`, warnings as errors) and runs 342 checks.
-* `e2e_test.py` compiles the **real** `clicker.ino` and `Board.cpp` against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the random number generator simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class in nine steps: the first power-on makes the secret and enrolls the clicker, the teacher assigns it, the lobby's class list, three questions with a double press, a very short tap, Wi-Fi loss and a server outage, unassign and assign again, a power cycle, a deletion, the reset gesture (a refused login, then a press that enrolls the new secret), a hold let go early, and one button held alone. It also checks that nothing the clicker prints carries a secret or a token. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
+* `e2e_test.py` compiles the **real** `clicker.ino` and `Board.cpp` against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the random number generator simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class in nine steps: the first power-on makes the secret and enrolls the clicker, the teacher assigns it, the lobby's class list, three questions with a double press, a very short tap, Wi-Fi loss and a server outage, unassign and assign again, a power cycle, a deletion, the reset gesture (a refused login, then a press that enrolls the new secret), a hold let go early, and one button held alone. It also checks that nothing the clicker prints carries a secret or a token, and that no reply is read in a way that would freeze the real HTTPClient: the stand-in closes every connection, so it reports a body read from a reply with no length, which on the board waits for the server to close the kept-open connection. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
 * The fleet of 15 simulated clickers and 15 phones is a backend test: `backend/tests/api/session/test_session_fleet_hardware.py`.
 
 The stand-ins only mirror the Arduino-ESP32 function signatures; the real check is still building for the board (§6).
