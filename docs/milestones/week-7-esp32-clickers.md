@@ -18,12 +18,12 @@ This document tracks the technical deliverables, architectural implementations, 
 ## 1. Executive Summary & Verification Metrics
 
 * **Theme**: *"One More Transport: Integrating hardware without redesigning the system"*
-* **Status**: **Backend Complete & Green · Firmware Built and Passing on a PC, Not Yet Run on an ESP32 · BLE Provisioner Dropped · Fleet Assembly Not Started**
+* **Status**: **Backend Complete & Green · Firmware Passing on a PC and Flashed to One ESP32, Bring-Up Checks Open · BLE Provisioner Dropped · Fleet Assembly Not Started**
 * **Backend Test Suite**: **2755 / 2755 passing tests** on 2026-10-13 (98 new for the clickers this week: 19 in `tests/core/db/`, 22 in `tests/api/staff/`, 35 test cases in `tests/api/devices/`, 16 for the vote label and the token scope in `tests/api/session/` and `tests/core/security/`, and 6 fleet tests in `tests/api/session/`; plus 8 for the database lock fix, 57 for the lobby presence and 18 for the rule that only students hold a clicker, all below).
 * **Frontend Test Suite**: **472 / 472 passing tests** in 74 files (`pnpm test` in `pwa/app/`; this week 95 new in 9 files for the teacher clicker screen and 73 new, with 8 new files, for the lobby's class list). `pnpm typecheck` and `pnpm build` are clean.
-* **Firmware Test Suite**: **336 / 336 checks** in `firmware/clicker/hosttest/run_tests.sh`, and all 13 steps of `firmware/clicker/hosttest/e2e_test.py`, which runs the real sketch on a PC against the real backend. They need `g++` under Linux, macOS or WSL and are not part of CI.
+* **Firmware Test Suite**: **336 / 336 checks** in `firmware/clicker/hosttest/run_tests.sh`, and all 13 steps of `firmware/clicker/hosttest/e2e_test.py`, which runs the real sketch on a PC against the real backend. They need `g++` under Linux, macOS or WSL and are not part of CI. The PlatformIO build for the ESP32-C3 succeeds (60% of flash, 12% of RAM).
 * **Statement Coverage**: **100.00% statement coverage** across all 7,011 source statements (`pyproject.toml` enforces `--cov-fail-under=100`).
-* **Linter & Formatter**: **0 errors, 0 warnings** from `ruff check` and `ruff format --check` over the scope CI uses. `pre-commit run --all-files` (8 hooks) passes on every file of this milestone. Its whitespace hook still rewrites one file from the TTS work, `tools/llama_tts_daemon/0002-qwen-tok-embd-rows.patch`, whose blank context lines must stay.
+* **Linter & Formatter**: **0 errors, 0 warnings** (`pre-commit run --all-files` clean across all 8 hooks; `ruff check` and `ruff format --check` clean over the scope CI uses).
 * **Modularity Compliance**: production modules are held to the 150-line ceiling by `tests/test_modularity_policy.py`. The largest new production module is `backend/src/api/presence/store.py` (105 lines).
 * **Acceptance Criteria Status**:
   * ⏳ **Live 10-question match with at least 10 physical ESP32 clickers and 0 lost votes**: pending hardware. Proven in CI today: 15 simulated clickers and 15 phones, through the real endpoints, play 5 rounds with zero lost votes (`test_session_fleet_hardware.py`). Not proven: a match with physical clickers, which waits for the first batch.
@@ -144,6 +144,7 @@ In Week 7 Student A worked on this half too.
 * **ESP32 firmware** in `firmware/clicker/` (ESP32-C3 Super Mini, Arduino framework). It was first committed on 2026-10-10 against `/api/v1/clicker/*` endpoints that are no longer in the backend. On 2026-10-13 it was ported to the interface above, with no backend change: it logs in with `POST /api/v1/devices/auth`, polls `GET /api/v1/session/current`, votes on `POST /api/v1/session/{session_id}/vote` and sends `POST /api/v1/presence/heartbeat` ([Clicker Firmware](../../firmware/clicker/README.md), [Clicker Protocol §8](../architecture/esp32-protocol.md#8-esp32-firmware)).
 * **USB setup link**: the clicker takes its device secret as one line on its USB serial port and keeps it in flash ([Clicker Protocol §8.2](../architecture/esp32-protocol.md#82-usb-setup-link)). The clicker no longer makes up its own secret.
 * **Firmware tests on a PC**: 336 unit checks, and an end-to-end run of the real sketch against the real backend (`firmware/clicker/hosttest/`). The end-to-end run covers the empty flash, the USB setup, the assignment, the class view, three questions, a double press, Wi-Fi loss, a backend outage, an unassignment, a power cycle and a replaced secret.
+* **First build and upload for the board** (2026-10-13): firmware 2.0.0 builds with PlatformIO (`espressif32` 7.1.3, Arduino core 2.0.17) and was uploaded to one ESP32-C3 Super Mini over USB.
 
 **Dropped or Removed on 2026-10-13:**
 
@@ -152,10 +153,9 @@ In Week 7 Student A worked on this half too.
 
 **Not Started:**
 
-* **A build and a run on a real ESP32.** Firmware 2.0.0 has run only on a PC, with the pins, the radio and the flash simulated. It has not been compiled with the ESP32 toolchain yet.
 * **A tool for the USB setup.** Today a person issues the secret in Swagger and types it in the Serial Monitor.
 * **Physical assembly and flashing** of the first clicker batch. One clicker is wired on a bench (2026-10-13), without its charger.
-* **Real-device checks**: the bring-up checklist in [Clicker Protocol §10](../architecture/esp32-protocol.md#10-failure-modes--bring-up-checklist) has not been run on any clicker. No clicker has joined the router.
+* **Real-device checks**: one clicker is flashed, and the bring-up checklist in [Clicker Protocol §10](../architecture/esp32-protocol.md#10-failure-modes--bring-up-checklist) has not been recorded for it. No result on the board (joining the router, the USB setup, a counted vote) is written down yet.
 
 ---
 
