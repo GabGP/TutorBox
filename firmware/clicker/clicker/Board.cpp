@@ -1,10 +1,6 @@
 #include "Board.h"
 
 #include <Preferences.h>
-#include <esp_system.h>
-#if __has_include(<esp_random.h>)
-#include <esp_random.h>  // esp_random() moved here in ESP-IDF 5 (Arduino core 3.x)
-#endif
 
 #include "config.h"
 
@@ -82,8 +78,8 @@ void Board::begin() {
   Serial.printf("TutorBox  : %s\n", TUTORBOX_URL);
   Serial.println("=========================================");
 
+  loadSecret();
   startWifi();
-  loadOrCreateSecret();  // after the radio starts: it makes esp_random() truly random
   http_.setReuse(true);  // keep one TCP connection open: faster votes, less battery
 }
 
@@ -102,22 +98,33 @@ void Board::startWifi() {
   lastJoinAttempt_ = offlineSince_;
 }
 
-void Board::loadOrCreateSecret() {
+void Board::loadSecret() {
+  // The TutorBox issues the secret and keeps only its hash. It reaches this clicker
+  // over USB (SerialSetup.h) and stays in flash until a new one replaces it.
+  secret_[0] = '\0';
   Preferences prefs;
   prefs.begin("clicker", false);
   String saved = prefs.isKey("secret") ? prefs.getString("secret") : String();
-  if (saved.length() == 32) {
+  prefs.end();
+  if (protocol::isSecret(saved.c_str())) {
     strncpy(secret_, saved.c_str(), sizeof(secret_) - 1);
     secret_[sizeof(secret_) - 1] = '\0';
+    Serial.println("[clicker] secret found in flash");
   } else {
-    // 128 random bits, kept in flash for good. The TutorBox stores only a hash.
-    for (int i = 0; i < 4; i++) {
-      snprintf(secret_ + i * 8, 9, "%08lx", static_cast<unsigned long>(esp_random()));
-    }
-    prefs.putString("secret", secret_);
-    Serial.println("[clicker] first boot: created this clicker's secret");
+    Serial.println("[clicker] no secret in flash yet: this clicker needs USB setup");
   }
+}
+
+bool Board::storeSecret(const char* secret) {
+  if (!protocol::isSecret(secret)) return false;
+  Preferences prefs;
+  prefs.begin("clicker", false);
+  const bool saved = prefs.putString("secret", secret) == strlen(secret);
   prefs.end();
+  if (!saved) return false;
+  strncpy(secret_, secret, sizeof(secret_) - 1);
+  secret_[sizeof(secret_) - 1] = '\0';
+  return true;
 }
 
 bool Board::wifiConnected() const { return WiFi.status() == WL_CONNECTED; }
@@ -145,9 +152,11 @@ void Board::maintainWifi(uint32_t nowMs) {
 
 int Board::rssi() const { return WiFi.RSSI(); }
 
-int Board::batteryMv() const {
+int Board::batteryPct() const {
 #if PIN_BATTERY_SENSE >= 0
-  return static_cast<int>(analogReadMilliVolts(PIN_BATTERY_SENSE) * BATTERY_DIVIDER);
+  const int mv =
+      static_cast<int>(analogReadMilliVolts(PIN_BATTERY_SENSE) * BATTERY_DIVIDER);
+  return protocol::batteryPercent(mv, BATTERY_EMPTY_MV, BATTERY_FULL_MV);
 #else
   return -1;
 #endif
@@ -161,23 +170,29 @@ void Board::readButtons(bool pressed[ButtonBank::kCount],
   }
 }
 
-int Board::post(const char* path, const char* body, char* reply, size_t replySize) {
-  reply[0] = '\0';
-  char url[128];
-  snprintf(url, sizeof(url), "%s%s", TUTORBOX_URL, path);
+int Board::readSerialByte() { return Serial.available() > 0 ? Serial.read() : -1; }
+
+int Board::send(const ClickerApp::Request& request, String& reply) {
+  reply = String();
+  char url[160];
+  snprintf(url, sizeof(url), "%s%s", TUTORBOX_URL, request.path);
   http_.setConnectTimeout(1500);
   http_.setTimeout(2500);
   if (!http_.begin(client_, url)) return HTTPC_ERROR_CONNECTION_REFUSED;
-  http_.addHeader("Content-Type", "application/json");
-  http_.addHeader("X-Clicker-Id", deviceId_);
-  http_.addHeader("X-Clicker-Secret", secret_);
-  const int status =
-      http_.POST(reinterpret_cast<uint8_t*>(const_cast<char*>(body)), strlen(body));
-  if (status > 0) {
-    String text = http_.getString();
-    strncpy(reply, text.c_str(), replySize - 1);
-    reply[replySize - 1] = '\0';
+  if (request.bearer != nullptr) {
+    char authorization[8 + protocol::kTokenSize];
+    snprintf(authorization, sizeof(authorization), "Bearer %s", request.bearer);
+    http_.addHeader("Authorization", authorization);
   }
+  int status;
+  if (request.post) {
+    http_.addHeader("Content-Type", "application/json");
+    status = http_.POST(reinterpret_cast<uint8_t*>(const_cast<char*>(request.body)),
+                        strlen(request.body));
+  } else {
+    status = http_.GET();
+  }
+  if (status > 0) reply = http_.getString();
   http_.end();
   return status;
 }

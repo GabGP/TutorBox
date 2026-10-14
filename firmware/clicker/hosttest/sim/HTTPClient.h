@@ -22,10 +22,13 @@ class HTTPClient {
   void setTimeout(uint16_t timeout);
   void addHeader(const String& name, const String& value, bool first = false,
                  bool replace = true);
+  int GET();
   int POST(uint8_t* payload, size_t size);
   String getString(void);
 
  private:
+  int perform(const char* method, const uint8_t* payload, size_t size);
+
   std::string host_;
   int port_ = 80;
   std::string path_;

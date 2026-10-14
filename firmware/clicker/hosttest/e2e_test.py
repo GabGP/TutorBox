@@ -1,8 +1,9 @@
 """End-to-end test: the real clicker firmware, run on a PC, against a real TutorBox.
 
 Starts the backend (uvicorn, throwaway database), starts the simulated clicker
-(build_sim.sh), then plays a classroom: enroll, teacher assigns, questions open,
-buttons pressed, Wi-Fi and server drop out, the clicker's flash is wiped.
+(build_sim.sh), then plays a classroom: USB setup, teacher assigns, questions open,
+buttons pressed, Wi-Fi and server drop out, the teacher takes the clicker away, its
+secret is replaced.
 
     python firmware/clicker/hosttest/e2e_test.py   (Linux, macOS or WSL)
 
@@ -28,6 +29,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 SIM = HERE / "build" / "clicker_sim"
 DEVICE = "ESP32-A4CF12"
+TOKEN_SHAPE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+)
 
 
 def free_port() -> int:
@@ -49,8 +53,16 @@ class Backend:
             SEED_TEACHER_USERNAME="teacher1",
             SEED_TEACHER_PIN="1234",
         )
+        # The command of the appliance's own unit (infra/systemd): main:app from src.
+        command = [sys.executable, "-m", "uvicorn", "main:app"]
+        command += [
+            "--app-dir",
+            str(REPO / "backend" / "src"),
+            "--port",
+            str(self.port),
+        ]
         self.proc = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "src.main:app", "--port", str(self.port)],
+            command,
             cwd=REPO / "backend",
             env=env,
             stdout=subprocess.DEVNULL,
@@ -103,6 +115,18 @@ class Api:
             "POST", "/auth/login", {"username": "teacher1", "pin": "1234"}
         )["session_id"]
 
+    def issue_secret(self) -> str:
+        """The staff call of the USB setup: the secret is shown once, here."""
+        return self.call("POST", f"/staff/devices/{DEVICE}/secret")["secret"]
+
+    def clicker_in_lobby(self, username: str) -> dict | None:
+        """The clicker of `username` as the teacher's lobby lists it."""
+        view = self.call("GET", "/presence/class")
+        for student in view["students"]:
+            if student["username"] == username:
+                return student["clicker"]
+        return None
+
 
 class Clicker:
     """The simulated clicker process, with a reader thread and expect()."""
@@ -122,15 +146,21 @@ class Clicker:
         )
         self.lines: queue.Queue[str] = queue.Queue()
         self.transcript: list[str] = []
+        self.printed: list[str] = []  # every line, read by expect() or not
         threading.Thread(target=self._read, daemon=True).start()
 
     def _read(self) -> None:
         for line in self.proc.stdout:
+            self.printed.append(line.rstrip("\n"))
             self.lines.put(line.rstrip("\n"))
 
     def send(self, command: str) -> None:
         self.proc.stdin.write(command + "\n")
         self.proc.stdin.flush()
+
+    def type_on_usb(self, text: str) -> None:
+        """Types a line on the clicker's USB serial port (the setup link)."""
+        self.send(f"serial {text}")
 
     def expect(self, pattern: str, timeout: float = 8.0) -> re.Match:
         deadline = time.time() + timeout
@@ -180,6 +210,17 @@ def votes(db_path: str) -> list[tuple]:
         conn.close()
 
 
+def wait_for(check, seconds: float = 5.0):
+    """Returns check()'s first truthy result, or fails after `seconds`."""
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        result = check()
+        if result:
+            return result
+        time.sleep(0.2)
+    raise AssertionError(f"still false after {seconds} s: {check.__name__}")
+
+
 def main() -> int:
     if not SIM.exists():
         subprocess.run(["bash", str(HERE / "build_sim.sh")], check=True)
@@ -187,7 +228,13 @@ def main() -> int:
     db_path, nvs = str(work / "tutorbox.db"), str(work / "nvs.txt")
     port = free_port()
     backend, api = Backend(db_path, port), Api(port)
-    clicker = None
+    clickers: list[Clicker] = []
+    secrets: list[str] = []
+
+    def power_on() -> Clicker:
+        clickers.append(Clicker(port, nvs))
+        return clickers[-1]
+
     try:
         print("TutorBox clicker end-to-end test")
         backend.start()
@@ -205,28 +252,43 @@ def main() -> int:
         question_ids = [q["id"] for q in bank]
         assert len(question_ids) == 3
 
-        step(
-            "power on: joins Wi-Fi, creates its secret, enrolls, waits for the teacher"
-        )
-        clicker = Clicker(port, nvs)
+        step("power on with empty flash: joins Wi-Fi, has no secret, asks for USB")
+        clicker = power_on()
         clicker.expect(rf"Device id : {DEVICE}")
+        clicker.expect("no secret in flash yet")
         clicker.expect("tx power 34")
-        clicker.expect("first boot: created this clicker's secret")
         clicker.expect("Wi-Fi connected")
-        clicker.expect(f"Waiting for the teacher to assign {DEVICE}")
+        clicker.expect(f"No secret yet: set {DEVICE} up over USB")
         clicker.expect("LED Magenta")
         clicker.send("press A")
         clicker.expect("Button A ignored: this clicker needs the teacher")
-        roster = {
-            d["device_id"]: d for d in api.call("GET", "/staff/devices")["devices"]
-        }
-        assert roster[DEVICE]["enrolled"] and roster[DEVICE]["online"], roster
-        assert roster[DEVICE]["firmware"] == "1.0.0" and roster[DEVICE]["rssi"] == -58
+        clicker.type_on_usb("id")
+        clicker.expect(rf"^clicker-id {DEVICE}$")
+        clicker.type_on_usb("secret 1234")
+        clicker.expect("^clicker-secret invalid")
 
-        step("teacher assigns it to ana: ready, green blip")
+        step(
+            "USB setup: registered, secret issued and typed in; it logs in, unassigned"
+        )
+        api.call("POST", "/staff/devices", {"device_id": DEVICE}, expect=201)
+        secrets.append(api.issue_secret())
+        clicker.type_on_usb(f"secret {secrets[-1]}")
+        clicker.expect("^clicker-secret stored$")
+        clicker.expect(f"Waiting for the teacher to assign {DEVICE}")
+        assert DEVICE in api.call("GET", "/presence/class")["unassigned_clickers"]
+
+        step("teacher assigns it to ana: ready within 5 s, online in the lobby")
         api.call("POST", f"/staff/devices/{DEVICE}/assign", {"user_id": ana_id})
-        clicker.expect("Assigned to a student: ready to vote")
+        clicker.expect("Assigned to ana: ready to vote")
         clicker.expect("LED Green")
+
+        def online_in_lobby():
+            seen = api.clicker_in_lobby("ana")
+            return seen if seen and seen["status"] == "online" else None
+
+        seen = wait_for(online_in_lobby)
+        assert seen["device_id"] == DEVICE and seen["rssi"] == -58, seen
+        assert seen["battery_pct"] is None, seen  # the sense resistors are optional
 
         step("question 1 opens: white; B is counted as a hardware vote")
         session = api.call(
@@ -236,6 +298,7 @@ def main() -> int:
             expect=201,
         )
         sid = session["id"]
+        clicker.quiet("Question open", 1.5)  # the lobby: nothing to answer yet
         api.call("POST", f"/session/{sid}/start")
         clicker.expect(rf"Question open \({sid}_r0\)")
         clicker.expect("LED White")
@@ -259,23 +322,23 @@ def main() -> int:
         clicker.send("tap D")
         clicker.expect("Vote D counted")
 
-        step("Wi-Fi drops and comes back")
+        step("Wi-Fi drops and comes back: same session, no new login")
         clicker.send("wifi off")
         clicker.expect("Wi-Fi lost")
         clicker.expect("LED Blue")
         clicker.send("press A")
         clicker.expect("Button A ignored: not connected yet")
         clicker.send("wifi on")
-        clicker.expect("Wi-Fi connected")
-        clicker.expect("Assigned to a student: ready to vote")
+        clicker.expect("Wi-Fi connected again")
+        clicker.quiet("Logging in", 1.5)
 
         step("TutorBox goes down: blue slow blink; back up: recovers by itself")
         backend.stop()
         for _ in range(3):
-            clicker.expect(r"Check-in failed \(-1")
+            clicker.expect(r"TutorBox did not answer \(-1\)")
         clicker.expect(r"status: server-unreachable", timeout=20)
         backend.start()
-        clicker.expect("Assigned to a student: ready to vote", timeout=10)
+        clicker.expect("TutorBox answers again", timeout=10)
 
         step("question 3 after the outage: A counted")
         for action in ("close", "reveal", "next"):
@@ -286,31 +349,46 @@ def main() -> int:
         assert [v[1] for v in votes(db_path)] == ["B", "D", "A"]
         assert {v[2] for v in votes(db_path)} == {"hardware"}
 
-        step("power cycle: same secret from flash, no re-enrollment")
-        clicker.stop()
-        clicker = Clicker(port, nvs)
-        clicker.expect(rf"Device id : {DEVICE}")
-        clicker.expect("Assigned to a student: ready to vote")
-        assert not any("first boot" in line for line in clicker.transcript)
+        step("teacher takes the clicker away: it notices within 5 s; given back, ready")
+        api.call("POST", f"/staff/devices/{DEVICE}/unassign")
+        clicker.expect("TutorBox ended this clicker's session")
+        clicker.expect(f"Waiting for the teacher to assign {DEVICE}")
+        clicker.send("press A")
+        clicker.expect("Button A ignored: this clicker needs the teacher")
+        api.call("POST", f"/staff/devices/{DEVICE}/assign", {"user_id": ana_id})
+        clicker.expect("Assigned to ana: ready to vote")
 
-        step("flash wiped (new secret): refused, teacher removes it, re-enrolls")
+        step("power cycle: the secret is in flash, it logs in by itself")
         clicker.stop()
-        os.remove(nvs)
-        clicker = Clicker(port, nvs)
-        clicker.expect("first boot: created this clicker's secret")
-        clicker.expect(r"TutorBox refused this clicker \(HTTP 401")
+        clicker = power_on()
+        clicker.expect("secret found in flash")
+        clicker.expect("Assigned to ana: ready to vote")
+        assert not any("No secret yet" in line for line in clicker.transcript)
+
+        step("secret replaced on the TutorBox: refused once, then silent until USB")
+        secrets.append(api.issue_secret())
+        clicker.expect("TutorBox ended this clicker's session")
+        clicker.expect(r"TutorBox refused this clicker's secret \(HTTP 401")
         clicker.expect("LED Magenta")
-        api.call("DELETE", f"/staff/devices/{DEVICE}")
-        clicker.expect(f"Waiting for the teacher to assign {DEVICE}", timeout=10)
+        clicker.quiet("Logging in|refused|Login failed|locked", 6)
+        clicker.type_on_usb(f"secret {secrets[-1]}")
+        clicker.expect("^clicker-secret stored$")
+        clicker.expect("Assigned to ana: ready to vote")
+
+        step("nothing the clickers printed carries a secret or a token")
+        time.sleep(0.5)
+        for line in (line for c in clickers for line in c.printed):
+            assert not any(secret in line for secret in secrets), line
+            assert not TOKEN_SHAPE.search(line), line
 
         print("PASS: all clicker end-to-end steps")
         return 0
     finally:
-        if clicker:
+        for clicker in clickers:
             clicker.stop()
-            if os.environ.get("E2E_VERBOSE"):
-                print("\n--- last clicker's serial log ---")
-                print("\n".join(clicker.transcript))
+        if clickers and os.environ.get("E2E_VERBOSE"):
+            print("\n--- last clicker's serial log ---")
+            print("\n".join(clickers[-1].transcript))
         backend.stop()
 
 

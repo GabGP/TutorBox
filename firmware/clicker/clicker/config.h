@@ -47,6 +47,10 @@
 // Leave -1 if you did not fit the two resistors.
 #define PIN_BATTERY_SENSE -1
 #define BATTERY_DIVIDER 2.0f
+// What the teacher's list shows as 0 % and 100 %. These suit one LiPo cell; for a
+// 3 x AA box use about 3300 and 4500.
+#define BATTERY_EMPTY_MV 3300
+#define BATTERY_FULL_MV 4200
 
 // ---- Radio ------------------------------------------------------------------------
 // Many ESP32-C3 Super Mini boards lose Wi-Fi at full transmit power (tiny antenna and
@@ -55,4 +59,4 @@
 // Modem sleep saves battery between check-ins. Set 0 if votes ever feel slow.
 #define WIFI_POWER_SAVE 1
 
-#define FIRMWARE_VERSION "1.0.0"
+#define FIRMWARE_VERSION "2.0.0"

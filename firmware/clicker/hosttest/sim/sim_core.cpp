@@ -3,6 +3,7 @@
 // Pins, Wi-Fi and flash are simulated; HTTP is real, so the clicker talks to an actual
 // TutorBox backend. Driven by text commands on stdin, one per line:
 //   press A | tap A | hold A | release A | wifi off | wifi on | quit
+//   serial <text>   types <text> and Enter on the clicker's USB serial port
 // It prints the firmware's serial log plus "LED <color>" whenever the RGB LED changes.
 //
 // Environment:
@@ -19,9 +20,9 @@
 #include <chrono>
 #include <cerrno>
 #include <cstdlib>
+#include <deque>
 #include <fstream>
 #include <map>
-#include <random>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -32,7 +33,6 @@
 #include "Preferences.h"
 #include "WiFi.h"
 #include "config.h"
-#include "esp_system.h"
 
 HardwareSerial Serial;
 EspClass ESP;
@@ -53,6 +53,7 @@ bool gWifiStarted = false;
 bool gWifiUp = false;
 unsigned long gWifiUpAt = 0;
 std::vector<WiFiEventFuncCb> gWifiHandlers;
+std::deque<char> gSerialIn;  // bytes "typed" on the USB serial port, not read yet
 
 uint64_t simMac() {
   const char* text = getenv("CLICKER_SIM_MAC");
@@ -122,12 +123,16 @@ uint32_t analogReadMilliVolts(uint8_t pin) {
   return 1950;
 }
 
-uint32_t esp_random(void) {
-  static std::random_device device;
-  return device();
-}
-
 void HardwareSerial::begin(unsigned long baud) { (void)baud; }
+
+int HardwareSerial::available() { return static_cast<int>(gSerialIn.size()); }
+
+int HardwareSerial::read() {
+  if (gSerialIn.empty()) return -1;
+  const char c = gSerialIn.front();
+  gSerialIn.pop_front();
+  return static_cast<unsigned char>(c);
+}
 
 size_t HardwareSerial::printf(const char* format, ...) {
   va_list args;
@@ -245,7 +250,13 @@ void HTTPClient::addHeader(const String& name, const String& value, bool first,
   headers_.push_back(std::string(name.c_str()) + ": " + value.c_str());
 }
 
+int HTTPClient::GET() { return perform("GET", nullptr, 0); }
+
 int HTTPClient::POST(uint8_t* payload, size_t size) {
+  return perform("POST", payload, size);
+}
+
+int HTTPClient::perform(const char* method, const uint8_t* payload, size_t size) {
   body_.clear();
   if (!gWifiUp) return HTTPC_ERROR_NOT_CONNECTED;
   addrinfo hints;
@@ -269,7 +280,7 @@ int HTTPClient::POST(uint8_t* payload, size_t size) {
     return HTTPC_ERROR_CONNECTION_REFUSED;
   }
   std::ostringstream request;
-  request << "POST " << path_ << " HTTP/1.1\r\nHost: " << host_ << ":" << port_
+  request << method << " " << path_ << " HTTP/1.1\r\nHost: " << host_ << ":" << port_
           << "\r\n";
   for (size_t i = 0; i < headers_.size(); i++) request << headers_[i] << "\r\n";
   request << "Content-Length: " << size << "\r\nConnection: close\r\n\r\n";
@@ -400,6 +411,15 @@ int main() {
       std::string verb, arg;
       words >> verb >> arg;
       const int pin = arg.empty() ? -1 : pinFor(arg[0]);
+      if (verb == "serial") {
+        // Not echoed: a line typed here may carry the clicker's secret.
+        const std::string typed = line.size() > 7 ? line.substr(7) : std::string();
+        ::printf("SIM < serial (%u characters)\n",
+                 static_cast<unsigned>(typed.size()));
+        gSerialIn.insert(gSerialIn.end(), typed.begin(), typed.end());
+        gSerialIn.push_back('\n');
+        continue;
+      }
       ::printf("SIM < %s\n", line.c_str());
       if (verb == "quit") {
         running = false;
