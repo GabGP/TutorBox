@@ -32,7 +32,7 @@ Core pedagogical, mathematical, and algorithmic specifications powering the thre
 * **[Question Pool Authoring Brief](quiz/question-pool-brief.md)**: Validator-derived rules, exemplars, batch plan, and ready-to-paste prompt for authoring the pre-verified question pool (`seed_data/pool/*.json`) with a frontier model; checked offline by `tests/modes/quiz/seed_data/test_pool.py`.
 * **[Socratic Pedagogical Model & Containment](architecture/socratic-pedagogy.md)**: Pedagogical state machine, deterministic 4-level hint escalation ladder, and SymPy math containment guardrails.
 * **[ESP32 Clicker Transport](architecture/esp32-clicker-transport.md)**: A short map of how a physical clicker's vote reaches the session engine and of the hardware-agnostic `VoteTransport` seam. The build, flash and classroom guide is the [Clicker Firmware README](../firmware/clicker/README.md).
-* **[ESP32 Clicker Protocol — Setup & Voting](architecture/esp32-protocol.md)**: How a clicker gets the classroom Wi-Fi (compiled into its firmware) and its device secret (typed in over USB), then authenticates and votes through the session API. It also keeps the Bluetooth provisioning design that was dropped on 2026-10-13.
+* **[ESP32 Clicker Protocol — Setup & Voting](architecture/esp32-protocol.md)**: How a clicker gets the classroom Wi-Fi (compiled into its firmware) and its device secret (made by the clicker itself on its first boot), then authenticates and votes through the session API. It also keeps the Bluetooth provisioning design that was dropped on 2026-10-13.
 * **[Offline Voice Feedback & Neural TTS Pipeline](architecture/voice-feedback.md)**: Architectural design, multi-tier Spanish engine hierarchy (`Qwen3-TTS` -> `Sherpa-ONNX` -> `Piper` -> `eSpeak-ng`), >51% Rule audio gating, and K'iche' routing.
 * **[Qwen3-TTS Daemon: Build & Deployment Guide](tts/qwen_build.md)**: Compilation instructions, persistent in-memory daemon patch, CUDA acceleration, and cross-platform reproduction guide.
 * **[Hardware Architecture & Offline Topology](architecture/hardware-topology.md)**: Hardware specifications for the isolated local Access Point and NVIDIA Jetson Orin Nano appliance (8GB Unified RAM budget).
@@ -51,7 +51,7 @@ Authoritative contracts, request/response JSON schemas, and security rules for t
 | **System & Health** | **[api/system.md](api/system.md)** | `GET /health`, captive-portal probes (`GET /generate_204`, `/hotspot-detect.html`, …) |
 | **Authentication & Users** | **[api/auth.md](api/auth.md)** | `POST /auth/login`, `POST /auth/logout`, `/users/*` (signup, me, pin, username) |
 | **Staff Administration** | **[api/staff.md](api/staff.md)** | `GET/POST /staff/users`, PIN resets, soft-delete, account recovery, audit logs |
-| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete, clicker secret, device authentication (`POST /devices/auth`) |
+| **Hardware Devices** | **[api/devices.md](api/devices.md)** | `GET/POST /staff/devices`, device assignment, unassign, fleet delete, first-contact enrollment of the clicker's secret, device authentication (`POST /devices/auth`) |
 | **Quiz Question Bank** | **[api/quiz.md](api/quiz.md)** | Curriculum topics, JSON Schema, SymPy validate, SLM generation, question bank |
 | **Quiz Sessions & Voting** | **[api/sessions.md](api/sessions.md)** | Session match lifecycle, voting countdown, first-press vote persistence, >51% Rule |
 | **Socratic Tutor (Mode 2)** | **[api/tutor.md](api/tutor.md)** | `POST /tutor/message`, reset, ping, and the teacher's live student list |
@@ -91,7 +91,7 @@ Engineering schedule and weekly deliverables:
 * **[Week 4 Milestone Synthesis](milestones/week-4-voice-quiz.md)**: Full Classroom Quiz with offline Spanish & Mayan voice, multi-tier TTS pipeline, oral math adaptation, and memory lifecycle profiling.
 * **[Week 5 Milestone Tracking](milestones/week-5-socratic-tutor.md)**: Socratic dialogue engine, SymPy answer containment, 48-problem bank, dialogue turn telemetry, and the tutor client's home-screen evidence.
 * **[Week 6 Milestone Tracking](milestones/week-6-games-sync.md)**: Game event ingestion endpoint, lesson-to-concept table for 77 lessons, deduplication per client event id, and the grade apps hosted from the appliance (client queue not started)
-* **[Week 7 Milestone Tracking](milestones/week-7-esp32-clickers.md)**: Clicker secret and device authentication, the vote label taken from the session, revocation of a clicker's sessions, and the simulated fleet test in CI (firmware and provisioner not started)
+* **[Week 7 Milestone Tracking](milestones/week-7-esp32-clickers.md)**: Clicker self-enrollment and device authentication, the vote label taken from the session, revocation of a clicker's sessions, the simulated fleet test in CI, and the firmware (built and tested on a PC; the provisioner was dropped)
 
 ---
 
