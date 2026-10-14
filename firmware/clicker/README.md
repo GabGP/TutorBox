@@ -182,7 +182,7 @@ In `firmware/clicker/clicker/`, copy `secrets.example.h` to **`secrets.h`** and 
 2. **File → Preferences → Additional boards manager URLs**: add `https://espressif.github.io/arduino-esp32/package_esp32_index.json`.
 3. **Tools → Board → Boards Manager**: install **esp32 by Espressif Systems** (3.x).
 4. **Tools → Manage Libraries**: install **ArduinoJson** by Benoit Blanchon (7.x).
-5. **File → Open**: `firmware/clicker/clicker/clicker.ino`. The other files open as tabs.
+5. **File → Open**: `firmware/clicker/clicker/clicker.ino`. `config.h` and `secrets.h` open as tabs; the rest of the code is in the `src/` folder, which the IDE compiles with the sketch (§11).
 6. In the **Tools** menu:
    * **Board**: *Nologo ESP32C3 Super Mini* (or *ESP32C3 Dev Module* on any C3 board)
    * **USB CDC On Boot**: *Enabled* (otherwise the Serial Monitor stays empty)
@@ -217,12 +217,12 @@ Each clicker is set up once, at the teacher's desk. Nothing is typed in, and no 
    ```text
    =========== Utz'tutor clicker ===========
    Device id : ESP32-A4CF12   <- write it on the case
-   Firmware  : 2.1.2
+   Firmware  : 2.1.3
    Wi-Fi     : Utz'tutor
    Utz'tutor : http://192.168.8.2
    =========================================
    [clicker] first boot: created this clicker's secret
-   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.2: looking for Wi-Fi
+   [ESP32-A4CF12] Clicker ESP32-A4CF12, firmware 2.1.3: looking for Wi-Fi
    [wifi] connected: IP 192.168.8.112, signal -54 dBm
    [ESP32-A4CF12] Wi-Fi connected
    [ESP32-A4CF12] Logging in to the Utz'tutor
@@ -334,29 +334,38 @@ The first answer counts: a second press in the same question is refused (red). T
 
 ## <a id="11-how-the-code-is-organized"></a>11. How the Code Is Organized
 
+The code is in two layers. Everything in `clicker/src/` except `esp32/` is plain C++ with no Arduino calls: it decides, and the unit tests run it on a PC. `esp32/` is the only folder that touches the board: it does what it is told. `clicker.ino` wires the two together.
+
 ```mermaid
 graph LR
-    INO["clicker.ino<br/>setup() / loop()"] --> BOARD["Board.cpp<br/>pins, Wi-Fi, HTTP, flash, the secret"]
-    INO --> BTN["Buttons.cpp<br/>debounce, interrupt taps"]
-    INO --> RESET["ResetGesture.cpp<br/>A and D held at power-on"]
-    INO --> APP["ClickerApp.cpp<br/>state machine: what to send,<br/>which light"]
-    APP --> LED["StatusLed.cpp<br/>colors and blink patterns"]
-    APP --> PROTO["Protocol.cpp<br/>JSON (ArduinoJson)"]
-    BOARD -->|"devices/auth, session/current,<br/>session/{id}/vote, presence/heartbeat"| API[("Utz'tutor backend")]
+    INO["clicker.ino<br/>setup() / loop()"] --> ESP["src/esp32/<br/>Wi-Fi, HTTP, flash, pins"]
+    INO --> APP["src/app/ClickerApp<br/>what to send, which light"]
+    APP --> CONN["Connection<br/>login, token, Phase"]
+    APP --> VOTE["Voting<br/>rounds, the vote being sent"]
+    APP --> REPLY["ReplyHandler<br/>what each reply changes"]
+    REPLY --> MEAN["src/protocol/<br/>JSON, what each status means"]
+    INO --> IN["src/input/<br/>clean presses, reset rule"]
+    ESP -->|"devices/auth, session/current,<br/>session/{id}/vote, presence/heartbeat"| API[("Utz'tutor backend")]
 ```
 
-| File | What it does |
+| Where | What it does |
 | :--- | :--- |
 | `clicker/config.h` | Everything you may change: Utz'tutor address, pins, LED type, battery range, radio settings, the reset hold time |
 | `clicker/secrets.example.h` | Template for `secrets.h` (Wi-Fi name and password) |
-| `clicker/clicker.ino` | Start-up: the reset check, Wi-Fi, the secret. Then the loop: Wi-Fi → buttons → one network request → lights |
-| `clicker/Board.cpp` | The only file that touches hardware: Wi-Fi, HTTP keep-alive, the secret in NVS (made once, then kept), interrupts, LEDs |
-| `clicker/ResetGesture.cpp` | The rule for the reset gesture: A and D held from power-on for the hold time. No Arduino calls |
-| `clicker/ClickerApp.cpp` | The rules: log in, poll every second, heartbeat every 5 s, vote only when a question is open, retries, light patterns |
-| `clicker/Buttons.cpp` | Clean presses from bouncy buttons; a tap during a network call still counts |
-| `clicker/StatusLed.cpp`, `clicker/Protocol.cpp` | LED timing and the JSON wire format |
+| `clicker/clicker.ino` | Start-up: the reset check, Wi-Fi, the secret. Then the loop: Wi-Fi → buttons → one network request → lights → status line |
+| `src/app/` | The rules. `ClickerApp` coordinates: `Connection` (Wi-Fi, login, token, the `Phase`; its login methods are in `ConnectionLogin.cpp`), `Voting` (with `RoundTracker` and `PendingVote`: which question is open, the vote being sent), `ReplyHandler` (what each server reply changes), `Schedule` (when the next poll and heartbeat are due). `LightPlan` picks the light for each situation, `Timing.h` holds every interval, `Request` builds the four requests |
+| `src/protocol/` | The wire format: `Protocol.h` (paths, sizes, the parsed replies), `RequestBodies.cpp`, `ReplyParsers.cpp` (ArduinoJson), and `ReplyMeaning` (what each HTTP status means for each call; no other file knows status codes) |
+| `src/input/` | `ButtonBank`: clean presses from bouncy buttons, and a tap during a network call still counts. `ResetGesture`: A and D held from power-on for the hold time |
+| `src/light/` | `StatusLed`: blink timing, and short overlays (green after a vote, red ×3) on top of the background |
+| `src/device/` | The clicker's own facts: its `Secret` (shape, hex from random words), its `DeviceName` (from the MAC), `BatteryLevel` (volts to %) |
+| `src/support/` | `FixedText` (strings in fixed arrays: no heap, no overrun, `wipe()` for tokens), `Deadline` and `Interval` (time that survives the 49-day `millis()` wrap), `Logger` |
+| `src/esp32/` | The only code that calls the Arduino-ESP32 core: `WifiLink`, `HttpLink` (one kept-open connection), `SecretStore` (the secret in NVS, made once), `ButtonPins` (interrupts), `Lights`, `BatterySensor`, `PowerOnReset`, `SerialMonitor` |
 | `platformio.ini` | PlatformIO build (Arduino IDE users ignore it) |
 | `hosttest/` | Tests and a PC simulator (§12) |
+
+Every source file stays under 150 lines, and each has one job; its first lines say which.
+
+The C++ is formatted with clang-format and `firmware/clicker/.clang-format`: the style VS Code's C/C++ extension applies, so **Format Document** there gives the same result.
 
 There is no clicker-only code on the server. The clicker calls [`POST /api/v1/devices/auth`](../../docs/api/devices.md#post-devices-auth), [`GET /api/v1/session/current`](../../docs/api/sessions.md#get-session-current), [`POST /api/v1/session/{id}/vote`](../../docs/api/sessions.md#post-session-vote) and [`POST /api/v1/presence/heartbeat`](../../docs/api/presence.md#post-presence-heartbeat). Votes go through the same session engine as phones, so the >51 % rule, reports and analytics need no changes.
 
@@ -386,8 +395,8 @@ bash firmware/clicker/hosttest/run_tests.sh     # unit tests of the clicker logi
 python firmware/clicker/hosttest/e2e_test.py    # the whole firmware against a real backend
 ```
 
-* `run_tests.sh` compiles `Buttons`, `StatusLed`, `Protocol`, `ResetGesture` and `ClickerApp` with the ESP32 2.x core's own flags (`-std=gnu++11 -fno-rtti`, warnings as errors) and runs 342 checks.
-* `e2e_test.py` compiles the **real** `clicker.ino` and `Board.cpp` against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the random number generator simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class in nine steps: the first power-on makes the secret and enrolls the clicker, the teacher assigns it, the lobby's class list, three questions with a double press, a very short tap, Wi-Fi loss and a server outage, unassign and assign again, a power cycle, a deletion, the reset gesture (a refused login, then a press that enrolls the new secret), a hold let go early, and one button held alone. It also checks that nothing the clicker prints carries a secret or a token, and that no reply is read in a way that would freeze the real HTTPClient: the stand-in closes every connection, so it reports a body read from a reply with no length, which on the board waits for the server to close the kept-open connection. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
+* `run_tests.sh` compiles every file in `clicker/src/` except `esp32/` with the ESP32 2.x core's own flags (`-std=gnu++11 -fno-rtti`, warnings as errors) and runs 484 checks from `hosttest/unit/`, one test file per part. `COVERAGE=1 bash firmware/clicker/hosttest/run_tests.sh` also prints line coverage per source (`hosttest/coverage.py`, needs gcov 9 or later): 100% of the pure code.
+* `e2e_test.py` compiles the **real** `clicker.ino` and all of `clicker/src/`, `esp32/` included, against stand-ins for the Arduino API (`hosttest/sim/`: pins, Wi-Fi, flash and the random number generator simulated, HTTP real), starts the backend on a throwaway database with the appliance's own launch command, and plays a class in nine steps: the first power-on makes the secret and enrolls the clicker, the teacher assigns it, the lobby's class list, three questions with a double press, a very short tap, Wi-Fi loss and a server outage, unassign and assign again, a power cycle, a deletion, the reset gesture (a refused login, then a press that enrolls the new secret), a hold let go early, and one button held alone. It also checks that nothing the clicker prints carries a secret or a token, and that no reply is read in a way that would freeze the real HTTPClient: the stand-in closes every connection, so it reports a body read from a reply with no length, which on the board waits for the server to close the kept-open connection. The backend side of the harness is `e2e_backend.py`, the clicker side `e2e_clicker.py`. It needs the backend's Python packages (`pip install -e "backend[dev]"`).
 * The fleet of 15 simulated clickers and 15 phones is a backend test: `backend/tests/api/session/test_session_fleet_hardware.py`.
 
 The stand-ins only mirror the Arduino-ESP32 function signatures; the real check is still building for the board (§6).

@@ -14,7 +14,7 @@ How a physical ESP32 clicker gets onto the classroom Wi-Fi, proves who it is, an
 ---
 
 > [!NOTE]
-> **Week 7 (ESP32 Hardware Clickers), state on 2026-10-13.** The backend is built: [§6](#6-backend-additions) describes it, and the [Devices API](../api/devices.md) is the reference. The firmware is built in `firmware/clicker/`, version 2.1.2, and calls only the endpoints of §6 ([Clicker Firmware](../../firmware/clicker/README.md)). It makes its own secret on its first boot and enrolls it at its first login (§8.2). It passes its tests on a PC, the unit tests and the end-to-end test against the real backend, and it builds with PlatformIO. On 2026-10-13 one board got version 2.0.0, which still had the USB setup link, then 2.1.0, which enrolled itself on the Jetson but dropped in and out of the lobby and could not vote (§10), then 2.1.1, which fixes that. The bring-up checklist of §10 is not recorded yet.
+> **Week 7 (ESP32 Hardware Clickers), state on 2026-10-13.** The backend is built: [§6](#6-backend-additions) describes it, and the [Devices API](../api/devices.md) is the reference. The firmware is built in `firmware/clicker/`, version 2.1.3, and calls only the endpoints of §6 ([Clicker Firmware](../../firmware/clicker/README.md)). It makes its own secret on its first boot and enrolls it at its first login (§8.2). It passes its tests on a PC, the unit tests and the end-to-end test against the real backend, and it builds with PlatformIO. On 2026-10-13 one board got version 2.0.0, which still had the USB setup link, then 2.1.0, which enrolled itself on the Jetson but dropped in and out of the lobby and could not vote (§10), then 2.1.1, which fixes that. Version 2.1.3 (2026-10-14) only restructures the code into one job per file (`firmware/clicker/clicker/src/`), with the same behavior. The bring-up checklist of §10 is not recorded yet.
 >
 > **Bluetooth provisioning was dropped on 2026-10-13**, and this document was first written around it. What replaced it: the Wi-Fi name and password are compiled into the firmware, and the clicker makes its own device secret. The Utz'tutor keeps a digest of it from the first login. §1, §3, §6, §8, §10 and §11 describe the clicker as built. §4 and §7, and the Bluetooth parts of §2 and §5, are the dropped design, kept as a record: none of that code exists. The hardware is in the [Clicker Firmware guide](../../firmware/clicker/README.md) and the `VoteTransport` principle in [ESP32 Clicker Transport](esp32-clicker-transport.md#3-the-votetransport-seam).
 
@@ -105,7 +105,7 @@ sequenceDiagram
 
 ## <a id="3-end-to-end-flow"></a>3. End-to-End Flow
 
-Clicker lifecycle, as a state machine. These are the phases of `ClickerApp` (`firmware/clicker/clicker/ClickerApp.h`). The clicker has one RGB light; its patterns are in [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means).
+Clicker lifecycle, as a state machine. These are the `Phase` values of the firmware (`firmware/clicker/clicker/src/app/Phase.h`); `Connection` moves between them. The clicker has one RGB light; its patterns are in [Clicker Firmware §8](../../firmware/clicker/README.md#8-what-the-light-means).
 
 ```mermaid
 stateDiagram-v2
@@ -451,7 +451,7 @@ Built in `firmware/clicker/`: Arduino framework, PlatformIO or the Arduino IDE, 
 
 ### 8.2 The secret and the reset gesture
 
-The clicker makes its own secret, once. The Utz'tutor learns its digest at the first login (§6.2). Code: `firmware/clicker/clicker/Board.cpp` (`loadOrCreateSecret`, `resetSecret`), `ResetGesture.cpp` (the reset rule) and `clicker.ino` (the check at start-up).
+The clicker makes its own secret, once. The Utz'tutor learns its digest at the first login (§6.2). Code, in `firmware/clicker/clicker/src/`: `esp32/SecretStore.cpp` (`loadOrCreate`, `forget`), `device/Secret.cpp` (the shape, and the hex made from random words), `input/ResetGesture.cpp` (the reset rule) and `esp32/PowerOnReset.cpp` (the check at start-up).
 
 | When | What the clicker does |
 | :--- | :--- |
@@ -523,6 +523,7 @@ Details worth keeping in mind:
 ### Bring-up checklist (in this order)
 - [ ] Backend: `pytest backend/tests/api/devices` green; `curl -X POST /api/v1/devices/auth`: an unknown id → `403` (enrolled), the same id with a wrong secret → `401`, assigned → `200` with a `session_id`.
 - [x] Firmware on a PC (2026-10-13, version 2.1.2): `firmware/clicker/hosttest/run_tests.sh` (342 checks) and `e2e_test.py` pass, the second against the real backend.
+- [x] Firmware on a PC (2026-10-14, version 2.1.3, the code restructured): `run_tests.sh` (484 checks, 100% line coverage of the pure code) and `e2e_test.py` pass, and PlatformIO builds it.
 - [ ] One clicker: the serial log shows `first boot: created this clicker's secret`, `Wi-Fi connected`, then `Connected, but not assigned`; after the assignment, `Assigned to <student>: ready to vote`; after a power-off and on, `secret found in flash` and the same student.
 - [ ] Reset gesture: hold A and D for 5 s at switch-on: the log says `reset: this clicker will make a new secret`, the light goes white, the box refuses the new secret (`refused`); delete the row, press a button, and assign it again.
 - [ ] Teacher starts a match on `/maestro/`; the clicker's vote raises `votes_cast` on the host page and `/pantalla/` within one second; reveal shows it in the bars.
