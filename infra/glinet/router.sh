@@ -14,7 +14,9 @@
 # Required: WIFI_SSID WIFI_KEY WIFI_CHANNEL WIFI_COUNTRY WIFI_HTMODE JETSON_IP JETSON_MAC
 #           DNS_NAME DHCP_START DHCP_LIMIT DHCP_LEASETIME
 # Optional: DISABLE_SERVICES (init scripts to stop and disable, space separated),
-#           AP_IFACE (wifi-iface section of the classroom AP; found by itself when empty)
+#           AP_IFACE (wifi-iface section of the classroom AP; found by itself when empty),
+#           FIRMWARE (GL.iNet firmware version the router must run, as in /etc/glversion;
+#           checked, never installed: verify reports a difference, apply only notes it)
 #
 # Not covered, still done by hand in the admin panel (initial.md §3 and §7): firmware update,
 # admin password, SSH key, GoodCloud unbind, saved repeater networks, tethering, auto-update.
@@ -37,9 +39,11 @@ done
 
 DISABLE_SERVICES=${DISABLE_SERVICES:-}
 AP_IFACE=${AP_IFACE:-}
+FIRMWARE=${FIRMWARE:-}
 # Overridable so the script can be tested off the router.
 RC_LOCAL=${RC_LOCAL:-/etc/rc.local}
 INIT_DIR=${INIT_DIR:-/etc/init.d}
+GLVERSION_FILE=${GLVERSION_FILE:-/etc/glversion}
 
 JETSON_MAC=$(echo "$JETSON_MAC" | tr 'A-F' 'a-f')
 
@@ -132,6 +136,22 @@ remove_sections() {
         fi
     done
 }
+
+# ---- §3 Firmware ---------------------------------------------------------------------------
+
+# A script cannot flash the router, so apply only notes the difference and the check that
+# follows apply reports it.
+if [ -n "$FIRMWARE" ]; then
+    firmware_found=$(cat "$GLVERSION_FILE" 2>/dev/null)
+    if [ "$firmware_found" != "$FIRMWARE" ]; then
+        firmware_message="firmware: is '${firmware_found:-unknown}', want '$FIRMWARE'"
+        if [ "$MODE" = apply ]; then
+            echo "note    $firmware_message; flash it in the admin panel (initial.md §3)"
+        else
+            differs "$firmware_message"
+        fi
+    fi
+fi
 
 # ---- §4 Wi-Fi ----------------------------------------------------------------------------
 

@@ -99,7 +99,10 @@ Keep one wired laptop on the LAN port through the whole procedure. Do not do thi
 3. **Do the firmware update now, if you intend to do one at all.** It is the only step that needs
    internet, and after §6 the router will never be online again. Verify the version under
    *System → Firmware*, then re-run this runbook from §3 if you upgrade (an upgrade without
-   "keep settings" wipes config).
+   "keep settings" wipes config). The kit pins the version in `router_firmware`
+   ([`group_vars/all.yml`](../ansible/group_vars/all.yml), now `4.3.28`): `router.sh verify`
+   reports any other version, and `router.yml` says when GL.iNet has released a newer stable
+   firmware for the `ar300m16` (only while the Jetson is online). Update the pin with the router.
 4. Enable SSH access, then confirm from the laptop:
 
 ```bash
