@@ -284,7 +284,7 @@ To move to a new release: update the router by hand
 | What it sets | Runbook section |
 | :--- | :--- |
 | Firmware version (checked only) | [§3](../glinet/initial.md#3-step-1--first-boot--admin-hardening) |
-| Wi-Fi: SSID, WPA2 passphrase, channel, country, HT20, client isolation | [§4](../glinet/initial.md#4-step-2--wi-fi-ssid-utztutor) |
+| Wi-Fi: SSID, WPA2 passphrase, channel, country, HT20, client isolation, the AP in `wireless.classroom`; every other Wi-Fi interface and radio disabled | [§4](../glinet/initial.md#4-step-2--wi-fi-ssid-utztutor) |
 | DHCP pool, the Jetson's static lease (MAC read from the Jetson), catch-all DNS | [§5](../glinet/initial.md#5-step-3--lan-dhcp--the-jetson-static-lease) |
 | WAN kill: interface disabled, firewall zone and forwardings removed, port held down at boot | [§6](../glinet/initial.md#6-step-4--kill-the-wan-path-4-layers) |
 | `gl-cloud` and `gl_ddns` stopped and disabled, no upstream DNS | [§7](../glinet/initial.md#7-step-5--disable-cloud-repeater--dns-leaks) |

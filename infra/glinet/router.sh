@@ -14,7 +14,6 @@
 # Required: WIFI_SSID WIFI_KEY WIFI_CHANNEL WIFI_COUNTRY WIFI_HTMODE JETSON_IP JETSON_MAC
 #           DNS_NAME DHCP_START DHCP_LIMIT DHCP_LEASETIME
 # Optional: DISABLE_SERVICES (init scripts to stop and disable, space separated),
-#           AP_IFACE (wifi-iface section of the classroom AP; found by itself when empty),
 #           FIRMWARE (GL.iNet firmware version the router must run, as in /etc/glversion;
 #           checked, never installed: verify reports a difference, apply only notes it)
 #
@@ -38,7 +37,6 @@ for name in WIFI_SSID WIFI_KEY WIFI_CHANNEL WIFI_COUNTRY WIFI_HTMODE JETSON_IP J
 done
 
 DISABLE_SERVICES=${DISABLE_SERVICES:-}
-AP_IFACE=${AP_IFACE:-}
 FIRMWARE=${FIRMWARE:-}
 # Overridable so the script can be tested off the router.
 RC_LOCAL=${RC_LOCAL:-/etc/rc.local}
@@ -155,32 +153,58 @@ fi
 
 # ---- §4 Wi-Fi ----------------------------------------------------------------------------
 
-if [ -z "$AP_IFACE" ]; then
+# The classroom AP is the section wireless.classroom. On a router without it, apply renames
+# the first access point on the lan, or creates one; verify checks that access point as it is.
+AP_IFACE=classroom
+if [ "$(uci -q get wireless.classroom)" != wifi-iface ]; then
+    found_ap=""
     for section in $(sections wireless wifi-iface); do
         [ "$(uci -q get "wireless.$section.mode")" = ap ] || continue
         [ "$(uci -q get "wireless.$section.network")" = lan ] || continue
-        AP_IFACE=$section
+        found_ap=$section
         break
     done
+    if [ -n "$found_ap" ]; then
+        if differs "wireless.$found_ap: the classroom AP, want it named wireless.classroom"; then
+            uci rename "wireless.$found_ap=classroom"
+            touch_package wireless
+        else
+            AP_IFACE=$found_ap
+        fi
+    elif differs "wireless.classroom: missing, want the classroom AP"; then
+        uci set wireless.classroom=wifi-iface
+        touch_package wireless
+    fi
 fi
-[ -n "$AP_IFACE" ] || { echo "router.sh: no access-point interface on the lan network" >&2; exit 2; }
-RADIO=$(uci -q get "wireless.$AP_IFACE.device")
-[ -n "$RADIO" ] || { echo "router.sh: wireless.$AP_IFACE has no device" >&2; exit 2; }
+
+RADIO=$(uci -q get "wireless.$AP_IFACE.device" || sections wireless wifi-device | head -n 1)
+[ -n "$RADIO" ] || { echo "router.sh: no wifi-device on this router" >&2; exit 2; }
 
 want "wireless.$RADIO.disabled" 0
 want "wireless.$RADIO.channel" "$WIFI_CHANNEL"
 want "wireless.$RADIO.htmode" "$WIFI_HTMODE"
 want "wireless.$RADIO.country" "$WIFI_COUNTRY"
+want "wireless.$AP_IFACE.device" "$RADIO"
+want "wireless.$AP_IFACE.network" lan
 want "wireless.$AP_IFACE.mode" ap
+want "wireless.$AP_IFACE.disabled" 0
 want "wireless.$AP_IFACE.ssid" "$WIFI_SSID"
 want "wireless.$AP_IFACE.encryption" psk2+ccmp
 want "wireless.$AP_IFACE.key" "$WIFI_KEY" secret
 want "wireless.$AP_IFACE.hidden" 0
 want "wireless.$AP_IFACE.isolate" 1
+# The radio's own address, the one printed on the label: no made-up MAC.
+absent "wireless.$AP_IFACE.macaddr"
 
-# §7.2: a station-mode interface is a wireless uplink. None may be enabled.
+# Only the classroom AP is on the air. Every other interface (a second access point, the guest
+# network, a station-mode uplink, §7.2) and every other radio is disabled, not deleted: the
+# admin panel expects its own sections to exist.
 for section in $(sections wireless wifi-iface); do
-    [ "$(uci -q get "wireless.$section.mode")" = sta ] || continue
+    [ "$section" = "$AP_IFACE" ] && continue
+    want "wireless.$section.disabled" 1
+done
+for section in $(sections wireless wifi-device); do
+    [ "$section" = "$RADIO" ] && continue
     want "wireless.$section.disabled" 1
 done
 

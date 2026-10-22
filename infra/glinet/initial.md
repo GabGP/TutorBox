@@ -21,8 +21,9 @@ someone plugs in a live uplink cable.
 > [`infra/ansible/router.yml`](../ansible/README.md#8-step-6--configure-the-router) runs it with a
 > kit's values (`--check` lists every difference without changing anything). This page remains the
 > explanation of each setting and the manual procedure. §2, §3, the admin-panel items of §7 and the
-> physical checks of §8 are still done by hand. One difference: the script keeps the Jetson's lease
-> in a named section, `dhcp.jetson`, instead of adding an anonymous `host` section.
+> physical checks of §8 are still done by hand. One difference: the script keeps the classroom AP
+> and the Jetson's lease in named sections, `wireless.classroom` and `dhcp.jetson`, instead of
+> numbered or anonymous ones.
 
 > [!WARNING]
 > Every step below is performed **without internet access**. Read §2 (Recovery) *before* touching
@@ -157,6 +158,17 @@ Two decisions worth understanding:
 - **`isolate='1'` (client isolation).** Students never need to talk to each other — only to the
   Jetson, which sits on the *wired* LAN and stays reachable. This blocks device-to-device traffic
   between student tablets at the AP level. Set to `'0'` only if a later milestone needs peer traffic.
+
+**Only the classroom AP is on the air.** Every other `wifi-iface` (a second access point, the
+guest network, a repeater uplink, §7) gets `disabled='1'`, and so does every radio other than the
+AP's. Disabled, not deleted: the admin panel expects its own guest and repeater sections. The AP
+also keeps the radio's own MAC address, the one on the label; delete any `macaddr` option on it.
+A router that arrived with eight open APs under someone else's network name is why this rule
+exists: after configuring the AP, check that nothing else is listed as enabled:
+
+```sh
+uci show wireless | grep -E "=wifi-iface|\.ssid|\.disabled|\.macaddr"
+```
 
 ---
 
@@ -307,7 +319,7 @@ ls /etc/init.d/ | grep -iE "cloud|ddns|gl_"
 
 2. **Repeater / WISP mode** — the router will auto-rejoin any saved upstream Wi-Fi it can see.
    Admin Panel → *Internet → Repeater*: delete every saved network and disable auto-reconnect.
-   Then disable any station-mode radio interface:
+   Then disable any station-mode radio interface (the rule at the end of §4 already covers it):
 
 ```sh
 uci show wireless | grep "mode='sta'"          # note the index, if any exists
