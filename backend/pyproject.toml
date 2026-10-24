@@ -12,31 +12,31 @@ description = "Utz'tutor FastAPI Backend & AI Socratic Engine"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.141.1",
-    "uvicorn[standard]>=0.53.0",
-    "pydantic>=2.13.5",
+    "fastapi>=0.162.0",
+    "uvicorn[standard]>=0.54.0",
+    "pydantic>=2.14.1",
     "bcrypt>=5.0.0",
     "sympy>=1.14.0",
-    "httpx2>=2.13.0",
+    "httpx2>=2.16.0",
     "piper-tts>=1.8.0",
-    "sherpa-onnx>=1.13.8",
+    "sherpa-onnx>=2.0.0",
     # Carries libonnxruntime for sherpa-onnx. Listed here because uv.lock records
     # sherpa-onnx with no dependencies: its linux_armv7l wheel declares none.
-    "sherpa-onnx-core>=1.13.8",
-    "onnx>=1.22.0",
+    "sherpa-onnx-core>=2.0.0",
+    "onnx>=1.23.2",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "pytest-env>=1.7.1",
+    "pytest-env>=1.8.1",
     "pytest-xdist>=3.8.0",
-    "pre-commit>=4.6.2",
+    "pre-commit>=4.7.0",
     "pyright>=1.1.414",
-    "ruff>=0.16.8",
-    "cmake>=3.28.0",
-    "ninja>=1.11.1",
+    "ruff>=0.17.2",
+    "cmake>=4.4.4",
+    "ninja>=1.13.2",
 ]
 
 [tool.uv]
