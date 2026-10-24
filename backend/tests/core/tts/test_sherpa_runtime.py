@@ -51,7 +51,7 @@ def test_create_offline_tts_import_error():
             TTSUnavailableError, match="sherpa-onnx runtime is not installed"
         ),
     ):
-        runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
+        runtime.create_offline_tts(Path("m"), Path("t"), cfg)
 
 
 def test_create_offline_tts_cuda_fallback_cpu_failure():
@@ -68,7 +68,7 @@ def test_create_offline_tts_cuda_fallback_cpu_failure():
             TTSUnavailableError, match="Failed to initialize Sherpa-ONNX on CPU"
         ),
     ):
-        runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
+        runtime.create_offline_tts(Path("m"), Path("t"), cfg)
 
 
 def test_create_offline_tts_cpu_direct_failure():
@@ -81,11 +81,4 @@ def test_create_offline_tts_cpu_direct_failure():
             TTSUnavailableError, match="Failed to initialize Sherpa-ONNX: Broken model"
         ),
     ):
-        runtime.create_offline_tts(Path("m"), Path("t"), Path("d"), cfg)
-
-
-def test_find_espeak_data_import_error(tmp_path):
-    from core.tts.engines.sherpa.models import _find_espeak_data
-
-    with patch("importlib.util.find_spec", side_effect=ImportError("No piper")):
-        assert _find_espeak_data(tmp_path) is None or True
+        runtime.create_offline_tts(Path("m"), Path("t"), cfg)

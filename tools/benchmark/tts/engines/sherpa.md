@@ -4,6 +4,7 @@
 
 - **Runtime**: `sherpa-onnx` C++ runtime with ONNX Runtime execution providers.
 - **Model**: Piper-compatible Spanish VITS checkpoint `es_ES-sharvard-medium.onnx`.
+- **G2P Dependency**: espeak-ng phonemes from `piper-tts`, passed in by the backend (`backend/src/core/tts/engines/phonemes.py`); sherpa-onnx 2.0 no longer bundles espeak-ng.
 - **Hardware Target**: CPU by default, with optional CUDA provider selection.
 - **License**: Apache 2.0 runtime and compatible model assets.
 - **Thread Allocation**: Configurable with `TTS_SHERPA_THREADS` (default: 6).

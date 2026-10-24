@@ -5,7 +5,7 @@
 - **Runtime**: `sherpa-onnx` C++ edge runtime with `OfflineTtsKokoroModelConfig`.
 - **Model Checkpoint**: `csukuangfj/kokoro-int8-multi-lang-v1_0` (114 MB INT8 ONNX, 28 MB voice embeddings).
 - **Target Language / Speaker**: Spanish (`em_santa`, speaker ID 53).
-- **G2P Dependency**: Bundled `espeak-ng-data` phonemization pipeline.
+- **G2P Dependency**: espeak-ng phonemes from `piper-tts`, passed in by the backend (`backend/src/core/tts/engines/phonemes.py`); sherpa-onnx 2.0 no longer bundles espeak-ng.
 - **License**: Apache 2.0.
 
 ## Empirical Benchmark Results (Workstation CPU 4-Thread)

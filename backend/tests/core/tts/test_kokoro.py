@@ -26,7 +26,6 @@ def _setup_mock_kokoro_dir(base_dir, has_dict=True, has_lexicon=True):
     (k_dir / "model.int8.onnx").write_text("dummy model")
     (k_dir / "voices.bin").write_text("dummy voices")
     (k_dir / "tokens.txt").write_text("dummy tokens")
-    (k_dir / "espeak-ng-data").mkdir(parents=True, exist_ok=True)
     if has_dict:
         (k_dir / "dict").mkdir(parents=True, exist_ok=True)
     if has_lexicon:
@@ -77,7 +76,6 @@ def test_resolve_kokoro_paths_success(tmp_path):
     assert paths.model_path.is_file()
     assert paths.voices_path.is_file()
     assert paths.tokens_path.is_file()
-    assert paths.data_dir.is_dir()
     assert paths.dict_dir is not None
     assert len(paths.lexicon_paths) >= 1
 
@@ -109,11 +107,6 @@ def test_resolve_kokoro_paths_failures(tmp_path):
     k_dir = _setup_mock_kokoro_dir(tmp_path)
     (k_dir / "tokens.txt").unlink()
     with pytest.raises(TTSUnavailableError, match="tokens.txt"):
-        resolve_kokoro_paths(str(k_dir))
-
-    k_dir = _setup_mock_kokoro_dir(tmp_path)
-    (k_dir / "espeak-ng-data").rmdir()
-    with pytest.raises(TTSUnavailableError, match="espeak-ng-data"):
         resolve_kokoro_paths(str(k_dir))
 
 
@@ -186,12 +179,13 @@ def test_kokoro_lifecycle_and_synthesize(tmp_path, monkeypatch):
 
         wav = backend.synthesize("Hola prueba", voice="53")
         assert wav.startswith(b"RIFF")
-        assert mock_engine.generate.called
-        assert mock_engine.generate.call_args[1]["sid"] == 53
+        generation_config = mock_engine.generate.call_args[0][1]
+        assert generation_config.sid == 53
+        assert generation_config.phoneme_codepoints[0][1] == ord("o")
 
         wav_dora = backend.synthesize("Hola Dora", voice="ef_dora")
         assert wav_dora.startswith(b"RIFF")
-        assert mock_engine.generate.call_args[1]["sid"] == 28
+        assert mock_engine.generate.call_args[0][1].sid == 28
 
         wav_fallback = backend.synthesize("Hola de nuevo", voice="invalid")
         assert wav_fallback.startswith(b"RIFF")

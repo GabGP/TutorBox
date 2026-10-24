@@ -7,7 +7,12 @@ from typing import Any
 
 from core.config import get_settings
 from core.tts.constants import MILLISECONDS_PER_SECOND
-from core.tts.engines.sherpa.models import resolve_sherpa_paths, samples_to_wav
+from core.tts.engines.phonemes import phoneme_generation_config
+from core.tts.engines.sherpa.models import (
+    read_espeak_voice,
+    resolve_sherpa_paths,
+    samples_to_wav,
+)
 from core.tts.engines.sherpa.runtime import create_offline_tts, ensure_ort_dll_directory
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
@@ -23,6 +28,7 @@ class SherpaBackend:
     def __init__(self) -> None:
         self._tts: Any | None = None
         self._current_model: str | None = None
+        self._espeak_voice: str | None = None
 
     @property
     def engine_name(self) -> str:
@@ -67,20 +73,21 @@ class SherpaBackend:
 
         ensure_ort_dll_directory()
         model_name = self._resolve_model(voice)
-        model_path, tokens_path, data_dir = resolve_sherpa_paths(model_name)
+        model_path, tokens_path = resolve_sherpa_paths(model_name)
         self._tts = create_offline_tts(
             model_path=model_path,
             tokens_path=tokens_path,
-            data_dir=data_dir,
             tts_cfg=tts_cfg,
         )
         self._current_model = model_name
+        self._espeak_voice = read_espeak_voice(model_path)
         return (time.perf_counter() - start_time) * MILLISECONDS_PER_SECOND
 
     def unload(self) -> None:
         """Reclaims memory by releasing the sherpa-onnx engine instance."""
         self._tts = None
         self._current_model = None
+        self._espeak_voice = None
         gc.collect()
 
     def synthesize(self, text: str, voice: str | None = None) -> bytes:
@@ -96,12 +103,15 @@ class SherpaBackend:
         if self._tts is None or self._current_model != target_model:
             self.preload(voice=target_model)
 
-        if self._tts is None:
+        if self._tts is None or self._espeak_voice is None:
             raise TTSUnavailableError("Sherpa engine is not initialized.")
 
         speaker_id = tts_cfg.piper_speaker_es
         try:
-            audio = self._tts.generate(spoken_text, sid=speaker_id)
+            generation_config = phoneme_generation_config(
+                spoken_text, self._espeak_voice, speaker_id
+            )
+            audio = self._tts.generate(spoken_text, generation_config)
         except Exception as err:
             raise TTSSynthesisError(f"Sherpa synthesis failed: {err}") from err
 

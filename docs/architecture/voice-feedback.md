@@ -43,6 +43,8 @@ The deployed **Base** checkpoint has no fixed named-speaker catalog. Utz'tutor e
 
 The selected Spanish neural checkpoint is `es_ES-sharvard-medium`, shared by the Sherpa-ONNX and Piper fallback tiers. It provides neutral, textbook-clean diction for Central American classrooms. Qwen3-TTS is preferred for natural prosody and mathematical sentence handling; Sherpa/Piper are preferred when response time or memory pressure dominates.
 
+Since sherpa-onnx 2.0 the runtime has no espeak-ng of its own: it ignores `data_dir` and only speaks Piper voices or Spanish Kokoro text when it is given the phonemes. `backend/src/core/tts/engines/phonemes.py` makes them with the espeak-ng that `piper-tts` bundles, under Piper's own lock, and the Sherpa and Kokoro engines pass them to `generate` as `GenerationConfig.phoneme_codepoints`. A Sherpa model's espeak voice is read from its Piper `.onnx.json` (`es` when there is none); Kokoro uses `TTS_KOKORO_VOICE`. Model folders no longer need an `espeak-ng-data` directory.
+
 ## 5. Mayan Language Routing Seam: K'iche' (`quc_Latn`)
 
 Formant synthesis does not provide a dependable K'iche' phonological inventory. The voice subsystem therefore keeps a separate routing seam:

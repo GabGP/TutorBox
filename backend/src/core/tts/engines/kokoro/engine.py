@@ -12,6 +12,7 @@ from core.tts.engines.kokoro.models import (
     resolve_speaker_id,
     samples_to_wav,
 )
+from core.tts.engines.phonemes import phoneme_generation_config
 from core.tts.engines.provider import resolve_execution_provider
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
@@ -72,7 +73,6 @@ class KokoroBackend:
             model=str(paths.model_path),
             voices=str(paths.voices_path),
             tokens=str(paths.tokens_path),
-            data_dir=str(paths.data_dir),
             dict_dir=dict_str,
             lexicon=lexicon_str,
             lang=tts_cfg.kokoro_voice,
@@ -133,9 +133,10 @@ class KokoroBackend:
 
         speaker_id = self._resolve_speaker_id(voice)
         try:
-            audio = self._tts.generate(
-                spoken_text, sid=speaker_id, speed=DEFAULT_SPEECH_SPEED
+            generation_config = phoneme_generation_config(
+                spoken_text, tts_cfg.kokoro_voice, speaker_id, DEFAULT_SPEECH_SPEED
             )
+            audio = self._tts.generate(spoken_text, generation_config)
         except Exception as err:
             raise TTSSynthesisError(f"Kokoro synthesis failed: {err}") from err
 

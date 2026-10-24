@@ -9,7 +9,7 @@ from core.config import clear_settings_cache
 from core.tts.engines.sherpa import SherpaBackend
 from core.tts.engines.sherpa.models import (
     _ensure_tokens_file,
-    _find_espeak_data,
+    read_espeak_voice,
     resolve_sherpa_paths,
     samples_to_wav,
 )
@@ -59,11 +59,26 @@ def test_samples_to_wav():
     assert empty_wav.startswith(b"RIFF")
 
 
-def test_find_espeak_data(tmp_path):
-    assert _find_espeak_data(tmp_path) is not None or True
-    custom_dir = tmp_path / "espeak-ng-data"
-    custom_dir.mkdir()
-    assert _find_espeak_data(tmp_path) == custom_dir.resolve()
+def test_read_espeak_voice_from_piper_config(tmp_path):
+    model = tmp_path / "quc_model.sherpa.onnx"
+    model.write_text("fake onnx")
+    (tmp_path / "quc_model.onnx.json").write_text(
+        json.dumps({"espeak": {"voice": "quc"}})
+    )
+    assert read_espeak_voice(model) == "quc"
+
+
+def test_read_espeak_voice_defaults_to_spanish(tmp_path):
+    no_config = tmp_path / "bare.onnx"
+    assert read_espeak_voice(no_config) == "es"
+
+    broken = tmp_path / "broken.onnx"
+    (tmp_path / "broken.onnx.json").write_text("not json {")
+    assert read_espeak_voice(broken) == "es"
+
+    not_an_object = tmp_path / "list.onnx"
+    (tmp_path / "list.onnx.json").write_text("[]")
+    assert read_espeak_voice(not_an_object) == "es"
 
 
 def test_ensure_tokens_file_existing(tmp_path):
@@ -119,7 +134,6 @@ def test_sherpa_preload_init_failure_cpu(tmp_path, monkeypatch):
     mock_model = tmp_path / "dummy.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_dummy.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "dummy.onnx")
     monkeypatch.setenv("TTS_SHERPA_PROVIDER", "cpu")
@@ -139,7 +153,6 @@ def test_sherpa_preload_cuda_fallback_to_cpu(tmp_path, monkeypatch):
     mock_model = tmp_path / "dummy.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_dummy.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "dummy.onnx")
     monkeypatch.setenv("TTS_SHERPA_PROVIDER", "cuda")
@@ -158,7 +171,6 @@ def test_sherpa_lifecycle_and_synthesize(tmp_path, monkeypatch):
     mock_model = tmp_path / "test.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_test.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "test.onnx")
     clear_settings_cache()
@@ -178,10 +190,12 @@ def test_sherpa_lifecycle_and_synthesize(tmp_path, monkeypatch):
         assert load_ms >= 0
         assert backend.is_loaded()
 
-        # Synthesis
+        # Synthesis: sherpa-onnx 2.x gets the phonemes, not only the text
         wav = backend.synthesize("Hola prueba")
         assert wav.startswith(b"RIFF")
-        assert mock_engine.generate.called
+        text, generation_config = mock_engine.generate.call_args[0]
+        assert text == "Hola prueba"
+        assert generation_config.phoneme_codepoints[0][1] == ord("o")
 
         # Unload
         backend.unload()
@@ -198,7 +212,6 @@ def test_sherpa_synthesize_zero_samples(tmp_path, monkeypatch):
     mock_model = tmp_path / "test.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_test.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "test.onnx")
     clear_settings_cache()
@@ -222,7 +235,6 @@ def test_sherpa_synthesize_engine_error(tmp_path, monkeypatch):
     mock_model = tmp_path / "test.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_test.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "test.onnx")
     clear_settings_cache()
@@ -244,7 +256,6 @@ def test_sherpa_is_available_success(tmp_path, monkeypatch):
     mock_model = tmp_path / "test.onnx"
     mock_model.write_text("fake")
     (tmp_path / "tokens_test.txt").write_text("a 1\n")
-    (tmp_path / "espeak-ng-data").mkdir()
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
     monkeypatch.setenv("TTS_SHERPA_MODEL_ES", "test.onnx")
     clear_settings_cache()
@@ -261,21 +272,6 @@ def test_sherpa_synthesize_disabled(monkeypatch):
         backend.synthesize("Hola")
 
 
-def test_resolve_sherpa_paths_missing_data_dir(tmp_path, monkeypatch):
-    mock_model = tmp_path / "test.onnx"
-    mock_model.write_text("fake")
-    (tmp_path / "tokens_test.txt").write_text("a 1\n")
-    monkeypatch.setenv("TTS_PIPER_MODEL_DIR", str(tmp_path))
-    clear_settings_cache()
-    with (
-        patch("core.tts.engines.sherpa.models._find_espeak_data", return_value=None),
-        pytest.raises(
-            TTSUnavailableError, match="espeak-ng-data directory was not found"
-        ),
-    ):
-        resolve_sherpa_paths("test.onnx")
-
-
 def test_ensure_tokens_file_invalid_json(tmp_path):
     model = tmp_path / "invalid.onnx"
     model.write_text("fake onnx")
@@ -283,11 +279,6 @@ def test_ensure_tokens_file_invalid_json(tmp_path):
     json_path.write_text("not json {")
     with pytest.raises(TTSUnavailableError, match="Sherpa tokens file not found"):
         _ensure_tokens_file(model)
-
-
-def test_find_espeak_data_not_found(tmp_path):
-    with patch.dict("sys.modules", {"piper": None}):
-        assert _find_espeak_data(tmp_path) is None
 
 
 def test_sherpa_synthesize_uninitialized():

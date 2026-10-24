@@ -30,7 +30,6 @@ class KokoroModelPaths:
     model_path: Path
     voices_path: Path
     tokens_path: Path
-    data_dir: Path
     dict_dir: Path | None
     lexicon_paths: tuple[Path, ...]
 
@@ -73,7 +72,7 @@ def resolve_kokoro_paths(
     if not model_file:
         raise TTSUnavailableError(f"Kokoro ONNX model file not found in '{model_dir}'.")
 
-    for required in ("voices.bin", "tokens.txt", "espeak-ng-data"):
+    for required in ("voices.bin", "tokens.txt"):
         if not (model_dir / required).exists():
             raise TTSUnavailableError(
                 f"Kokoro '{required}' not found in '{model_dir}'."
@@ -91,7 +90,6 @@ def resolve_kokoro_paths(
         model_path=model_file,
         voices_path=(model_dir / "voices.bin").resolve(),
         tokens_path=(model_dir / "tokens.txt").resolve(),
-        data_dir=(model_dir / "espeak-ng-data").resolve(),
         dict_dir=dict_dir,
         lexicon_paths=lexicons,
     )

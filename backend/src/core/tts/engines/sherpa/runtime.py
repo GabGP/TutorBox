@@ -30,7 +30,6 @@ def ensure_ort_dll_directory() -> None:
 def create_offline_tts(
     model_path: Path,
     tokens_path: Path,
-    data_dir: Path,
     tts_cfg: TTSConfig,
 ) -> Any:
     """Initializes Sherpa-ONNX OfflineTts with CUDA provider, falling back to CPU."""
@@ -42,7 +41,6 @@ def create_offline_tts(
     vits_cfg = sherpa_onnx.OfflineTtsVitsModelConfig(
         model=str(model_path),
         tokens=str(tokens_path),
-        data_dir=str(data_dir),
         length_scale=tts_cfg.piper_length_scale,
         noise_scale=tts_cfg.piper_noise_scale,
         noise_scale_w=tts_cfg.piper_noise_w_scale,

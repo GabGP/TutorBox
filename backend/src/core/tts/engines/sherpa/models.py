@@ -9,34 +9,27 @@ from core.tts.audio import samples_to_wav
 from core.tts.engines.sherpa.metadata import ensure_sherpa_model as _ensure_sherpa_model
 from core.tts.exceptions import TTSUnavailableError
 
-__all__ = ["resolve_sherpa_paths", "samples_to_wav"]
+__all__ = ["read_espeak_voice", "resolve_sherpa_paths", "samples_to_wav"]
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_ESPEAK_VOICE: str = "es"
 
-def _find_espeak_data(base_dir: Path) -> Path | None:
-    """Finds espeak-ng-data directory from local models, piper package, or system."""
-    candidates = [
-        base_dir / "espeak-ng-data",
-        PROJECT_ROOT / ".cache" / "models" / "tts" / "espeak-ng-data",
-    ]
+
+def _piper_config_path(model_path: Path) -> Path:
+    """Returns the Piper .onnx.json that sits next to a .onnx or .sherpa.onnx model."""
+    clean_stem = model_path.name.replace(".sherpa", "").replace(".onnx", "")
+    return model_path.parent / f"{clean_stem}.onnx.json"
+
+
+def read_espeak_voice(model_path: Path) -> str:
+    """Reads the model's espeak-ng voice from its Piper config, or 'es' without one."""
     try:
-        import importlib.util
-
-        spec = importlib.util.find_spec("piper")
-        if spec and spec.origin:
-            candidates.append(Path(spec.origin).parent / "espeak-ng-data")
-    except (ImportError, AttributeError):
-        pass
-
-    candidates.extend(
-        [Path("/usr/share/espeak-ng-data"), Path("/usr/lib/espeak-ng-data")]
-    )
-
-    for candidate in candidates:
-        if candidate.is_dir():
-            return candidate.resolve()
-    return None
+        with open(_piper_config_path(model_path), "r", encoding="utf-8") as f:
+            espeak_settings = json.load(f).get("espeak", {})
+        return str(espeak_settings.get("voice", DEFAULT_ESPEAK_VOICE))
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return DEFAULT_ESPEAK_VOICE
 
 
 def _ensure_tokens_file(model_path: Path) -> Path:
@@ -51,7 +44,7 @@ def _ensure_tokens_file(model_path: Path) -> Path:
             return cand.resolve()
 
     clean_stem = model_path.name.replace(".sherpa", "").replace(".onnx", "")
-    json_path = model_path.parent / f"{clean_stem}.onnx.json"
+    json_path = _piper_config_path(model_path)
     if json_path.is_file():
         try:
             with open(json_path, "r", encoding="utf-8") as f:
@@ -72,8 +65,8 @@ def _ensure_tokens_file(model_path: Path) -> Path:
     )
 
 
-def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
-    """Resolves (model_path, tokens_path, espeak_data_dir) for Sherpa-ONNX."""
+def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path]:
+    """Resolves (model_path, tokens_path) for Sherpa-ONNX."""
     tts = get_settings().tts
     search_dirs = [
         Path(tts.piper_model_dir),
@@ -101,8 +94,4 @@ def resolve_sherpa_paths(model_name: str) -> tuple[Path, Path, Path]:
 
     resolved_model = _ensure_sherpa_model(resolved_model)
     tokens_path = _ensure_tokens_file(resolved_model)
-    data_dir = _find_espeak_data(resolved_model.parent)
-    if not data_dir:
-        raise TTSUnavailableError("espeak-ng-data directory was not found for Sherpa.")
-
-    return resolved_model, tokens_path, data_dir
+    return resolved_model, tokens_path
