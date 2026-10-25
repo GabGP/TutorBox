@@ -28,6 +28,7 @@
           DHCP_LIMIT={{ dhcp_limit | quote }}
           DHCP_LEASETIME={{ dhcp_leasetime | quote }}
           DISABLE_SERVICES={{ router_disable_services | join(' ') | quote }}
+          FIRMWARE={{ router_firmware | quote }}
       no_log: true
       check_mode: false
       changed_when: false

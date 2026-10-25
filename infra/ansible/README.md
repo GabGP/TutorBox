@@ -84,7 +84,7 @@ on it. `router.yml` pipes one shell script to the router over SSH. The script ha
 | Item | Notes |
 | :--- | :--- |
 | Jetson Orin Nano (8 GB) with an NVMe drive | The reference kit runs JetPack 7.2 (L4T R39.2, Ubuntu 24.04). |
-| GL.iNet GL-AR300M16 | Stock GL.iNet firmware 4.3.x (OpenWrt 22.03). |
+| GL.iNet GL-AR300M16 | Stock GL.iNet firmware 4.3.28 (OpenWrt 22.03.4), the version in `router_firmware`. |
 | Ethernet cable | Jetson to the router's **LAN** port. |
 | Internet for the Jetson during the install | Its own Wi-Fi on any network with internet. The models alone are about 6 GB. |
 | A screen and keyboard, or SSH to the Jetson | Only for the install. In the classroom the kit needs neither. |
@@ -238,8 +238,10 @@ A few things on the router cannot be scripted, or must be done before a script c
 
 1. Cable the Jetson to the router's **LAN** port. Leave the WAN port empty.
 2. Browse to `http://192.168.8.1`, choose a language and set the **admin password**
-   ([GL.iNet Setup §3](../glinet/initial.md#3-step-1--first-boot--admin-hardening)). If you want a
-   firmware update, do it now: after Step 6 the router is never online again.
+   ([GL.iNet Setup §3](../glinet/initial.md#3-step-1--first-boot--admin-hardening)). Check the
+   firmware under *System → Firmware*: it must be `router_firmware` from
+   [`group_vars/all.yml`](group_vars/all.yml). Update it now if needed: after Step 6 the router is
+   never online again.
 3. In the admin panel, do the items the script cannot do
    ([GL.iNet Setup §7](../glinet/initial.md#7-step-5--disable-cloud-repeater--dns-leaks)):
    unbind **GoodCloud**, delete saved **Repeater** networks, turn off **Tethering** and
@@ -271,8 +273,17 @@ ansible-playbook router.yml
 It applies the settings, waits for the router, and checks again; it stops with an error if anything
 still differs. No `sudo` is needed: the work happens on the router, over SSH.
 
+It also checks the router's firmware against `router_firmware`, but never installs one: a different
+version is a `DRIFT` line, and after applying it stops the run. While the Jetson is online, it asks
+GL.iNet's firmware API whether a stable release newer than `router_firmware` exists for
+`router_model` and prints `NEWER STABLE FIRMWARE: ...` if so. Offline, it says it could not check.
+To move to a new release: update the router by hand
+([GL.iNet Setup §3](../glinet/initial.md#3-step-1--first-boot--admin-hardening)), then
+`router_firmware`.
+
 | What it sets | Runbook section |
 | :--- | :--- |
+| Firmware version (checked only) | [§3](../glinet/initial.md#3-step-1--first-boot--admin-hardening) |
 | Wi-Fi: SSID, WPA2 passphrase, channel, country, HT20, client isolation | [§4](../glinet/initial.md#4-step-2--wi-fi-ssid-utztutor) |
 | DHCP pool, the Jetson's static lease (MAC read from the Jetson), catch-all DNS | [§5](../glinet/initial.md#5-step-3--lan-dhcp--the-jetson-static-lease) |
 | WAN kill: interface disabled, firewall zone and forwardings removed, port held down at boot | [§6](../glinet/initial.md#6-step-4--kill-the-wan-path-4-layers) |
@@ -309,7 +320,8 @@ checks that failed. It checks that:
 - Ollama has the kit's models, the PWA is built, the voice models are present and the Qwen3-TTS
   daemon is a GPU build.
 - The Jetson holds `192.168.8.2` and does not take DNS from the router.
-- The router answers every name with the Jetson's address, and its settings match `kit.yml`.
+- The router answers every name with the Jetson's address, and its settings and firmware match
+  `kit.yml` and `router_firmware`.
 - The classroom-screen files are installed and the user is logged in at boot.
 
 Then the checks only a person can do: join the Wi-Fi with an iPhone and an Android phone and see

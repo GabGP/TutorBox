@@ -93,6 +93,13 @@ router_disable_services:
   - gl-cloud
   - gl_ddns
 router_ssh_options: "-o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new"
+# GL.iNet firmware the router must run (/etc/glversion). router.yml also asks GL's firmware API,
+# when the Jetson is online, whether a newer stable release exists for router_model; update the
+# router by hand (initial.md §3), then this value. 4.3.28 is newer than the latest stable
+# (4.3.27) and GL no longer lists it; kept until the next stable release.
+router_firmware: "4.3.28"
+router_model: ar300m16
+router_firmware_api: https://firmware-api.gl-inet.com/cloud-api/model/info
 
 # verify.yml: set to true once the kit is in the classroom, to also require Wi-Fi off.
 expect_offline: false

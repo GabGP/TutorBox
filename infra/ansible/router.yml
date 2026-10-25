@@ -33,6 +33,34 @@
         quiet: true
       when: not ansible_check_mode
 
+    # Needs internet; in the classroom the Jetson is offline and this only says so.
+    - name: Ask GL.iNet for its stable firmware releases
+      ansible.builtin.uri:
+        url: "{{ router_firmware_api }}?model={{ router_model }}"
+        timeout: 10
+      register: router_firmware_releases
+      check_mode: false
+      changed_when: false
+      failed_when: false
+
+    - name: Report whether a newer stable firmware exists
+      vars:
+        stable_versions: >-
+          {{ (router_firmware_releases.json.info | default([]))
+             | selectattr('stage', 'equalto', 'RELEASE') | map(attribute='version') | list }}
+        newer_versions: "{{ stable_versions | select('version', router_firmware, '>') | list }}"
+      ansible.builtin.debug:
+        msg: >-
+          {%- if router_firmware_releases.status | default(-1) != 200 or not stable_versions -%}
+          GL.iNet's firmware API did not answer (is the Jetson offline?): newer firmware not checked.
+          {%- elif newer_versions -%}
+          NEWER STABLE FIRMWARE: GL.iNet released {{ newer_versions | join(', ') }} for
+          {{ router_model }}; this kit pins {{ router_firmware }}. Update the router by hand
+          (infra/glinet/initial.md §3), then router_firmware in group_vars/all.yml.
+          {%- else -%}
+          No stable firmware newer than {{ router_firmware }} for {{ router_model }}.
+          {%- endif %}
+
     - name: List the differences (check mode)
       ansible.builtin.include_tasks: tasks/router_run.yml
       vars:
