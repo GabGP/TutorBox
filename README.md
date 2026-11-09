@@ -1,6 +1,8 @@
-# Utz'tutor: Autonomous Offline Edge AI Socratic Educational Platform
+<h1 align="center">Utz'tutor</h1>
 
-[![ci-backend](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml)
+<p align="center">
+  <a href="https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml"><img src="https://github.com/GabGP/TutorBox/actions/workflows/ci-backend.yml/badge.svg" alt="Backend CI"></a>
+</p>
 
 <div align="center">
 
@@ -11,152 +13,220 @@
 
 </div>
 
----
+<p align="center">
+  <strong>A classroom AI tutor in a box, for rural schools with no internet at all.</strong><br>
+  A small computer and a Wi-Fi router turn any classroom into an interactive maths lesson: students answer on their phones or on cheap button clickers, and the box spots common mistakes and explains them out loud, in Spanish or K'iche'.
+</p>
 
-**Utz'tutor** is an offline Edge AI educational appliance designed for basic education students in rural and off-grid communities with zero internet connectivity. The appliance delivers interactive classroom quizzes, Socratic math tutoring, and offline educational games with dual-language voice output in Spanish and **K'iche'** (`quc_Latn`).
+<p align="center">
+  <img src="docs/media/classroom-quiz.webp" width="860" alt="A classroom quiz from start to finish: the teacher picks fractions from the question bank, where every wrong answer is tagged with the mistake behind it; three students connect; answers come in live; most students picked the same wrong answer, so the app flags the misconception and reads the explanation aloud; the classroom screen shows the results and then the next question">
+</p>
+
+<p align="center">
+  <sub>A real session on a development machine: the teacher builds a fractions quiz, students join, and when most of the class falls for the same wrong answer, the box explains that specific mistake aloud.</sub>
+</p>
 
 > [!NOTE]
-> **Work in Progress**: This project is under active development as an engineering capstone project. Architecture, schemas, and features are subject to ongoing iteration.
+> Work in progress: this is an engineering capstone project under active development.
 
 ---
 
-## Table of Contents
+## Why it exists
 
-- [1. Project Architecture](#1-project-architecture)
-- [2. Hardware Topology](#2-hardware-topology)
-- [3. Software & AI Stack](#3-software--ai-stack)
-- [4. System Constraints & Guardrails](#4-system-constraints--guardrails)
-- [5. Repository Structure](#5-repository-structure)
-- [6. Quick Start](#6-quick-start)
-- [7. Technical Documentation](#7-technical-documentation)
-- [Next Steps](#next-steps)
+Many schools in rural Guatemala have no internet and few resources, and many students learn in K'iche' as well as Spanish. Utz'tutor brings an AI tutor to them anyway: everything, including the language model and the voices, runs on a box in the classroom. Nothing ever needs a connection.
 
 ---
 
-## <a id="1-project-architecture"></a>1. Project Architecture
+## What it does
 
-Utz'tutor operates on a local network topology consisting of an isolated Access Point and an integrated Edge AI Core Appliance.
-
-```mermaid
-graph TD
-    subgraph AP ["Local Access Point"]
-        Router["GL.iNet GL-AR300M16 Router<br/>(SSID: Utz'tutor - Isolated Local AP)"]
-    end
-    subgraph Clients ["Client Layer"]
-        Students["Student Devices<br/>(Tablets, Smartphones & ESP32 Clickers)"]
-    end
-    subgraph Core ["Core AI Appliance (NVIDIA Jetson Orin Nano - 8GB Unified RAM)"]
-        Nginx["Nginx Web Server & Reverse Proxy"]
-        PWA["Compiled React/Vite PWA Static Files"]
-        FastAPI["FastAPI Backend Application (:8000)"]
-        SymPy["SymPy Math Engine & Containment Guardrail"]
-        Pedagogy["Socratic State Machine & Session Engine"]
-        SQLite[("SQLite Database<br/>bcrypt PIN Hashing")]
-        LLM["llama.cpp (Gemma 4 A2B Q4_K_M)<br/>127.0.0.1:8080"]
-        TTS["Offline Voice Output<br/>(Qwen3-TTS -> Sherpa -> Piper -> eSpeak)"]
-        HDMI["Classroom Display (HDMI)<br/>Question, Timer, Results & Audio"]
-    end
-    Students <-->|"Wi-Fi (DHCP)"| Router
-    Router <-->|"Ethernet"| Nginx
-    Nginx --> PWA
-    Nginx <-->|"API & WebSockets Proxy"| FastAPI
-    FastAPI <--> SymPy
-    FastAPI <--> Pedagogy
-    FastAPI <--> SQLite
-    FastAPI <-->|"IPC / Local HTTP (127.0.0.1:8080)"| LLM
-    FastAPI <--> TTS
-    FastAPI <--> HDMI
-```
+- **Three modes in one box:** a [classroom quiz](#classroom-quiz) the whole class plays together, a [Socratic tutor](#a-tutor-that-never-gives-the-answer) for practice after class, and [take-home apps](#take-home-apps) with offline games for each grade.
+- **Wrong answers that teach.** Every wrong option is designed around a specific mistake ("divided only the numerator", "subtracted to simplify"), so the results show *why* students got it wrong, not just how many.
+- **Speaks up when the class is stuck.** If more than 51% of the students pick the same wrong answer, the box explains that mistake aloud, offline, in Spanish or K'iche'.
+- **AI that is kept honest.** A small language model on the box (Gemma) writes new questions and talks to students, but a computer algebra engine (SymPy) [checks the maths](#ai-that-is-kept-honest) every time. The model never decides what is correct.
+- **Works with or without phones.** Students answer on a phone or on an [ESP32 clicker](#clickers-for-students-without-phones) with four buttons and a light.
+- **Safe for kids.** Students log in with a PIN that's stored hashed, never in plain text, and the network is a closed local Wi-Fi.
 
 ---
 
-## <a id="2-hardware-topology"></a>2. Hardware Topology
+## Classroom quiz
 
-All components operate **100% offline** without WAN connectivity.
-
-| Node | Hardware | Role & Responsibilities |
-| :--- | :--- | :--- |
-| **Core AI Appliance** | NVIDIA Jetson Orin Nano (8GB Unified RAM) | Hosts Nginx, the PWA, FastAPI, `llama.cpp`, offline Spanish/K'iche' audio, SymPy, SQLite, and classroom HDMI output. |
-| **Wireless AP** | GL.iNet GL-AR300M16 Router | Isolated local Access Point broadcasting SSID `Utz'tutor` and handling DHCP. |
+The recording at the top: the teacher picks questions from a bank of 66 (or has new ones written, below), students join, and the results show not just who was right but which mistake the class made. When most of the class falls for the same one, the box explains it out loud, and after the game the teacher gets a short report of the mistakes that keep coming up.
 
 ---
 
-## <a id="3-software--ai-stack"></a>3. Software & AI Stack
+## AI that is kept honest
 
-* **Backend**: Python 3.11+, FastAPI, WebSockets, and SQLite with idempotent SQL migrations.
-* **Frontend**: React / Vite Progressive Web App (PWA), hosted directly on the Jetson appliance via Nginx.
-* **Deterministic Math Engine**: **SymPy** for mathematical parsing, algebraic verification, and equivalence checking.
-* **LLM Engine**: **Gemma 4 A2B** quantized to `Q4_K_M` through `llama.cpp` (`llama-server`) on `127.0.0.1:8080`.
-* **Voice Output**: Offline **Qwen3-TTS** is the current quality winner for Spanish. Automatic fallback order is **Qwen3-TTS -> Sherpa-ONNX -> Piper VITS -> eSpeak-ng**. eSpeak is robotic, but is retained as the ultimate availability safety net. Production WAV peaks are calibrated to `0.78`.
-* **Student Input**: Mobile web clickers and physical ESP32 clickers (strictly zero voice/microphone input).
+<p align="center">
+  <img src="docs/media/ai-questions.webp" width="860" alt="The teacher picks Fractions and asks for 3 new questions; the screen shows the model writing each one, checking the calculations, saving it and designing the wrong options; question 2 turns red and is dropped; the result reads 2 of 3 questions ready, in 1 min 18 s">
+</p>
 
----
+<p align="center">
+  <sub>Three fraction questions written by Gemma on the box. Question 2 failed the check and was dropped.</sub>
+</p>
 
-## <a id="4-system-constraints--guardrails"></a>4. System Constraints & Guardrails
+The teacher picks a topic and Gemma writes the questions, each with one right answer and three wrong options built around known mistakes. Before anything reaches the class, SymPy works every problem out on its own:
 
-1. **No LLM Math**: The LLM is prohibited from evaluating mathematical accuracy. SymPy is the sole authority.
-2. **Containment Guardrail**: Mathematical answers are checked before any LLM response is returned.
-3. **Audio Feedback & >51% Rule**: TTS speaks only when more than 51% of participating students select one diagnostic distractor; the teacher's device only plays server-synthesized audio.
-4. **Security & Privacy**: Student PINs are hashed with `bcrypt` and never logged in plain text.
-5. **Memory Budget**: Jetson unified memory is budgeted for classroom sessions and lifecycle-separated LLM/TTS workloads.
+- the answer marked as correct must equal what SymPy computes,
+- no wrong option may secretly be correct too,
+- and each wrong option must name a mistake from that topic's list.
 
----
-
-## <a id="5-repository-structure"></a>5. Repository Structure
-
-```text
-TutorBox/
-├── backend/      # FastAPI application, Socratic logic, SymPy engine, offline voice, SQLite DB
-├── pwa/          # Classroom web clients and static assets
-├── firmware/     # ESP32-C3 hardware clicker firmware (Arduino / PlatformIO) and PC simulator
-├── infra/        # Ansible kit setup, systemd, Nginx, captive portal, and router runbooks
-├── tools/        # Launcher modules behind run.py, voice model downloader, offline benchmarks, and llama.cpp TTS daemon build toolchain
-├── docs/         # Architecture specs, pedagogy, API documentation, and milestones
-└── run.py        # One-command development and appliance startup runner
-```
+A draft that fails goes back to the model with the reason; after three tries the question is dropped. In this recording Gemma marked **2/5** as the answer to a question whose answer is **1/2**: SymPy caught it, and the question never made it into the game. The teacher can still read and edit every question, including the explanations, in the question bank.
 
 ---
 
-## <a id="6-quick-start"></a>6. Quick Start
+## A tutor that never gives the answer
 
-Utz'tutor uses **[uv](https://docs.astral.sh/uv/)** for environment startup:
+<p align="center">
+  <img src="docs/media/tutor-chat.webp" width="860" alt="Left, the classroom TV in tutor mode: 'Practise with the tutor', the address to open, and live totals of students connected, problems solved and students asking for help. Right, a student's phone: she asks how much 3/4 + 1/8 is, the tutor asks what the problem wants her to do, she answers 4/12, the tutor gives hint 1 of 3 about the denominators, she answers 6/8 + 1/8 = 7/8 and the tutor congratulates her; the TV's solved counter goes up">
+</p>
+
+<p align="center">
+  <sub>A real practice chat on a student's phone, with the classroom TV in tutor mode.</sub>
+</p>
+
+After class, students practise on their phones. When an answer is wrong, the tutor works out *which* mistake it was (4/12 means the tops and the bottoms were added) and replies with a hint from a ladder of up to three, never with the answer. Gemma rewrites each hint in a friendlier voice, and a guard throws the rewrite away if it reveals the answer, loses the problem's numbers or stops asking a question; the planned hint is used instead. In this chat it did exactly that, twice. The classroom TV only shows totals (connected, solved, asking for help), never names.
+
+---
+
+## Take-home apps
+
+<p align="center">
+  <img src="docs/media/take-home.webp" width="860" alt="Left, the classroom TV: 'Take Q'uq' home!' with the address to download the app. Right, the first-grade app on a phone: the child picks a character and types her name, an adventure map with levels for measurement, geometry, problems, arithmetic, sets and patterns, then a game asking where the quetzal is, where the rabbit is and who is up, ending with three stars">
+</p>
+
+<p align="center">
+  <sub>The first-grade app: pick a character, follow Q'uq' the quetzal across the map, and play.</sub>
+</p>
+
+In take-home mode the box serves an Android app for each grade (first, second and third) at `/descargas`. Once installed it works with no connection at all: short "look, listen, tap" games that need no reading, one level per competency of the national curriculum (CNB), with progress saved on the phone.
+
+---
+
+## Clickers for students without phones
+
+<p align="center">
+  <img src="docs/media/clicker.webp" width="860" alt="Left, the teacher's screens: a new clicker ESP32-A4CF12 appears by itself with no student, the teacher assigns it to mateo, the lobby shows mateo connected through the clicker, a question opens and three answers arrive, and the result shows 2 of 3 chose 2/12. Right, a drawing of the clicker whose light blinks magenta while unassigned, turns green when assigned, blinks white while the question is open, and turns green after button A is pressed">
+</p>
+
+<p align="center">
+  <sub>The clicker on the right is a drawing, but its light follows the real firmware, which ran here in its PC simulator and voted as mateo.</sub>
+</p>
+
+A clicker is a small ESP32-C3 board with four answer buttons and one light. It joins the box's Wi-Fi by itself and appears in the teacher's list; the teacher assigns it to a student once. When a question opens the light blinks white, the student presses A, B, C or D, and the light turns green when the vote is counted. The [build and flashing guide](firmware/clicker/README.md) covers the parts, the wiring and what every light means.
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/media/question-bank.jpg" alt="Question editor for 'How much is 8/12 simplified?': options A to C are labelled with the misconception behind them and feedback for the student, D is marked correct">
+      <br><sub><b>The question bank.</b> Each wrong option names the mistake behind it and the feedback the student gets.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/media/misconception-alert.jpg" alt="Result screen: the correct answer is D, 2/3; 2 of 3 students (67%) chose 2/12, flagged as a majority misconception, with the explanation 'you divided only the numerator' being read aloud">
+      <br><sub><b>A misconception caught.</b> Two of the three students chose 2/12, so the box reads out why that's wrong.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <img src="docs/media/classroom-screen.jpg" alt="Classroom display: the question 'How much is 5/10 simplified?' with four large coloured answers and a countdown">
+      <br><sub><b>The classroom display,</b> on the projector or TV over HDMI.</sub>
+    </td>
+    <td valign="top">
+      <img src="docs/media/group-report.jpg" alt="Group summary after the game: 67% average, 6 answers to 2 questions, the hardest question was 8/12 with 33% correct, and the repeated mistake: 2 students chose 2/12 because they divided only the numerator">
+      <br><sub><b>After the game,</b> a report of the hardest questions and the mistakes that keep coming up.</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>The interface is in Spanish, as used in the classroom. Everything shown was recorded on a development machine, with Gemma 4 running locally through llama.cpp.</sub>
+
+---
+
+## The hardware
+
+| Part | What it does |
+| :--- | :--- |
+| **NVIDIA Jetson Orin Nano** (8 GB) | The box: serves the web app, runs the language model, the voices, the maths engine and the database, and drives the classroom display over HDMI. |
+| **GL.iNet GL-AR300M16 router** | A private Wi-Fi network called `Utz'tutor` that students' phones join. |
+| **ESP32-C3 clickers** | Cheap physical answer buttons for students without phones. |
+
+All of it works 100% offline.
+
+---
+
+## Run it
+
+For development you need [uv](https://docs.astral.sh/uv/) and `pnpm`; one command does the rest:
 
 ```bash
-# 1. Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 2. Boot everything with one command
+curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv, if needed
 ./run.py
 ```
 
-`run.py` checks prerequisites (`uv`, `espeak-ng`, neural voice models, local `llama-server`, `pnpm`), compiles the PWA, runs database migrations, seeds the question bank, and starts Uvicorn. If voice models are missing in `.cache/models/tts/`, spoken feedback gracefully falls back to eSpeak-ng; download neural weights using `./run.py --download-models all` (or specific tier: `minimal`, `kokoro`, `qwen`). Qwen3-TTS is discovered from the standard model cache and `llama-tts` locations; set `TTS_QWEN_BINARY` only for a non-standard install.
+`run.py` checks what's installed, builds the web app, sets up the database, loads the question bank and starts the server. Then open:
 
-To build a classroom kit (a Jetson and its router) instead of a development server, follow **[Automated Kit Setup](infra/ansible/README.md)**. It calls `./run.py --prepare`, which builds everything and exits without starting the server.
+| Who | Address |
+| :--- | :--- |
+| Teacher | `http://localhost:8000/maestro/` |
+| Students | `http://localhost:8000/alumno/` |
+| Classroom display | `http://localhost:8000/pantalla/` |
+| API documentation | `http://localhost:8000/docs` |
 
-* **Teacher Host**: `http://localhost:8000/maestro/`
-* **Student Voting**: `http://localhost:8000/alumno/`
-* **Classroom Screen**: `http://localhost:8000/pantalla/`
-* **API Documentation**: `http://localhost:8000/docs`
+A first teacher account, `teacher1`, is created automatically; change its PIN before real use (see the [authentication docs](docs/api/auth.md)).
 
-Or run directly with `uv`:
+- **Without the language model** the question bank and quizzes still work; generating new questions needs `llama-server` on `127.0.0.1:8080`.
+- **Voices:** without the neural voice models it falls back to eSpeak-ng. Download better voices with `./run.py --download-models all` (or `minimal`, `kokoro`, `qwen`).
+- **A real classroom kit** (the Jetson and its router) is set up with Ansible: follow the [kit setup guide](infra/ansible/README.md), which runs `./run.py --prepare`.
 
-```bash
-uv run --directory backend uvicorn main:app --app-dir src --reload
+---
+
+## How it's built
+
+```mermaid
+graph TD
+    Students["Phones & ESP32 clickers"] <-->|Wi-Fi| Router["Local router<br/>(no internet)"]
+    Router <--> Nginx["Nginx"]
+    subgraph Box ["Jetson Orin Nano"]
+        Nginx --> PWA["Web app (React PWA)"]
+        Nginx <--> API["FastAPI backend"]
+        API <--> SymPy["SymPy: checks all the maths"]
+        API <--> DB[("SQLite")]
+        API <--> LLM["Gemma via llama.cpp:<br/>writes questions, tutors"]
+        API <--> Voice["Offline voices:<br/>Qwen3-TTS → Sherpa → Piper → eSpeak"]
+        API --> HDMI["Classroom display (HDMI)"]
+    end
+```
+
+- **Backend:** Python 3.11+, FastAPI and WebSockets, SQLite with versioned migrations.
+- **Frontend:** a React and Vite progressive web app, served by Nginx from the box.
+- **Maths:** SymPy is the only authority on whether an answer is correct.
+- **Language model:** Gemma 4 (A2B, quantised to Q4_K_M) through `llama.cpp`.
+- **Voices:** Qwen3-TTS for the best Spanish, falling back to Sherpa-ONNX, Piper and finally eSpeak-ng so there is always a voice.
+
+```text
+TutorBox/
+├── backend/    # FastAPI app: quiz sessions, Socratic tutor, SymPy checks, voices, database
+├── pwa/        # teacher, student and classroom-display web apps
+├── firmware/   # ESP32-C3 clicker firmware and a PC simulator
+├── infra/      # Ansible kit setup, Nginx, systemd, captive portal, router guides
+├── tools/      # launcher modules, voice model downloader, benchmarks
+├── docs/       # architecture, pedagogy, API and database documentation
+└── run.py      # one-command startup
 ```
 
 ---
 
-## <a id="7-technical-documentation"></a>7. Technical Documentation
+## Documentation
 
-* **[Documentation Portal](docs/README.md)**: Index and navigation hub for technical specifications.
-* **[Voice Feedback Architecture](docs/architecture/voice-feedback.md)**: TTS hierarchy, CUDA verification, voices, peaks, and sample rates.
-* **[Database Schema & ER Model](docs/database/README.md)**: SQLite schema, ER diagrams, indexes, and migrations.
-* **[REST API Specifications](docs/api/README.md)**: Domain contracts, RBAC matrix, auth flows, and error formats.
-* **[Backend Developer Guide](backend/README.md)**: Backend installation, local execution, benchmarking, and testing.
+- [Documentation portal](docs/README.md)
+- [The three modes](docs/architecture/three-modes.md) and [how wrong answers diagnose mistakes](docs/architecture/diagnostic-distractors.md)
+- [Voice feedback](docs/architecture/voice-feedback.md)
+- [REST API](docs/api/README.md) and [database](docs/database/README.md)
+- [Backend developer guide](backend/README.md)
 
 ---
 
-## Next Steps
-
-* **[Explore the Documentation Portal](docs/README.md)**: Deep dive into the database schema, API contracts, and architecture.
-* **[Setup Backend Environment](backend/README.md)**: Local developer setup, virtual environment, and testing instructions.
+Made by [@GabGP](https://github.com/GabGP), with contributions from [@guillermo-martinez42](https://github.com/guillermo-martinez42) and David.
