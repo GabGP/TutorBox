@@ -229,4 +229,4 @@ TutorBox/
 
 ---
 
-Made by [@GabGP](https://github.com/GabGP), with contributions from [@guillermo-martinez42](https://github.com/guillermo-martinez42) and David.
+Made by [@GabGP](https://github.com/GabGP) and [@guillermo-martinez42](https://github.com/guillermo-martinez42).
