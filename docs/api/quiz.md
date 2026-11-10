@@ -25,7 +25,7 @@ These endpoints govern the diagnostic question lifecycle: discovering curriculum
 | `POST` | `/api/v1/quiz/generate` | Teacher, Admin | Generate new diagnostic question using local SLM with retries |
 | `GET` | `/api/v1/quiz/generation-logs` | Teacher, Admin | Query historical SLM generation telemetry and rejections |
 | `GET` | `/api/v1/quiz/generation-metrics` | Teacher, Admin | Aggregated SLM generation latency and reliability metrics |
-| `GET` | `/api/v1/quiz/analytics` | Teacher, Admin | Weekly or monthly class report: accuracy per topic, change vs previous period, top misconceptions |
+| `GET` | `/api/v1/quiz/analytics` | Teacher, Admin | Daily, weekly or monthly class report: accuracy per topic, change vs previous period, top misconceptions |
 | `GET` | `/api/v1/quiz/questions` | Teacher, Admin | Query and filter questions from persistent bank |
 | `GET` | `/api/v1/quiz/questions/{id}` | Teacher, Admin | Fetch a single diagnostic question by unique ID |
 | `POST` | `/api/v1/quiz/questions` | Teacher, Admin | Create teacher-authored question with SymPy verification |
@@ -333,11 +333,11 @@ Calculate aggregated generation reliability, latency, and retry metrics for obse
 
 ### <a id="get-quiz-analytics"></a>`GET /api/v1/quiz/analytics`
 
-Teacher report over every student vote in a week (Monday to Sunday) or calendar month: which topics score best, which fail most, and which improved against the previous period. A vote's topic is its question's topic (the session topic if the question was hard-deleted). Topics come best accuracy first; `change` is percentage points vs the previous period (`null` when that topic had no answers then).
+Teacher report over every student vote in a day, a week (Monday to Sunday) or a calendar month: which topics score best, which fail most, and which improved against the previous period. A vote's topic is its question's topic (the session topic if the question was hard-deleted). Topics come best accuracy first; `change` is percentage points vs the previous period (`null` when that topic had no answers then).
 
 * **Authorization**: Teacher, Admin
 * **Query Parameters**:
-  * `period` (`week` | `month`, default `week`).
+  * `period` (`day` | `week` | `month`, default `week`).
   * `date` (`YYYY-MM-DD`, optional): any day inside the period; defaults to today. Periods are cut on UTC dates.
 * **Responses**:
   * `200 OK`:
@@ -364,7 +364,7 @@ Teacher report over every student vote in a week (Monday to Sunday) or calendar 
     ```
     `end` is exclusive. `weakest_topic` is `null` with fewer than two topics; `most_improved_topic` is `null` when no topic went up. `misconceptions` lists the top 5 wrong-answer misconceptions of the period.
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
-  * `422 Unprocessable Entity`: `period` is not `week`/`month`, or `date` is malformed.
+  * `422 Unprocessable Entity`: `period` is not `day`/`week`/`month`, or `date` is malformed.
 
 ---
 

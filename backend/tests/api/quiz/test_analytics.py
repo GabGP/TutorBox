@@ -5,7 +5,7 @@ from datetime import date
 
 import pytest
 
-from src.core.db.quiz_analytics import period_bounds
+from src.core.db.periods import period_bounds
 from tests.conftest import get_user_id
 
 ANALYTICS = "/api/v1/quiz/analytics"
@@ -159,6 +159,7 @@ def test_an_unknown_period_is_rejected(staff_db, client, teacher_headers):
 @pytest.mark.parametrize(
     ("period", "day", "bounds"),
     [
+        ("day", date(2026, 3, 1), ("2026-02-28", "2026-03-01", "2026-03-02")),
         ("week", date(2026, 11, 9), ("2026-11-02", "2026-11-09", "2026-11-16")),
         ("week", date(2026, 11, 15), ("2026-11-02", "2026-11-09", "2026-11-16")),
         ("month", date(2026, 12, 31), ("2026-11-01", "2026-12-01", "2027-01-01")),

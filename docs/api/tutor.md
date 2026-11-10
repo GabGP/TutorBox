@@ -32,6 +32,7 @@ who is using it. Code: `backend/src/api/tutor/` (HTTP) and `backend/src/modes/so
 | `POST /api/v1/tutor/ping` | Student, Teacher, Admin | The chat is open; the student counts as connected for 45 s. The PWA sends it every 20 s. |
 | `GET /api/v1/tutor/students` | Teacher, Admin | Students seen in the last 30 minutes, connected first. |
 | `GET /api/v1/tutor/summary` | Public | Class totals for the classroom screen (`/pantalla/` has no login): `{"online", "solved", "need_help"}`, no names. `need_help` counts connected students on hint 3 of 3. |
+| `GET /api/v1/tutor/analytics` | Teacher, Admin | Daily, weekly or monthly report: topics students asked about and got stuck on, plus one topic summary per student login. See below. |
 
 ```http
 POST /api/v1/tutor/message
@@ -69,6 +70,29 @@ scaffolding strategy applied and, on a wrong answer, the misconception behind it
 labels are computed in `backend/src/modes/socratic/telemetry/` and written by
 `backend/src/api/tutor/turn_logging.py`; their vocabularies are in
 [dialogue.md §2.1](../database/dialogue.md#21-telemetry-label-vocabularies).
+
+### Teacher report: `GET /api/v1/tutor/analytics`
+
+Teacher, Admin (`403` for students). Query: `period` = `day` | `week` (default, Monday to Sunday) | `month`, and an optional
+`date` (`YYYY-MM-DD`, any day in the period, default today; periods are cut on UTC dates). Built from `turn_logs`, which keeps
+every turn after the login expires, so each student login reads as one session summary. Only students' turns count. The
+report carries **topics and counts, never what the child wrote or what the tutor replied**.
+
+```json
+{
+  "period": "week", "start": "2026-11-09", "end": "2026-11-16",
+  "students": 2, "sessions": 2, "turns": 7,
+  "most_asked_topic": "arithmetic", "most_stuck_topic": "arithmetic",
+  "topics": [{"topic": "arithmetic", "turns": 5, "students": 2, "solved": 2, "stuck": 1}],
+  "session_summaries": [{"student": "ana", "started_at": "2026-11-10 09:00:00", "last_turn_at": "2026-11-10 09:06:00",
+                         "turns": 6, "topics": ["arithmetic", "fractions"], "solved": 2, "stuck": 1}]
+}
+```
+
+`turns` counts the messages a student sent (what they asked about); a topic is the turn's `concept_topic`, and turns without
+one count only in the totals. A problem is its text within one login: `solved` counts problems answered right, `stuck` counts
+problems that reached hint 3 (the worked analogy). Topics come most asked first; `session_summaries` come newest first (at
+most 200), with UTC timestamps.
 
 ---
 

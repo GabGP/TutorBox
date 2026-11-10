@@ -96,7 +96,8 @@ pwa/
 │       │   ├── presence/           # Teacher lobby class list & student phone heartbeat
 │       │   ├── question-generator/ # Topic selector & question count picker
 │       │   ├── speech/             # TTS audio playback & status badge
-│       │   └── match-report/       # Aggregate analytics, remediation alert & CSV export
+│       │   ├── match-report/       # Aggregate analytics, remediation alert & CSV export
+│       │   └── reports/            # Teacher reports sheet: quiz / tutor / games, by day, week or month
 │       ├── shared/         # Cross-cutting primitives & design system
 │       │   ├── api/                # Type-safe fetch client & endpoint contracts
 │       │   ├── lib/                # Storage & audio synthesis helpers

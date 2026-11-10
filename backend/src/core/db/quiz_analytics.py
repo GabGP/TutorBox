@@ -1,21 +1,19 @@
-"""Mode 1 analytics, read side: per-topic quiz accuracy for a week or month vs the one before."""
+"""Mode 1 analytics, read side: per-topic quiz accuracy for a period vs the one before."""
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import date, timedelta
-from typing import Literal
+from datetime import date
+
+from core.db.periods import Period, period_params
 
 __all__ = [
     "TOP_MISCONCEPTIONS",
     "MisconceptionCount",
-    "Period",
     "QuizAnalytics",
     "TopicScore",
-    "period_bounds",
     "summarize_quiz_analytics",
 ]
 
-Period = Literal["week", "month"]
 TOP_MISCONCEPTIONS = 5
 
 # A vote's topic is its question's; the session topic covers a hard-deleted question.
@@ -68,16 +66,6 @@ class QuizAnalytics:
     misconceptions: list[MisconceptionCount]
 
 
-def period_bounds(period: Period, day: date) -> tuple[date, date, date]:
-    """(previous start, start, exclusive end) of the Monday week or calendar month of day."""
-    if period == "week":
-        start = day - timedelta(days=day.weekday())
-        return start - timedelta(days=7), start, start + timedelta(days=7)
-    start = day.replace(day=1)
-    end = (start + timedelta(days=32)).replace(day=1)
-    return (start - timedelta(days=1)).replace(day=1), start, end
-
-
 def _percent(correct: int, answers: int) -> float | None:
     return round(100 * correct / answers, 1) if answers else None
 
@@ -105,18 +93,8 @@ def _topic_scores(conn: sqlite3.Connection, params: dict) -> list[TopicScore]:
 def summarize_quiz_analytics(
     conn: sqlite3.Connection, period: Period, day: date
 ) -> QuizAnalytics:
-    """Scores every topic answered in the period that holds day.
-
-    ponytail: created_at is UTC and compared by date, so a vote after 18:00 in
-    Guatemala (UTC-6) on a period's last day counts toward the next period.
-    """
-    previous, start, end = period_bounds(period, day)
-    params = {
-        "previous": previous.isoformat(),
-        "start": start.isoformat(),
-        "end": end.isoformat(),
-        "limit": TOP_MISCONCEPTIONS,
-    }
+    """Scores every topic answered in the period that holds day."""
+    params = {**period_params(period, day), "limit": TOP_MISCONCEPTIONS}
     topics = _topic_scores(conn, params)
     improved = [t for t in topics if t.change is not None and t.change > 0]
     students = conn.execute(
@@ -132,8 +110,8 @@ def summarize_quiz_analytics(
     correct = sum(t.correct for t in topics)
     return QuizAnalytics(
         period=period,
-        start=start,
-        end=end,
+        start=date.fromisoformat(params["start"]),
+        end=date.fromisoformat(params["end"]),
         students=students,
         answers=answers,
         correct=correct,

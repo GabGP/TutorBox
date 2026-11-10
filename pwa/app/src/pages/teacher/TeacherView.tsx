@@ -6,6 +6,8 @@ import { useRosterManager } from '../../features/roster/useRosterManager';
 import { TeacherSettingsSheet } from './TeacherSettingsSheet';
 import type { SettingsSectionId } from '../../features/settings/SettingsView';
 import { ClickerFleetSheet } from '../../features/clickers/ClickerFleetSheet';
+import { ReportsView } from '../../features/reports/ReportsView';
+import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
@@ -43,6 +45,7 @@ export const TeacherView: React.FC = () => {
   // Which accordion row the settings sheet opens on (none for the gear button).
   const [settingsSection, setSettingsSection] = useState<SettingsSectionId | undefined>(undefined);
   const [showClickers, setShowClickers] = useState(false);
+  const [showReports, setShowReports] = useState(false);
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
@@ -80,6 +83,7 @@ export const TeacherView: React.FC = () => {
     if (!user) {
       setShowSettings(false);
       setShowClickers(false);
+      setShowReports(false);
     }
   }, [user]);
 
@@ -178,6 +182,7 @@ export const TeacherView: React.FC = () => {
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
         onOpenSettings={() => openSettings()}
         onOpenClickers={() => setShowClickers(true)}
+        onOpenReports={() => setShowReports(true)}
       />
       {showModePicker && (
         <ModePicker
@@ -270,6 +275,11 @@ export const TeacherView: React.FC = () => {
         />
       )}
       {showClickers && isStaff && <ClickerFleetSheet onClose={() => setShowClickers(false)} />}
+      {showReports && isStaff && (
+        <Sheet label="Reportes" onClose={() => setShowReports(false)}>
+          <ReportsView />
+        </Sheet>
+      )}
       <ToastViewport toasts={toasts ?? []} onDismiss={(id) => dismissToast?.(id)} />
     </div>
   );

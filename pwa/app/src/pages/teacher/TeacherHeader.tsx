@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Gamepad2, Settings } from 'lucide-react';
+import { ArrowLeft, BarChart3, Gamepad2, Settings } from 'lucide-react';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
@@ -14,6 +14,8 @@ export interface TeacherHeaderProps {
   onOpenSettings?: () => void;
   /** Opens the clicker fleet sheet; the button is hidden when absent. */
   onOpenClickers?: () => void;
+  /** Opens the quiz / tutor / games reports sheet; hidden when absent. */
+  onOpenReports?: () => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   onToggleVoice,
   onOpenSettings,
   onOpenClickers,
+  onOpenReports,
 }) => {
   return (
     <header className={styles.header}>
@@ -59,6 +62,16 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       >
         {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
       </button>
+      {onOpenReports && (
+        <button
+          id="reportsBtn"
+          onClick={onOpenReports}
+          aria-label="Reportes"
+          className={`${styles.voiceBtn} ${utils.rowInline}`}
+        >
+          <BarChart3 size={18} aria-hidden />
+        </button>
+      )}
       {onOpenClickers && (
         <button
           id="clickers"
