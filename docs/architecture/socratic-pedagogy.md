@@ -78,6 +78,8 @@ The code is in `backend/src/modes/socratic/`; the endpoints and guard table are 
 
 **Dialogue state machine.** `planner.py` turns each message and the stored `Conversation` (problem and hint level) into the next move without the model. Number words are read as digits first ("doscientos más cien"). A new problem starts at level 0, and every wrong answer or request for help sets `min(level + 1, 3)`. The ladder therefore stops at level 3 and repeats it until the child solves the problem, which resets the conversation.
 
+**Misconception-aimed questions.** On a wrong answer the planner calls `classify_error` (`telemetry/error_type.py`). If the answer matches one of the 16 misconceptions, the child gets that misconception's question from `misconception_hints.py` in place of the ladder hint for that level (45 for 52 - 17 asks about borrowing). The level still rises. The ladder hint is used when the answer is unclassified, when the same misconception repeats on the next wrong answer (`Conversation.error` remembers the last one), or when the question would fail the containment check. `turn_logs.scaffolding_strategy` records these turns as `target_misconception` instead of the ladder rung.
+
 | Level | Operations (`operation_hints.py`, `hints.py`) | Equations (`equation_hints.py`) |
 | :---: | :--- | :--- |
 | 0 | Restates the goal with the child's numbers | Restates the equation |

@@ -36,6 +36,7 @@ class TurnResult:
     is_correct: bool | None
     topic_id: str | None
     attempt: Fraction | None = None
+    aimed: bool = False  # the hint was the question for the diagnosed misconception
 
 
 class SocraticTutor:
@@ -60,6 +61,7 @@ class SocraticTutor:
             is_correct=move.is_correct,
             topic_id=move.topic.id if move.topic else None,
             attempt=move.attempt,
+            aimed=move.aimed,
         )
 
     def reset(self, key: str) -> None:

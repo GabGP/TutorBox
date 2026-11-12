@@ -28,13 +28,16 @@ _KIND_STRATEGIES: dict[str, str] = {
     "off_topic": "redirect",
     "orphan": "redirect",
 }
+_AIMED = "target_misconception"  # a question for the diagnosed misconception
 STRATEGIES = frozenset(
-    {*_LADDER_STRATEGIES.values(), *_KIND_STRATEGIES.values(), _OTHER}
+    {*_LADDER_STRATEGIES.values(), *_KIND_STRATEGIES.values(), _AIMED, _OTHER}
 )
 
 
-def scaffolding_strategy(kind: str, hint_level: int) -> str:
-    """The strategy of a move; hint_level is read only for a hint."""
+def scaffolding_strategy(kind: str, hint_level: int, aimed: bool = False) -> str:
+    """The strategy of a move; hint_level is read only for a hint off the ladder."""
+    if aimed:
+        return _AIMED
     if kind == "hint":
         return _LADDER_STRATEGIES[hint_level]
     return _KIND_STRATEGIES.get(kind, _OTHER)

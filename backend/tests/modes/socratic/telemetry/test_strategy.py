@@ -55,9 +55,14 @@ def test_an_unknown_kind_is_logged_as_other():
     assert scaffolding_strategy("a_future_move", 0) == "other"
 
 
+def test_a_hint_aimed_at_the_misconception_is_not_logged_as_its_rung():
+    assert scaffolding_strategy("hint", 1, aimed=True) == "target_misconception"
+
+
 def test_the_public_set_holds_exactly_the_strategies_the_function_returns():
     returned = {scaffolding_strategy("hint", level) for level, _ in HINT_LADDER}
     returned |= {scaffolding_strategy(kind, 0) for kind, _ in NON_HINT_KINDS}
     returned.add(scaffolding_strategy("a_future_move", 0))
+    returned.add(scaffolding_strategy("hint", 1, aimed=True))
 
     assert returned == STRATEGIES

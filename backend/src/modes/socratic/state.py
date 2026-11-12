@@ -23,6 +23,7 @@ class Conversation:
     level: int = 0
     word_numbers: tuple[Fraction, ...] = ()
     topic_id: str | None = None  # just explained: the child may answer with an idea
+    error: str | None = None  # misconception of the last wrong answer, if judged
 
 
 class ConversationStore:

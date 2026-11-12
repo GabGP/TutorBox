@@ -13,6 +13,7 @@ from modes.socratic import hints, replies
 from modes.socratic.curriculum import Topic, load_curriculum
 from modes.socratic.input_guard import check_input, clean_input
 from modes.socratic.lexicon import HELP
+from modes.socratic.misconception_hints import misconception_hint
 from modes.socratic.numbers import digits_for_words, extract_numbers
 from modes.socratic.problems import (
     Problem,
@@ -22,6 +23,7 @@ from modes.socratic.problems import (
 )
 from modes.socratic.reading import bare_answer, is_question, numeric_topic
 from modes.socratic.state import Conversation
+from modes.socratic.telemetry.error_type import classify_error
 from modes.socratic.text import Folded
 
 __all__ = ["MAX_LEVEL", "Move", "plan"]
@@ -42,6 +44,7 @@ class Move:
     topic: Topic | None = None
     question: str = ""
     attempt: Fraction | None = None  # the value the child typed, when it was judged
+    aimed: bool = False  # the text is the question for the diagnosed misconception
 
 
 def plan(conversation: Conversation, message: str) -> tuple[Move, Conversation]:
@@ -56,7 +59,7 @@ def plan(conversation: Conversation, message: str) -> tuple[Move, Conversation]:
     if (attempt := find_attempt(message)) is not None:
         problem, value = attempt
         same = conversation.problem == problem
-        return _judge(problem, value, conversation.level if same else 0)
+        return _judge(problem, value, conversation if same else Conversation())
     if (problem := find_problem(message)) is not None:
         return _start(problem)
     if (answer := bare_answer(message, folded)) is not None:
@@ -94,7 +97,11 @@ def _start(problem: Problem) -> tuple[Move, Conversation]:
     return Move("hint", text, llm="rewrite", problem=problem), Conversation(problem)
 
 
-def _judge(problem: Problem, value: Fraction, level: int) -> tuple[Move, Conversation]:
+def _judge(
+    problem: Problem, value: Fraction, before: Conversation
+) -> tuple[Move, Conversation]:
+    """`before` is the conversation so far on this same problem (empty if new)."""
+    level = before.level
     if problem.target < 0:
         return Move("negative", replies.NEGATIVE), Conversation()
     if value in accepted_answers(problem):
@@ -102,11 +109,15 @@ def _judge(problem: Problem, value: Fraction, level: int) -> tuple[Move, Convers
         move = Move("praise", praise, problem=problem, level=level, is_correct=True)
         return replace(move, attempt=value), Conversation()
     level = min(level + 1, MAX_LEVEL)
-    text = f"Todavía no. {hints.hint(problem, level)}"
+    # A misconception gets its own question once; if it repeats, climb the ladder.
+    error = classify_error(problem, value)
+    aimed = None if error == before.error else misconception_hint(problem, error)
+    text = f"Todavía no. {aimed or hints.hint(problem, level)}"
     move = Move(
         "hint", text, llm="rewrite", problem=problem, level=level, is_correct=False
     )
-    return replace(move, attempt=value), Conversation(problem, level)
+    move = replace(move, attempt=value, aimed=aimed is not None)
+    return move, Conversation(problem, level, error=error)
 
 
 def _next_hint(
@@ -120,7 +131,7 @@ def _next_hint(
 
 def _answer(conversation: Conversation, value: Fraction) -> tuple[Move, Conversation]:
     if conversation.problem is not None:
-        return _judge(conversation.problem, value, conversation.level)
+        return _judge(conversation.problem, value, conversation)
     if conversation.word_numbers:
         return Move("show_work", replies.SHOW_WORK), conversation
     if conversation.topic_id is not None:

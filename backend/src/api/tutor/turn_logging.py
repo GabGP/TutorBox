@@ -30,7 +30,9 @@ def build_turn_record(session_id: str, message: str, result: TurnResult) -> Turn
         concept_subconcept=concept.subconcept,
         cnb_topic=concept.cnb_topic,
         error_type=_wrong_answer_error_type(result),
-        scaffolding_strategy=scaffolding_strategy(result.kind, result.hint_level),
+        scaffolding_strategy=scaffolding_strategy(
+            result.kind, result.hint_level, result.aimed
+        ),
     )
 
 

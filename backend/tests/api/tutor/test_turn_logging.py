@@ -20,9 +20,9 @@ START = (
     "¡Vamos! Queremos resolver 2x + 4 = 14 paso a paso. "
     "¿Qué te pide hacer este problema?"
 )
-CLUE = (
-    "Todavía no. Buscamos el número que falta en 2x + 4 = 14. "
-    "¿Qué operación deshace lo que le hicieron a ese número?"
+CLUE = (  # the model rewords the question aimed at forgot_division, not the ladder's
+    "Todavía no. Vas bien, pero falta un paso: en 2x + 4 = 14 el número que falta "
+    "está multiplicado. ¿Cómo deshaces esa multiplicación?"
 )
 STEP = "Todavía no. Primero deshaz el + 4: quita 4 de los dos lados. ¿Cuánto es 14 - 4?"
 EXPLANATION = "Una fracción es una parte de un todo, como 1/4. ¿Qué parte comes tú?"
@@ -50,7 +50,7 @@ DIALOGUE = [
             "two_step_equations",
             "operaciones_combinadas",
             "forgot_division",
-            "concept_clue",
+            "target_misconception",
         ),
     ),
     (
@@ -144,7 +144,7 @@ def test_a_wrong_answer_is_labelled_with_its_misconception_and_rung():
         concept_subconcept="two_step_equations",
         cnb_topic="operaciones_combinadas",
         error_type="forgot_division",
-        scaffolding_strategy="concept_clue",
+        scaffolding_strategy="target_misconception",
     )
 
 
