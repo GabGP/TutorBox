@@ -1,0 +1,121 @@
+{
+  "note": "The tutor's pre-written knowledge, authored offline (docs/tutor/knowledge-base-brief.md) and checked by tests/modes/socratic/test_knowledge_base.py. 'explanations' is keyed by the topic ids of cnb_matematicas.json; 'misconceptions' by the slugs classify_error returns, and {p} stands for the child's problem.",
+  "explanations": {
+    "numeracion_maya": [
+      "Los números mayas se escriben con tres símbolos: un punto vale 1, una barra vale 5 y la concha vale 0. Para escribir 7 dibujas una barra y dos puntos. ¿Cómo escribirías el 8?",
+      "El sistema maya es vigesimal: cuenta de 20 en 20, como si usaras los dedos de las manos y de los pies. Nosotros contamos de 10 en 10. ¿Por qué crees que eligieron el 20?"
+    ],
+    "suma_resta": [
+      "Sumar es juntar cantidades. Si tienes 3 canicas y te dan 4 más, las juntas: 3 + 4 = 7. Restar es quitar: si de esas regalas 4, te quedan 3. ¿Me das un ejemplo tuyo de sumar o de restar?",
+      "Para sumar números grandes, ponlos uno debajo del otro: unidades con unidades y decenas con decenas. Empieza por las unidades y, si se juntan diez o más, llevas una decena. ¿Qué números te gustaría sumar así?",
+      "La resta es lo contrario de la suma. Como 5 + 3 = 8, entonces 8 - 3 = 5. Por eso puedes revisar una resta haciendo una suma. ¿Se te ocurre otro ejemplo?"
+    ],
+    "multiplicacion": [
+      "Multiplicar es sumar el mismo número varias veces. 3 × 4 quiere decir 4 + 4 + 4. Así no tienes que contar de uno en uno. ¿Qué suma repetida sería 2 × 5?",
+      "Las tablas de multiplicar son sumas repetidas que aprendes de memoria. En la tabla del 5 vas saltando de 5 en 5: 5, 10, 15, 20. ¿Qué número sigue?"
+    ],
+    "division": [
+      "Dividir es repartir en partes iguales. Si repartes 12 galletas entre 3 amigos, a cada uno le tocan 4, porque 3 × 4 = 12. ¿Qué repartirías tú en partes iguales?",
+      "La división es lo contrario de la multiplicación: para dividir entre 5 buscas en la tabla del 5. A veces sobra algo, y eso se llama residuo. ¿En qué tabla buscarías para dividir entre 4?"
+    ],
+    "operaciones_combinadas": [
+      "Cuando hay varias operaciones seguimos un orden: primero lo que está entre paréntesis, luego multiplicar y dividir, y al final sumar y restar. En 2 + 3 × 4 se hace antes 3 × 4. ¿Qué harías después?",
+      "En una operación con un número que falta buscamos el número escondido. Para encontrarlo deshacemos lo que le hicieron: lo contrario de sumar es restar y lo contrario de multiplicar es dividir. ¿Cómo deshaces una resta?"
+    ],
+    "potencias": [
+      "Una potencia es una multiplicación repetida del mismo número. 2 al cubo quiere decir 2 × 2 × 2. El exponente, el número pequeño de arriba, dice cuántas veces se multiplica. ¿Qué multiplicación sería 3 al cuadrado?",
+      "Elevar al cuadrado es multiplicar un número por sí mismo: 4 al cuadrado es 4 × 4. Se llama así porque da el área de un cuadrado con ese lado. ¿Qué multiplicación sería 5 al cuadrado?"
+    ],
+    "divisibilidad": [
+      "Los múltiplos de un número salen de su tabla: los de 3 son 3, 6, 9, 12 y siguen. Un divisor es un número que divide a otro sin que sobre nada. ¿Me dices otro múltiplo de 3?",
+      "Un número primo solo se puede dividir entre 1 y entre él mismo, como 2, 3, 5 y 7. El 6 no es primo porque también se divide entre 2 y entre 3. ¿Crees que el 9 es primo?"
+    ],
+    "fracciones": [
+      "Una fracción es una parte de un todo que se partió en pedazos iguales. Si partes una tortilla en 4 pedazos iguales y comes 1, comiste 1/4. ¿Qué fracción de la tortilla queda?",
+      "En una fracción, el denominador es el número de abajo: dice en cuántas partes iguales se partió el todo. El numerador, arriba, dice cuántas partes tomas. En 3/4 tomas 3 de 4 partes. ¿Me das otro ejemplo?",
+      "Para sumar fracciones, los pedazos deben ser del mismo tamaño, o sea, tener el mismo denominador. 1/4 + 2/4 = 3/4: sumas los pedazos y el tamaño no cambia. ¿Qué harías si los denominadores fueran diferentes?"
+    ],
+    "decimales": [
+      "Los números decimales sirven para escribir partes más pequeñas que 1. Después del punto vienen los décimos: 0.5 es la mitad de 1. ¿Dónde has visto números con punto decimal?",
+      "En un decimal, cada lugar después del punto vale diez veces menos: primero los décimos y luego los centésimos. Por eso al sumar decimales se pone el punto debajo del punto. ¿Qué pasaría si no los alineas?"
+    ],
+    "razones_porcentajes": [
+      "Un porcentaje es una parte de cada 100. El 50% es la mitad, porque 50 es la mitad de 100. Si tienes 100 canicas y el 20% son rojas, hay 20 rojas. ¿Qué parte del total sería el 25%?",
+      "Una razón compara dos cantidades que crecen juntas. Si por 2 tortillas pagas 1 quetzal, por 4 tortillas pagas 2 quetzales. ¿Qué pasa con el precio si compras el doble?"
+    ],
+    "numeros_romanos": [
+      "Los números romanos se escriben con letras mayúsculas. Si una letra de menor valor va después de otra, se suma; si va antes, se resta. ¿Qué números romanos has visto en un reloj?",
+      "Los romanos no tenían el cero y usaban siete letras para escribir sus números. Todavía los vemos en relojes y en los nombres de los siglos. ¿Dónde has visto números romanos?"
+    ],
+    "conjuntos": [
+      "Un conjunto es un grupo de cosas que tienen algo en común, como el conjunto de las frutas o el de los números pares. Cada cosa del grupo se llama elemento. ¿Qué conjunto puedes formar con cosas de tu clase?",
+      "La unión junta todos los elementos de dos conjuntos. La intersección tiene solo los que están en los dos al mismo tiempo. ¿Qué habría en la intersección de las frutas y las cosas rojas?"
+    ],
+    "patrones": [
+      "Un patrón es algo que se repite siguiendo una regla. En 2, 4, 6, 8 la regla es sumar 2 cada vez. Si descubres la regla, puedes saber qué número sigue. ¿Cuál es la regla de 3, 6, 9?",
+      "Para encontrar la regla de una serie, mira cuánto cambia de un número al siguiente. En 5, 10, 15 cada número aumenta 5. ¿Me inventas una serie con otra regla?"
+    ],
+    "ubicacion": [
+      "En el plano cartesiano cada punto tiene dos números, como (3, 2): el primero dice cuánto avanzas hacia la derecha y el segundo cuánto subes. ¿Hacia dónde te mueves primero para llegar a (4, 1)?",
+      "Los puntos cardinales nos ayudan a ubicarnos: norte, sur, este y oeste. El sol sale por el este y se oculta por el oeste. ¿Hacia qué lado de tu escuela sale el sol?"
+    ],
+    "geometria": [
+      "Las figuras se reconocen por sus lados y por sus esquinas, que se llaman vértices. El triángulo tiene 3 lados, el cuadrado tiene 4 lados iguales y el círculo no tiene lados. ¿Qué figuras ves cerca de ti?",
+      "Un ángulo es la abertura entre dos líneas que se juntan en un punto. La esquina de una hoja es un ángulo recto. Si es más cerrado se llama agudo y si es más abierto, obtuso. ¿Dónde ves un ángulo recto?"
+    ],
+    "perimetro_area": [
+      "El perímetro es la medida de todo el contorno de una figura: se suman sus lados. En un cuadrado de lado 3 es 3 + 3 + 3 + 3. El área es el espacio de adentro. ¿Cuál medirías para cercar un terreno?",
+      "El área dice cuántos cuadritos caben dentro de una figura. En un rectángulo de 4 por 2 caben 2 filas de 4 cuadritos. ¿Cómo los contarías sin contarlos uno por uno?"
+    ],
+    "solidos": [
+      "Los sólidos geométricos ocupan espacio: se pueden agarrar. El cubo tiene 6 caras cuadradas, como un dado. La esfera es redonda como una pelota y no tiene caras planas. ¿Qué sólido se parece a una lata?",
+      "En un sólido, las caras son sus superficies planas, las aristas son las líneas donde se juntan dos caras y los vértices son las esquinas. ¿Cuántas caras tiene una caja de zapatos?"
+    ],
+    "medidas": [
+      "Medir es comparar algo con una unidad. Para el largo usamos metros y centímetros: 1 metro tiene 100 centímetros. Para el peso usamos libras y para los líquidos, litros. ¿Con qué unidad medirías tu lápiz?",
+      "Hay unidades grandes y pequeñas para medir lo mismo. 1 libra tiene 16 onzas y 1 quintal tiene 100 libras. Elegimos la unidad según el tamaño de lo que medimos. ¿Qué pesarías en quintales?"
+    ],
+    "tiempo": [
+      "El reloj mide el tiempo. La aguja corta marca las horas y la larga los minutos. 1 hora tiene 60 minutos, y media hora son 30 minutos. ¿Dónde está la aguja larga cuando pasa media hora?",
+      "El calendario gregoriano tiene 12 meses y 365 días. El calendario maya Cholq'ij tiene 260 días, que se forman con 13 números y 20 nombres de días. ¿En qué mes es tu cumpleaños?"
+    ],
+    "dinero": [
+      "En Guatemala usamos quetzales y centavos. 1 quetzal tiene 100 centavos, así que 50 centavos son la mitad de 1 quetzal. ¿Con qué monedas juntarías 1 quetzal?",
+      "El vuelto es el dinero que te devuelven cuando pagas con más de lo que cuesta algo. Para saberlo, al dinero que diste le quitas el precio. ¿Qué operación usarías para calcular el vuelto?"
+    ],
+    "estadistica": [
+      "Los datos son información que juntamos, como la fruta favorita de cada compañero. En una tabla los contamos, y en una gráfica de barras la barra más alta muestra lo que más se repite. ¿Qué preguntarías en una encuesta?",
+      "El promedio reparte un total en partes iguales. Si en 2 días lees 4 y 6 páginas, juntas todas las páginas y las repartes entre los 2 días. ¿Qué operaciones usarías?"
+    ],
+    "probabilidad": [
+      "La probabilidad dice qué tan fácil es que algo pase. Al lanzar una moneda hay 2 resultados posibles, cara o escudo, y los dos son igual de probables. ¿Qué resultados puede dar un dado?",
+      "Un suceso es seguro si siempre pasa, posible si a veces pasa e imposible si nunca pasa. Sacar un 7 con un dado es imposible. ¿Me dices algo que sea seguro?"
+    ],
+    "numeracion": [
+      "En un número, cada cifra vale según su lugar. En 34, el 3 vale 3 decenas, o sea 30, y el 4 vale 4 unidades. Por eso 34 y 43 no son iguales. ¿Cuánto vale el 5 en 52?",
+      "Para comparar dos números, mira primero cuál tiene más cifras. Si tienen las mismas, compara de izquierda a derecha: 52 es mayor que 48 porque 5 decenas son más que 4. ¿Cuál es mayor, 39 o 41?"
+    ],
+    "problemas": [
+      "Para resolver un problema, primero lee con calma y busca qué te preguntan. Luego mira qué datos tienes y decide si hay que juntar, quitar, repetir o repartir. ¿Qué problema quieres resolver?",
+      "Las palabras de un problema dan pistas: juntar es sumar, quitar es restar, repetir grupos iguales es multiplicar y repartir es dividir. ¿Qué palabras tiene tu problema?"
+    ]
+  },
+  "misconceptions": {
+    "alignment_error": "En {p}, escribe un número debajo del otro. ¿Quedaron las unidades debajo de las unidades?",
+    "added_instead_of_subtracted": "Mira bien el signo de {p}. ¿Te pide juntar o quitar?",
+    "borrowing_error": "En {p}, mira las unidades: ¿al número de arriba le alcanza para quitarle el de abajo, o hay que pedir prestada una decena?",
+    "table_lookup_error": "Estuviste muy cerca. Cuenta otra vez los grupos de {p}: ¿te sobró o te faltó algún grupo?",
+    "inverted_division": "En {p}, ¿cuál es el número que se reparte y entre cuántos se reparte? Fíjate en el orden.",
+    "ignored_parentheses": "En {p} hay paréntesis. ¿Qué operación se hace antes que las demás?",
+    "left_to_right_precedence": "En {p} hay varias operaciones. ¿Cuál va antes: la multiplicación y la división, o la suma y la resta?",
+    "added_denominators": "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se suman los denominadores, o hay que tener pedazos del mismo tamaño?",
+    "subtracted_denominators": "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se restan los denominadores, o hay que tener pedazos del mismo tamaño?",
+    "wrong_inverse_operation": "En {p}, ¿qué operación le hicieron al número que falta? ¿Con cuál operación se deshace?",
+    "forgot_division": "Vas bien, pero falta un paso. En {p}, el número que falta está multiplicado: ¿cómo deshaces esa multiplicación?",
+    "divided_before_subtracting": "En {p}, ¿qué se deshace antes: lo que se suma o se resta, o lo que multiplica?",
+    "subtracted_instead_of_divided": "En {p}, un número multiplica al que falta. ¿Una multiplicación se deshace restando o dividiendo?",
+    "sign_inversion_error": "En {p}, mira el signo del número que acompaña al que falta. ¿Se deshace sumando o restando?",
+    "multiplied_by_percentage_directly": "Un porcentaje es una parte de cada cien. En {p}, ¿multiplicas por el número completo o por esa parte de cien?",
+    "subtracted_percentage_as_raw_number": "En {p}, el porcentaje no es una cantidad para restar: es una parte del total. ¿Qué parte del total te piden?"
+  }
+}

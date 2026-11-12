@@ -217,6 +217,6 @@ def test_prompting_replies():
     )
     assert "con 5 y 3:" in word_problem([Fraction(5), Fraction(3)])
     assert "fracciones" in think_first(topic)
-    assert "fracciones" in explain_fallback(topic)
+    assert explain_fallback(topic).startswith("Una fracción es una parte de un todo")
     assert "un problema de fracciones y" in idea_thanks(topic)
     assert "un problema y" in idea_thanks(None)

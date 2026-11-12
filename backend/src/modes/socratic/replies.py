@@ -6,8 +6,10 @@ refusal names what the tutor can do instead, so a child is never left stuck.
 
 from fractions import Fraction
 
+from modes.socratic.containment import leaks
 from modes.socratic.curriculum import Topic
 from modes.socratic.input_guard import InputProblem
+from modes.socratic.knowledge import explanations
 from modes.socratic.numbers import format_value
 from modes.socratic.problems import Problem
 from modes.socratic.text import Folded
@@ -119,7 +121,21 @@ def idea_thanks(topic: Topic | None) -> str:
     )
 
 
-def explain_fallback(topic: Topic) -> str:
+def explain_fallback(
+    topic: Topic, question: str = "", active: Problem | None = None
+) -> str:
+    """A pre-written explanation of the topic (knowledge_base.json).
+
+    One that would give away the answer of the problem in progress (`active`) is
+    left out; with none left, the child is invited to share what they know.
+    """
+    safe = [
+        text
+        for text in explanations(topic.id)
+        if active is None or not leaks(text, active)
+    ]
+    if safe:  # the same question gets the same text; another wording, maybe another
+        return safe[len(question) % len(safe)]
     return (
         f"Hablemos de {topic.title}. ¿Qué sabes ya de este tema? Dime un ejemplo "
         "y lo pensamos juntos."

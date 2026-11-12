@@ -85,7 +85,7 @@ def plan(conversation: Conversation, message: str) -> tuple[Move, Conversation]:
     if folded.has_any(("cuanto*", "cuanta*")):
         move = Move("think", replies.think_first(topic), llm="rewrite", topic=topic)
         return move, explained
-    fallback = replies.explain_fallback(topic)
+    fallback = replies.explain_fallback(topic, message, conversation.problem)
     move = Move("explain", fallback, llm="explain", topic=topic, question=message)
     return move, explained
 

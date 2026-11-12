@@ -4,17 +4,13 @@ import pytest
 
 from modes.socratic import hints, misconception_hints
 from modes.socratic.containment import leaks
-from modes.socratic.misconception_hints import QUESTIONS, misconception_hint
+from modes.socratic.misconception_hints import misconception_hint
 from modes.socratic.planner import plan
 from modes.socratic.problems import find_problem
 from modes.socratic.state import Conversation
-from modes.socratic.telemetry import ERROR_SLUGS, UNCLASSIFIED
+from modes.socratic.telemetry import UNCLASSIFIED
 from tests.conftest import required
 from tests.modes.socratic.telemetry.test_error_type import LABELLED
-
-
-def test_every_misconception_the_classifier_names_has_a_question():
-    assert set(QUESTIONS) == ERROR_SLUGS
 
 
 @pytest.mark.parametrize(("text", "attempt", "slug"), LABELLED)
