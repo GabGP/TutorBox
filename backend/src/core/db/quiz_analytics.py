@@ -82,7 +82,7 @@ def _topic_scores(conn: sqlite3.Connection, params: dict) -> list[TopicScore]:
     for topic, answers, correct, previous_answers, previous_correct in rows:
         if not answers:
             continue
-        accuracy = _percent(correct, answers)
+        accuracy = round(100 * correct / answers, 1)  # answers is not 0 here
         before = _percent(previous_correct, previous_answers)
         change = None if before is None else round(accuracy - before, 1)
         topics.append(TopicScore(topic, answers, correct, accuracy, before, change))
@@ -119,7 +119,7 @@ def summarize_quiz_analytics(
         best_topic=topics[0].topic if topics else None,
         weakest_topic=topics[-1].topic if len(topics) > 1 else None,
         most_improved_topic=(
-            max(improved, key=lambda t: t.change).topic if improved else None
+            max(improved, key=lambda t: t.change or 0.0).topic if improved else None
         ),
         topics=topics,
         misconceptions=[MisconceptionCount(*row) for row in misconceptions],
