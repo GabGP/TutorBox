@@ -2,73 +2,45 @@
 
 0 restates the goal with the child's numbers, 1 names the concept and 2 isolates
 a smaller step: the units, counting on, one row less of the table. Level 3, the
-worked example, is in hints.py.
+worked example, is in hints.py. The wordings live in knowledge_base.json
+(paraphrases, five per template); the code only picks the template and computes
+its numbers. `p` is the problem's text, which picks the wording.
 """
+
+from modes.socratic.knowledge import phrase
 
 __all__ = ["LADDERS"]
 
 
-def _suma(a: int, b: int, level: int) -> str:
-    if level == 0:
-        return (
-            f"¡Vamos a pensarlo juntos! Queremos juntar {a} y {b}. ¿Por dónde empiezas?"
-        )
-    if level == 1:
-        return (
-            f"Sumar es juntar. Si tienes {a} y te dan {b} más, ¿cuántos tienes? "
-            "Puedes separar cada número en decenas y unidades."
-        )
+def _suma(a: int, b: int, level: int, p: str) -> str:
+    if level < 2:
+        return phrase(f"suma_{level}", p, a=a, b=b)
     if a < 10 and b < 10:
-        return f"Empieza en {max(a, b)} y cuenta {min(a, b)} más. ¿A qué número llegas?"
-    return f"Empieza por las unidades: ¿cuánto es {a % 10} + {b % 10}?"
+        return phrase("suma_2_count", p, big=max(a, b), small=min(a, b))
+    return phrase("suma_2_units", p, ua=a % 10, ub=b % 10)
 
 
-def _resta(a: int, b: int, level: int) -> str:
-    if level == 0:
-        return f"Vamos a pensar en {a} - {b}. ¿Qué pasa cuando a {a} le quitas {b}?"
-    if level == 1:
-        return (
-            f"Restar es quitar. Si tienes {a} y quitas {b}, ¿cuántos quedan? "
-            f"También puedes pensar: ¿qué número sumado a {b} da {a}?"
-        )
+def _resta(a: int, b: int, level: int, p: str) -> str:
+    if level < 2:
+        return phrase(f"resta_{level}", p, a=a, b=b)
     if a < 10:
-        return f"Empieza en {a} y cuenta hacia atrás {b}. ¿A qué número llegas?"
+        return phrase("resta_2_back", p, a=a, b=b)
     if a - b < 10:  # the units step (32 - 25 → 12 - 5) would be the whole answer
-        return f"Cuenta desde {b} hasta llegar a {a}. ¿Cuántos pasos das?"
+        return phrase("resta_2_up", p, a=a, b=b)
     units_a, units_b = a % 10, b % 10
     if units_a >= units_b:
-        return f"Empieza por las unidades: ¿cuánto es {units_a} - {units_b}?"
-    return (
-        f"Las unidades {units_a} son menos que {units_b}: pide prestada una "
-        f"decena. ¿Cuánto es {units_a + 10} - {units_b}?"
-    )
+        return phrase("resta_2_units", p, ua=units_a, ub=units_b)
+    return phrase("resta_2_borrow", p, ua=units_a, ub=units_b, ten=units_a + 10)
 
 
-def _multiplicacion(a: int, b: int, level: int) -> str | None:
-    if level == 0:
-        return f"Vamos a pensar en {a} × {b}. ¿Qué significa multiplicar {a} por {b}?"
-    if level == 1:
-        return (
-            f"Multiplicar es sumar el mismo número varias veces: {a} × {b} es "
-            f"sumar {a}, {b} veces. ¿Cómo empezarías?"
-        )
-    if b < 2:
+def _multiplicacion(a: int, b: int, level: int, p: str) -> str | None:
+    if level == 2 and b < 2:
         return None
-    return f"{a} × {b} es {a} × {b - 1} más otro {a}. ¿Cuánto es {a} × {b - 1}?"
+    return phrase(f"multiplicacion_{level}", p, a=a, b=b, prev=b - 1)
 
 
-def _division(a: int, b: int, level: int) -> str:
-    if level == 0:
-        return f"Vamos a pensar en {a} ÷ {b}. ¿Qué significa repartir {a} entre {b}?"
-    if level == 1:
-        return (
-            f"Dividir es repartir en partes iguales. Si repartes {a} entre {b}, "
-            f"¿cuántos le tocan a cada uno? Piensa en la tabla del {b}."
-        )
-    return (
-        f"¿Qué número multiplicado por {b} da {a}? Prueba la tabla del {b}: "
-        f"{b} × 1 = {b}, {b} × 2 = {b * 2}. ¿Sigues?"
-    )
+def _division(a: int, b: int, level: int, p: str) -> str:
+    return phrase(f"division_{level}", p, a=a, b=b, b2=b * 2)
 
 
 LADDERS = {

@@ -2,6 +2,8 @@
 
 import threading
 
+import pytest
+
 from core.config.tutor_settings import TutorConfig
 from core.llm import LLMClient, MockLLMClient
 from modes.socratic import (
@@ -16,6 +18,8 @@ from modes.socratic.hints import hint
 from modes.socratic.problems import find_problem
 from modes.socratic.prompts import explain_prompt, rewrite_prompt
 from tests.conftest import required
+
+pytestmark = pytest.mark.usefixtures("first_wording")  # the rewording is of wording 0
 
 
 def _tutor(*responses: str) -> tuple[SocraticTutor, MockLLMClient]:
@@ -85,6 +89,21 @@ def test_concept_questions_use_the_explain_prompt_and_replies_skip_the_model():
 
     assert tutor.respond("login-1", "hola").kind == "social"
     assert len(client.call_history) == 1
+
+
+def test_with_rewording_off_hints_skip_the_model_and_explanations_still_use_it():
+    client = MockLLMClient(
+        ["Una fracción es una parte de un todo, como 1/4. ¿Qué parte comes tú?"]
+    )
+    gateway = TutorGateway(client, max_concurrent=1, queue_seconds=0.1)
+    tutor = SocraticTutor(gateway, ConversationStore(), rewrite_hints=False)
+
+    hinted = tutor.respond("login-1", "23 + 45")
+
+    assert hinted.reply == hint(required(find_problem("23 + 45")), 0)
+    assert not hinted.used_model and hinted.llm_raw is None
+    assert not hinted.containment_triggered and not client.call_history
+    assert tutor.respond("login-2", "¿qué es una fracción?").used_model
 
 
 def test_an_explanation_always_ends_with_a_question_for_the_child():

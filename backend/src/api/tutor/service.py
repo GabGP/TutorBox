@@ -24,7 +24,7 @@ def get_tutor() -> SocraticTutor:
     gateway = TutorGateway(
         TutorSLMClient(config), config.max_concurrent, config.queue_seconds
     )
-    return SocraticTutor(gateway, ConversationStore())
+    return SocraticTutor(gateway, ConversationStore(), config.rewrite_hints)
 
 
 @lru_cache(maxsize=1)

@@ -23,11 +23,12 @@ def test_a_new_problem_starts_the_ladder_at_level_0():
 
 def test_wrong_answers_climb_the_ladder_up_to_level_3():
     conversation = _working_on("23 + 45")
+    problem = required(conversation.problem)
 
     for expected in (1, 2, 3, MAX_LEVEL):
         move, conversation = plan(conversation, "70")
         assert (move.kind, move.level, move.is_correct) == ("hint", expected, False)
-        assert move.text.startswith("Todavía no.")
+        assert move.text.endswith(hints.hint(problem, expected))
 
 
 def test_the_right_answer_is_praised_and_clears_the_problem():

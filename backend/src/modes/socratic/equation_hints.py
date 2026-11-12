@@ -10,37 +10,12 @@ from fractions import Fraction
 
 from core.math_engine import exact_fraction, parse_equation_components
 from modes.socratic.containment import leaks
+from modes.socratic.knowledge import phrase
 from modes.socratic.numbers import extract_numbers
 from modes.socratic.problems import UNKNOWN, Problem, sympy_equation
 
 __all__ = ["equation_hint"]
 
-_STEP = {  # level 2: where to start, never the result
-    "suma": "Cuenta desde {b} hasta llegar a {c}. ¿Cuántos pasos das?",
-    "resta": "Empieza en {c} y cuenta {b} hacia adelante. ¿A qué número llegas?",
-    "producto": "¿Qué número multiplicado por {a} da {c}? Prueba la tabla del {a}: "
-    "{a} × 1 = {a}, {a} × 2 = {a2}. ¿Sigues?",
-    "cociente": "Si repartes un número entre {a} y a cada uno le tocan {c}, piensa "
-    "en {a} grupos de {c}. ¿Cuántos hay en total?",
-    "dos_pasos_suma": "Primero deshaz el + {b}: quita {b} de los dos lados. "
-    "¿Cuánto es {c} - {b}?",
-    "dos_pasos_resta": "Primero deshaz el - {b}: suma {b} a los dos lados. "
-    "¿Cuánto es {c} + {b}?",
-}
-_WORKED = {  # level 3: a parallel equation, solved
-    "suma": "en {u} + {b} = {c} contamos desde {b} hasta {c}: son {x} pasos, así "
-    "que {u} = {x}",
-    "resta": "en {u} - {b} = {c} contamos {b} hacia adelante desde {c}: llegamos a "
-    "{x}, así que {u} = {x}",
-    "producto": "en {a} × {u} = {c} buscamos en la tabla del {a}: {a} × {x} = {c}, "
-    "así que {u} = {x}",
-    "cociente": "en {u} ÷ {a} = {c} juntamos {a} grupos de {c}: {a} × {c} = {x}, así "
-    "que {u} = {x}",
-    "dos_pasos_suma": "en {a} × {u} + {b} = {c} quitamos {b} de los dos lados: "
-    "{a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}",
-    "dos_pasos_resta": "en {a} × {u} - {b} = {c} sumamos {b} a los dos lados: "
-    "{a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}",
-}  # one sentence each: a reworded hint keeps at most three (guard.clean)
 # (coefficient, constant, solution): x + 3 = 8, x - 2 = 4, 3 × x = 12... Two
 # examples of each shape share no number, so one never gives an answer away.
 _EXAMPLES = (
@@ -57,15 +32,20 @@ def equation_hint(problem: Problem, level: int) -> str | None:
         return None
     shape, unknown, numbers = structure
     if level == 2:
-        return _STEP[shape].format(**numbers)
+        return phrase(f"eq_step_{shape}", problem.text, **numbers)
     for q, s, x in _EXAMPLES:
         q, s = Fraction(q), Fraction(s)
         example = _numbers(q, s, q * x + s)
         if _shape(q, s) != shape or example == numbers:
             continue
-        worked = _WORKED[shape].format(**example, u=unknown, x=x)
-        text = f"Mira este ejemplo: {worked}. Ahora te toca: ¿qué número va en "
-        text += f"{problem.text}?"
+        text = phrase(
+            f"eq_worked_{shape}",
+            problem.text,
+            **example,
+            u=unknown,
+            x=x,
+            p=problem.text,
+        )
         if not leaks(text, problem):
             return text
     return None

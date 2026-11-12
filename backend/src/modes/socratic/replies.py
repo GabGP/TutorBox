@@ -9,7 +9,7 @@ from fractions import Fraction
 from modes.socratic.containment import leaks
 from modes.socratic.curriculum import Topic
 from modes.socratic.input_guard import InputProblem
-from modes.socratic.knowledge import explanations
+from modes.socratic.knowledge import explanations, phrase
 from modes.socratic.numbers import format_value
 from modes.socratic.problems import Problem
 from modes.socratic.text import Folded
@@ -98,18 +98,11 @@ def back_to(problem: Problem) -> str:
 
 def word_problem(numbers: list[Fraction]) -> str:
     listed = " y ".join(format_value(n) for n in numbers[:4])
-    return (
-        f"Vamos a pensar en tu problema. ¿Qué operación necesitas hacer con "
-        f"{listed}: sumar, restar, multiplicar o dividir? Escríbela con los "
-        "números, usando +, -, × o ÷."
-    )
+    return phrase("word_problem", listed, listed=listed)
 
 
 def think_first(topic: Topic) -> str:
-    return (
-        f"¡Buena pregunta sobre {topic.title}! ¿Qué crees tú? Piensa en un "
-        "ejemplo y cuéntame tu idea."
-    )
+    return phrase("think_first", topic.id, title=topic.title)
 
 
 def idea_thanks(topic: Topic | None) -> str:

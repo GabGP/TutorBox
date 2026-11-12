@@ -42,9 +42,16 @@ class TurnResult:
 class SocraticTutor:
     """Mode 2 tutor: deterministic pedagogy, optional model voice, hard guards."""
 
-    def __init__(self, gateway: TutorGateway, store: ConversationStore) -> None:
+    def __init__(
+        self,
+        gateway: TutorGateway,
+        store: ConversationStore,
+        rewrite_hints: bool = True,
+    ) -> None:
+        """`rewrite_hints=False` shows hints as written (TUTOR_REWRITE_HINTS)."""
         self._gateway = gateway
         self._store = store
+        self._rewrite_hints = rewrite_hints
 
     def respond(self, key: str, message: str) -> TurnResult:
         move, conversation = plan(self._store.get(key), message)
@@ -76,7 +83,7 @@ class SocraticTutor:
         `active` is the problem still in progress after this move: an explanation
         given mid-problem must not leak its answer either.
         """
-        if move.llm == "none":
+        if move.llm == "none" or (move.llm == "rewrite" and not self._rewrite_hints):
             return move.text, None, False, False
         if move.llm == "explain" and move.topic is not None:
             prompt = explain_prompt(move.question, move.topic.title)

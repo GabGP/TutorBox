@@ -85,7 +85,7 @@ graph TD
 ### <a id="mode-2-socratic-tutor"></a>Mode 2: Socratic Tutor (Conversational Math Practice)
 * **Workflow**: Individual practice mode for students after class.
 * **Socratic Guardrails**: Uses SymPy to parse mathematical expressions and evaluate correctness. The SLM is mechanically blocked from delivering final solutions or worked answers via the deterministic hint escalation ladder ($0 \to 3$).
-* **Implementation**: a text-only chat on `/alumno/`, limited to the CNB mathematics of 1.º–5.º primaria. The DeepSeek-R1-Distill-Qwen-1.5B model only rewords the deterministic hint or explains a concept, and an output guard rejects any reply that states the answer, adds numbers, or is not plain Spanish ([Tutor API](../api/tutor.md#3-guardrails)).
+* **Implementation**: a text-only chat on `/alumno/`, limited to the CNB mathematics of 1.º–5.º primaria. Hints are deterministic and shown as written. The DeepSeek-R1-Distill-Qwen-1.5B model only explains a concept (or rewords each hint when `TUTOR_REWRITE_HINTS=true`), and an output guard rejects any reply that states the answer, adds numbers, or is not plain Spanish ([Tutor API](../api/tutor.md#3-guardrails)).
 
 ---
 

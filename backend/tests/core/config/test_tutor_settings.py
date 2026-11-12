@@ -16,6 +16,7 @@ _NAMES = (
     "TUTOR_MAX_CONCURRENT",
     "TUTOR_QUEUE_SECONDS",
     "TUTOR_TURNS_PER_MINUTE",
+    "TUTOR_REWRITE_HINTS",
 )
 
 
@@ -39,6 +40,7 @@ def test_env_overrides_and_invalid_values_fall_back(monkeypatch):
     monkeypatch.setenv("TUTOR_MAX_CONCURRENT", "3")
     monkeypatch.setenv("TUTOR_QUEUE_SECONDS", "0")
     monkeypatch.setenv("TUTOR_TURNS_PER_MINUTE", "30")
+    monkeypatch.setenv("TUTOR_REWRITE_HINTS", "true")
 
     assert load_tutor_config() == TutorConfig(
         model_name="otro:1b",
@@ -46,6 +48,7 @@ def test_env_overrides_and_invalid_values_fall_back(monkeypatch):
         max_concurrent=3,
         queue_seconds=0.0,
         turns_per_minute=30,
+        rewrite_hints=True,
     )
 
 

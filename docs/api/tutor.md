@@ -104,7 +104,8 @@ flowchart LR
     I -->|image, file, too long| D["Deterministic reply"]
     I --> P["Planner<br/>CNB scope · SymPy · hint ladder 0-3"]
     P -->|greeting, refusal, praise| D
-    P -->|hint / concept| L["DeepSeek-R1-Distill-Qwen-1.5B<br/>rewords the hint or explains"]
+    P -->|hint| D
+    P -->|concept, or hint if TUTOR_REWRITE_HINTS| L["DeepSeek-R1-Distill-Qwen-1.5B<br/>explains, or rewords the hint"]
     L --> G{"Output guard"}
     G -->|safe| R["Model's wording"]
     G -->|unsafe, slow or down| D
@@ -116,10 +117,13 @@ cien" is 200 + 100), finds the problem in the message ("23 + 45", "7 por 8", "la
 ladder (0 restate, 1 concept, 2 smaller step, 3 worked example with other numbers). A wrong answer or a
 request for help moves one level up, never past 3. For an equation, level 2 names the first step to
 undo and level 3 solves a parallel equation (`2 × x + 1 = 7` when the child has `2x + 4 = 14`). The
-**model** only rewords the chosen hint, or explains a CNB concept in two sentences.
+**model** explains a CNB concept in two sentences. Hints are shown as the planner wrote them, so they
+arrive instantly with `used_model: false`; a wrong answer opens with one of the pre-written "todavía
+no" wordings of `knowledge_base.json`. With `TUTOR_REWRITE_HINTS=true` the model rewords every hint
+instead, as it did before, and the rewording guards below apply.
 
 Measured on the Jetson, the 1.5B distill asked to tutor freely invents dialogue turns and states the
-answer; asked to reword a given hint it stays close to it. Replies take about 5–15 s (the model always
+answer; asked to reword a given hint it stays close to it. Model replies take about 5–15 s (the model always
 reasons first); the first one after Ollama unloads the model takes about 30 s.
 
 ---

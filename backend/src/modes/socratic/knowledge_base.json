@@ -1,5 +1,5 @@
 {
-  "note": "The tutor's pre-written knowledge, authored offline (docs/tutor/knowledge-base-brief.md) and checked by tests/modes/socratic/test_knowledge_base.py. 'explanations' is keyed by the topic ids of cnb_matematicas.json; 'misconceptions' by the slugs classify_error returns, and {p} stands for the child's problem.",
+  "note": "The tutor's pre-written knowledge, authored offline (docs/tutor/knowledge-base-brief.md) and checked by tests/modes/socratic/test_knowledge_base.py. 'explanations' is keyed by the topic ids of cnb_matematicas.json; 'misconceptions' by the slugs classify_error returns, with five questions each and {p} for the child's problem; 'paraphrases' holds the wordings of a phrase the tutor repeats: 'not_yet' (an opener) and one key per hint template, each with exactly five wordings that share the named str.format placeholders of the first (the text the code used to hold).",
   "explanations": {
     "numeracion_maya": [
       "Los números mayas se escriben con tres símbolos: un punto vale 1, una barra vale 5 y la concha vale 0. Para escribir 7 dibujas una barra y dos puntos. ¿Cómo escribirías el 8?",
@@ -100,22 +100,429 @@
       "Las palabras de un problema dan pistas: juntar es sumar, quitar es restar, repetir grupos iguales es multiplicar y repartir es dividir. ¿Qué palabras tiene tu problema?"
     ]
   },
+  "paraphrases": {
+    "not_yet": [
+      "Todavía no.",
+      "Aún no.",
+      "No es ese número.",
+      "Buen intento, pero todavía no.",
+      "Ese no es, pero sigamos.",
+      "Gracias por intentarlo, pero todavía no."
+    ],
+    "suma_0": [
+      "¡Vamos a pensarlo juntos! Queremos juntar {a} y {b}. ¿Por dónde empiezas?",
+      "¡Piénsalo con calma! Tenemos {a} y {b} para juntar. ¿Cómo empezarías?",
+      "¡Manos a la obra! Hay que juntar {a} y {b}. ¿Qué haces primero?",
+      "¡Vamos paso a paso! La idea es juntar {a} y {b}. ¿Por dónde quieres empezar?",
+      "¡Tú puedes! Se trata de juntar {a} y {b}. ¿Cuál sería tu primer paso?"
+    ],
+    "suma_1": [
+      "Sumar es juntar. Si tienes {a} y te dan {b} más, ¿cuántos tienes? Puedes separar cada número en decenas y unidades.",
+      "Sumar es unir cantidades. Si tienes {a} y te regalan {b} más, ¿cuántos tienes ahora? Puedes partir cada número en decenas y unidades.",
+      "Sumar es agregar. Si tienes {a} y consigues {b} más, ¿cuántos hay en total? Prueba separando cada número en decenas y unidades.",
+      "Sumar es juntar lo que tienes. Si tienes {a} y llegan {b} más, ¿cuántos tienes? Ayúdate separando decenas y unidades.",
+      "Con sumar se junta todo. Si tienes {a} y te dan {b} más, ¿cuántos tienes en total? Intenta separar cada número en decenas y unidades."
+    ],
+    "suma_2_count": [
+      "Empieza en {big} y cuenta {small} más. ¿A qué número llegas?",
+      "Párate en {big} y avanza {small} números contando. ¿En cuál terminas?",
+      "Sigue contando desde {big}, {small} números más. ¿Dónde te detienes?",
+      "Pon tu dedo en {big} y cuenta {small} hacia adelante. ¿Qué número tocas al final?",
+      "Salta desde {big} contando {small} más. ¿En qué número caes?"
+    ],
+    "suma_2_units": [
+      "Empieza por las unidades: ¿cuánto es {ua} + {ub}?",
+      "Primero las unidades, las cifras de la derecha: ¿cuánto es {ua} + {ub}?",
+      "Comienza con las cifras de la derecha, las unidades: ¿cuánto da {ua} + {ub}?",
+      "Fíjate solo en las unidades para empezar: ¿cuánto es {ua} + {ub}?",
+      "Deja las decenas para después y suma las unidades: ¿cuánto es {ua} + {ub}?"
+    ],
+    "resta_0": [
+      "Vamos a pensar en {a} - {b}. ¿Qué pasa cuando a {a} le quitas {b}?",
+      "Pensemos en {a} - {b}. Si a {a} le quitas {b}, ¿qué pasa con la cantidad?",
+      "Miremos juntos {a} - {b}. ¿Qué ocurre cuando de {a} sacas {b}?",
+      "Veamos qué pide {a} - {b}. ¿Qué pasa si a {a} le quitas {b}?",
+      "Hablemos de {a} - {b}. ¿Qué le pasa a {a} cuando le quitas {b}?"
+    ],
+    "resta_1": [
+      "Restar es quitar. Si tienes {a} y quitas {b}, ¿cuántos quedan? También puedes pensar: ¿qué número sumado a {b} da {a}?",
+      "Restar es sacar. Si tienes {a} y sacas {b}, ¿cuántos quedan? Otra forma de pensarlo: ¿qué número sumado a {b} da {a}?",
+      "Restar es quitar. Si tenías {a} y se van {b}, ¿cuántos quedan? Puedes pensarlo al revés: ¿qué número sumado a {b} da {a}?",
+      "Restar es quitar. Si hay {a} y se llevan {b}, ¿cuántos quedan? Piensa también al revés: ¿qué número sumado a {b} da {a}?",
+      "Con restar quitamos cantidad. Si tienes {a} y regalas {b}, ¿cuántos te quedan? Otra pista: ¿qué número sumado a {b} da {a}?"
+    ],
+    "resta_2_back": [
+      "Empieza en {a} y cuenta hacia atrás {b}. ¿A qué número llegas?",
+      "Párate en {a} y retrocede {b} números contando. ¿En cuál terminas?",
+      "Cuenta para atrás desde {a}, {b} números. ¿Dónde te detienes?",
+      "Pon tu dedo en {a} y cuenta {b} hacia atrás. ¿Qué número tocas al final?",
+      "Retrocede desde {a} contando {b} pasos. ¿En qué número caes?"
+    ],
+    "resta_2_up": [
+      "Cuenta desde {b} hasta llegar a {a}. ¿Cuántos pasos das?",
+      "Empieza en {b} y sigue contando hasta {a}. ¿Cuántos pasos diste?",
+      "Camina contando desde {b} hasta {a}. ¿Cuántos pasos te hicieron falta?",
+      "Pon tu dedo en {b} y avanza hasta {a}. ¿Cuántos números saltaste?",
+      "Sube contando desde {b} hasta {a}. ¿Cuántos pasos das en el camino?"
+    ],
+    "resta_2_units": [
+      "Empieza por las unidades: ¿cuánto es {ua} - {ub}?",
+      "Primero las unidades, las cifras de la derecha: ¿cuánto es {ua} - {ub}?",
+      "Comienza con las cifras de la derecha, las unidades: ¿cuánto da {ua} - {ub}?",
+      "Fíjate solo en las unidades para empezar: ¿cuánto es {ua} - {ub}?",
+      "Deja las decenas para después y resta las unidades: ¿cuánto es {ua} - {ub}?"
+    ],
+    "resta_2_borrow": [
+      "Las unidades {ua} son menos que {ub}: pide prestada una decena. ¿Cuánto es {ten} - {ub}?",
+      "A {ua} no le alcanza para quitarle {ub}: pide prestada la decena de al lado. ¿Cuánto es {ten} - {ub}?",
+      "Como {ua} es menor que {ub}, necesitas pedir prestada una decena. ¿Cuánto es {ten} - {ub}?",
+      "Las unidades {ua} no alcanzan para quitar {ub}: pide prestada una decena y así tienes {ten}. ¿Cuánto es {ten} - {ub}?",
+      "Si a {ua} no le alcanza para quitar {ub}, pide prestado a las decenas. ¿Cuánto es {ten} - {ub}?"
+    ],
+    "multiplicacion_0": [
+      "Vamos a pensar en {a} × {b}. ¿Qué significa multiplicar {a} por {b}?",
+      "Pensemos en {a} × {b}. ¿Qué quiere decir multiplicar {a} por {b}?",
+      "Miremos juntos {a} × {b}. ¿Qué crees que significa {a} por {b}?",
+      "Veamos qué pide {a} × {b}. ¿Qué haces cuando multiplicas {a} por {b}?",
+      "Hablemos de {a} × {b}. ¿Cómo explicarías multiplicar {a} por {b}?"
+    ],
+    "multiplicacion_1": [
+      "Multiplicar es sumar el mismo número varias veces: {a} × {b} es sumar {a}, {b} veces. ¿Cómo empezarías?",
+      "Multiplicar es sumar lo mismo varias veces: {a} × {b} quiere decir sumar {a}, {b} veces. ¿Por dónde empezarías?",
+      "Con multiplicar sumamos el mismo número muchas veces: {a} × {b} es juntar {a}, {b} veces. ¿Cómo lo empezarías?",
+      "Multiplicar es sumar números iguales: {a} × {b} significa {a} sumado {b} veces. ¿Cómo lo harías?",
+      "Al multiplicar repetimos el mismo número en la suma: {a} × {b} es {a} sumado {b} veces. ¿Cuál sería tu primer paso?"
+    ],
+    "multiplicacion_2": [
+      "{a} × {b} es {a} × {prev} más otro {a}. ¿Cuánto es {a} × {prev}?",
+      "Piensa que {a} × {b} es {a} × {prev} y le sumas {a} más. ¿Cuánto es {a} × {prev}?",
+      "Mira este truco: {a} × {b} es {a} × {prev} y otro grupo de {a}. ¿Cuánto es {a} × {prev}?",
+      "Si ya sabes {a} × {prev}, solo falta sumar {a} para tener {a} × {b}. ¿Cuánto es {a} × {prev}?",
+      "{a} × {b} se arma con {a} × {prev} más otro {a}. ¿Cuánto es {a} × {prev}?"
+    ],
+    "division_0": [
+      "Vamos a pensar en {a} ÷ {b}. ¿Qué significa repartir {a} entre {b}?",
+      "Pensemos en {a} ÷ {b}. ¿Qué quiere decir repartir {a} entre {b}?",
+      "Miremos juntos {a} ÷ {b}. ¿Qué crees que pasa al repartir {a} entre {b}?",
+      "Veamos qué pide {a} ÷ {b}. ¿Cómo repartirías {a} entre {b}?",
+      "Hablemos de {a} ÷ {b}. ¿Qué haces cuando repartes {a} entre {b}?"
+    ],
+    "division_1": [
+      "Dividir es repartir en partes iguales. Si repartes {a} entre {b}, ¿cuántos le tocan a cada uno? Piensa en la tabla del {b}.",
+      "Dividir es repartir parejo. Si repartes {a} entre {b}, ¿cuántos le tocan a cada persona? Ayúdate con la tabla del {b}.",
+      "Dividir es dar a todos la misma cantidad. Si repartes {a} entre {b}, ¿cuánto recibe cada uno? Busca en la tabla del {b}.",
+      "Dividir es hacer partes iguales. Si tienes {a} y los repartes entre {b}, ¿cuántos le tocan a cada uno? Recuerda la tabla del {b}.",
+      "Con dividir repartimos en partes del mismo tamaño. Si repartes {a} entre {b}, ¿cuánto recibe cada uno? Mira la tabla del {b}."
+    ],
+    "division_2": [
+      "¿Qué número multiplicado por {b} da {a}? Prueba la tabla del {b}: {b} × 1 = {b}, {b} × 2 = {b2}. ¿Sigues?",
+      "Busca el número que, multiplicado por {b}, da {a}. Recorre la tabla del {b}: {b} × 1 = {b}, {b} × 2 = {b2}. ¿Sigues?",
+      "¿Con qué número hay que multiplicar {b} para llegar a {a}? Recorre la tabla del {b}: {b} × 1 = {b}, {b} × 2 = {b2}. ¿Vas viendo?",
+      "Piensa: ¿cuál número, al multiplicarlo por {b}, da {a}? Mira cómo va la tabla del {b}: {b} × 1 = {b}, {b} × 2 = {b2}. ¿Sigues?",
+      "¿Cuántos grupos de {b} caben en {a}? Sigue la tabla del {b}: {b} × 1 = {b}, {b} × 2 = {b2}. ¿Vas bien?"
+    ],
+    "generic_0": [
+      "Vamos a resolver {p} paso a paso. ¿Qué te pide hacer este problema?",
+      "Resolvamos {p} paso a paso. ¿Qué te pide este problema?",
+      "Empecemos con {p}, despacio y con calma. ¿Qué crees que hay que hacer?",
+      "Miremos {p} juntos. ¿Qué te está pidiendo este problema?",
+      "Vamos con {p}, sin prisa. ¿Qué tienes que averiguar?"
+    ],
+    "generic_1": [
+      "Piensa qué significa cada signo en {p}. ¿Qué vas a hacer primero?",
+      "Mira los signos de {p} y piensa qué quiere decir cada uno. ¿Qué harías primero?",
+      "Fíjate en cada signo de {p}. ¿Qué te dice cada signo?",
+      "Recorre {p} signo por signo. ¿Qué operación ves y qué harías primero?",
+      "Los signos de {p} te dan pistas. ¿Qué te dicen y qué harías primero?"
+    ],
+    "generic_2": [
+      "Resuelve primero una parte pequeña de {p}. ¿Qué parte puedes hacer tú?",
+      "Empieza por lo más fácil de {p}. ¿Qué parte puedes resolver tú?",
+      "Separa {p} en partes pequeñas. ¿Cuál parte te parece más fácil?",
+      "Elige la parte más sencilla de {p}. ¿Cuál escoges y cómo la resuelves?",
+      "No tienes que hacer todo de golpe en {p}. ¿Qué parte puedes empezar a resolver?"
+    ],
+    "generic_3": [
+      "Prueba con números más pequeños que se parezcan a {p} y luego vuelve a tu problema. ¿Qué números usarías?",
+      "Inventa problemas parecidos a {p} con números más chicos y luego regresa al tuyo. ¿Qué números escogerías?",
+      "Haz de cuenta que los números de {p} son más pequeños, resuélvelo y luego vuelve al tuyo. ¿Qué números pondrías?",
+      "Cambia los números de {p} por otros más pequeños para practicar, y luego vuelve al tuyo. ¿Cuáles usarías?",
+      "Practica primero con números chicos parecidos a {p} y después regresa a tu problema. ¿Cuáles elegirías?"
+    ],
+    "concept_fracciones": [
+      "Mira los denominadores de {p}: ¿son iguales o diferentes? Eso te dice cómo empezar.",
+      "Fíjate en los denominadores de {p}, los números de abajo: ¿son iguales o diferentes? Eso te dice por dónde empezar.",
+      "Observa los denominadores de {p}: ¿son iguales o distintos? De eso depende cómo empiezas.",
+      "Compara los denominadores de {p}: ¿son iguales o diferentes? Así sabrás cómo seguir.",
+      "Antes de operar, revisa los denominadores de {p}: ¿son iguales o diferentes? Esa pista te guía."
+    ],
+    "concept_decimales": [
+      "Con decimales, pon el punto debajo del punto: décimos con décimos. ¿Cómo quedan alineados los números de {p}?",
+      "Con decimales, alinea los puntos uno debajo del otro: décimos con décimos. ¿Cómo quedan acomodados los números de {p}?",
+      "En los decimales el punto va debajo del punto, así los décimos quedan con los décimos. ¿Cómo acomodarías los números de {p}?",
+      "Acomoda los decimales con el punto en la misma columna: décimos con décimos. ¿Cómo se ven alineados los números de {p}?",
+      "Para decimales, cada lugar debe quedar frente a su igual: décimos con décimos. ¿Cómo alinearías los números de {p}?"
+    ],
+    "concept_porcentaje": [
+      "Un porcentaje es una parte de cada 100. ¿Qué parte de 100 pide {p}, y cómo la buscarías?",
+      "Porcentaje quiere decir por cada 100. ¿Qué parte de 100 pide {p}, y cómo la buscarías?",
+      "El porcentaje dice cuántas partes de 100 tomamos. ¿Qué parte de 100 pide {p}, y cómo la encontrarías?",
+      "Piensa en 100 partes iguales: el porcentaje toma algunas de ellas. ¿Cuántas pide {p}, y cómo las buscarías?",
+      "Porcentaje es la parte que tomas de cada 100. ¿Qué parte de 100 pide {p}, y cómo la encontrarías?"
+    ],
+    "concept_ecuacion": [
+      "En {p} buscamos el número que falta. ¿Qué operación deshace lo que le hicieron a ese número?",
+      "En {p} tenemos que hallar el número escondido. ¿Con qué operación deshaces lo que le hicieron?",
+      "Lo que buscamos en {p} es el número que falta. ¿Qué operación contraria deshace lo que le hicieron?",
+      "En {p}, el número que falta está escondido detrás de las operaciones. ¿Cuál es la operación contraria que lo deshace?",
+      "Imagina que en {p} el número que falta se escondió. ¿Qué operación deshace lo que le hicieron a ese número?"
+    ],
+    "concept_combinada": [
+      "En {p} hay varias operaciones: primero los paréntesis, luego multiplicar y dividir, y al final sumar y restar. ¿Qué harías primero?",
+      "En {p} hay varias operaciones, y el orden importa: paréntesis primero, después multiplicar y dividir, y al final sumar y restar. ¿Cuál harías primero?",
+      "Mira {p}: hay varias operaciones, y se hacen en este orden: paréntesis, luego multiplicar y dividir, y por último sumar y restar. ¿Por cuál empiezas?",
+      "Las operaciones de {p} tienen su orden: primero paréntesis, después multiplicar y dividir, y al último sumar y restar. ¿Cuál va primero aquí?",
+      "Recuerda el orden en {p}: paréntesis, luego multiplicar y dividir, y por último sumar y restar. ¿Qué operación haces primero?"
+    ],
+    "worked_suma": [
+      "Mira este ejemplo: {c} + {d} = {r}, porque juntamos {c} y {d}. Ahora te toca: ¿cuánto es {p}?",
+      "Fíjate en este ejemplo: {c} + {d} = {r}, porque juntamos {c} y {d}. Ahora inténtalo con tu problema: ¿cuánto es {p}?",
+      "Te muestro cómo se hace: {c} + {d} = {r}, ya que juntamos {c} y {d}. Ahora prueba con el tuyo: ¿cuánto es {p}?",
+      "Observa este caso: {c} + {d} = {r}, pues juntamos {c} y {d}. Ahora es tu turno: ¿cuánto es {p}?",
+      "Veamos cómo se resuelve este: {c} + {d} = {r}, porque juntamos {c} con {d}. Ahora te toca a ti: ¿cuánto es {p}?"
+    ],
+    "worked_resta": [
+      "Mira este ejemplo: {c} - {d} = {r}, porque a {c} le quitamos {d}. Ahora te toca: ¿cuánto es {p}?",
+      "Fíjate en este ejemplo: {c} - {d} = {r}, porque a {c} le quitamos {d}. Ahora inténtalo con tu problema: ¿cuánto es {p}?",
+      "Te muestro cómo se hace: {c} - {d} = {r}, ya que de {c} sacamos {d}. Ahora prueba con el tuyo: ¿cuánto es {p}?",
+      "Observa este caso: {c} - {d} = {r}, pues a {c} le quitamos {d}. Ahora es tu turno: ¿cuánto es {p}?",
+      "Veamos cómo se resuelve este: {c} - {d} = {r}, porque de {c} se van {d}. Ahora te toca a ti: ¿cuánto es {p}?"
+    ],
+    "worked_multiplicacion": [
+      "Mira este ejemplo: {c} × {d} es sumar {c}, {d} veces: {sums} = {r}. Ahora te toca: ¿cuánto es {p}?",
+      "Fíjate en este ejemplo: {c} × {d} es sumar {c}, {d} veces: {sums} = {r}. Ahora inténtalo con tu problema: ¿cuánto es {p}?",
+      "Te muestro cómo se hace: {c} × {d} es juntar {c}, {d} veces: {sums} = {r}. Ahora prueba con el tuyo: ¿cuánto es {p}?",
+      "Observa este caso: {c} × {d} se calcula sumando {c}, {d} veces: {sums} = {r}. Ahora es tu turno: ¿cuánto es {p}?",
+      "Veamos cómo se resuelve este: {c} × {d} quiere decir {c} sumado {d} veces: {sums} = {r}. Ahora te toca a ti: ¿cuánto es {p}?"
+    ],
+    "worked_division": [
+      "Mira este ejemplo: {c} ÷ {d} = {r}, porque {d} × {r} = {c}. Ahora te toca: ¿cuánto es {p}?",
+      "Fíjate en este ejemplo: {c} ÷ {d} = {r}, porque {d} × {r} = {c}. Ahora inténtalo con tu problema: ¿cuánto es {p}?",
+      "Te muestro cómo se hace: {c} ÷ {d} = {r}, ya que {d} × {r} = {c}. Ahora prueba con el tuyo: ¿cuánto es {p}?",
+      "Observa este caso: {c} ÷ {d} = {r}, pues {d} × {r} = {c}. Ahora es tu turno: ¿cuánto es {p}?",
+      "Veamos cómo se resuelve este: {c} ÷ {d} = {r}, porque si multiplicas {d} × {r} sale {c}. Ahora te toca a ti: ¿cuánto es {p}?"
+    ],
+    "word_problem": [
+      "Vamos a pensar en tu problema. ¿Qué operación necesitas hacer con {listed}: sumar, restar, multiplicar o dividir? Escríbela con los números, usando +, -, × o ÷.",
+      "Pensemos en tu problema. ¿Qué operación hay que hacer con {listed}: sumar, restar, multiplicar o dividir? Escríbela con los números, usando +, -, × o ÷.",
+      "Vamos a entender tu problema. ¿Qué operación te piden con {listed}: sumar, restar, multiplicar o dividir? Anótala con los números, usando +, -, × o ÷.",
+      "Leamos tu problema con calma. ¿Con {listed}, qué operación necesitas: sumar, restar, multiplicar o dividir? Escríbela con los números, usando +, -, × o ÷.",
+      "Analicemos tu problema juntos. ¿Qué operación te sirve con {listed}: sumar, restar, multiplicar o dividir? Ponla por escrito con los números, usando +, -, × o ÷."
+    ],
+    "think_first": [
+      "¡Buena pregunta sobre {title}! ¿Qué crees tú? Piensa en un ejemplo y cuéntame tu idea.",
+      "¡Qué buena pregunta sobre {title}! ¿Tú qué piensas? Busca un ejemplo y cuéntame tu idea.",
+      "¡Me gusta tu pregunta sobre {title}! ¿Qué crees tú? Imagina algún ejemplo y cuéntame lo que piensas.",
+      "¡Muy buena pregunta sobre {title}! ¿Qué se te ocurre? Piensa en algún ejemplo y dime tu idea.",
+      "¡Interesante pregunta sobre {title}! ¿Cómo lo piensas tú? Inventa algún ejemplo y cuéntame tu idea."
+    ],
+    "eq_step_suma": [
+      "Cuenta desde {b} hasta llegar a {c}. ¿Cuántos pasos das?",
+      "Empieza en {b} y sigue contando hasta {c}. ¿Cuántos pasos diste?",
+      "Camina contando desde {b} hasta {c}. ¿Cuántos pasos te hicieron falta?",
+      "Pon tu dedo en {b} y avanza hasta {c}. ¿Cuántos números saltaste?",
+      "Sube contando desde {b} hasta {c}. ¿Cuántos pasos das en el camino?"
+    ],
+    "eq_step_resta": [
+      "Empieza en {c} y cuenta {b} hacia adelante. ¿A qué número llegas?",
+      "Párate en {c} y avanza {b} números contando. ¿En cuál terminas?",
+      "Sigue contando desde {c}, {b} números hacia adelante. ¿Dónde te detienes?",
+      "Pon tu dedo en {c} y cuenta {b} más. ¿Qué número tocas al final?",
+      "Salta desde {c} contando {b} hacia adelante. ¿En qué número caes?"
+    ],
+    "eq_step_producto": [
+      "¿Qué número multiplicado por {a} da {c}? Prueba la tabla del {a}: {a} × 1 = {a}, {a} × 2 = {a2}. ¿Sigues?",
+      "Busca el número que, multiplicado por {a}, da {c}. Recorre la tabla del {a}: {a} × 1 = {a}, {a} × 2 = {a2}. ¿Sigues?",
+      "¿Con qué número hay que multiplicar {a} para llegar a {c}? Recorre la tabla del {a}: {a} × 1 = {a}, {a} × 2 = {a2}. ¿Vas viendo?",
+      "Piensa: ¿cuál número, al multiplicarlo por {a}, da {c}? Mira cómo va la tabla del {a}: {a} × 1 = {a}, {a} × 2 = {a2}. ¿Sigues?",
+      "¿Cuántos grupos de {a} caben en {c}? Sigue la tabla del {a}: {a} × 1 = {a}, {a} × 2 = {a2}. ¿Vas bien?"
+    ],
+    "eq_step_cociente": [
+      "Si repartes un número entre {a} y a cada uno le tocan {c}, piensa en {a} grupos de {c}. ¿Cuántos hay en total?",
+      "Imagina que repartes cierta cantidad entre {a} y a cada uno le tocan {c}. Piensa en {a} grupos de {c}: ¿cuántos hay en total?",
+      "Si se reparte cierta cantidad entre {a} y a cada uno le tocan {c}, forma {a} grupos de {c}. ¿Cuántos hay juntos?",
+      "Alguien repartió cierta cantidad entre {a}, y a cada uno le tocaron {c}. Junta {a} grupos de {c}: ¿cuántos hay?",
+      "Piensa que cierta cantidad se reparte entre {a} y cada uno recibe {c}. Si juntas los {a} grupos de {c}, ¿cuántos hay en total?"
+    ],
+    "eq_step_dos_pasos_suma": [
+      "Primero deshaz el + {b}: quita {b} de los dos lados. ¿Cuánto es {c} - {b}?",
+      "Para empezar deshaz el + {b}: resta {b} de ambos lados. ¿Cuánto es {c} - {b}?",
+      "Lo primero es deshacer el + {b}: quítale {b} a cada lado. ¿Cuánto da {c} - {b}?",
+      "Empieza deshaciendo el + {b}: quita {b} en ambos lados. ¿Cuánto es {c} - {b}?",
+      "Primero toca deshacer el + {b}, y se quita {b} de ambos lados. ¿Cuánto es {c} - {b}?"
+    ],
+    "eq_step_dos_pasos_resta": [
+      "Primero deshaz el - {b}: suma {b} a los dos lados. ¿Cuánto es {c} + {b}?",
+      "Para empezar deshaz el - {b}: suma {b} a ambos lados. ¿Cuánto es {c} + {b}?",
+      "Lo primero es deshacer el - {b}: agrégale {b} a cada lado. ¿Cuánto da {c} + {b}?",
+      "Empieza deshaciendo el - {b}: suma {b} en ambos lados. ¿Cuánto es {c} + {b}?",
+      "Primero toca deshacer el - {b}, y se suma {b} a ambos lados. ¿Cuánto es {c} + {b}?"
+    ],
+    "eq_worked_suma": [
+      "Mira este ejemplo: en {u} + {b} = {c} contamos desde {b} hasta {c}: son {x} pasos, así que {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {u} + {b} = {c} contamos desde {b} hasta {c}: son {x} pasos, así que {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {u} + {b} = {c} contamos desde {b} hasta {c}: son {x} pasos, y por eso {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {u} + {b} = {c} se cuenta desde {b} hasta {c}: son {x} pasos, entonces {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {u} + {b} = {c} contamos de {b} a {c} y salen {x} pasos, así que {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ],
+    "eq_worked_resta": [
+      "Mira este ejemplo: en {u} - {b} = {c} contamos {b} hacia adelante desde {c}: llegamos a {x}, así que {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {u} - {b} = {c} contamos {b} hacia adelante desde {c}: llegamos a {x}, así que {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {u} - {b} = {c} partimos de {c} y contamos {b} más: llegamos a {x}, y por eso {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {u} - {b} = {c} se cuenta {b} hacia adelante desde {c}: se llega a {x}, entonces {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {u} - {b} = {c} avanzamos {b} desde {c} y llegamos a {x}, así que {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ],
+    "eq_worked_producto": [
+      "Mira este ejemplo: en {a} × {u} = {c} buscamos en la tabla del {a}: {a} × {x} = {c}, así que {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {a} × {u} = {c} buscamos en la tabla del {a}: {a} × {x} = {c}, así que {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {a} × {u} = {c} miramos la tabla del {a}: {a} × {x} = {c}, y por eso {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {a} × {u} = {c} se busca en la tabla del {a}: {a} × {x} = {c}, entonces {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {a} × {u} = {c} recorremos la tabla del {a} hasta {a} × {x} = {c}, así que {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ],
+    "eq_worked_cociente": [
+      "Mira este ejemplo: en {u} ÷ {a} = {c} juntamos {a} grupos de {c}: {a} × {c} = {x}, así que {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {u} ÷ {a} = {c} juntamos {a} grupos de {c}: {a} × {c} = {x}, así que {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {u} ÷ {a} = {c} formamos {a} grupos de {c}: {a} × {c} = {x}, y por eso {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {u} ÷ {a} = {c} se juntan {a} grupos de {c}: {a} × {c} = {x}, entonces {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {u} ÷ {a} = {c} reunimos {a} grupos de {c} y {a} × {c} = {x}, así que {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ],
+    "eq_worked_dos_pasos_suma": [
+      "Mira este ejemplo: en {a} × {u} + {b} = {c} quitamos {b} de los dos lados: {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {a} × {u} + {b} = {c} quitamos {b} de ambos lados: {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {a} × {u} + {b} = {c} restamos {b} a cada lado: {a} × {u} = {m}; después dividimos {m} entre {a}: {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {a} × {u} + {b} = {c} se quita {b} en ambos lados: {a} × {u} = {m}; luego se reparte {m} entre {a}: {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {a} × {u} + {b} = {c} primero quitamos {b} de ambos lados y queda {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ],
+    "eq_worked_dos_pasos_resta": [
+      "Mira este ejemplo: en {a} × {u} - {b} = {c} sumamos {b} a los dos lados: {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora te toca: ¿qué número va en {p}?",
+      "Fíjate en este ejemplo: en {a} × {u} - {b} = {c} sumamos {b} a ambos lados: {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora inténtalo con tu problema: ¿qué número va en {p}?",
+      "Te muestro cómo se hace: en {a} × {u} - {b} = {c} agregamos {b} a cada lado: {a} × {u} = {m}; después dividimos {m} entre {a}: {u} = {x}. Ahora prueba con el tuyo: ¿qué número va en {p}?",
+      "Observa este caso: en {a} × {u} - {b} = {c} se suma {b} en ambos lados: {a} × {u} = {m}; luego se reparte {m} entre {a}: {u} = {x}. Ahora es tu turno: ¿qué número va en {p}?",
+      "Veamos cómo se resuelve este: en {a} × {u} - {b} = {c} primero sumamos {b} a ambos lados y queda {a} × {u} = {m}; luego repartimos {m} entre {a}: {u} = {x}. Ahora te toca a ti: ¿qué número va en {p}?"
+    ]
+  },
   "misconceptions": {
-    "alignment_error": "En {p}, escribe un número debajo del otro. ¿Quedaron las unidades debajo de las unidades?",
-    "added_instead_of_subtracted": "Mira bien el signo de {p}. ¿Te pide juntar o quitar?",
-    "borrowing_error": "En {p}, mira las unidades: ¿al número de arriba le alcanza para quitarle el de abajo, o hay que pedir prestada una decena?",
-    "table_lookup_error": "Estuviste muy cerca. Cuenta otra vez los grupos de {p}: ¿te sobró o te faltó algún grupo?",
-    "inverted_division": "En {p}, ¿cuál es el número que se reparte y entre cuántos se reparte? Fíjate en el orden.",
-    "ignored_parentheses": "En {p} hay paréntesis. ¿Qué operación se hace antes que las demás?",
-    "left_to_right_precedence": "En {p} hay varias operaciones. ¿Cuál va antes: la multiplicación y la división, o la suma y la resta?",
-    "added_denominators": "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se suman los denominadores, o hay que tener pedazos del mismo tamaño?",
-    "subtracted_denominators": "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se restan los denominadores, o hay que tener pedazos del mismo tamaño?",
-    "wrong_inverse_operation": "En {p}, ¿qué operación le hicieron al número que falta? ¿Con cuál operación se deshace?",
-    "forgot_division": "Vas bien, pero falta un paso. En {p}, el número que falta está multiplicado: ¿cómo deshaces esa multiplicación?",
-    "divided_before_subtracting": "En {p}, ¿qué se deshace antes: lo que se suma o se resta, o lo que multiplica?",
-    "subtracted_instead_of_divided": "En {p}, un número multiplica al que falta. ¿Una multiplicación se deshace restando o dividiendo?",
-    "sign_inversion_error": "En {p}, mira el signo del número que acompaña al que falta. ¿Se deshace sumando o restando?",
-    "multiplied_by_percentage_directly": "Un porcentaje es una parte de cada cien. En {p}, ¿multiplicas por el número completo o por esa parte de cien?",
-    "subtracted_percentage_as_raw_number": "En {p}, el porcentaje no es una cantidad para restar: es una parte del total. ¿Qué parte del total te piden?"
+    "alignment_error": [
+      "En {p}, escribe un número debajo del otro. ¿Quedaron las unidades debajo de las unidades?",
+      "Escribe los números de {p} uno debajo del otro. ¿Las unidades quedaron en la misma columna?",
+      "Acomoda los números de {p} en columnas. ¿Cada cifra quedó debajo de otra del mismo valor?",
+      "En {p}, pega los números a la derecha. ¿Las unidades están una debajo de la otra?",
+      "Mira cómo escribiste {p} en columnas. ¿Las unidades están con las unidades y las decenas con las decenas?"
+    ],
+    "added_instead_of_subtracted": [
+      "Mira bien el signo de {p}. ¿Te pide juntar o quitar?",
+      "Fíjate en el signo de {p}. ¿Pide juntar o quitar?",
+      "Observa el signo de {p} otra vez. ¿Qué te pide hacer: juntar o quitar?",
+      "Revisa qué signo tiene {p}. ¿Es para juntar o para quitar?",
+      "Antes de seguir, mira el signo de {p}. ¿Se junta o se quita?"
+    ],
+    "borrowing_error": [
+      "En {p}, mira las unidades: ¿al número de arriba le alcanza para quitarle el de abajo, o hay que pedir prestada una decena?",
+      "En {p}, fíjate en las unidades: ¿a la de arriba le alcanza para quitar la de abajo, o hay que pedir prestado a las decenas?",
+      "Mira las unidades de {p}: ¿el número de arriba tiene suficiente para quitarle el de abajo, o necesitas pedir prestada la decena?",
+      "Empieza por las unidades de {p}. ¿Puedes quitar la de abajo a la de arriba, o tienes que pedir prestado?",
+      "En {p}, compara las unidades de arriba y de abajo: ¿alcanza para quitar, o hace falta pedir prestada la decena?"
+    ],
+    "table_lookup_error": [
+      "Estuviste muy cerca. Cuenta otra vez los grupos de {p}: ¿te sobró o te faltó algún grupo?",
+      "Vas muy cerca. Revisa otra vez los grupos de {p}: ¿te sobró o te faltó algún grupo?",
+      "Casi lo logras. Vuelve a contar los grupos de {p}: ¿hay alguno de más o de menos?",
+      "Estás cerquita. Mira de nuevo los grupos de {p}: ¿te pasaste o te quedaste corto con algún grupo?",
+      "Muy buen intento, y estás cerca. Cuenta de nuevo los grupos de {p}: ¿falta o sobra algún grupo?"
+    ],
+    "inverted_division": [
+      "En {p}, ¿cuál es el número que se reparte y entre cuántos se reparte? Fíjate en el orden.",
+      "Mira {p}: ¿qué número se reparte y entre cuántos se reparte? Fíjate bien en el orden.",
+      "En {p}, ¿cuál número se va a repartir y entre cuántos? Revisa el orden de los números.",
+      "Fíjate en {p}: ¿qué cantidad se reparte y entre cuántos? El orden importa.",
+      "En {p}, ¿qué número se reparte y cuál es el que reparte? Revisa bien el orden."
+    ],
+    "ignored_parentheses": [
+      "En {p} hay paréntesis. ¿Qué operación se hace antes que las demás?",
+      "Mira los paréntesis de {p}. ¿Qué se hace primero?",
+      "En {p} aparecen paréntesis. ¿Qué te dicen sobre lo que va primero?",
+      "Fíjate en los paréntesis de {p}. ¿Qué operación va antes que las demás?",
+      "Los paréntesis de {p} piden algo especial. ¿Qué operación se resuelve primero?"
+    ],
+    "left_to_right_precedence": [
+      "En {p} hay varias operaciones. ¿Cuál va antes: la multiplicación y la división, o la suma y la resta?",
+      "Mira las operaciones de {p}. ¿Cuáles se hacen antes: multiplicar y dividir, o sumar y restar?",
+      "Recuerda que las operaciones tienen un orden. En {p}, ¿cuáles se hacen antes: multiplicar y dividir, o sumar y restar?",
+      "En {p} hay varias operaciones. ¿Empezarías por la izquierda, o hay operaciones que van antes?",
+      "Mira {p}: ¿qué operaciones se resuelven antes, las de multiplicar y dividir o las de sumar y restar?"
+    ],
+    "added_denominators": [
+      "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se suman los denominadores, o hay que tener pedazos del mismo tamaño?",
+      "En {p}, el denominador dice qué tan grandes son los pedazos. ¿Se suman los denominadores, o primero hay que tener pedazos del mismo tamaño?",
+      "Mira los denominadores de {p}: dicen de qué tamaño son los pedazos. ¿Cambia el tamaño al sumar, o los pedazos deben ser iguales?",
+      "El denominador de {p} nos dice el tamaño de cada pedazo. ¿Tiene sentido sumar los tamaños, o hay que juntar pedazos iguales?",
+      "Piensa en {p} como pedazos de tortilla: el denominador dice qué tan grande es cada uno. ¿Se suman los denominadores, o necesitas pedazos del mismo tamaño?"
+    ],
+    "subtracted_denominators": [
+      "En {p}, el denominador dice de qué tamaño son los pedazos. ¿Se restan los denominadores, o hay que tener pedazos del mismo tamaño?",
+      "En {p}, el denominador dice qué tan grandes son los pedazos. ¿Se restan los denominadores, o primero hay que tener pedazos del mismo tamaño?",
+      "Mira los denominadores de {p}: dicen de qué tamaño son los pedazos. ¿Cambia el tamaño al restar, o los pedazos deben ser iguales?",
+      "El denominador de {p} nos dice el tamaño de cada pedazo. ¿Tiene sentido restar los tamaños, o hay que quitar pedazos iguales?",
+      "Piensa en {p} como pedazos de tortilla: el denominador dice qué tan grande es cada uno. ¿Se restan los denominadores, o necesitas pedazos del mismo tamaño?"
+    ],
+    "wrong_inverse_operation": [
+      "En {p}, ¿qué operación le hicieron al número que falta? ¿Con cuál operación se deshace?",
+      "Mira {p}: ¿qué le hicieron al número que falta? ¿Cuál operación lo deshace?",
+      "En {p}, ¿qué operación está pegada al número que falta? ¿Cuál es su contraria?",
+      "Fíjate en lo que le pasó al número que falta en {p}. ¿Cómo lo deshaces?",
+      "En {p}, el número que falta fue cambiado por alguna operación. ¿Cuál fue, y con cuál se deshace?"
+    ],
+    "forgot_division": [
+      "Vas bien, pero falta un paso. En {p}, el número que falta está multiplicado: ¿cómo deshaces esa multiplicación?",
+      "Vas por buen camino, pero aún falta algo. En {p}, el número que falta está multiplicado: ¿cómo deshaces esa multiplicación?",
+      "Casi lo tienes, pero falta terminar. En {p}, el número que falta viene multiplicado: ¿qué operación lo deshace?",
+      "Buen avance, aunque todavía no termina. En {p}, algo multiplica al número que falta: ¿cómo lo deshaces?",
+      "Vas muy bien, pero aún falta seguir. En {p}, el número que falta está multiplicado por otro: ¿cómo deshaces eso?"
+    ],
+    "divided_before_subtracting": [
+      "En {p}, ¿qué se deshace antes: lo que se suma o se resta, o lo que multiplica?",
+      "Mira {p}: ¿qué conviene deshacer primero, lo que suma o resta, o lo que multiplica?",
+      "En {p}, ¿con cuál empiezas a deshacer: con la suma o la resta, o con la multiplicación?",
+      "Piensa en cómo deshacer lo que le hicieron al número en {p}: ¿qué va primero, lo que suma o resta, o lo que multiplica?",
+      "En {p}, el número que falta tiene varias operaciones encima: ¿cuál se deshace primero?"
+    ],
+    "subtracted_instead_of_divided": [
+      "En {p}, un número multiplica al que falta. ¿Una multiplicación se deshace restando o dividiendo?",
+      "Mira {p}: un número multiplica al que falta. ¿Cómo se deshace una multiplicación, restando o dividiendo?",
+      "En {p}, el número que falta está multiplicado. ¿Se deshace restando o dividiendo?",
+      "Fíjate en {p}: algo multiplica al número que falta. ¿Qué operación contraria usas, restar o dividir?",
+      "En {p}, el número que falta viene multiplicado por otro. ¿Sirve restar para deshacerlo, o conviene dividir?"
+    ],
+    "sign_inversion_error": [
+      "En {p}, mira el signo del número que acompaña al que falta. ¿Se deshace sumando o restando?",
+      "Mira el signo del número que acompaña al que falta en {p}. ¿Cómo se deshace: sumando o restando?",
+      "En {p}, fíjate si el número junto al que falta suma o resta. ¿Qué haces para deshacerlo?",
+      "Observa el signo que tiene el número vecino en {p}. ¿Se deshace sumando o restando?",
+      "En {p}, revisa si ese número acompañante está sumando o restando. ¿Con qué operación lo deshaces?"
+    ],
+    "multiplied_by_percentage_directly": [
+      "Un porcentaje es una parte de cada cien. En {p}, ¿multiplicas por el número completo o por esa parte de cien?",
+      "El porcentaje es la parte que te toca de cada cien. En {p}, ¿multiplicas por el número completo o por esa parte?",
+      "Un porcentaje habla de partes de cada cien. En {p}, ¿usas el número tal cual o la parte de cien que significa?",
+      "Piensa en un porcentaje como partes de cien. En {p}, ¿multiplicas por el número completo o por esa fracción de cien?",
+      "Porcentaje quiere decir partes de cada cien. En {p}, ¿te sirve multiplicar por el número completo o por su parte de cien?"
+    ],
+    "subtracted_percentage_as_raw_number": [
+      "En {p}, el porcentaje no es una cantidad para restar: es una parte del total. ¿Qué parte del total te piden?",
+      "En {p}, el porcentaje no se resta como si fuera una cantidad: es una parte del total. ¿Qué parte te piden?",
+      "Mira {p}: el porcentaje dice qué parte del total tomar, no cuánto restar. ¿Qué parte del total es?",
+      "En {p}, el porcentaje habla de una parte del total y no de un número para quitar. ¿Cuál es esa parte?",
+      "Piensa en {p}: el porcentaje representa parte del total, no una resta directa. ¿Qué parte del total pide?"
+    ]
   }
 }

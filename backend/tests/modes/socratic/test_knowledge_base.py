@@ -13,7 +13,7 @@ import pytest
 
 from core.math_engine import evaluate_exact
 from modes.quiz.contracts.taxonomy import CURRICULUM_TAXONOMY
-from modes.socratic import replies
+from modes.socratic import hints, replies
 from modes.socratic.containment import leaks
 from modes.socratic.curriculum import load_curriculum
 from modes.socratic.guard import check
@@ -21,7 +21,9 @@ from modes.socratic.knowledge import (
     explanations,
     load_knowledge,
     misconception_question,
+    variant,
 )
+from modes.socratic.numbers import digits_for_words, extract_numbers
 from modes.socratic.planner import plan
 from modes.socratic.problems import find_problem
 from modes.socratic.state import Conversation
@@ -35,7 +37,11 @@ EXPLANATIONS = [
     for topic_id, texts in KNOWLEDGE["explanations"].items()
     for text in texts
 ]
-MISCONCEPTIONS = list(KNOWLEDGE["misconceptions"].items())
+MISCONCEPTIONS = [
+    (slug, question)
+    for slug, questions in KNOWLEDGE["misconceptions"].items()
+    for question in questions
+]
 NUMBER = r"\d+(?:[./]\d+)?"
 # A written equality between numbers: '3 + 4 = 7', '1/4 + 2/4 = 3/4'.
 EQUALITY = re.compile(rf"({NUMBER}(?:\s*[+\-×÷]\s*{NUMBER})+)\s*=\s*({NUMBER})")
@@ -92,12 +98,45 @@ def test_a_misconception_question_names_the_problem_and_no_number(slug, question
     assert "{p}" in question
     assert "?" in question
     assert not re.search(r"\d", question)
-    assert misconception_question(slug) == question
+    assert re.findall(r"\{(\w*)\}", question) == ["p"]
+    assert question in KNOWLEDGE["misconceptions"][slug]
+
+
+def test_every_misconception_has_five_distinct_questions_and_the_problem_picks_one():
+    for slug, questions in KNOWLEDGE["misconceptions"].items():
+        assert len(set(questions)) == len(questions) == 5, slug
+        picked = {misconception_question(slug, f"{n} + 1") for n in range(60)}
+        assert picked == set(questions), slug
+        assert misconception_question(slug, "7 + 8") == misconception_question(
+            slug, "7 + 8"
+        )
+
+
+def test_the_not_yet_opener_has_five_to_eight_one_sentence_wordings_without_numbers():
+    wordings = KNOWLEDGE["paraphrases"]["not_yet"]  # hint templates: test_hint_wordings
+    assert 5 <= len(set(wordings)) == len(wordings) <= 8
+    assert not any(extract_numbers(digits_for_words(text)) for text in wordings)
+    # One sentence each: the output guard keeps three sentences of a rewording.
+    assert all(re.fullmatch(r"[^.!?]+\.", text) for text in wordings)
+    assert {variant("not_yet", seed) for seed in range(len(wordings))} == set(wordings)
+
+
+def test_a_wrong_answer_opens_with_a_not_yet_wording_that_varies_with_the_attempt():
+    working = plan(Conversation(), "23 + 45")[1]
+    clue = hints.hint(required(working.problem), 1)
+    openers = set()
+
+    for attempt in range(60, 66):
+        move, _ = plan(working, str(attempt))
+        assert move.text.endswith(f" {clue}")
+        openers.add(move.text.removesuffix(f" {clue}"))
+
+    assert openers == set(KNOWLEDGE["paraphrases"]["not_yet"])
 
 
 def test_an_unknown_key_has_no_knowledge():
     assert explanations("astronomia") == ()
-    assert misconception_question("unclassified") is None
+    assert misconception_question("unclassified", "3 + 4") is None
 
 
 @pytest.mark.parametrize("topic", TOPICS, ids=lambda topic: topic.id)

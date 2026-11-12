@@ -7,7 +7,7 @@ server as the quiz generator (SLM_BASE_URL) but with its own model and limits.
 import os
 from dataclasses import dataclass
 
-from core.config.parsers import parse_float, parse_int
+from core.config.parsers import parse_bool, parse_float, parse_int
 
 __all__ = [
     "DEFAULT_TUTOR_MODEL_NAME",
@@ -25,6 +25,8 @@ DEFAULT_TUTOR_TIMEOUT_SECONDS = 45.0
 DEFAULT_TUTOR_MAX_CONCURRENT = 2
 DEFAULT_TUTOR_QUEUE_SECONDS = 20.0
 DEFAULT_TUTOR_TURNS_PER_MINUTE = 12
+# Hints are shown as written (instant); True lets the model reword each one.
+DEFAULT_TUTOR_REWRITE_HINTS = False
 
 
 @dataclass(frozen=True)
@@ -36,6 +38,7 @@ class TutorConfig:
     max_concurrent: int = DEFAULT_TUTOR_MAX_CONCURRENT
     queue_seconds: float = DEFAULT_TUTOR_QUEUE_SECONDS
     turns_per_minute: int = DEFAULT_TUTOR_TURNS_PER_MINUTE
+    rewrite_hints: bool = DEFAULT_TUTOR_REWRITE_HINTS
 
 
 def load_tutor_config() -> TutorConfig:
@@ -59,4 +62,5 @@ def load_tutor_config() -> TutorConfig:
         turns_per_minute=parse_int(
             "TUTOR_TURNS_PER_MINUTE", DEFAULT_TUTOR_TURNS_PER_MINUTE, 1, 120
         ),
+        rewrite_hints=parse_bool("TUTOR_REWRITE_HINTS", DEFAULT_TUTOR_REWRITE_HINTS),
     )

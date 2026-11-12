@@ -9,6 +9,8 @@ from modes.socratic.equation_hints import equation_hint
 from modes.socratic.problems import Problem, find_problem
 from tests.conftest import required
 
+pytestmark = pytest.mark.usefixtures("first_wording")  # pins exact texts
+
 
 @pytest.mark.parametrize(
     ("equation", "step"),

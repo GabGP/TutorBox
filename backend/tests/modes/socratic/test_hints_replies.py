@@ -20,6 +20,8 @@ from modes.socratic.replies import (
 from modes.socratic.text import Folded
 from tests.conftest import required
 
+pytestmark = pytest.mark.usefixtures("first_wording")  # pins exact texts
+
 
 @pytest.mark.parametrize(
     ("message", "level", "expected"),

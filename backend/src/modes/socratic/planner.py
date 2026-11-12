@@ -12,6 +12,7 @@ from fractions import Fraction
 from modes.socratic import hints, replies
 from modes.socratic.curriculum import Topic, load_curriculum
 from modes.socratic.input_guard import check_input, clean_input
+from modes.socratic.knowledge import variant
 from modes.socratic.lexicon import HELP
 from modes.socratic.misconception_hints import misconception_hint
 from modes.socratic.numbers import digits_for_words, extract_numbers
@@ -112,7 +113,8 @@ def _judge(
     # A misconception gets its own question once; if it repeats, climb the ladder.
     error = classify_error(problem, value)
     aimed = None if error == before.error else misconception_hint(problem, error)
-    text = f"Todavía no. {aimed or hints.hint(problem, level)}"
+    not_yet = variant("not_yet", value.numerator + level)  # varies with the attempt
+    text = f"{not_yet} {aimed or hints.hint(problem, level)}"
     move = Move(
         "hint", text, llm="rewrite", problem=problem, level=level, is_correct=False
     )

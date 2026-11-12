@@ -12,6 +12,8 @@ from modes.socratic.telemetry import UNCLASSIFIED
 from tests.conftest import required
 from tests.modes.socratic.telemetry.test_error_type import LABELLED
 
+pytestmark = pytest.mark.usefixtures("first_wording")  # pins exact texts
+
 
 @pytest.mark.parametrize(("text", "attempt", "slug"), LABELLED)
 def test_the_question_names_the_problem_and_never_its_answer(text, attempt, slug):
@@ -37,8 +39,7 @@ def test_a_borrowing_error_and_another_wrong_answer_get_different_hints():
         "borrowing_error",
     )
     assert "prestada" in borrowed.text
-    assert borrowed.text.startswith("Todavía no.")
-    assert other.text == f"Todavía no. {hints.hint(required(working.problem), 1)}"
+    assert other.text.endswith(hints.hint(required(working.problem), 1))
 
 
 def test_the_same_misconception_again_climbs_the_ladder():
@@ -48,7 +49,7 @@ def test_the_same_misconception_again_climbs_the_ladder():
     move, _ = plan(after, "45")
 
     assert move.level == 2
-    assert move.text == f"Todavía no. {hints.hint(required(working.problem), 2)}"
+    assert move.text.endswith(hints.hint(required(working.problem), 2))
 
 
 def test_no_question_for_an_unclassified_answer_or_one_that_would_leak(monkeypatch):

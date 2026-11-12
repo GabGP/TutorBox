@@ -13,6 +13,7 @@ from tests.conftest import auth_headers
 
 MESSAGE = "/api/v1/tutor/message"
 REWORDED = "¡Vamos! Queremos juntar 23 y 45. ¿Por dónde empiezas tú?"
+pytestmark = pytest.mark.usefixtures("first_wording")  # the rewording is of wording 0
 
 
 @pytest.fixture

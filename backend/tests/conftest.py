@@ -192,3 +192,20 @@ def get_user_id(conn: sqlite3.Connection, username: str) -> int:
     row = cursor.fetchone()
     assert row is not None, f"User {username} not found in test database."
     return row["id"]
+
+
+@pytest.fixture
+def first_wording(monkeypatch: pytest.MonkeyPatch):
+    """Every tutor hint template says its first wording (what exact-text tests pin)."""
+    from modes.socratic import knowledge
+
+    monkeypatch.setattr(knowledge, "seed_of", lambda text: 0)
+
+
+@pytest.fixture(params=range(5), ids=lambda index: f"wording{index}")
+def wording(request, monkeypatch: pytest.MonkeyPatch) -> int:
+    """Runs a test once per wording index, forced for every tutor hint template."""
+    from modes.socratic import knowledge
+
+    monkeypatch.setattr(knowledge, "seed_of", lambda text: request.param)
+    return request.param
