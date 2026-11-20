@@ -123,12 +123,12 @@ python -m uvicorn main:app --app-dir backend/src
 
 ### Development & Build Commands
 
-Inside `pwa/app/`:
+Inside `pwa/app/`, with Node.js 24 (Vitest needs 22.19 or newer; `infra/ansible` installs the pinned `node_version`, 24.22.3, under `~/.local`):
 
 ```bash
 pnpm dev        # Launch Vite development server on port 5173 with API proxying
 pnpm typecheck  # Strict TypeScript verification (0 errors)
-pnpm test       # Execute Vitest test suite (79 suites, 519 tests)
+pnpm test       # Execute Vitest test suite (86 suites, 558 tests)
 pnpm build      # Build production bundle to dist/
 ```
 

@@ -14,7 +14,7 @@ log_dir: "{{ repo_dir }}/.cache/logs"
 
 # ---- Pinned versions (what the reference Jetson runs) -----------------------------------
 uv_version: "0.12.13"
-node_version: "22.14.0"
+node_version: "24.22.3"
 pnpm_version: "12.5.1"
 ollama_version: "0.33.2"
 

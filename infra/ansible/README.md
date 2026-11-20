@@ -182,7 +182,7 @@ daemon. What it does, in order:
 | `system` | Hostname, time zone. Disables three base-image units that fail on every boot (`dnsmasq`, `isc-dhcp-server`, `isc-dhcp-server6`). |
 | `packages` | `nginx-light`, `espeak-ng`, `git`, `build-essential`. |
 | `cuda` | The CUDA compiler (`cuda-minimal-build-13-2`, `libcublas-dev-13-2`). The base image has the CUDA runtime only. |
-| `tools` | Checks `uv`; installs Node.js and pnpm under `~/.local`, at the pinned versions. |
+| `tools` | Checks `uv`; installs Node.js (24 LTS, which the PWA's Vitest needs) and pnpm under `~/.local`, at the pinned versions. |
 | `ollama` | Installs Ollama at the pinned version, starts `ollama.service`, pulls the quiz and tutor models. |
 | `app` | Writes `<repo>/.env`, then runs `run.py --prepare --download-models all --build-llama --require-cuda`. |
 | `nginx` | Installs and enables the site, removes Ubuntu's default site. |
