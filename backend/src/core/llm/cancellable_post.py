@@ -83,7 +83,9 @@ def post_json_until_stopped(
     except (OSError, http.client.HTTPException) as request_error:
         if stop_requested.is_set():
             raise LLMCallCancelled("LLM request stopped.") from request_error
-        raise RuntimeError(f"LocalSLM request failed: {request_error}") from request_error
+        raise RuntimeError(
+            f"LocalSLM request failed: {request_error}"
+        ) from request_error
     finally:
         request_finished.set()
         connection.close()

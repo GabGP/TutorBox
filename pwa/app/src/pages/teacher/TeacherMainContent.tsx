@@ -1,34 +1,21 @@
 import React from 'react';
 import { MatchReportView } from '../../features/match-report/MatchReportView';
-import { QuestionCountPicker } from '../../features/question-generator/QuestionCountPicker';
 import { TopicSelector } from '../../features/question-generator/TopicSelector';
-import { getTopicLabel } from '../../shared/taxonomy/labels';
-import { TelemetryView } from '../../features/question-generator/TelemetryView';
-import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 import { useHostAddress } from '../../shared/routing/session';
-import { QUESTION_SOURCE_OPTIONS, SourceSwitch } from './SourceSwitch';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel, SessionReport } from '../../features/session-engine/session.types';
-import { GenerationProgress, TopicModel } from '../../features/question-generator/generator.types';
+import { TopicModel } from '../../features/question-generator/generator.types';
 import { StoredRoundHistory } from '../../shared/lib/storage';
 import { TeacherLiveRounds } from './TeacherLiveRounds';
 import { TeacherLobby } from './TeacherLobby';
 import styles from './TeacherView.module.css';
 
-/** Quiz-setup slice: topics, count, generation, bank source. */
+/** Quiz-setup slice: topic choice, then the bank step (pick, write or generate). */
 export interface QuizSetupProps {
   topics: TopicModel[];
   selectedTopic: string;
-  count: number;
-  genError?: string | null;
-  progress: GenerationProgress | null;
-  /** The teacher pressed Detener: creation waits for Reanudar or Cancelar. */
-  isGenerationPaused?: boolean;
-  source: 'generate' | 'bank';
   bankStep: React.ReactNode;
   onSelectTopic: (topic: string) => void;
-  onChangeCount: (count: number) => void;
-  onSourceChange: (s: 'generate' | 'bank') => void;
 }
 
 /** Speech playback slice for live rounds. */
@@ -60,7 +47,7 @@ export interface TeacherMainContentProps {
 
 /**
  * Teacher Console Step Content Switcher.
- * Renders the active workspace screen: topic selector, question count picker,
+ * Renders the active workspace screen: topic selector, bank step (pick, write or generate),
  * pre-game lobby, live voting/reveal rounds, or end-of-game match report.
  *
  * @param {TeacherMainContentProps} props - Step state plus the quiz, lobby,
@@ -82,12 +69,6 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
     <main className={styles.mainContent}>
       {step === 'topic' && (
         <section id="s-topic" className={styles.stack}>
-          <SourceSwitch
-            value={quiz.source}
-            onChange={quiz.onSourceChange}
-            options={QUESTION_SOURCE_OPTIONS}
-            ariaLabel="Origen de preguntas"
-          />
           <TopicSelector
             topics={quiz.topics}
             selectedTopic={quiz.selectedTopic}
@@ -95,27 +76,10 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           />
         </section>
       )}
-      {step === 'count' && quiz.source === 'generate' && (
-        <section id="s-count" className={styles.stack}>
-          <QuestionCountPicker
-            count={quiz.count}
-            topicLabel={getTopicLabel(quiz.selectedTopic)}
-            onChangeCount={quiz.onChangeCount}
-            errorNote={quiz.genError}
-          />
-          <Collapsible title="Actividad de generación">
-            <TelemetryView />
-          </Collapsible>
-        </section>
-      )}
-      {step === 'count' && quiz.source === 'bank' && (
-        <section id="s-count">{quiz.bankStep}</section>
-      )}
+      {step === 'count' && <section id="s-count">{quiz.bankStep}</section>}
       {step === 'lobby' && (
         <TeacherLobby
           session={session}
-          progress={quiz.progress}
-          isGenerationPaused={quiz.isGenerationPaused}
           hostAddress={hostAddress}
           onManageUsers={lobby.onManageUsers}
           onOpenClickers={lobby.onOpenClickers}

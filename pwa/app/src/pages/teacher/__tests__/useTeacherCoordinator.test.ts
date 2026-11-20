@@ -247,7 +247,6 @@ describe('useTeacherCoordinator Hook', () => {
     expect(result.current.wizard).toBe('count');
 
     act(() => {
-      result.current.setSource('bank');
       result.current.toggleBankId('q_a');
       result.current.toggleBankId('q_b');
     });
@@ -268,10 +267,6 @@ describe('useTeacherCoordinator Hook', () => {
     await act(async () => {
       await result.current.advancePrimary(); // topic -> count
     });
-    act(() => {
-      result.current.setSource('bank');
-    });
-
     await act(async () => {
       await result.current.advancePrimary();
     });

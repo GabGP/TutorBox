@@ -9,8 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-import core.llm.cancellable_post as cancellable_post
-from core.llm import LLMCallCancelled, LocalSLMClient
+from core.llm import LLMCallCancelled, LocalSLMClient, cancellable_post
 from core.llm.cancellable_post import post_json_until_stopped
 
 COMPLETION = {"choices": [{"message": {"content": "hola"}}]}
@@ -95,6 +94,7 @@ def test_stop_closes_the_connection_while_the_model_thinks(llm_server):
 
 def test_answer_that_arrives_after_stop_is_discarded(monkeypatch):
     """A stop that lands as the answer arrives still raises LLMCallCancelled."""
+
     def always_stopped() -> bool:
         return True
 

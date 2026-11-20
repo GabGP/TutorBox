@@ -6,8 +6,14 @@ import type { GenerationProgress } from './generator.types';
  * Wall-clock state for the generation progress display: rotating pedagogical
  * stage caption, elapsed seconds ticker, and per-question start tracking.
  * Extracted from QuestionGenerationProgress so the view only derives values.
+ * `isPaused` freezes the timers but keeps the current question number.
  */
-export function useGenerationClock(progress: GenerationProgress, isDone: boolean) {
+export function useGenerationClock(
+  progress: GenerationProgress,
+  isDone: boolean,
+  isPaused = false
+) {
+  const isFrozen = isDone || isPaused;
   const [stageIndex, setStageIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const startTimeRef = useRef(Date.now());
@@ -17,12 +23,12 @@ export function useGenerationClock(progress: GenerationProgress, isDone: boolean
   const qStartRef = useRef(0);
 
   useEffect(() => {
-    if (isDone) return;
+    if (isFrozen) return;
     const stageTimer = setInterval(() => {
       setStageIndex((prev) => (prev + 1) % PEDAGOGICAL_STAGES.length);
     }, PROGRESS_ANIMATION.STAGE_SPEED_SECONDS * 1000);
     return () => clearInterval(stageTimer);
-  }, [isDone]);
+  }, [isFrozen]);
 
   useEffect(() => {
     if (prevIdxRef.current !== currentIdx) {
@@ -32,12 +38,12 @@ export function useGenerationClock(progress: GenerationProgress, isDone: boolean
   }, [currentIdx]);
 
   useEffect(() => {
-    if (isDone) return;
+    if (isFrozen) return;
     const clock = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     return () => clearInterval(clock);
-  }, [isDone]);
+  }, [isFrozen]);
 
   return { stageIndex, elapsedSeconds, currentIdx, questionStartSecond: qStartRef.current };
 }

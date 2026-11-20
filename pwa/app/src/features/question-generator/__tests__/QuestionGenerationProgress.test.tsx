@@ -160,4 +160,23 @@ describe('QuestionGenerationProgress Component', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/1 pregunta\(s\) con error/)).toBeInTheDocument();
   });
+
+  it('keeps the current question number and holds the clock while stopped', () => {
+    render(<QuestionGenerationProgress progress={mockProgress} isPaused />);
+
+    expect(screen.getByRole('heading', { name: 'Creación detenida' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_content, element) =>
+          element?.tagName === 'SPAN' && element.textContent === 'Pregunta 3 de 5'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('40%')).toBeInTheDocument();
+    expect(screen.queryByText(/Restante estimado/)).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(screen.getByText(/Tiempo transcurrido/).textContent).toContain('0s');
+  });
 });

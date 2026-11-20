@@ -1,8 +1,7 @@
 import type { SessionModel } from '../../features/session-engine/session.types';
-import type { QuestionSource } from './useWizardSelection';
 import {
   getPrimaryActionLabel,
-  getSecondaryActionLabel,
+  SECONDARY_ACTION_LABELS,
   TEACHER_STEP_TITLES,
   type TeacherStep,
 } from './teacherViewConfig';
@@ -10,13 +9,10 @@ import {
 export interface TeacherViewModelInput {
   session: SessionModel | null;
   wizard: string;
-  source: QuestionSource;
   bankIds: string[];
   isGenerating: boolean;
-  isGenerationPaused?: boolean;
   roundClosed: boolean;
   isLast: boolean;
-  hasSessionForLobby: boolean;
 }
 
 export interface TeacherViewModel {
@@ -47,30 +43,30 @@ export function getTeacherStep(
 /**
  * Pure derivation of every label and flag the teacher header/footer need.
  * Extracted from TeacherView so step logic is testable without rendering.
+ * The count step is the bank pick: the game starts from the chosen questions,
+ * and not while the Generar tab is still adding to them.
  */
 export function getTeacherViewModel(input: TeacherViewModelInput): TeacherViewModel {
-  const { session, wizard, source, bankIds, isGenerating, roundClosed, isLast } = input;
-  const isGenerationPaused = Boolean(input.isGenerationPaused);
+  const { session, wizard, bankIds, isGenerating, roundClosed, isLast } = input;
   const step = getTeacherStep(session, wizard);
   const key = step as TeacherStep;
   const [subtitle, title] = TEACHER_STEP_TITLES[key] ?? ["Utz'tutor", 'Panel'];
-  const isBankSource = step === 'count' && source === 'bank';
-  const isBankEmpty = isBankSource && bankIds.length === 0;
-  const primaryText = isBankSource
+  const isBankStep = step === 'count';
+  const isBankEmpty = isBankStep && bankIds.length === 0;
+  const primaryText = isBankStep
     ? bankIds.length > 0
       ? `Jugar con ${bankIds.length}`
       : 'Elige preguntas del banco'
-    : getPrimaryActionLabel(step, isGenerating, isGenerationPaused, roundClosed, isLast);
+    : getPrimaryActionLabel(step, roundClosed, isLast);
   return {
     step,
     title,
     subtitle,
     primaryText,
-    secondaryText: getSecondaryActionLabel(step, isGenerating, isGenerationPaused),
+    secondaryText: SECONDARY_ACTION_LABELS[key],
     wizardIdx: ['topic', 'count', 'lobby'].indexOf(step),
     isBankEmpty,
-    isPrimaryDisabled:
-      (isGenerating && !isGenerationPaused) || isBankEmpty || (step === 'lobby' && !input.hasSessionForLobby && !isGenerationPaused),
-    isLobbySuccess: step === 'lobby' && input.hasSessionForLobby,
+    isPrimaryDisabled: isBankEmpty || (isBankStep && isGenerating),
+    isLobbySuccess: step === 'lobby',
   };
 }

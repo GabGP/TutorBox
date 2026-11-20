@@ -106,16 +106,12 @@ export const TeacherView: React.FC = () => {
   const vm = getTeacherViewModel({
     session: coordinator.session,
     wizard: coordinator.wizard,
-    source: coordinator.source,
     bankIds: coordinator.bankIds,
     isGenerating: coordinator.isGenerating,
-    isGenerationPaused: coordinator.isGenerationPaused,
     roundClosed: curRound?.status === 'closed',
     isLast,
-    hasSessionForLobby: Boolean(coordinator.session),
   });
   const step = vm.step;
-  const secondaryTextIsStop = vm.secondaryText === 'Detener';
 
   const handlePlaySpeech = useCallback(() => {
     if (curRound) {
@@ -135,8 +131,6 @@ export const TeacherView: React.FC = () => {
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const handlePrimary = useCallback(async () => {
-    // Reanudar: the generating primary action is still awaiting, so skip the busy guard.
-    if (coordinator.isGenerationPaused) return coordinator.resumeGeneration();
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -154,9 +148,8 @@ export const TeacherView: React.FC = () => {
   const handleSecondary = useCallback(() => {
     stopPlayback();
     if (step === 'topic') logout();
-    else if (secondaryTextIsStop) coordinator.stopGeneration();
     else coordinator.resetSession();
-  }, [step, secondaryTextIsStop, stopPlayback, logout, coordinator]);
+  }, [step, stopPlayback, logout, coordinator]);
 
   const handleCloseSettings = useCallback(() => {
     const pref = storage.getVoicePreference();
@@ -211,11 +204,6 @@ export const TeacherView: React.FC = () => {
             quiz={{
               topics: coordinator.topics,
               selectedTopic: coordinator.topic,
-              count: coordinator.count,
-              genError: coordinator.genError,
-              progress: coordinator.progress,
-              isGenerationPaused: coordinator.isGenerationPaused,
-              source: coordinator.source,
               bankStep: (
                 <BankPickStep
                   selectedTopic={coordinator.topic}
@@ -223,21 +211,19 @@ export const TeacherView: React.FC = () => {
                   onChangeCount={coordinator.setCount}
                   genError={coordinator.genError}
                   progress={coordinator.progress}
-                  pregenerating={coordinator.isGenerating}
-                  pregenerationPaused={coordinator.isGenerationPaused}
-                  onStopPregeneration={coordinator.stopGeneration}
-                  onResumePregeneration={coordinator.resumeGeneration}
-                  onCancelPregeneration={coordinator.cancelPregeneration}
+                  generating={coordinator.isGenerating}
+                  generationPaused={coordinator.isGenerationPaused}
+                  onStopGeneration={coordinator.stopGeneration}
+                  onResumeGeneration={coordinator.resumeGeneration}
+                  onCancelGeneration={coordinator.cancelBankGeneration}
                   bankIds={coordinator.bankIds}
                   onToggleBankId={coordinator.toggleBankId}
                   onEnsureBankIds={coordinator.ensureBankIds}
-                  onPregenerate={coordinator.pregenerate}
+                  onGenerate={coordinator.generateIntoBank}
                   isAdmin={user?.role === 'admin'}
                 />
               ),
               onSelectTopic: coordinator.setTopic,
-              onChangeCount: coordinator.setCount,
-              onSourceChange: coordinator.setSource,
             }}
             lobby={{
               onManageUsers: () => openSettings('usuarios'),
@@ -260,10 +246,7 @@ export const TeacherView: React.FC = () => {
           <TeacherFooter
             primaryText={primaryText}
             secondaryText={secondaryText}
-            // While stopped the generating action is still pending (busy) but Reanudar must work.
-            isPrimaryDisabled={
-              vm.isPrimaryDisabled || (busy && !coordinator.isGenerationPaused)
-            }
+            isPrimaryDisabled={vm.isPrimaryDisabled || busy}
             isLobbySuccess={vm.isLobbySuccess}
             wizardIndex={wizardIdx}
             onPrimary={handlePrimary}

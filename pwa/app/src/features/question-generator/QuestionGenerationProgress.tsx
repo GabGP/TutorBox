@@ -28,14 +28,14 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
   const total = progress.total || 1;
   const isDone = Boolean(forceComplete || (progress.done >= total && total > 0));
   const { stageIndex, elapsedSeconds, currentIdx, questionStartSecond } =
-    useGenerationClock(progress, isDone || isPaused);
+    useGenerationClock(progress, isDone, isPaused);
 
   const percent = isDone ? 100 : Math.min(100, Math.round((progress.done / total) * 100));
   const remaining = isDone ? 0 : Math.max(0, total - progress.done);
   const effectiveEta = progress.eta ?? PROGRESS_ANIMATION.DEFAULT_QUESTION_ETA_SECONDS;
   const currentQElapsed = Math.max(0, elapsedSeconds - questionStartSecond);
   const currentQRemaining = remaining > 0 ? Math.max(1, effectiveEta - currentQElapsed) : 0;
-  const liveRemaining = !isDone && remaining > 0 ? currentQRemaining + Math.max(0, remaining - 1) * effectiveEta : null;
+  const liveRemaining = !isDone && !isPaused && remaining > 0 ? currentQRemaining + Math.max(0, remaining - 1) * effectiveEta : null;
   const formattedElapsed = formatDuration(elapsedSeconds, false) || '0s', formattedEta = formatDuration(liveRemaining, true);
   const topicLabel = progress.currentTopic ? getTopicLabel(progress.currentTopic) : '', subconceptLabel = getSubconceptLabel(progress.currentSubconcept);
   const colsMobile = total <= PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX ? total : PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX;

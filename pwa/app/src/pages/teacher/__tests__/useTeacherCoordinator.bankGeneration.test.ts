@@ -22,7 +22,7 @@ function hangUntilAborted(_payload: unknown, signal?: AbortSignal) {
   });
 }
 
-describe('useTeacherCoordinator pre-generation', () => {
+describe('useTeacherCoordinator bank generation', () => {
   it('keeps the questions already saved chosen when Cancelar follows Detener', async () => {
     vi.mocked(generatorApi.getMetrics).mockResolvedValue({
       topic: 'arithmetic',
@@ -37,13 +37,13 @@ describe('useTeacherCoordinator pre-generation', () => {
 
     let run!: Promise<string[] | null>;
     act(() => {
-      run = result.current.pregenerate();
+      run = result.current.generateIntoBank();
     });
     await waitFor(() => expect(generatorApi.generateQuestion).toHaveBeenCalledTimes(2));
     act(() => result.current.stopGeneration());
     await waitFor(() => expect(result.current.isGenerationPaused).toBe(true));
 
-    act(() => result.current.cancelPregeneration());
+    act(() => result.current.cancelBankGeneration());
 
     await expect(run).resolves.toBeNull();
     expect(result.current.bankIds).toEqual(['q_saved']);

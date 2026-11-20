@@ -30,11 +30,11 @@ const baseProps = {
   onChangeCount: vi.fn(),
   genError: null,
   progress: null,
-  pregenerating: false,
+  generating: false,
   bankIds: [],
   onToggleBankId: vi.fn(),
   onEnsureBankIds: vi.fn(),
-  onPregenerate: vi.fn().mockResolvedValue(['q1']),
+  onGenerate: vi.fn().mockResolvedValue(['q1']),
 };
 
 describe('BankPickStep', () => {
@@ -61,7 +61,7 @@ describe('BankPickStep', () => {
     vi.restoreAllMocks();
   });
 
-  it('floats pre-generation errors as error toasts', async () => {
+  it('floats generation errors as error toasts', async () => {
     mockBankBackend();
     render(<BankPickStep {...baseProps} genError="El modelo no respondió" />);
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -70,53 +70,59 @@ describe('BankPickStep', () => {
     vi.restoreAllMocks();
   });
 
-  it('pre-generates from the Pre-generar tab', async () => {
+  it('generates into the bank from the Generar tab', async () => {
     mockBankBackend();
-    const onPregenerate = vi.fn().mockResolvedValue(['q9']);
+    const onGenerate = vi.fn().mockResolvedValue(['q9']);
     const onEnsureBankIds = vi.fn();
     render(
-      <BankPickStep {...baseProps} onPregenerate={onPregenerate} onEnsureBankIds={onEnsureBankIds} />
+      <BankPickStep {...baseProps} onGenerate={onGenerate} onEnsureBankIds={onEnsureBankIds} />
     );
-    fireEvent.click(screen.getByRole('tab', { name: /Pre-generar/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Generar$/ }));
     fireEvent.click(
-      screen.getByRole('button', { name: /Pre-generar en banco/ })
+      screen.getByRole('button', { name: /Generar en banco/ })
     );
-    await waitFor(() => expect(onPregenerate).toHaveBeenCalled());
+    await waitFor(() => expect(onGenerate).toHaveBeenCalled());
     await waitFor(() => expect(onEnsureBankIds).toHaveBeenCalledWith(['q9']));
     vi.restoreAllMocks();
   });
 
-  it('offers Detener while pre-generating, then Cancelar and Reanudar', () => {
+  it('offers Detener while generating, then Cancelar and Reanudar', () => {
     mockBankBackend();
     const controls = {
-      onStopPregeneration: vi.fn(),
-      onResumePregeneration: vi.fn(),
-      onCancelPregeneration: vi.fn(),
+      onStopGeneration: vi.fn(),
+      onResumeGeneration: vi.fn(),
+      onCancelGeneration: vi.fn(),
     };
     const progress = { done: 1, total: 3, failed: 0, ids: ['q1'], eta: 5, currentIndex: 2 };
     const { rerender } = render(
-      <BankPickStep {...baseProps} {...controls} progress={progress} pregenerating />
+      <BankPickStep {...baseProps} {...controls} progress={progress} generating />
     );
-    fireEvent.click(screen.getByRole('tab', { name: /Pre-generar/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Generar$/ }));
 
-    expect(screen.queryByRole('button', { name: /Pre-generar en banco/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Generar en banco/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Progreso de creación de preguntas' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Generar una más' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Detener' }));
-    expect(controls.onStopPregeneration).toHaveBeenCalledTimes(1);
+    expect(controls.onStopGeneration).toHaveBeenCalledTimes(1);
 
     rerender(
       <BankPickStep
         {...baseProps}
         {...controls}
         progress={progress}
-        pregenerating
-        pregenerationPaused
+        generating
+        generationPaused
       />
     );
     expect(screen.getByRole('heading', { name: 'Creación detenida' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reanudar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(controls.onResumePregeneration).toHaveBeenCalledTimes(1);
-    expect(controls.onCancelPregeneration).toHaveBeenCalledTimes(1);
+    expect(controls.onResumeGeneration).toHaveBeenCalledTimes(1);
+    expect(controls.onCancelGeneration).toHaveBeenCalledTimes(1);
+
+    rerender(<BankPickStep {...baseProps} {...controls} progress={progress} />);
+    expect(screen.getByRole('button', { name: 'Generar una más' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Progreso de creación de preguntas' })).toBeNull();
     vi.restoreAllMocks();
   });
 });

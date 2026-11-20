@@ -21,12 +21,12 @@ import styles from './BankPickStep.module.css';
 import { SourceSwitch } from './SourceSwitch';
 import { Collapsible } from '../../shared/ui/Collapsible/Collapsible';
 
-export type BankTab = 'elegir' | 'crear' | 'pregrow';
+export type BankTab = 'elegir' | 'crear' | 'generar';
 
 const BANK_TABS = [
   { value: 'elegir', icon: BookOpen, label: 'Elegir' },
   { value: 'crear', icon: Plus, label: 'Crear' },
-  { value: 'pregrow', icon: Zap, label: 'Pre-generar' },
+  { value: 'generar', icon: Zap, label: 'Generar' },
 ] as const;
 
 export interface BankPickStepProps {
@@ -35,24 +35,24 @@ export interface BankPickStepProps {
   onChangeCount: (n: number) => void;
   genError?: string | null;
   progress: GenerationProgress | null;
-  pregenerating: boolean;
+  generating: boolean;
   /** Detener was pressed: creation waits for Reanudar or Cancelar. */
-  pregenerationPaused?: boolean;
-  onStopPregeneration?: () => void;
-  onResumePregeneration?: () => void;
-  onCancelPregeneration?: () => void;
+  generationPaused?: boolean;
+  onStopGeneration?: () => void;
+  onResumeGeneration?: () => void;
+  onCancelGeneration?: () => void;
   bankIds: string[];
   onToggleBankId: (id: string) => void;
   onEnsureBankIds: (ids: string[]) => void;
-  onPregenerate: () => Promise<unknown>;
+  onGenerate: () => Promise<unknown>;
   isAdmin?: boolean;
 }
 
 /**
  * Quiz-prep bank picker: hand-pick stored questions (Elegir), write one
- * manually (Crear), or fill the bank on demand (Pre-generar), with the
+ * manually (Crear), or fill the bank on demand (Generar), with the
  * generation activity log underneath. The match is built only from the
- * chosen questions — no generation involved. Pre-generation failures
+ * chosen questions — no generation involved. Generation failures
  * float as error toasts so the layout never shifts.
  */
 export const BankPickStep: React.FC<BankPickStepProps> = ({
@@ -61,15 +61,15 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   onChangeCount,
   genError,
   progress,
-  pregenerating,
-  pregenerationPaused = false,
-  onStopPregeneration,
-  onResumePregeneration,
-  onCancelPregeneration,
+  generating,
+  generationPaused = false,
+  onStopGeneration,
+  onResumeGeneration,
+  onCancelGeneration,
   bankIds,
   onToggleBankId,
   onEnsureBankIds,
-  onPregenerate,
+  onGenerate,
   isAdmin = false,
 }) => {
   const [tab, setTab] = useState<BankTab>('elegir');
@@ -80,8 +80,8 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
     if (genError) pushToast({ message: genError, tone: 'error' });
   }, [genError, pushToast]);
 
-  const handlePregenerate = async () => {
-    const ids = (await onPregenerate()) as unknown;
+  const handleGenerate = async () => {
+    const ids = (await onGenerate()) as unknown;
     if (Array.isArray(ids) && ids.length > 0) {
       onEnsureBankIds(ids as string[]);
       setReloadKey((k) => k + 1);
@@ -127,60 +127,62 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
         <QuestionForm initial={null} onSaved={handleCreated} />
       )}
 
-      {tab === 'pregrow' && (
+      {tab === 'generar' && (
         <>
-          <div className={generatorStyles.counter}>
-            <div className={generatorStyles.num}>{count}</div>
-            <div className={generatorStyles.sub}>
-              para pre-generar · {getTopicLabel(selectedTopic)}
+          {/* While it runs, the status card takes the counter's place, as in the lobby. */}
+          {generating && progress ? (
+            <QuestionGenerationProgress
+              progress={progress}
+              isComplete={false}
+              isPaused={generationPaused}
+            />
+          ) : (
+            <div className={generatorStyles.counter}>
+              <div className={generatorStyles.num}>{count}</div>
+              <div className={generatorStyles.sub}>
+                para generar · {getTopicLabel(selectedTopic)}
+              </div>
+              <div className={generatorStyles.pm}>
+                <button
+                  type="button"
+                  aria-label="Generar una menos"
+                  onClick={() => onChangeCount(Math.max(QUESTION_COUNT_MIN, count - 1))}
+                >
+                  <Minus size={28} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className={generatorStyles.p}
+                  aria-label="Generar una más"
+                  onClick={() => onChangeCount(Math.min(QUESTION_COUNT_MAX, count + 1))}
+                >
+                  <Plus size={28} aria-hidden />
+                </button>
+              </div>
             </div>
-            <div className={generatorStyles.pm}>
-              <button
-                type="button"
-                aria-label="Pre-generar una menos"
-                onClick={() => onChangeCount(Math.max(QUESTION_COUNT_MIN, count - 1))}
-              >
-                <Minus size={28} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className={generatorStyles.p}
-                aria-label="Pre-generar una más"
-                onClick={() => onChangeCount(Math.min(QUESTION_COUNT_MAX, count + 1))}
-              >
-                <Plus size={28} aria-hidden />
-              </button>
-            </div>
-          </div>
+          )}
           <div className={formStyles.addForm}>
-            {!pregenerating && (
-              <button type="button" className={formStyles.submitAdd} onClick={handlePregenerate}>
-                <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Pre-generar en banco</span>
+            {!generating && (
+              <button type="button" className={formStyles.submitAdd} onClick={handleGenerate}>
+                <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Generar en banco</span>
               </button>
             )}
-            {pregenerating && !pregenerationPaused && (
-              <button type="button" className={formStyles.submitAdd} onClick={onStopPregeneration}>
+            {generating && !generationPaused && (
+              <button type="button" className={formStyles.submitAdd} onClick={onStopGeneration}>
                 <span className={utils.rowInline6}><Square size={16} aria-hidden /> Detener</span>
               </button>
             )}
-            {pregenerating && pregenerationPaused && (
+            {generating && generationPaused && (
               <>
-                <button type="button" className={formStyles.submitAdd} onClick={onCancelPregeneration}>
+                <button type="button" className={formStyles.submitAdd} onClick={onCancelGeneration}>
                   <span className={utils.rowInline6}><X size={18} aria-hidden /> Cancelar</span>
                 </button>
-                <button type="button" className={formStyles.submitAdd} onClick={onResumePregeneration}>
+                <button type="button" className={formStyles.submitAdd} onClick={onResumeGeneration}>
                   <span className={utils.rowInline6}><Play size={16} aria-hidden /> Reanudar</span>
                 </button>
               </>
             )}
           </div>
-          {progress && (
-            <QuestionGenerationProgress
-              progress={progress}
-              isComplete={false}
-              isPaused={pregenerationPaused}
-            />
-          )}
           <p className={styles.description}>
             Las nuevas preguntas se eligen solas para el juego.
           </p>

@@ -21,7 +21,7 @@ export const PEDAGOGICAL_STAGES = [
 ] as const;
 
 /**
- * Shared question-count stepper bounds (generate flow and bank pregrow).
+ * Shared question-count stepper bounds (bank Generar tab).
  * The backend accepts `question_ids` with min_length=1, so the union range
  * 1–20 keeps every previously possible choice available in both steppers.
  */

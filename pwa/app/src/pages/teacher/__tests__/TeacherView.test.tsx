@@ -95,13 +95,11 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
-      source: 'generate',
-      setSource: vi.fn(),
       bankIds: [],
       toggleBankId: vi.fn(),
       ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
+      generateIntoBank: vi.fn(),
+      cancelBankGeneration: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
@@ -144,13 +142,11 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
-      source: 'generate',
-      setSource: vi.fn(),
       bankIds: [],
       toggleBankId: vi.fn(),
       ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
+      generateIntoBank: vi.fn(),
+      cancelBankGeneration: vi.fn(),
       advancePrimary,
       resetSession: vi.fn(),
     });
@@ -197,13 +193,11 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
-      source: 'generate',
-      setSource: vi.fn(),
       bankIds: [],
       toggleBankId: vi.fn(),
       ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
+      generateIntoBank: vi.fn(),
+      cancelBankGeneration: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
@@ -211,6 +205,9 @@ describe('TeacherView Component', () => {
     render(<TeacherView />);
     expect(screen.getByText('Elegir tema')).toBeInTheDocument();
     expect(screen.getByText('Aritmética')).toBeInTheDocument();
+    // No Generar/Banco choice: Continuar always leads to the bank step.
+    expect(screen.queryByRole('tablist', { name: 'Origen de preguntas' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeInTheDocument();
 
     const voiceBtn = screen.getByRole('button', { name: 'Voz ES' });
     fireEvent.click(voiceBtn);
@@ -247,86 +244,23 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
-      source: 'bank',
-      setSource: vi.fn(),
       bankIds: ['q1', 'q2'],
       toggleBankId: vi.fn(),
       ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
+      generateIntoBank: vi.fn(),
+      cancelBankGeneration: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
 
     render(<TeacherView />);
-    fireEvent.click(screen.getByRole('tab', { name: /Pre-generar/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Generar$/ }));
     expect(
-      screen.getByRole('button', { name: /Pre-generar en banco/ })
+      screen.getByRole('button', { name: /Generar en banco/ })
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Jugar con 2' })
     ).toBeInTheDocument();
-  });
-
-  it('renders QuestionGenerationProgress when generating in lobby', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: { id: 't1', username: 'profe', role: 'teacher' },
-      loading: false,
-      mustChangePin: false,
-      pendingPin: null,
-      login: vi.fn(),
-      signupAndLogin: vi.fn(),
-      handlePinChange: vi.fn(),
-      logout: vi.fn(),
-      restoreSession: vi.fn(),
-    });
-    vi.mocked(useTeacherCoordinator).mockReturnValue({
-      sid: null,
-      wizard: 'lobby',
-      setWizard: vi.fn(),
-      topic: 'fractions',
-      setTopic: vi.fn(),
-      count: 5,
-      setCount: vi.fn(),
-      topics: [{ name: 'fractions', subconcepts: [] }],
-      session: null,
-      progress: {
-        done: 1,
-        total: 5,
-        failed: 0,
-        ids: ['q1'],
-        eta: 10,
-        currentIndex: 2,
-        currentTopic: 'fractions',
-        currentSubconcept: null,
-      },
-      isGenerating: true,
-      isGenerationPaused: false,
-      stopGeneration: vi.fn(),
-      resumeGeneration: vi.fn(),
-      genError: null,
-      history: [],
-      report: null,
-      source: 'generate',
-      setSource: vi.fn(),
-      bankIds: [],
-      toggleBankId: vi.fn(),
-      ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
-      advancePrimary: vi.fn(),
-      resetSession: vi.fn(),
-    });
-
-    render(<TeacherView />);
-    expect(
-      screen.getByText('Creando las preguntas con IA...')
-    ).toBeInTheDocument();
-    expect(screen.getByText('P2')).toBeInTheDocument();
-
-    const primaryBtn = screen.getByRole('button', { name: /Creando preguntas/ });
-    expect(primaryBtn).toBeDisabled();
-    expect(primaryBtn.className).not.toContain('ok');
   });
 
   it('triggers speech prefetching when round enters closed status', () => {
@@ -389,69 +323,16 @@ describe('TeacherView Component', () => {
       genError: null,
       history: [],
       report: null,
-      source: 'generate',
-      setSource: vi.fn(),
       bankIds: [],
       toggleBankId: vi.fn(),
       ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
+      generateIntoBank: vi.fn(),
+      cancelBankGeneration: vi.fn(),
       advancePrimary: vi.fn(),
       resetSession: vi.fn(),
     });
 
     render(<TeacherView />);
     expect(mockPrefetch).toHaveBeenCalledWith(0);
-  });
-
-  it('shows the squishy source switch on the topic step', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: { id: 't1', username: 'profe', role: 'teacher' },
-      loading: false,
-      mustChangePin: false,
-      pendingPin: null,
-      login: vi.fn(),
-      signupAndLogin: vi.fn(),
-      handlePinChange: vi.fn(),
-      logout: vi.fn(),
-      restoreSession: vi.fn(),
-    });
-    const setSource = vi.fn();
-    vi.mocked(useTeacherCoordinator).mockReturnValue({
-      sid: null,
-      wizard: 'topic',
-      setWizard: vi.fn(),
-      topic: '',
-      setTopic: vi.fn(),
-      count: 10,
-      setCount: vi.fn(),
-      topics: [],
-      session: null,
-      progress: null,
-      isGenerating: false,
-      isGenerationPaused: false,
-      stopGeneration: vi.fn(),
-      resumeGeneration: vi.fn(),
-      genError: null,
-      history: [],
-      report: null,
-      source: 'generate',
-      setSource,
-      bankIds: [],
-      toggleBankId: vi.fn(),
-      ensureBankIds: vi.fn(),
-      pregenerate: vi.fn(),
-      cancelPregeneration: vi.fn(),
-      advancePrimary: vi.fn(),
-      resetSession: vi.fn(),
-    });
-
-    render(<TeacherView />);
-    const bankTab = screen.getByRole('tab', { name: /Banco/ });
-    expect(
-      screen.getByRole('tab', { name: /Generar/ })
-    ).toHaveAttribute('aria-selected', 'true');
-    fireEvent.click(bankTab);
-    expect(setSource).toHaveBeenCalledWith('bank');
   });
 });

@@ -1,18 +1,16 @@
 import { useCallback, useState } from 'react';
 
-export type TeacherWizardStep = 'topic' | 'count' | 'lobby';
-export type QuestionSource = 'generate' | 'bank';
+export type TeacherWizardStep = 'topic' | 'count';
 
 /**
- * Wizard selection state for the teacher setup flow (topic -> count -> lobby)
- * plus the question source and hand-picked bank ids. Pure selection state —
- * session creation and generation live in the coordinator.
+ * Wizard selection state for the teacher setup flow (topic -> bank pick; the
+ * lobby follows once a session exists) plus the hand-picked bank ids. Pure
+ * selection state — session creation and generation live in the coordinator.
  */
 export function useWizardSelection() {
   const [wizard, setWizard] = useState<TeacherWizardStep>('topic');
   const [topic, setTopic] = useState('');
   const [count, setCount] = useState(10);
-  const [source, setSource] = useState<QuestionSource>('generate');
   const [bankIds, setBankIds] = useState<string[]>([]);
 
   const toggleBankId = useCallback((id: string) => {
@@ -27,7 +25,6 @@ export function useWizardSelection() {
 
   const resetSelection = useCallback(() => {
     setWizard('topic');
-    setSource('generate');
     setBankIds([]);
   }, []);
 
@@ -38,8 +35,6 @@ export function useWizardSelection() {
     setTopic,
     count,
     setCount,
-    source,
-    setSource,
     bankIds,
     toggleBankId,
     ensureBankIds,

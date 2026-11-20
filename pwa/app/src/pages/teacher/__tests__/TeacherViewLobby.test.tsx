@@ -28,18 +28,28 @@ const teacherAuth = {
   restoreSession: vi.fn(),
 };
 
-/** The lobby step: the wizard reached it and no match is running yet. */
+/** The lobby step: a match was built from the bank and has not started. */
+const LOBBY_SESSION = {
+  id: 's_lobby',
+  title: 'Pilas',
+  topic: 'arithmetic',
+  status: 'lobby',
+  question_count: 5,
+  current_round_index: 0,
+  created_at: '2026-11-20T10:00:00Z',
+};
+
 function lobbyCoordinator(overrides: Record<string, unknown> = {}) {
   return {
-    sid: null,
-    wizard: 'lobby',
+    sid: LOBBY_SESSION.id,
+    wizard: 'count',
     setWizard: vi.fn(),
     topic: 'arithmetic',
     setTopic: vi.fn(),
     count: 5,
     setCount: vi.fn(),
     topics: [],
-    session: null,
+    session: LOBBY_SESSION,
     progress: null,
     isGenerating: false,
     isGenerationPaused: false,
@@ -48,13 +58,11 @@ function lobbyCoordinator(overrides: Record<string, unknown> = {}) {
     genError: null,
     history: [],
     report: null,
-    source: 'generate',
-    setSource: vi.fn(),
     bankIds: [],
     toggleBankId: vi.fn(),
     ensureBankIds: vi.fn(),
-    pregenerate: vi.fn(),
-    cancelPregeneration: vi.fn(),
+    generateIntoBank: vi.fn(),
+    cancelBankGeneration: vi.fn(),
     advancePrimary: vi.fn(),
     resetSession: vi.fn(),
     ...overrides,
@@ -113,29 +121,6 @@ describe('TeacherView lobby', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('shows the class list in the lobby while the questions are still being written', async () => {
-    vi.mocked(useTeacherCoordinator).mockReturnValue(
-      lobbyCoordinator({
-        isGenerating: true,
-        progress: {
-          done: 1,
-          total: 5,
-          failed: 0,
-          ids: ['q1'],
-          eta: 10,
-          currentIndex: 2,
-          currentTopic: 'fractions',
-          currentSubconcept: null,
-        },
-      })
-    );
-    render(<TeacherView />);
-
-    expect(screen.getByRole('heading', { name: 'Alumnos' })).toBeInTheDocument();
-    expect(await screen.findByText('ana')).toBeInTheDocument();
-    expect(screen.queryByText('Usuarios registrados')).not.toBeInTheDocument();
-  });
-
   it('opens the settings sheet on the Usuarios row from Administrar usuarios', async () => {
     render(<TeacherView />);
     await screen.findByText('ana');
@@ -168,62 +153,5 @@ describe('TeacherView lobby', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Clickers' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Ajustes' })).not.toBeInTheDocument();
-  });
-
-  it('offers Detener while the questions are being created', () => {
-    const coordinator = lobbyCoordinator({
-      isGenerating: true,
-      progress: { done: 1, total: 5, failed: 0, ids: ['q1'], eta: 10, currentIndex: 2 },
-    });
-    vi.mocked(useTeacherCoordinator).mockReturnValue(coordinator);
-    render(<TeacherView />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Detener' }));
-
-    expect(coordinator.stopGeneration).toHaveBeenCalledTimes(1);
-    expect(coordinator.resetSession).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument();
-  });
-
-  it('offers Reanudar and Cancelar once creation is stopped', () => {
-    const coordinator = lobbyCoordinator({
-      isGenerating: true,
-      isGenerationPaused: true,
-      progress: { done: 1, total: 5, failed: 0, ids: ['q1'], eta: 10, currentIndex: 2 },
-    });
-    vi.mocked(useTeacherCoordinator).mockReturnValue(coordinator);
-    render(<TeacherView />);
-
-    expect(screen.getByRole('heading', { name: 'Creación detenida' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Reanudar' }));
-    expect(coordinator.resumeGeneration).toHaveBeenCalledTimes(1);
-    expect(coordinator.advancePrimary).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(coordinator.resetSession).toHaveBeenCalledTimes(1);
-  });
-
-  it('keeps Reanudar enabled while the creating action is still pending', () => {
-    const neverSettles = new Promise<void>(() => undefined);
-    const counting = lobbyCoordinator({
-      wizard: 'count',
-      advancePrimary: vi.fn(() => neverSettles),
-    });
-    vi.mocked(useTeacherCoordinator).mockReturnValue(counting);
-    const { rerender } = render(<TeacherView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Crear las preguntas' }));
-
-    const stopped = lobbyCoordinator({
-      isGenerating: true,
-      isGenerationPaused: true,
-      progress: { done: 1, total: 5, failed: 0, ids: ['q1'], eta: 10, currentIndex: 2 },
-    });
-    vi.mocked(useTeacherCoordinator).mockReturnValue(stopped);
-    rerender(<TeacherView />);
-
-    const resume = screen.getByRole('button', { name: 'Reanudar' });
-    expect(resume).toBeEnabled();
-    fireEvent.click(resume);
-    expect(stopped.resumeGeneration).toHaveBeenCalledTimes(1);
   });
 });

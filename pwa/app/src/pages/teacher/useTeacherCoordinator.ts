@@ -12,7 +12,7 @@ import { storage } from '../../shared/lib/storage';
 import { useSessionSideEffects, useVanishedSessionEffect } from './useSessionSideEffects';
 import { useWizardSelection } from './useWizardSelection';
 
-export type { QuestionSource, TeacherWizardStep } from './useWizardSelection';
+export type { TeacherWizardStep } from './useWizardSelection';
 
 interface UseTeacherCoordinatorOptions {
   enabled?: boolean;
@@ -87,8 +87,6 @@ export function useTeacherCoordinator(
     setTopic,
     count,
     setCount,
-    source,
-    setSource,
     bankIds,
     toggleBankId,
     ensureBankIds,
@@ -133,14 +131,14 @@ export function useTeacherCoordinator(
     storage.clearTeacherSessionId();
   }, [cancelGeneration, setSession, setHistory, setReport, resetSelection, unloadIfLoaded]);
 
-  /** Cancelar in Pre-generar: the questions already saved stay chosen. */
-  const cancelPregeneration = useCallback(() => {
+  /** Cancelar in Generar: the questions already saved stay chosen. */
+  const cancelBankGeneration = useCallback(() => {
     const alreadySavedIds = progress?.ids ?? [];
     cancelGeneration();
     if (alreadySavedIds.length > 0) ensureBankIds(alreadySavedIds);
   }, [progress, cancelGeneration, ensureBankIds]);
 
-  const pregenerate = useCallback(async () => {
+  const generateIntoBank = useCallback(async () => {
     const ids = await startGeneration(topic, count, topics);
     if (ids) {
       ensureBankIds(ids);
@@ -151,23 +149,10 @@ export function useTeacherCoordinator(
   const advancePrimary = useCallback(async () => {
     if (!session) {
       if (wizard === 'topic') return setWizard('count');
-      if (wizard === 'count') {
-        if (source === 'bank') {
-          if (bankIds.length === 0) return;
-          const picked = await createMatchSession(topic, bankIds);
-          setSid(picked.id);
-          setSession(picked);
-          return;
-        }
-        setWizard('lobby');
-        const ids = await startGeneration(topic, count, topics);
-        if (!ids) {
-          setWizard((cur) => (cur === 'lobby' ? 'count' : cur));
-          return;
-        }
-        const newSession = await createMatchSession(topic, ids);
-        setSid(newSession.id);
-        setSession(newSession);
+      if (wizard === 'count' && bankIds.length > 0) {
+        const picked = await createMatchSession(topic, bankIds);
+        setSid(picked.id);
+        setSession(picked);
       }
       return;
     }
@@ -203,12 +188,8 @@ export function useTeacherCoordinator(
     session,
     wizard,
     topic,
-    count,
-    topics,
     voiceLang,
-    source,
     bankIds,
-    startGeneration,
     setSession,
     preloadIfUnloaded,
     resetSession,
@@ -232,13 +213,11 @@ export function useTeacherCoordinator(
     genError,
     history,
     report,
-    source,
-    setSource,
     bankIds,
     toggleBankId,
     ensureBankIds,
-    pregenerate,
-    cancelPregeneration,
+    generateIntoBank,
+    cancelBankGeneration,
     advancePrimary,
     resetSession,
   };

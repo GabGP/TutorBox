@@ -18,33 +18,6 @@ describe('TeacherLobby Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders QuestionGenerationProgress when generating questions without active session', async () => {
-    render(
-      <TeacherLobby
-        session={null}
-        progress={{
-          done: 1,
-          total: 3,
-          failed: 0,
-          ids: ['q1'],
-          eta: 8,
-          currentIndex: 2,
-          currentTopic: 'arithmetic',
-        }}
-        hostAddress="192.168.4.1/alumno"
-        {...lobbyHandlers()}
-      />
-    );
-
-    expect(
-      screen.getByText('Creando las preguntas con IA...')
-    ).toBeInTheDocument();
-    expect(screen.getByText('192.168.4.1/alumno')).toBeInTheDocument();
-    // The class list shows while the questions are still being written.
-    expect(screen.getByRole('heading', { name: 'Alumnos' })).toBeInTheDocument();
-    expect(await screen.findByText(/Todavía no hay alumnos/)).toBeInTheDocument();
-  });
-
   it('renders ready hero when session exists', async () => {
     render(
       <TeacherLobby
@@ -57,7 +30,6 @@ describe('TeacherLobby Component', () => {
           current_round_index: 0,
           created_at: new Date().toISOString(),
         }}
-        progress={null}
         hostAddress="192.168.4.1/alumno"
         {...lobbyHandlers()}
       />
@@ -69,48 +41,10 @@ describe('TeacherLobby Component', () => {
     await screen.findByText(/Todavía no hay alumnos/);
   });
 
-  it('surfaces partial failures inside the progress card instead of a separate note', async () => {
-    render(
-      <TeacherLobby
-        session={{
-          id: 's-123',
-          title: 'Sesión',
-          topic: 'arithmetic',
-          status: 'lobby',
-          question_count: 2,
-          current_round_index: 0,
-          created_at: new Date().toISOString(),
-        }}
-        progress={{
-          done: 3,
-          total: 3,
-          failed: 1,
-          ids: ['q1', 'q2'],
-          eta: 5,
-          statuses: ['success', 'failed', 'success'],
-        }}
-        hostAddress="192.168.4.1/alumno"
-        {...lobbyHandlers()}
-      />
-    );
-
-    // Failure state lives in the card (pills + badge + caption)…
-    expect(
-      screen.getByText(/1 pregunta\(s\) con error/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('2 de 3 preguntas listas. 1 no salieron del modelo.')
-    ).toBeInTheDocument();
-    // …not in the old duplicated note below the card.
-    expect(screen.queryByText(/no salieron del modelo; el juego tendrá/)).toBeNull();
-    await screen.findByText(/Todavía no hay alumnos/);
-  });
-
   it('no longer renders the user table; the class list replaces it', async () => {
     render(
       <TeacherLobby
         session={null}
-        progress={null}
         hostAddress="192.168.4.1/alumno"
         {...lobbyHandlers()}
       />
@@ -124,7 +58,7 @@ describe('TeacherLobby Component', () => {
     vi.mocked(presenceApi.getClassPresence).mockResolvedValue(MIXED_CLASS);
     const handlers = lobbyHandlers();
     render(
-      <TeacherLobby session={null} progress={null} hostAddress="192.168.4.1/alumno" {...handlers} />
+      <TeacherLobby session={null} hostAddress="192.168.4.1/alumno" {...handlers} />
     );
 
     expect(await screen.findByText('ana')).toBeInTheDocument();
@@ -137,7 +71,7 @@ describe('TeacherLobby Component', () => {
     vi.mocked(presenceApi.getClassPresence).mockResolvedValue(MIXED_CLASS);
     const handlers = lobbyHandlers();
     render(
-      <TeacherLobby session={null} progress={null} hostAddress="192.168.4.1/alumno" {...handlers} />
+      <TeacherLobby session={null} hostAddress="192.168.4.1/alumno" {...handlers} />
     );
 
     expect(await screen.findByText('ESP32-C3D002')).toBeInTheDocument();

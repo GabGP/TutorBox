@@ -7,8 +7,8 @@ from collections.abc import Callable, Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-import api.quiz.disconnect_watch as disconnect_watch
 import api.quiz.generate as generate_module
+from api.quiz import disconnect_watch
 from api.quiz.dependencies import get_quiz_generator
 from core.llm import MockLLMClient
 from modes.quiz.generation.generator import QuizQuestionGenerator
@@ -79,9 +79,8 @@ def test_question_finished_after_stop_is_not_saved(
     assert response.status_code == 499
     assert len(mock_llm.call_history) == 1
     questions_after = conn.execute(count_questions).fetchone()[0]
-    logged_count = conn.execute(
-        "SELECT COUNT(*) FROM quiz_generation_logs"
-    ).fetchone()[0]
+    count_logs = "SELECT COUNT(*) FROM quiz_generation_logs"
+    logged_count = conn.execute(count_logs).fetchone()[0]
     assert (questions_after, logged_count) == (questions_before, 0)
 
 
