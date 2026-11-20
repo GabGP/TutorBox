@@ -94,3 +94,24 @@ describe('TeacherFooter layout', () => {
     expect(document.documentElement.style.getPropertyValue('--toast-dock')).toBe('');
   });
 });
+
+describe('TeacherFooter hold hints', () => {
+  it('a tap on Terminar la pregunta asks for a hold instead of doing nothing', () => {
+    const onHoldTap = vi.fn();
+    const onPrimary = vi.fn();
+    setupHoldTimers();
+    try {
+      render(
+        <TeacherFooter {...baseProps} primaryText="Terminar la pregunta" onPrimary={onPrimary} onHoldTap={onHoldTap} />
+      );
+      const hold = screen.getByRole('button', { name: 'Terminar la pregunta' });
+      fireEvent.pointerDown(hold, { pointerId: 1 });
+      advanceHold(100);
+      fireEvent.pointerUp(hold, { pointerId: 1 });
+    } finally {
+      teardownHoldTimers();
+    }
+    expect(onPrimary).not.toHaveBeenCalled();
+    expect(onHoldTap).toHaveBeenCalledWith('Mantén presionado para terminar la pregunta.');
+  });
+});

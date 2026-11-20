@@ -10,6 +10,7 @@ import { ReportsView } from '../../features/reports/ReportsView';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
+import { ApiError } from '../../shared/api/httpClient';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
@@ -140,8 +141,15 @@ export const TeacherView: React.FC = () => {
     if (step === 'reveal') stopPlayback();
     try {
       await coordinator.advancePrimary();
-    } catch {
-      pushToast?.({ message: 'No se pudo avanzar. Inténtalo otra vez.', tone: 'error' });
+    } catch (err: unknown) {
+      // No answer or a 502/503 from nginx: the backend is restarting, not refusing.
+      const restarting = err instanceof ApiError && (err.status === 0 || err.status >= 502);
+      pushToast?.({
+        message: restarting
+          ? "Utz'tutor se está reiniciando. Inténtalo en unos segundos."
+          : 'No se pudo avanzar. Inténtalo otra vez.',
+        tone: 'error',
+      });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -256,6 +264,7 @@ export const TeacherView: React.FC = () => {
             wizardIndex={wizardIdx}
             onPrimary={handlePrimary}
             onSecondary={handleSecondary}
+            onHoldTap={(hint) => pushToast?.({ message: hint, tone: 'warn' })}
           />
         </>
       )}

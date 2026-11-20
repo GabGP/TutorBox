@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from '../../../features/auth/useAuth';
 import { useApplianceMode } from '../../../features/mode/useApplianceMode';
 import { useRosterManager } from '../../../features/roster/useRosterManager';
 import { useSpeechPlayback } from '../../../features/speech/useSpeechPlayback';
 import { tutorApi } from '../../../features/tutor/tutorApi';
+import { ApiError } from '../../../shared/api/httpClient';
 import { TeacherView } from '../TeacherView';
 import { useTeacherCoordinator } from '../useTeacherCoordinator';
 
@@ -136,5 +137,20 @@ describe('TeacherView top bar, logout and mode errors', () => {
 
     expect(pushToast).toHaveBeenCalledWith({ message: 'Hay un juego en curso', tone: 'error' });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('says the server is restarting when a step fails with a 502', async () => {
+    const advancePrimary = vi.fn().mockRejectedValue(new ApiError('Bad Gateway', 502));
+    vi.mocked(useTeacherCoordinator).mockReturnValue({ ...topicCoordinator, advancePrimary } as never);
+    render(<TeacherView />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+    });
+
+    expect(pushToast).toHaveBeenCalledWith({
+      message: "Utz'tutor se está reiniciando. Inténtalo en unos segundos.",
+      tone: 'error',
+    });
   });
 });

@@ -15,7 +15,12 @@ export interface TeacherFooterProps {
   wizardIndex: number;
   onPrimary: () => void;
   onSecondary: () => void;
+  /** A hold button was only tapped: the parent says how to use it. */
+  onHoldTap?: (hint: string) => void;
 }
+
+const TERMINAR_HINT = 'Mantén presionado para terminar la pregunta.';
+const CANCELAR_HINT = 'Mantén presionado para cancelar el juego.';
 
 /**
  * Teacher Console Bottom Action Bar and Wizard Progress.
@@ -24,7 +29,8 @@ export interface TeacherFooterProps {
  * (MEDIUM tier, see holdDurations); all other primary labels stay single-tap.
  * Cancelar during a started match ends it for everyone, so it is a LONG hold.
  * Both holds keep the footer's pill shape, Cancelar on the left, so they read
- * as one pair. Toasts float above the footer instead of covering it.
+ * as one pair. Toasts float above the footer instead of covering it. A tap
+ * on either hold asks the parent to explain that it needs a hold.
  */
 export const TeacherFooter: React.FC<TeacherFooterProps> = ({
   primaryText,
@@ -35,6 +41,7 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
   wizardIndex,
   onPrimary,
   onSecondary,
+  onHoldTap,
 }) => {
   const footerRef = useRef<HTMLElement>(null);
   useToastDock(footerRef);
@@ -56,6 +63,7 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
             fillTextColor="#ffffff"
             doneLabel="Cancelado"
             onHold={onSecondary}
+            onTap={() => onHoldTap?.(CANCELAR_HINT)}
           >
             {secondaryText}
           </HoldButton>
@@ -85,6 +93,7 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
             fillTextColor="var(--accent-ink, #1F3E33)"
             doneLabel="Cerrada"
             onHold={onPrimary}
+            onTap={() => onHoldTap?.(TERMINAR_HINT)}
           >
             Terminar la pregunta
           </HoldButton>

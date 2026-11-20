@@ -14,6 +14,8 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  /* iOS: no callout on a long press, which would cancel the hold mid-way. */
+  -webkit-touch-callout: none;
   cursor: pointer;
   transition: transform 0.16s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)), filter 0.16s ease, box-shadow 0.2s ease;
 }
