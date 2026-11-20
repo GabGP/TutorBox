@@ -1,5 +1,7 @@
 import React, { useRef } from 'react';
 import listStyles from '../../shared/styles/lists.module.css';
+import { ClickerStatusLine } from '../presence/ClickerStatusLine';
+import type { ClickerPresence } from '../presence/presence.types';
 import styles from './clickers.module.css';
 import type { ClickerDevice } from './clickers.types';
 import { hasNeverConnected, isNewClicker } from './clickerStatus';
@@ -8,8 +10,8 @@ import { hasNeverConnected, isNewClicker } from './clickerStatus';
  * Horizontal travel, in px, above which a click on the id is read as the end
  * of a drag rather than a tap. A mouse drag that starts and ends on the id
  * still fires its click, and SwipeRow does not stop it, so without this the
- * edit sheet would open on top of the strip the drag just revealed. Taps stay
- * well under this (a few px of jitter at most).
+ * tap would shut the strip the drag just revealed. Taps stay well under this
+ * (a few px of jitter at most).
  */
 const DRAG_CLICK_TOLERANCE_PX = 8;
 
@@ -19,20 +21,25 @@ export interface ClickerFaceBodyProps {
   armed?: boolean;
   /** Laid over the tag line while armed (hold to confirm and Cancelar). */
   confirm?: React.ReactNode;
-  onOpenEdit: (device: ClickerDevice) => void;
+  /** Live status from the class list; null for a clicker without a student. */
+  status?: ClickerPresence | null;
+  /** A tap on the id: slides the row open or shut. */
+  onTap: () => void;
 }
 
 /**
  * The two lines of a clicker row. Line 1 is the id: the teacher matches it
  * against the label on the case, so it is never truncated. Line 2 holds the
- * tags. The armed row reuses both lines, with the tags hidden in place and
+ * tags and, once the clicker has connected, its live status as the lobby
+ * shows it (dot, words, signal, battery). The armed row reuses both lines, with the tags hidden in place and
  * the confirm laid over them, so arming a delete keeps the row height.
  */
 export const ClickerFaceBody: React.FC<ClickerFaceBodyProps> = ({
   device,
   armed = false,
   confirm,
-  onOpenEdit,
+  status = null,
+  onTap,
 }) => {
   // Where the pointer went down on the id button; null when no press is pending
   // (keyboard activation, or a press already consumed by its click).
@@ -42,7 +49,7 @@ export const ClickerFaceBody: React.FC<ClickerFaceBodyProps> = ({
     const startX = pressX.current;
     pressX.current = null;
     if (startX !== null && Math.abs(event.clientX - startX) > DRAG_CLICK_TOLERANCE_PX) return;
-    onOpenEdit(device);
+    onTap();
   };
 
   const studentTagClass =
@@ -85,6 +92,8 @@ export const ClickerFaceBody: React.FC<ClickerFaceBodyProps> = ({
           {showNeverConnectedChip && (
             <span className={`${listStyles.roleTag} ${styles.tagChip}`}>Sin conectar</span>
           )}
+          {/* Sin conectar already says a clicker never joined; the live status starts after that. */}
+          {status !== null && !showNeverConnectedChip && <ClickerStatusLine clicker={status} />}
         </div>
         {armed && <div className={styles.confirmOverlay}>{confirm}</div>}
       </div>

@@ -46,10 +46,33 @@ describe('ClickerRow face', () => {
     vi.restoreAllMocks();
   });
 
-  it('tapping the id opens the edit sheet for that clicker', () => {
-    const { onOpenEdit } = renderRow(assignedDevice);
+  it('tapping the id slides the row open, never the edit sheet', () => {
+    const { onOpenEdit, onOpenChange } = renderRow(assignedDevice);
     fireEvent.click(screen.getByRole('button', { name: 'ESP32-A4CF12' }));
-    expect(onOpenEdit).toHaveBeenCalledWith(assignedDevice);
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(onOpenEdit).not.toHaveBeenCalled();
+  });
+
+  it('tapping the id of an open row slides it shut', () => {
+    const { onOpenChange } = renderRow(assignedDevice, { swipeOpen: true });
+    fireEvent.click(screen.getByRole('button', { name: 'ESP32-A4CF12' }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('shows the live status the lobby shows', () => {
+    renderRow(assignedDevice, {
+      status: {
+        device_id: 'ESP32-A4CF12',
+        status: 'online',
+        seconds_ago: 2,
+        signal: 'fair',
+        rssi: -70,
+        battery_pct: 12,
+      },
+    });
+    expect(screen.getByRole('img', { name: 'Conectado' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Señal regular' })).toBeInTheDocument();
+    expect(screen.getByText('Batería baja 12 %')).toBeInTheDocument();
   });
 
   it('labels the row with the clicker id', () => {

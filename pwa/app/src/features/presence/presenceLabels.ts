@@ -1,4 +1,4 @@
-import type { PresenceChannel, SignalStrength, StudentPresence } from './presence.types';
+import type { ClickerPresence, PresenceChannel, SignalStrength, StudentPresence } from './presence.types';
 
 /** A clicker below this battery level shows the low-battery warning. */
 export const LOW_BATTERY_PERCENT = 20;
@@ -45,6 +45,13 @@ export function studentStatusLabel(student: StudentPresence): string {
   if (student.status === 'online') return 'Conectado';
   if (student.status === 'absent') return 'No ha entrado';
   return `Se cayó${agoSuffix(mostRecentDropSeconds(student))}`;
+}
+
+/** A clicker's own status in words: "Conectado", "Se cayó hace 12 s" or "Desconectado". */
+export function clickerStatusLabel(clicker: ClickerPresence): string {
+  if (clicker.status === 'online') return 'Conectado';
+  if (clicker.status === 'absent') return DISCONNECTED_LABEL;
+  return `Se cayó${agoSuffix(clicker.seconds_ago)}`;
 }
 
 /** Text alternative of the signal bars. */

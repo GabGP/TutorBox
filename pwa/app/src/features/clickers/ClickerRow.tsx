@@ -7,9 +7,12 @@ import { SwipeRow } from '../../shared/ui/SwipeRow/SwipeRow';
 import styles from './clickers.module.css';
 import { ClickerFaceBody } from './ClickerFaceBody';
 import type { ClickerDevice } from './clickers.types';
+import type { ClickerPresence } from '../presence/presence.types';
 
 export interface ClickerRowProps {
   device: ClickerDevice;
+  /** Live status from the class list; null when no student holds the clicker. */
+  status?: ClickerPresence | null;
   /** This row's delete is armed: the strip gives way to the hold confirm. */
   confirmArmed: boolean;
   swipeOpen: boolean;
@@ -25,10 +28,11 @@ export interface ClickerRowProps {
  * One clicker row: the swipe strip (Info, Editar, Eliminar) or, once delete
  * is armed, a press-and-hold confirm with a Cancelar affordance. Both states
  * share the two-line face (see ClickerFaceBody), so the row keeps its height.
- * Tapping the id opens the edit sheet. Escape disarms.
+ * Tapping the id slides the row open or shut, like swiping. Escape disarms.
  */
 export const ClickerRow: React.FC<ClickerRowProps> = ({
   device,
+  status = null,
   confirmArmed,
   swipeOpen,
   onOpenInfo,
@@ -56,8 +60,9 @@ export const ClickerRow: React.FC<ClickerRowProps> = ({
           <div className={styles.faceFrame}>
             <ClickerFaceBody
               device={device}
+              status={status}
               armed
-              onOpenEdit={onOpenEdit}
+              onTap={() => undefined}
               confirm={
                 <>
                   <HoldButton
@@ -115,7 +120,11 @@ export const ClickerRow: React.FC<ClickerRowProps> = ({
               },
             ]}
           >
-            <ClickerFaceBody device={device} onOpenEdit={onOpenEdit} />
+            <ClickerFaceBody
+              device={device}
+              status={status}
+              onTap={() => onOpenChange(!swipeOpen)}
+            />
           </SwipeRow>
         )}
       </div>

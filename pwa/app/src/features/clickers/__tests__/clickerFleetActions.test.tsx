@@ -33,12 +33,11 @@ describe('ClickerFleetView row actions', () => {
     vi.restoreAllMocks();
   });
 
-  it('opens the edit sheet from the face and from the Editar action', async () => {
+  it('slides a row open from the face and opens the edit sheet from Editar', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
     fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
-    expect(await screen.findByRole('dialog', { name: 'Editar clicker ESP32-B7' })).toBeInTheDocument();
-    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(clickerRow('ESP32-B7').querySelector('[data-open]')).toHaveAttribute('data-open', 'true');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     fireEvent.click(within(clickerRow('ESP32-A4CF12')).getByRole('button', { name: 'Editar clicker ESP32-A4CF12' }));
     expect(screen.getByRole('dialog', { name: 'Editar clicker ESP32-A4CF12' })).toBeInTheDocument();
@@ -220,7 +219,8 @@ describe('clicker feature requests', () => {
     expect(fleet.requests.length).toBeGreaterThan(0);
     for (const request of fleet.requests) {
       expect(request.path).not.toContain('/secret');
-      expect(request.path.startsWith('/staff/')).toBe(true);
+      // Only staff routes, plus the read-only class list behind the live status.
+      expect(request.path.startsWith('/staff/') || request.path === '/presence/class').toBe(true);
     }
   });
 });

@@ -9,6 +9,7 @@ import { act, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import * as httpClient from '../../../shared/api/httpClient';
 import { ApiError } from '../../../shared/api/httpClient';
+import type { ClickerPresence } from '../../presence/presence.types';
 import type { RosterStudent } from '../../roster/roster.types';
 import type { ClickerDevice } from '../clickers.types';
 
@@ -62,6 +63,8 @@ export interface FakeFleet {
   devices: ClickerDevice[];
   /** The next request with this method and path fails with `error`. */
   failNext: (method: string, path: string, error: Error) => void;
+  /** What `GET /presence/class` reports for an assigned clicker (absent until set). */
+  setClickerStatus: (deviceId: string, status: Partial<ClickerPresence>) => void;
 }
 
 interface FleetSeed {
@@ -97,7 +100,41 @@ export function installFakeFleet(seed: FleetSeed = {}): FakeFleet {
     }
   };
 
+  const clickerStatuses = new Map<string, Partial<ClickerPresence>>();
+
+  /** The class list as `GET /presence/class` sends it, built from the live fleet. */
+  const classPresence = () => {
+    const rows = students.map((student) => {
+      const device = devices.find((candidate) => candidate.assigned_user_id === Number(student.id));
+      const clicker: ClickerPresence | null = device
+        ? {
+            device_id: device.device_id,
+            status: 'absent',
+            seconds_ago: null,
+            signal: null,
+            rssi: null,
+            battery_pct: null,
+            ...clickerStatuses.get(device.device_id),
+          }
+        : null;
+      return {
+        user_id: Number(student.id),
+        username: student.username,
+        status: clicker?.status ?? 'absent',
+        phone: { status: 'absent', seconds_ago: null },
+        clicker,
+      };
+    });
+    return {
+      online: rows.filter((row) => row.status === 'online').length,
+      total: rows.length,
+      students: rows,
+      unassigned_clickers: devices.filter((device) => device.assigned_user_id === null).map((device) => device.device_id),
+    };
+  };
+
   const answer = (method: string, path: string, body?: unknown): unknown => {
+    if (method === 'GET' && path === '/presence/class') return classPresence();
     if (method === 'GET' && path === '/staff/devices') {
       return { devices: devices.map((device) => ({ ...device })) };
     }
@@ -164,6 +201,9 @@ export function installFakeFleet(seed: FleetSeed = {}): FakeFleet {
     devices,
     failNext: (method, path, error) => {
       pendingFailures.set(`${method} ${path}`, error);
+    },
+    setClickerStatus: (deviceId, status) => {
+      clickerStatuses.set(deviceId, status);
     },
   };
 }

@@ -242,3 +242,10 @@
   font-size: 17px;
   color: var(--ink);
 }
+
+.headerCounts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}

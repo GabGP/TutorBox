@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import listStyles from '../../shared/styles/lists.module.css';
 import { DataList } from '../../shared/ui/DataList/DataList';
 import { Skeleton } from '../../shared/ui/Skeleton/Skeleton';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import type { ClickerPresence } from '../presence/presence.types';
+import { useClassPresence } from '../presence/useClassPresence';
 import { ClickerAddForm } from './ClickerAddForm';
 import { ClickerEditSheet } from './ClickerEditSheet';
 import { ClickerInfoSheet } from './ClickerInfoSheet';
@@ -22,9 +24,13 @@ const SKELETON_ROWS = 3;
  * Escape closes the innermost layer first (a sheet, then an armed delete),
  * never the Clickers sheet behind it.
  * Failures float as error toasts, so the list never shifts. The list reloads
- * by itself (see useClickerFleet), so a clicker that switches on appears here.
+ * by itself (see useClickerFleet), so a clicker that switches on appears here,
+ * and each row shows its live status from the lobby's class list. Both polls
+ * run only while this view is mounted, that is while the Clickers sheet is open.
  */
-export const ClickerFleetView: React.FC = () => {
+export const ClickerFleetView: React.FC<{ presencePollingIntervalMs?: number }> = ({
+  presencePollingIntervalMs,
+}) => {
   const {
     devices,
     students,
@@ -41,7 +47,17 @@ export const ClickerFleetView: React.FC = () => {
   const [infoDevice, setInfoDevice] = useState<ClickerDevice | null>(null);
   const [editDevice, setEditDevice] = useState<ClickerDevice | null>(null);
 
+  const { presence } = useClassPresence(presencePollingIntervalMs);
+  const statusByDeviceId = useMemo(() => {
+    const byId = new Map<string, ClickerPresence>();
+    for (const student of presence?.students ?? []) {
+      if (student.clicker) byId.set(student.clicker.device_id, student.clicker);
+    }
+    return byId;
+  }, [presence]);
+
   const withStudent = devices.filter((device) => device.assigned_user_id !== null).length;
+  const connected = [...statusByDeviceId.values()].filter((clicker) => clicker.status === 'online').length;
 
   // The Sheet component closes on any Escape (it listens on window too), so
   // without this an Escape meant for a nested sheet or an armed delete would
@@ -87,7 +103,10 @@ export const ClickerFleetView: React.FC = () => {
     <div className={`${listStyles.container} ${styles.fleet}`} id="clickerFleet">
       <div className={listStyles.rowb}>
         <b>Clickers</b>
-        <span id="clickersCount">{`${withStudent} de ${devices.length} con alumno`}</span>
+        <span className={styles.headerCounts}>
+          <span id="clickersCount">{`${withStudent} de ${devices.length} con alumno`}</span>
+          {presence !== null && <span id="clickersOnline">{`· ${connected} conectados`}</span>}
+        </span>
       </div>
 
       <ClickerAddForm onRegister={registerClicker} />
@@ -115,6 +134,7 @@ export const ClickerFleetView: React.FC = () => {
             <ClickerRow
               key={device.device_id}
               device={device}
+              status={statusByDeviceId.get(device.device_id) ?? null}
               confirmArmed={armedDeleteId === device.device_id}
               swipeOpen={openSwipeId === device.device_id}
               onOpenInfo={(row) => setInfoDevice(row)}
