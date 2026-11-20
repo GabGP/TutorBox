@@ -186,7 +186,7 @@ daemon. What it does, in order:
 | `ollama` | Installs Ollama at the pinned version, starts `ollama.service`, pulls the quiz and tutor models. |
 | `app` | Writes `<repo>/.env`, then runs `run.py --prepare --download-models all --build-llama --require-cuda`. |
 | `nginx` | Installs and enables the site, removes Ubuntu's default site. |
-| `services` | Installs, enables and starts `utztutor-backend` and `utztutor-power`. |
+| `services` | Installs, enables and starts `utztutor-backend` and `utztutor-power`. The backend unit has `OOMPolicy=continue`: when the kernel kills the Qwen3-TTS daemon for memory, only the daemon goes and the backend falls back to another voice, instead of systemd restarting the whole backend in the middle of a match. |
 | `kiosk` | Automatic login, a desktop that never blanks or locks, Firefox policies, and the classroom-screen unit. |
 | `network` | Stops the wired connection from using the router's DNS ([Captive Portal §6](../captive-portal.md#6-limitations--field-notes)). |
 

@@ -29,6 +29,11 @@ ExecStart={{ repo_dir }}/.cache/venv/bin/python -m uvicorn main:app --app-dir {{
 Environment=PYTHONPYCACHEPREFIX={{ repo_dir }}/.cache/pycache
 Restart=on-failure
 RestartSec=2
+# The Qwen3-TTS daemon is a child of this unit and can be OOM-killed mid-synthesis on the
+# 8 GB Jetson; the backend then falls back to another voice. The default (stop) would also
+# stop uvicorn and drop every request of a live match for ~10 s, so only the killed
+# process goes.
+OOMPolicy=continue
 # The app only writes under <repo>/.cache (SQLite DB, bytecode, caches);
 # keep the rest of the system read-only.
 NoNewPrivileges=true
