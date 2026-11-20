@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
+import { LogOut, Receipt, User as UserIcon, Users, Volume2, type LucideIcon } from 'lucide-react';
 import { AccordionRow } from '../../shared/ui/Accordion/Accordion';
 import { AccountCard } from '../auth/AccountCard';
 import { User } from '../auth/auth.types';
@@ -28,6 +28,8 @@ export interface SettingsViewProps {
   staffEnabled?: boolean;
   /** Section open when the list mounts (e.g. Usuarios from the lobby). Closed when absent. */
   initialSection?: SettingsSectionId;
+  /** Ends the session; the Cerrar sesión row is hidden when absent. */
+  onLogout?: () => void;
 }
 
 /** The accordion rows of the settings list. */
@@ -36,7 +38,8 @@ export type SettingsSectionId = 'cuenta' | 'usuarios' | 'voz' | 'auditoria';
 /**
  * Teacher Settings list (FB Settings style accordion).
  * Sections mount incrementally: Cuenta first; Usuarios / Preguntas /
- * Actividad / Voz / Auditoría follow in later steps.
+ * Actividad / Voz / Auditoría follow in later steps. Cerrar sesión closes
+ * the list, so it is reachable in every class mode and at every step.
  */
 export const SettingsView: React.FC<SettingsViewProps> = ({
   user,
@@ -45,6 +48,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   roster,
   staffEnabled = false,
   initialSection,
+  onLogout,
 }) => {
   const [open, setOpen] = useState<SettingsSectionId | null>(initialSection ?? null);
 
@@ -115,6 +119,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {staffEnabled &&
         user.role === 'admin' &&
         row('auditoria', Receipt, 'Auditoría', <AuditView />, 'Solo admins')}
+
+      {onLogout && (
+        <button type="button" id="logout" className={styles.logout} onClick={onLogout}>
+          <LogOut size={18} aria-hidden /> Cerrar sesión
+        </button>
+      )}
     </div>
   );
 };

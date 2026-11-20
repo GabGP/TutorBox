@@ -169,16 +169,6 @@
   }
 }
 
-.alert {
-  margin: 0;
-  padding: 8px 12px;
-  border: 1px solid var(--bad-line);
-  border-radius: 12px;
-  background: var(--bad-bg);
-  color: var(--bad-ink);
-  font-size: 0.85rem;
-}
-
 .composer {
   display: flex;
   gap: 8px;

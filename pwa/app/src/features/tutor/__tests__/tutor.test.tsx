@@ -130,14 +130,15 @@ describe('TutorChat', () => {
     const input = screen.getByLabelText('Tu mensaje para el tutor');
     const files = { files: [new File(['x'], 'tarea.png', { type: 'image/png' })] };
 
+    // A toast above the composer, not a line inside the chat.
     fireEvent.paste(input, { clipboardData: files });
-    expect(screen.getByRole('alert')).toHaveTextContent('Solo puedo leer texto, no imágenes.');
+    expect(screen.getByTestId('toast-viewport')).toHaveTextContent('Solo puedo leer texto, no imágenes.');
+    expect(screen.getAllByText(/Solo puedo leer texto/)).toHaveLength(1);
 
-    fireEvent.change(input, { target: { value: '5' } });
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     fireEvent.drop(input, { dataTransfer: files });
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getAllByText(/Solo puedo leer texto/)).toHaveLength(2);
     fireEvent.paste(input, { clipboardData: { files: [] } });
+    expect(screen.getAllByText(/Solo puedo leer texto/)).toHaveLength(2);
   });
 
   it('clears the chat on "Empezar de nuevo"', async () => {

@@ -71,3 +71,30 @@ describe('SettingsView initialSection', () => {
     expect(screen.queryByText('Usuarios registrados')).not.toBeInTheDocument();
   });
 });
+
+describe('SettingsView Cerrar sesión', () => {
+  it('ends the session from the last row of the list', () => {
+    const onLogout = vi.fn();
+    render(
+      <SettingsView
+        user={{ id: 't1', username: 'profe', role: 'teacher' }}
+        onProfileChanged={vi.fn()}
+        onSessionInvalidated={vi.fn()}
+        onLogout={onLogout}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    expect(onLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the row when no logout is given', () => {
+    render(
+      <SettingsView
+        user={{ id: 't1', username: 'profe', role: 'teacher' }}
+        onProfileChanged={vi.fn()}
+        onSessionInvalidated={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument();
+  });
+});

@@ -72,3 +72,25 @@ describe('TeacherFooter secondary guard', () => {
     }
   });
 });
+
+describe('TeacherFooter layout', () => {
+  it('puts the Cancelar hold left of Terminar, both in the footer pill shape', () => {
+    render(
+      <TeacherFooter {...baseProps} primaryText="Terminar la pregunta" secondaryText="Cancelar" isSecondaryHold />
+    );
+    const cancel = screen.getByRole('button', { name: 'Mantén para cancelar el juego' });
+    const terminar = screen.getByRole('button', { name: 'Terminar la pregunta' });
+
+    expect(cancel.compareDocumentPosition(terminar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(cancel.style.getPropertyValue('--hb-radius')).toBe('32px');
+    expect(terminar.style.getPropertyValue('--hb-radius')).toBe('32px');
+  });
+
+  it('lifts toasts above itself while it is on screen', () => {
+    const { unmount } = render(<TeacherFooter {...baseProps} primaryText="Continuar" />);
+    expect(document.documentElement.style.getPropertyValue('--toast-dock')).toMatch(/^\d+px$/);
+
+    unmount();
+    expect(document.documentElement.style.getPropertyValue('--toast-dock')).toBe('');
+  });
+});

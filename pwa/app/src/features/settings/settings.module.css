@@ -4,3 +4,23 @@
   gap: 12px;
   width: 100%;
 }
+
+/* Same shape as an accordion row, in the danger ink: it ends the session. */
+.logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--bad-ink);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.logout:hover {
+  background: var(--bad-bg);
+}

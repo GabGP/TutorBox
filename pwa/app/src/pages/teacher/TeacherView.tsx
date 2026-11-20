@@ -9,6 +9,7 @@ import { ClickerFleetSheet } from '../../features/clickers/ClickerFleetSheet';
 import { ReportsView } from '../../features/reports/ReportsView';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
 import { SpeechLanguage } from '../../features/speech/speech.types';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
@@ -26,6 +27,7 @@ import styles from './TeacherView.module.css';
 import { useTeacherCoordinator } from './useTeacherCoordinator';
 import { usePlayedRounds } from './usePlayedRounds';
 import { getTeacherViewModel } from './teacherViewModel';
+import { MODE_HEADER_TITLES } from './teacherViewConfig';
 
 /**
  * Teacher Console Master View.
@@ -64,6 +66,7 @@ export const TeacherView: React.FC = () => {
   // The appliance has no keyboard: this page is the remote that picks the class mode.
   const classMode = useApplianceMode({ enabled: isStaff });
   const mode = classMode.mode ?? 'quiz';
+  useErrorToast(classMode.error, pushToast);
   const host = useHostAddress();
 
   const { state: speechState, message: speechMsg, speak, prefetch, stopPlayback } = useSpeechPlayback(
@@ -147,11 +150,10 @@ export const TeacherView: React.FC = () => {
 
   const handleSecondary = useCallback(() => {
     stopPlayback();
-    if (step === 'topic') logout();
-    else if (step === 'stats') coordinator.resetSession();
+    if (step === 'stats') coordinator.resetSession();
     // Lobby or a started match: the server ends it, so phones and the screen leave too.
     else void coordinator.cancelMatch();
-  }, [step, stopPlayback, logout, coordinator]);
+  }, [step, stopPlayback, coordinator]);
 
   const handleCloseSettings = useCallback(() => {
     const pref = storage.getVoicePreference();
@@ -167,7 +169,9 @@ export const TeacherView: React.FC = () => {
     return <TeacherAuthView mustChangePin={mustChangePin} pendingPin={pendingPin} roleError={roleError} onLogin={async (u, p) => (setRoleError(null), login(u, p))} onPinChange={handlePinChange} />;
   }
 
-  const { title, subtitle, primaryText, secondaryText, wizardIdx } = vm;
+  const { primaryText, secondaryText, wizardIdx } = vm;
+  // The top bar follows the class mode: the quiz steps mean nothing in tutor or take-home mode.
+  const [subtitle, title] = mode === 'quiz' ? [vm.subtitle, vm.title] : MODE_HEADER_TITLES[mode];
   // Offer the switch whenever no game is running (the backend also refuses it mid-game).
   const showModePicker = mode !== 'quiz' || step === 'topic' || step === 'stats';
 
@@ -178,6 +182,7 @@ export const TeacherView: React.FC = () => {
         subtitle={subtitle}
         step={step}
         voiceLang={voiceLang}
+        showQuizControls={mode === 'quiz'}
         onBack={() => coordinator.setWizard('topic')}
         onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
         onOpenSettings={() => openSettings()}
@@ -188,7 +193,6 @@ export const TeacherView: React.FC = () => {
         <ModePicker
           mode={classMode.mode}
           saving={classMode.saving}
-          error={classMode.error}
           onChange={classMode.setMode}
         />
       )}
@@ -263,6 +267,7 @@ export const TeacherView: React.FC = () => {
           user={user}
           onProfileChanged={restoreSession}
           onSessionInvalidated={logout}
+          onLogout={() => void logout()}
           onClose={handleCloseSettings}
           staffEnabled={isStaff}
           initialSection={settingsSection}

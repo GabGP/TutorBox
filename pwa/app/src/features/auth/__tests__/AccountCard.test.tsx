@@ -127,6 +127,31 @@ describe('AccountCard', () => {
     spy.mockRestore();
   });
 
+  it('floats a refused PIN change as an error toast, not an inline line', async () => {
+    const spy = vi.spyOn(authApi, 'changePin').mockRejectedValue(new Error('PIN actual incorrecto'));
+    setupHoldTimers();
+    try {
+      render(<AccountCard user={user} onProfileChanged={vi.fn()} onSessionInvalidated={vi.fn()} />);
+      fireEvent.change(screen.getByPlaceholderText('PIN actual (para cambiar PIN)'), {
+        target: { value: '1111' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('PIN nuevo (4 a 8 números)'), {
+        target: { value: '2222' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Repite el PIN nuevo'), {
+        target: { value: '2222' },
+      });
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Cambiar PIN' }), { pointerId: 1 });
+      advanceHold(800);
+      await act(async () => {});
+      expect(screen.getByTestId('toast-viewport')).toHaveTextContent('PIN actual incorrecto');
+      expect(document.getElementById('accPinErr')).toBeNull();
+    } finally {
+      teardownHoldTimers();
+    }
+    spy.mockRestore();
+  });
+
   it('submits username change on hold and invalidates session', async () => {
     const spy = vi.spyOn(authApi, 'changeUsername').mockResolvedValue(undefined);
     const onSessionInvalidated = vi.fn();

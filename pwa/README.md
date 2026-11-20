@@ -139,6 +139,17 @@ pnpm build      # Build production bundle to dist/
 `src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
 `/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
 
+The `/maestro/` top bar follows the mode. In quiz mode it shows the wizard step (`Paso 1 de 3`, `En juego`…) with the back and voice buttons; in tutor mode it reads `Modo tutor · Chat de práctica` and in take-home mode `Llevar a casa · App para el teléfono`, without the quiz-only buttons.
+
+---
+
+### Teacher console conventions
+
+* **Cerrar sesión** is the last row of **Ajustes**, so it is reachable in every mode and at every step. The quiz footer no longer has a `Salir` button.
+* Failures and passing notices are toasts, never lines inside the page: a refused mode switch, a failed poll of the class list or the tutor list, a report that does not load, a refused role, PIN or name change, a failed tutor message and a refused image in the tutor chat. A poll that keeps failing stays one toast. Inline text is kept for field validation next to its input and for a temporary PIN, which a toast must never carry.
+* Toasts float above a bottom bar instead of covering it: the quiz footer and the tutor chat composer publish their height (`useToastDock`, CSS variable `--toast-dock`).
+* During a match the footer holds **Cancelar** on the left and **Terminar la pregunta** on the right, both press-and-hold and both in the footer's pill shape.
+
 ---
 
 ### Clickers (teacher header)
@@ -164,7 +175,7 @@ The screen never requests or shows a clicker secret. Each clicker makes its own 
 
 ### Class list (teacher lobby)
 
-Before the quiz starts, the teacher's lobby on `/maestro/` shows the class from `src/features/presence/`. Each student is **Conectado** (connected by phone or clicker), **Se cayó hace 12 s** (dropped; when both the phone and the clicker dropped, the more recent drop is shown) or **No ha entrado**. A row also shows the phone mark, and the assigned clicker with its id, its signal bars and a low-battery warning under 20 %. A phone that dropped, or a clicker that dropped or never joined, is marked **Desconectado**, with no time: how long ago is said once, in the student's status. The clickers no student holds are listed below with **Asignar clickers**, which opens the clicker sheet; **Administrar usuarios** opens the settings on the Usuarios row. The list refreshes every 2 seconds and keeps the last list on screen when a refresh fails. Every status comes from the server, and the screen does not recompute thresholds.
+Before the quiz starts, the teacher's lobby on `/maestro/` shows the class from `src/features/presence/`. Each student is **Conectado** (connected by phone or clicker), **Se cayó hace 12 s** (dropped; when both the phone and the clicker dropped, the more recent drop is shown) or **No ha entrado**. A row also shows the phone mark, and the assigned clicker with its id, its signal bars and a low-battery warning under 20 %. A phone that dropped, or a clicker that dropped or never joined, is marked **Desconectado**, with no time: how long ago is said once, in the student's status. The clickers no student holds are listed below with **Asignar clickers**, which opens the clicker sheet; **Administrar usuarios** opens the settings on the Usuarios row. The list refreshes every 2 seconds and keeps the last list on screen when a refresh fails; the failure shows as one error toast. Every status comes from the server, and the screen does not recompute thresholds.
 
 A student's phone sends the heartbeat only while it waits in a quiz class: once when it starts, every 5 seconds, and again when the page becomes visible. Tutor mode keeps its own ping; take-home mode and a PIN change that is still pending send nothing.
 

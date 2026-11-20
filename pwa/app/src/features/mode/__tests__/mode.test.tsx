@@ -42,14 +42,14 @@ describe('useApplianceMode', () => {
 describe('ModePicker', () => {
   it('marks the active mode and reports a new choice', () => {
     const onChange = vi.fn();
-    render(<ModePicker mode="quiz" saving={false} error={null} onChange={onChange} />);
+    render(<ModePicker mode="quiz" saving={false} onChange={onChange} />);
     expect(screen.getByRole('button', { name: /Quiz/ })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: /Llevar a casa/ }));
     expect(onChange).toHaveBeenCalledWith('apps');
   });
 
   it('treats an unknown mode (still loading) as the quiz', () => {
-    render(<ModePicker mode={null} saving={false} error={null} onChange={vi.fn()} />);
+    render(<ModePicker mode={null} saving={false} onChange={vi.fn()} />);
     expect(screen.getByRole('button', { name: /Quiz/ })).toHaveAttribute('aria-pressed', 'true');
   });
 });

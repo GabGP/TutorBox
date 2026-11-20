@@ -189,6 +189,14 @@
   font-weight: 500;
 }
 
+/* Terminar la pregunta: same pill as the primary button and the Cancelar hold beside it. */
+.primaryHold {
+  flex: 1;
+  width: auto;
+  min-height: 64px;
+  font-size: 19px;
+}
+
 .secondaryBtn:hover:not(:disabled) {
   background: #f1f8fb;
 }
@@ -204,7 +212,8 @@
     gap: 12px;
     width: auto;
   }
-  .primaryBtn {
+  .primaryBtn,
+  .primaryHold {
     flex: 0 0 auto;
     min-width: 250px;
   }

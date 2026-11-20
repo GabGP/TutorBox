@@ -36,8 +36,9 @@ interface UseAccountFormsCallbacks {
  * State machine behind AccountCard: username self-rename (guarded by
  * HoldButton press-and-hold since it ends the session) plus voluntary
  * PIN rotation (re-authenticates, session survives). Both confirmations
- * float as toasts so the card never shifts layout; field validation
- * errors stay inline next to their inputs.
+ * float as toasts so the card never shifts layout, and so do server
+ * refusals (wrong PIN, name taken); field validation errors stay inline
+ * next to their inputs.
  */
 export function useAccountForms(
   user: User,
@@ -80,7 +81,7 @@ export function useAccountForms(
       pushToast({ message: 'Nombre actualizado. Inicia sesión de nuevo.' });
       await onSessionInvalidated();
     } catch (err: unknown) {
-      setNameError(toErrorMessage(err, 'Error al cambiar el nombre'));
+      pushToast({ message: toErrorMessage(err, 'Error al cambiar el nombre'), tone: 'error' });
     } finally {
       setSubmitting(null);
     }
@@ -116,7 +117,7 @@ export function useAccountForms(
       pushToast({ message: 'PIN actualizado.' });
       await onProfileChanged();
     } catch (err: unknown) {
-      setPinError(toErrorMessage(err, 'Error al cambiar el PIN'));
+      pushToast({ message: toErrorMessage(err, 'Error al cambiar el PIN'), tone: 'error' });
     } finally {
       setSubmitting(null);
     }

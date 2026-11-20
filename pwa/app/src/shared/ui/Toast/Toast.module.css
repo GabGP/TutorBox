@@ -1,9 +1,10 @@
-/* Shared floating toasts (SwipeToast port): overlay confirmations, never shift layout. */
+/* Shared floating toasts (SwipeToast port): overlay confirmations, never shift layout.
+   --toast-dock is how far a bottom bar reaches up the screen (useToastDock); toasts float above it. */
 
 .viewport {
   position: fixed;
   left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(var(--toast-dock, env(safe-area-inset-bottom)) + 16px);
   z-index: 60;
   transform: translateX(-50%);
   display: flex;
@@ -236,7 +237,7 @@
   .viewport {
     left: auto;
     right: 24px;
-    bottom: 24px;
+    bottom: calc(var(--toast-dock, 0px) + 24px);
     transform: none;
     align-items: flex-end;
   }

@@ -12,18 +12,18 @@ const OPTIONS: { mode: ApplianceMode; label: string; hint: string; Icon: typeof 
 interface ModePickerProps {
   mode: ApplianceMode | null;
   saving: boolean;
-  error: string | null;
   onChange: (mode: ApplianceMode) => void;
 }
 
 /**
  * The teacher's remote for the keyboard-less appliance: the class screen and every
- * student phone follow the mode picked here.
+ * student phone follow the mode picked here. A failed switch floats as an error toast
+ * from the teacher view.
  *
- * @param {ModePickerProps} props - Current mode, saving flag, last error and change handler.
+ * @param {ModePickerProps} props - Current mode, saving flag and change handler.
  * @returns {JSX.Element} Three large mode buttons.
  */
-export const ModePicker: React.FC<ModePickerProps> = ({ mode, saving, error, onChange }) => (
+export const ModePicker: React.FC<ModePickerProps> = ({ mode, saving, onChange }) => (
   <section className={styles.picker} aria-label="Modo de la clase">
     <div className={styles.options} role="group">
       {OPTIONS.map(({ mode: value, label, hint, Icon }) => (
@@ -41,10 +41,5 @@ export const ModePicker: React.FC<ModePickerProps> = ({ mode, saving, error, onC
         </button>
       ))}
     </div>
-    {error && (
-      <p className={styles.error} role="alert">
-        {error}
-      </p>
-    )}
   </section>
 );

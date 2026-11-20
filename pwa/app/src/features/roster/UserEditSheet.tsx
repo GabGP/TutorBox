@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { getRoleLabel } from '../../shared/constants/roles';
-import { toErrorMessage } from '../../shared/lib/errors';
 import formStyles from '../../shared/styles/forms.module.css';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
 import {
@@ -26,7 +25,8 @@ export interface UserEditSheetProps {
  * Edit card for a roster user. Role edits are staged locally and applied
  * with Guardar cambios (guards against locking out the last manager
  * server-side); PIN reset and delete act immediately. Actions not provided
- * by the parent are hidden (e.g. lobby offers reset only).
+ * by the parent are hidden (e.g. lobby offers reset only). A refused role
+ * change floats as an error toast from the parent hook; the sheet stays open.
  */
 export const UserEditSheet: React.FC<UserEditSheetProps> = ({
   user,
@@ -37,12 +37,10 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
   onRoleChange,
 }) => {
   const [busy, setBusy] = useState(false);
-  const [roleError, setRoleError] = useState('');
   const [pendingRole, setPendingRole] = useState('');
 
   useEffect(() => {
     setBusy(false);
-    setRoleError('');
     setPendingRole(user?.role || '');
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -53,12 +51,11 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
   const handleSaveRole = async () => {
     if (!onRoleChange || !roleDirty) return;
     setBusy(true);
-    setRoleError('');
     try {
       await onRoleChange(user.id, pendingRole);
       onClose();
-    } catch (err: unknown) {
-      setRoleError(toErrorMessage(err, 'Error al cambiar rol'));
+    } catch {
+      // The parent hook already showed the error toast.
     } finally {
       setBusy(false);
     }
@@ -104,7 +101,6 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
             value={pendingRole || user.role}
             onChange={(e) => {
               setPendingRole(e.target.value);
-              setRoleError('');
             }}
             disabled={busy}
             aria-label="Rol del usuario"
@@ -124,9 +120,6 @@ export const UserEditSheet: React.FC<UserEditSheetProps> = ({
             >
               Guardar cambios
             </button>
-          )}
-          {roleError && (
-            <div className={formStyles.errorBanner}>{roleError}</div>
           )}
         </>
       )}

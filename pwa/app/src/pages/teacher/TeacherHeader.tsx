@@ -9,6 +9,8 @@ export interface TeacherHeaderProps {
   subtitle: string;
   step: string;
   voiceLang: SpeechLanguage;
+  /** Back and the voice toggle only mean something in quiz mode; hidden when false. */
+  showQuizControls?: boolean;
   onBack: () => void;
   onToggleVoice: () => void;
   onOpenSettings?: () => void;
@@ -21,6 +23,7 @@ export interface TeacherHeaderProps {
 /**
  * Teacher Console Top Navigation Bar.
  * Renders back navigation button, current screen title/step subtitle, and offline language toggle.
+ * Out of quiz mode the title follows the class mode and back / voice are hidden.
  *
  * @param {TeacherHeaderProps} props - Component props containing titles, language state, and event callbacks.
  * @returns {JSX.Element} The rendered teacher console header.
@@ -30,6 +33,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   subtitle,
   step,
   voiceLang,
+  showQuizControls = true,
   onBack,
   onToggleVoice,
   onOpenSettings,
@@ -38,15 +42,17 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
 }) => {
   return (
     <header className={styles.header}>
-      <button
-        id="back"
-        className={styles.backBtn}
-        disabled={step !== 'count'}
-        onClick={onBack}
-        aria-label="Volver"
-      >
-        <ArrowLeft size={24} aria-hidden />
-      </button>
+      {showQuizControls && (
+        <button
+          id="back"
+          className={styles.backBtn}
+          disabled={step !== 'count'}
+          onClick={onBack}
+          aria-label="Volver"
+        >
+          <ArrowLeft size={24} aria-hidden />
+        </button>
+      )}
       <div className={utils.grow}>
         <div className={styles.title} id="title">
           {title}
@@ -55,13 +61,15 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
           {subtitle}
         </div>
       </div>
-      <button
-        id="voice"
-        className={styles.voiceBtn}
-        onClick={onToggleVoice}
-      >
-        {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
-      </button>
+      {showQuizControls && (
+        <button
+          id="voice"
+          className={styles.voiceBtn}
+          onClick={onToggleVoice}
+        >
+          {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
+        </button>
+      )}
       {onOpenReports && (
         <button
           id="reportsBtn"

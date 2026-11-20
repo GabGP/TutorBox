@@ -16,6 +16,8 @@ export interface TeacherSettingsSheetProps {
   staffEnabled?: boolean;
   /** Accordion row open when the sheet appears; closed when absent. */
   initialSection?: SettingsSectionId;
+  /** Cerrar sesión at the end of the list. */
+  onLogout?: () => void;
 }
 
 /**
@@ -31,6 +33,7 @@ export const TeacherSettingsSheet: React.FC<TeacherSettingsSheetProps> = ({
   roster,
   staffEnabled,
   initialSection,
+  onLogout,
 }) => {
   return (
     <Sheet label="Ajustes" onClose={onClose}>
@@ -41,6 +44,7 @@ export const TeacherSettingsSheet: React.FC<TeacherSettingsSheetProps> = ({
         roster={roster}
         staffEnabled={staffEnabled}
         initialSection={initialSection}
+        onLogout={onLogout}
       />
     </Sheet>
   );

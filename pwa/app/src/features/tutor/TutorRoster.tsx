@@ -1,4 +1,7 @@
 import React from 'react';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import type { TutorStudent } from './tutorApi';
 import { useTutorRoster } from './useTutorRoster';
 import styles from './tutor.module.css';
@@ -15,7 +18,7 @@ function lastSeen(seconds: number): string {
 
 /**
  * Teacher panel in tutor mode: which students have the tutor open, what they are working
- * on and how far up the hint ladder they are.
+ * on and how far up the hint ladder they are. A failed poll floats as one error toast.
  *
  * @param {object} props - `host` shown in the empty state, `pollingIntervalMs` for tests.
  */
@@ -24,6 +27,8 @@ export const TutorRoster: React.FC<{ host: string; pollingIntervalMs?: number }>
   pollingIntervalMs,
 }) => {
   const { students, loaded, error } = useTutorRoster(pollingIntervalMs);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+  useErrorToast(error, pushToast);
   const online = students.filter((student) => student.online).length;
   // Stuck students first; otherwise keep the backend's order (connected first, then by name).
   const ordered = [...students.filter(needsHelp), ...students.filter((student) => !needsHelp(student))];
@@ -33,11 +38,6 @@ export const TutorRoster: React.FC<{ host: string; pollingIntervalMs?: number }>
       <h3>
         Alumnos en el tutor <span className={styles.count}>{online} conectados</span>
       </h3>
-      {error && (
-        <p className={styles.alert} role="alert">
-          {error}
-        </p>
-      )}
       {loaded && students.length === 0 && (
         <p className={styles.mute}>
           Todavía nadie. Los alumnos entran desde su teléfono en <strong>{host}/alumno</strong> con su
@@ -71,6 +71,7 @@ export const TutorRoster: React.FC<{ host: string; pollingIntervalMs?: number }>
           </li>
         ))}
       </ul>
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </section>
   );
 };

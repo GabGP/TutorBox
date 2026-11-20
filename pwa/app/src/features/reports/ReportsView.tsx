@@ -4,6 +4,9 @@ import { toErrorMessage } from '../../shared/lib/errors';
 import { formatFullDate } from '../../shared/lib/format';
 import { getMisconceptionLabel, getTopicLabel } from '../../shared/taxonomy/labels';
 import { SegmentedSwitch, type SwitchOption } from '../../shared/ui/SegmentedSwitch/SegmentedSwitch';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { QuizReport, ReportPeriod, TutorReport, reportsApi } from './reportsApi';
 import styles from './reports.module.css';
 
@@ -112,12 +115,15 @@ const TutorSection: React.FC<{ r: TutorReport }> = ({ r }) => {
 /**
  * Teacher analytics: quiz, tutor and (later) games reports for a day, week or
  * month. The tutor report lists topics per session, never the conversation.
+ * A report that fails to load floats as an error toast.
  */
 export const ReportsView: React.FC = () => {
   const [kind, setKind] = useState<ReportKind>('quiz');
   const [period, setPeriod] = useState<ReportPeriod>('week');
   const [report, setReport] = useState<{ kind: ReportKind; data: QuizReport | TutorReport } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+  useErrorToast(error, pushToast);
 
   useEffect(() => {
     if (kind === 'games') return;
@@ -139,13 +145,13 @@ export const ReportsView: React.FC = () => {
       ) : (
         <>
           <SegmentedSwitch value={period} onChange={setPeriod} options={PERIOD_OPTIONS} ariaLabel="Periodo" />
-          {error && <p className={styles.error} role="alert">{error}</p>}
           {!report && !error && <p className={styles.mute}>Cargando…</p>}
           {empty && <p className={styles.note}>Sin actividad en este periodo.</p>}
           {report && !empty && report.kind === 'quiz' && <QuizSection r={report.data as QuizReport} />}
           {report && !empty && report.kind === 'tutor' && <TutorSection r={report.data as TutorReport} />}
         </>
       )}
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </div>
   );
 };

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { HoldButton } from '../../shared/ui/HoldButton/HoldButton';
 import { HOLD_LONG_MS, HOLD_MEDIUM_MS } from '../../shared/ui/HoldButton/holdDurations';
 import { StepDots } from '../../shared/ui/StepDots/StepDots';
+import { useToastDock } from '../../shared/ui/Toast/useToastDock';
 import styles from './TeacherView.module.css';
 
 export interface TeacherFooterProps {
@@ -22,6 +23,8 @@ export interface TeacherFooterProps {
  * The irreversible `Terminar la pregunta` CTA is a press-and-hold guard
  * (MEDIUM tier, see holdDurations); all other primary labels stay single-tap.
  * Cancelar during a started match ends it for everyone, so it is a LONG hold.
+ * Both holds keep the footer's pill shape, Cancelar on the left, so they read
+ * as one pair. Toasts float above the footer instead of covering it.
  */
 export const TeacherFooter: React.FC<TeacherFooterProps> = ({
   primaryText,
@@ -33,8 +36,10 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
   onPrimary,
   onSecondary,
 }) => {
+  const footerRef = useRef<HTMLElement>(null);
+  useToastDock(footerRef);
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} ref={footerRef}>
       <div className={styles.btns}>
         {secondaryText && isSecondaryHold && (
           <HoldButton
@@ -69,7 +74,9 @@ export const TeacherFooter: React.FC<TeacherFooterProps> = ({
             key="terminar"
             holdTime={HOLD_MEDIUM_MS}
             size="md"
+            radius={32}
             id="primary"
+            className={styles.primaryHold}
             ariaLabel="Terminar la pregunta"
             disabled={isPrimaryDisabled}
             backgroundColor="var(--p, #1F3E33)"

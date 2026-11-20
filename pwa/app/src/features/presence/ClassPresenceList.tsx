@@ -2,6 +2,9 @@ import React from 'react';
 import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import styles from './presence.module.css';
 import { PresenceRow } from './PresenceRow';
 import type { ClassPresence } from './presence.types';
@@ -54,7 +57,8 @@ function countDropped(presence: ClassPresence): number {
 /**
  * The teacher's lobby list: who is connected by phone or clicker, which
  * connections dropped, and the clickers nobody holds yet. Shows the last good
- * list while a poll fails, and a loading line until the first answer.
+ * list while a poll fails (the failure floats as one error toast), and a
+ * loading line until the first answer.
  */
 export const ClassPresenceList: React.FC<ClassPresenceListProps> = ({
   onManageUsers,
@@ -62,6 +66,8 @@ export const ClassPresenceList: React.FC<ClassPresenceListProps> = ({
   pollingIntervalMs,
 }) => {
   const { presence, error } = useClassPresence(pollingIntervalMs);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+  useErrorToast(error, pushToast);
 
   return (
     <section className={`${listStyles.container} ${styles.panel}`} aria-labelledby="classPresenceTitle">
@@ -76,11 +82,6 @@ export const ClassPresenceList: React.FC<ClassPresenceListProps> = ({
         )}
       </div>
 
-      {error && (
-        <p className={formStyles.errorBanner} role="alert">
-          {error}
-        </p>
-      )}
       {presence === null && !error && <p className={utils.muted}>Cargando la lista de alumnos…</p>}
       {presence && presence.students.length === 0 && <p className={utils.help}>{EMPTY_CLASS_TEXT}</p>}
       {presence && presence.students.length > 0 && (
@@ -102,6 +103,7 @@ export const ClassPresenceList: React.FC<ClassPresenceListProps> = ({
       >
         Administrar usuarios
       </button>
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </section>
   );
 };

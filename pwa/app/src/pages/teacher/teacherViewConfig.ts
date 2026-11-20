@@ -23,8 +23,14 @@ export const TEACHER_STEP_TITLES: Record<TeacherStep, [string, string]> = {
   stats: ['Juego terminado', 'Resumen del grupo'],
 };
 
+/** Header [subtitle, title] while the class is out of quiz mode; the quiz steps do not apply. */
+export const MODE_HEADER_TITLES: Record<'tutor' | 'apps', [string, string]> = {
+  tutor: ['Modo tutor', 'Chat de práctica'],
+  apps: ['Llevar a casa', 'App para el teléfono'],
+};
+
+// Logging out lives in Ajustes (Cerrar sesión), so the topic step has no secondary action.
 export const SECONDARY_ACTION_LABELS: Partial<Record<TeacherStep, string>> = {
-  topic: 'Salir',
   lobby: 'Cancelar',
   // A started match can be cancelled at any point; the footer asks for a hold.
   question: 'Cancelar',

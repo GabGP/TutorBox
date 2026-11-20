@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Send, Star } from 'lucide-react';
+import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
+import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
+import { useToastDock } from '../../shared/ui/Toast/useToastDock';
+import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { type ChatMessage, useTutorChat } from './useTutorChat';
 import styles from './tutor.module.css';
 
@@ -34,15 +38,19 @@ const Message: React.FC<{ message: ChatMessage }> = ({ message }) => {
 /**
  * The student's Socratic math tutor chat. Text only: there is no attachment button, and
  * pasted or dropped files (e.g. a photo of the homework) are refused before they reach
- * the input. The backend guards the same rule.
+ * the input. The backend guards the same rule. A refused file or a failed send
+ * floats as a toast above the composer.
  *
  * @param {object} props - `username` of the logged-in student.
  */
 export const TutorChat: React.FC<{ username: string }> = ({ username }) => {
   const { messages, sending, error, send, reset } = useTutorChat(username);
   const [draft, setDraft] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLFormElement>(null);
+  const { toasts, pushToast, dismissToast } = useToastQueue();
+  useErrorToast(error, pushToast);
+  useToastDock(composerRef);
 
   useEffect(() => {
     const list = listRef.current;
@@ -57,7 +65,7 @@ export const TutorChat: React.FC<{ username: string }> = ({ username }) => {
   const refuseFiles = (files: FileList | undefined, event: React.SyntheticEvent) => {
     if (files && files.length > 0) {
       event.preventDefault();
-      setNotice(TEXT_ONLY);
+      pushToast({ message: TEXT_ONLY, tone: 'warn' });
     }
   };
 
@@ -90,20 +98,13 @@ export const TutorChat: React.FC<{ username: string }> = ({ username }) => {
         )}
       </div>
 
-      {(error || notice) && (
-        <p className={styles.alert} role="alert">
-          {error || notice}
-        </p>
-      )}
-
-      <form className={styles.composer} onSubmit={submit}>
+      <form className={styles.composer} onSubmit={submit} ref={composerRef}>
         <input
           type="text"
           value={draft}
           maxLength={MAX_CHARS}
           onChange={(event) => {
             setDraft(event.target.value);
-            setNotice(null);
           }}
           onPaste={(event) => refuseFiles(event.clipboardData?.files, event)}
           onDrop={(event) => refuseFiles(event.dataTransfer?.files, event)}
@@ -116,6 +117,7 @@ export const TutorChat: React.FC<{ username: string }> = ({ username }) => {
           <Send size={20} aria-hidden />
         </button>
       </form>
+      <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </section>
   );
 };

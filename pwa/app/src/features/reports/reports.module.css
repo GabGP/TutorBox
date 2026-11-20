@@ -15,4 +15,3 @@
 .down { color: var(--bad); }
 .mute { color: var(--mute); font-size: 14px; }
 .note { border-radius: 20px; background: var(--chip); border: 1px solid var(--line2); padding: 16px; color: var(--mute); margin: 0; }
-.error { border-radius: 20px; background: var(--bad-bg); border: 1px solid var(--bad-line); padding: 12px 16px; color: var(--bad-ink); margin: 0; }
