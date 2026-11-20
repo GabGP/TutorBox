@@ -1,18 +1,14 @@
 import React from 'react';
 import { ArrowLeft, BarChart3, Gamepad2, Settings } from 'lucide-react';
-import { SpeechLanguage } from '../../features/speech/speech.types';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
 
 export interface TeacherHeaderProps {
   title: string;
   subtitle: string;
-  step: string;
-  voiceLang: SpeechLanguage;
-  /** Back and the voice toggle only mean something in quiz mode; hidden when false. */
-  showQuizControls?: boolean;
+  /** The back arrow works (bank pick, lobby); otherwise its place stays empty. */
+  canGoBack: boolean;
   onBack: () => void;
-  onToggleVoice: () => void;
   onOpenSettings?: () => void;
   /** Opens the clicker fleet sheet; the button is hidden when absent. */
   onOpenClickers?: () => void;
@@ -22,37 +18,34 @@ export interface TeacherHeaderProps {
 
 /**
  * Teacher Console Top Navigation Bar.
- * Renders back navigation button, current screen title/step subtitle, and offline language toggle.
- * Out of quiz mode the title follows the class mode and back / voice are hidden.
+ * The same bar in every mode and step: a fixed height, the back arrow's place
+ * always kept (empty when there is nowhere to go back), a one-line title and
+ * subtitle that end in … when too long, and round icon buttons of one size.
+ * The quiz voice language lives in Ajustes → Voz.
  *
- * @param {TeacherHeaderProps} props - Component props containing titles, language state, and event callbacks.
+ * @param {TeacherHeaderProps} props - Titles, whether back works, and the sheet openers.
  * @returns {JSX.Element} The rendered teacher console header.
  */
 export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   title,
   subtitle,
-  step,
-  voiceLang,
-  showQuizControls = true,
+  canGoBack,
   onBack,
-  onToggleVoice,
   onOpenSettings,
   onOpenClickers,
   onOpenReports,
 }) => {
   return (
     <header className={styles.header}>
-      {showQuizControls && (
-        <button
-          id="back"
-          className={styles.backBtn}
-          disabled={step !== 'count'}
-          onClick={onBack}
-          aria-label="Volver"
-        >
-          <ArrowLeft size={24} aria-hidden />
-        </button>
-      )}
+      <button
+        id="back"
+        className={styles.backBtn}
+        disabled={!canGoBack}
+        onClick={onBack}
+        aria-label="Volver"
+      >
+        <ArrowLeft size={24} aria-hidden />
+      </button>
       <div className={utils.grow}>
         <div className={styles.title} id="title">
           {title}
@@ -61,42 +54,18 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
           {subtitle}
         </div>
       </div>
-      {showQuizControls && (
-        <button
-          id="voice"
-          className={styles.voiceBtn}
-          onClick={onToggleVoice}
-        >
-          {voiceLang === 'es' ? 'Voz ES' : "Voz K'iche'"}
-        </button>
-      )}
       {onOpenReports && (
-        <button
-          id="reportsBtn"
-          onClick={onOpenReports}
-          aria-label="Reportes"
-          className={`${styles.voiceBtn} ${utils.rowInline}`}
-        >
+        <button id="reportsBtn" onClick={onOpenReports} aria-label="Reportes" className={styles.iconBtn}>
           <BarChart3 size={18} aria-hidden />
         </button>
       )}
       {onOpenClickers && (
-        <button
-          id="clickers"
-          onClick={onOpenClickers}
-          aria-label="Clickers"
-          className={`${styles.voiceBtn} ${utils.rowInline}`}
-        >
+        <button id="clickers" onClick={onOpenClickers} aria-label="Clickers" className={styles.iconBtn}>
           <Gamepad2 size={18} aria-hidden />
         </button>
       )}
       {onOpenSettings && (
-        <button
-          id="settings"
-          onClick={onOpenSettings}
-          aria-label="Ajustes"
-          className={`${styles.voiceBtn} ${utils.rowInline}`}
-        >
+        <button id="settings" onClick={onOpenSettings} aria-label="Ajustes" className={styles.iconBtn}>
           <Settings size={18} aria-hidden />
         </button>
       )}

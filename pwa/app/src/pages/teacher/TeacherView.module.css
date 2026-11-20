@@ -16,25 +16,26 @@
   }
 }
 
+/* One bar for every mode and step: fixed height, nothing in it changes width. */
 .header {
   position: sticky;
   top: 0;
   z-index: 5;
-  min-height: 62px;
+  height: 62px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px var(--gut);
+  gap: 8px;
+  padding: 0 var(--gut) 0 calc(var(--gut) - 8px);
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
 
 .backBtn {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 24px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 20px;
   font-size: 24px;
   color: var(--ink2);
   display: grid;
@@ -43,21 +44,21 @@
 }
 
 .backBtn:hover { background: var(--line); }
-.backBtn:disabled { opacity: 0; pointer-events: none; width: 0; flex-basis: 0; overflow: hidden; }
+.backBtn:disabled { visibility: hidden; }
 
-.voiceBtn {
-  flex: 0 0 auto;
+.iconBtn {
+  flex: 0 0 40px;
+  width: 40px;
   height: 40px;
-  padding: 0 16px;
   border-radius: 20px;
+  display: grid;
+  place-items: center;
   background: var(--tint2);
   color: var(--tint-ink);
-  font-size: 14px;
-  font-weight: 600;
   transition: background 0.16s ease;
 }
 
-.voiceBtn:hover {
+.iconBtn:hover {
   background: #c2dbe6;
 }
 
@@ -119,14 +120,39 @@
   gap: 16px;
 }
 
+.title,
+.subtitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .title {
   font-size: 19px;
+  line-height: 24px;
   font-weight: 600;
 }
 
 .subtitle {
   font-size: 13px;
+  line-height: 18px;
   color: var(--mute2);
+}
+
+/* Narrow phones: smaller buttons so the step titles fit on their one line. */
+@media (max-width: 420px) {
+  .header {
+    gap: 4px;
+  }
+  .backBtn,
+  .iconBtn {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  .title {
+    font-size: 16px;
+  }
 }
 
 .footer {

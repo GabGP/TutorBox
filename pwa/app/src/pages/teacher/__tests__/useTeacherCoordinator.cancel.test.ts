@@ -126,4 +126,18 @@ describe('useTeacherCoordinator cancelMatch', () => {
     expect(sessionApi.abandonSession).not.toHaveBeenCalled();
     expect(result.current.session).toBeNull();
   });
+
+  it('Volver from the lobby ends the match and goes back to the bank pick on its topic', async () => {
+    vi.mocked(sessionApi.abandonSession).mockResolvedValue({} as never);
+    const { result } = await renderWith({ ...activeSession, status: 'lobby' });
+
+    await act(async () => {
+      await result.current.backToBankPick();
+    });
+
+    expect(sessionApi.abandonSession).toHaveBeenCalledWith('s_live');
+    expect(result.current.session).toBeNull();
+    expect(result.current.wizard).toBe('count');
+    expect(result.current.topic).toBe('arithmetic');
+  });
 });

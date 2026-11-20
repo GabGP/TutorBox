@@ -66,6 +66,7 @@ function lobbyCoordinator(overrides: Record<string, unknown> = {}) {
     clearGenerationResult: vi.fn(),
     advancePrimary: vi.fn(),
     cancelMatch: vi.fn(),
+    backToBankPick: vi.fn(),
     resetSession: vi.fn(),
     ...overrides,
   } as unknown as ReturnType<typeof useTeacherCoordinator>;
@@ -166,5 +167,18 @@ describe('TeacherView lobby', () => {
 
     expect(coordinator.cancelMatch).toHaveBeenCalledTimes(1);
     expect(coordinator.resetSession).not.toHaveBeenCalled();
+  });
+
+  it('the back arrow in the lobby returns to the bank pick', () => {
+    const coordinator = lobbyCoordinator();
+    vi.mocked(useTeacherCoordinator).mockReturnValue(coordinator);
+    render(<TeacherView />);
+
+    const back = screen.getByRole('button', { name: 'Volver' });
+    expect(back).toBeEnabled();
+    fireEvent.click(back);
+
+    expect(coordinator.backToBankPick).toHaveBeenCalledTimes(1);
+    expect(coordinator.setWizard).not.toHaveBeenCalled();
   });
 });

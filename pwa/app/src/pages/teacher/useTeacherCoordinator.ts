@@ -66,6 +66,20 @@ async function ensureLobbyVoice(
 }
 
 /**
+ * Ends a lobby or started match on the server, so students and the screen
+ * leave it too. A match the server already ended (409) or lost (404) has
+ * nothing left to end, so the error is ignored.
+ */
+async function abandonRunningMatch(session: SessionModel | null): Promise<void> {
+  if (!session || (session.status !== 'lobby' && session.status !== 'active')) return;
+  try {
+    await sessionApi.abandonSession(session.id);
+  } catch {
+    // Nothing left to cancel on the server; the console moves on anyway.
+  }
+}
+
+/**
  * Teacher quiz-master orchestration: wizard selection (useWizardSelection),
  * session engine plus reactive side effects (useSessionSideEffects),
  * question generation, and the primary-action state machine over session
@@ -121,35 +135,45 @@ export function useTeacherCoordinator(
     unloadIfLoaded,
   });
 
-  const resetSession = useCallback(() => {
+  /** Drops the match from this console; the wizard selection is left as it is. */
+  const clearMatch = useCallback(() => {
     void unloadIfLoaded();
     cancelGeneration();
     setSid(null);
     setSession(null);
     setReport(null);
     setHistory([]);
-    resetSelection();
     storage.clearTeacherSessionId();
-  }, [cancelGeneration, setSession, setHistory, setReport, resetSelection, unloadIfLoaded]);
+  }, [cancelGeneration, setSession, setHistory, setReport, unloadIfLoaded]);
 
-  /** Cancelar in Generar: the questions already saved stay chosen. */
+  const resetSession = useCallback(() => {
+    clearMatch();
+    resetSelection();
+  }, [clearMatch, resetSelection]);
+
   /**
    * Cancelar in the lobby or mid-game: the server ends the match first, so
    * students and the screen leave it too, then the console starts over.
-   * A match the server already ended (409) or lost (404) still resets.
    */
   const cancelMatch = useCallback(async () => {
-    const running = session && (session.status === 'lobby' || session.status === 'active');
-    if (running) {
-      try {
-        await sessionApi.abandonSession(session.id);
-      } catch {
-        // Nothing left to cancel on the server; the console resets anyway.
-      }
-    }
+    await abandonRunningMatch(session);
     resetSession();
   }, [session, resetSession]);
 
+  /**
+   * Back arrow in the lobby: the match that has not started ends on the
+   * server, and the console returns to the bank pick with the same topic and
+   * questions still chosen, ready to build the match again.
+   */
+  const backToBankPick = useCallback(async () => {
+    const lobbyTopic = session?.topic;
+    await abandonRunningMatch(session);
+    clearMatch();
+    if (lobbyTopic) setTopic(lobbyTopic);
+    setWizard('count');
+  }, [session, clearMatch, setTopic, setWizard]);
+
+  /** Cancelar in Generar: the questions already saved stay chosen. */
   const cancelBankGeneration = useCallback(() => {
     const alreadySavedIds = progress?.ids ?? [];
     cancelGeneration();
@@ -239,6 +263,7 @@ export function useTeacherCoordinator(
     cancelBankGeneration,
     advancePrimary,
     cancelMatch,
+    backToBankPick,
     resetSession,
   };
 }

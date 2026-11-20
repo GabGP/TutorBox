@@ -44,6 +44,7 @@ const topicCoordinator = {
   clearGenerationResult: vi.fn(),
   advancePrimary: vi.fn(),
   cancelMatch: vi.fn(),
+  backToBankPick: vi.fn(),
   resetSession: vi.fn(),
 } as unknown as ReturnType<typeof useTeacherCoordinator>;
 
@@ -109,15 +110,15 @@ describe('TeacherView top bar, logout and mode errors', () => {
     expect(logout).toHaveBeenCalledTimes(1);
   });
 
-  it('titles the top bar after the class mode, without the quiz back and voice buttons', () => {
+  it('titles the top bar after the class mode, keeping the back arrow place empty', () => {
     classMode('tutor');
     const { rerender } = render(<TeacherView />);
     // The mode picker repeats these words, so read the bar itself.
     const bar = () => [document.getElementById('subtitle')?.textContent, document.getElementById('title')?.textContent];
 
     expect(bar()).toEqual(['Modo tutor', 'Chat de práctica']);
-    expect(screen.queryByRole('button', { name: 'Volver' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Voz ES' })).not.toBeInTheDocument();
+    // Kept but unusable, so the title starts in the same place in every mode.
+    expect(screen.getByRole('button', { name: 'Volver', hidden: true })).toBeDisabled();
 
     classMode('apps');
     rerender(<TeacherView />);
@@ -126,8 +127,7 @@ describe('TeacherView top bar, logout and mode errors', () => {
     classMode('quiz');
     rerender(<TeacherView />);
     expect(bar()).toEqual(['Paso 1 de 3', 'Elegir tema']);
-    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Voz ES' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Volver', hidden: true })).toBeDisabled();
   });
 
   it('floats a refused mode switch as an error toast instead of a line under the picker', () => {

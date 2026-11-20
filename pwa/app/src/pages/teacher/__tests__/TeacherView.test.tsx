@@ -103,6 +103,7 @@ describe('TeacherView Component', () => {
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
       cancelMatch: vi.fn(),
+      backToBankPick: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -152,6 +153,7 @@ describe('TeacherView Component', () => {
       clearGenerationResult: vi.fn(),
       advancePrimary,
       cancelMatch: vi.fn(),
+      backToBankPick: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -167,7 +169,7 @@ describe('TeacherView Component', () => {
     expect(primary).not.toBeDisabled();
   });
 
-  it('renders topic selector on step 1 and toggles language voice', () => {
+  it('renders topic selector on step 1 with no voice toggle in the bar', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 't1', username: 'profe', role: 'teacher' },
       loading: false,
@@ -205,6 +207,7 @@ describe('TeacherView Component', () => {
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
       cancelMatch: vi.fn(),
+      backToBankPick: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -215,9 +218,8 @@ describe('TeacherView Component', () => {
     expect(screen.queryByRole('tablist', { name: 'Origen de preguntas' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeInTheDocument();
 
-    const voiceBtn = screen.getByRole('button', { name: 'Voz ES' });
-    fireEvent.click(voiceBtn);
-    expect(screen.getByRole('button', { name: "Voz K'iche'" })).toBeInTheDocument();
+    // The voice language is picked in Ajustes → Voz, not in the top bar.
+    expect(screen.queryByRole('button', { name: /^Voz / })).not.toBeInTheDocument();
   });
 
   it('shows bank picker and pick-count CTA on the count step', () => {
@@ -258,6 +260,7 @@ describe('TeacherView Component', () => {
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
       cancelMatch: vi.fn(),
+      backToBankPick: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -339,6 +342,7 @@ describe('TeacherView Component', () => {
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
       cancelMatch: vi.fn(),
+      backToBankPick: vi.fn(),
       resetSession: vi.fn(),
     });
 

@@ -139,7 +139,9 @@ pnpm build      # Build production bundle to dist/
 `src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
 `/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
 
-The `/maestro/` top bar follows the mode. In quiz mode it shows the wizard step (`Paso 1 de 3`, `En juego`…) with the back and voice buttons; in tutor mode it reads `Modo tutor · Chat de práctica` and in take-home mode `Llevar a casa · App para el teléfono`, without the quiz-only buttons.
+The `/maestro/` top bar follows the mode. In quiz mode it shows the wizard step (`Paso 1 de 3`, `En juego`…); in tutor mode it reads `Modo tutor · Chat de práctica` and in take-home mode `Llevar a casa · App para el teléfono`. The bar itself never moves: a fixed 62 px height, one line each for title and subtitle (ending in … when too long), the back arrow's place always kept, and the same round Reportes, Clickers and Ajustes buttons in every mode.
+
+The back arrow works on the bank pick (back to the topic) and in **Preparar el juego** (back to the bank pick: the match that has not started is ended on the server, and the topic and the chosen questions stay). The quiz voice language is chosen in **Ajustes → Voz**, when a voice is saved as the default; the bar has no voice toggle.
 
 ---
 

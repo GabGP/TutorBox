@@ -63,6 +63,7 @@ const idleCoordinator = {
   clearGenerationResult: vi.fn(),
   advancePrimary: vi.fn(),
   cancelMatch: vi.fn(),
+  backToBankPick: vi.fn(),
   resetSession: vi.fn(),
 };
 
@@ -72,10 +73,8 @@ describe('TeacherHeader Clickers button', () => {
       <TeacherHeader
         title="Panel"
         subtitle="Inicio"
-        step="topic"
-        voiceLang="es"
+        canGoBack={false}
         onBack={vi.fn()}
-        onToggleVoice={vi.fn()}
       />
     );
     expect(screen.queryByRole('button', { name: 'Clickers' })).not.toBeInTheDocument();
@@ -87,10 +86,8 @@ describe('TeacherHeader Clickers button', () => {
       <TeacherHeader
         title="Panel"
         subtitle="Inicio"
-        step="topic"
-        voiceLang="es"
+        canGoBack={false}
         onBack={vi.fn()}
-        onToggleVoice={vi.fn()}
         onOpenSettings={vi.fn()}
         onOpenClickers={onOpenClickers}
       />

@@ -180,11 +180,8 @@ export const TeacherView: React.FC = () => {
       <TeacherHeader
         title={title}
         subtitle={subtitle}
-        step={step}
-        voiceLang={voiceLang}
-        showQuizControls={mode === 'quiz'}
-        onBack={() => coordinator.setWizard('topic')}
-        onToggleVoice={() => setVoiceLang((v) => (v === 'es' ? 'quc' : 'es'))}
+        canGoBack={mode === 'quiz' && (step === 'count' || step === 'lobby')}
+        onBack={step === 'lobby' ? () => void coordinator.backToBankPick() : () => coordinator.setWizard('topic')}
         onOpenSettings={() => openSettings()}
         onOpenClickers={() => setShowClickers(true)}
         onOpenReports={() => setShowReports(true)}
