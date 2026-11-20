@@ -1,6 +1,6 @@
 # Utz'tutor Frontend (PWA)
 
-Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance (both the vanilla HTML/JS reference client in `pilas/` and the modular React 19 + TypeScript PWA in `app/`).
+Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance: the modular React 19 + TypeScript classroom PWA in `app/` and the take-home math apps in `tareas/`.
 
 <div align="center">
 
@@ -13,65 +13,22 @@ Classroom web clients hosted directly on the NVIDIA Jetson Orin Nano appliance (
 
 ---
 
-## 1. Pilas — the classroom quiz client (`pilas/`)
+## 1. React PWA — Classroom Client (`pwa/app/`)
 
-Pilas is the shipped Classroom Quiz client: three vanilla HTML pages plus a shared `static/tb.js`,
-served by the FastAPI backend itself (`backend/src/main.py` mounts the client directory per folder), so every
-page talks to `/api/v1` on the same origin. There is no build step and no state of its own: the
-backend session engine is the only source of truth and the pages poll it once per second.
+`pwa/app/` is the modular, type-safe React 19 + TypeScript + Vite Progressive Web Application designed under Feature-Sliced Design (FSD). It is served same-origin by the FastAPI backend (`backend/src/main.py` mounts `.cache/pwa/dist` per folder) so every page talks to `/api/v1` on the same origin.
 
 | URL | Who | What it does |
 | :--- | :--- | :--- |
-| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick a topic → number of questions → the local model writes every question (`POST /api/v1/quiz/generate`, no seed bank) → student roster → start the match → live count, close/reveal/next → group summary + CSV. When one wrong answer takes >51% of the class, the device reads the misconception explanation out loud (offline multi-tier TTS: Qwen3-TTS -> Sherpa -> Piper -> espeak-ng, Spanish). |
-| `/alumno/` | Students | **Opens by itself when a phone joins the `Utz'tutor` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Login or self-signup (forced PIN change when the teacher reset it) → auto-join the current match → A–D vote (first press locks) → result with the explanation for the chosen distractor → final score. |
+| `/maestro/` | Teacher (role `teacher`/`admin`) | Login → pick mode (quiz, tutor, take-home) → pick topic & questions from bank or local LLM → lobby presence & ESP32 clickers → start match → live count, close/reveal/next → group summary, remediation TTS (>51% rule), reports & CSV. |
+| `/alumno/` | Students | **Opens by itself when a phone joins the `Utz'tutor` Wi-Fi** ([captive portal](../infra/captive-portal.md)). Follows the teacher's active mode: A–D quiz voting, Socratic tutor chat, or take-home grade download menu. |
 | `/pantalla/` | HDMI classroom screen | Question + countdown + vote count, then the correct answer with the aggregate bars. Never per-student votes. |
 | `/` | — | Redirects to `/alumno/` (to `http://utztutor/alumno/` when reached through any other name). |
-
-### Run it
-
-```bash
-sudo apt install espeak-ng                           # offline voice for the >51% intervention
-cd backend
-python -m uvicorn main:app --app-dir src --host 0.0.0.0        # teacher: http://<appliance-ip>:8000/maestro/
-# classroom: nginx publishes the same process on :80 → http://utztutor/maestro/ (infra/nginx/utztutor.conf)
-```
-
-Bootstrap teacher: `teacher1` / `1234` (`SEED_TEACHER_*` in `.env`). The model must be reachable at
-`SLM_BASE_URL`; when a generation fails the slot is skipped and the teacher is told — nothing is
-served from the question bank.
-
-### Endpoints used
-
-| Endpoint | Page |
-| :--- | :--- |
-| `GET /health` | teacher login indicator |
-| `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/pin` | all logins, session restore, forced PIN rotation |
-| `POST /api/v1/users/signup` | student "Crear cuenta" |
-| `GET /api/v1/staff/users`, `POST /api/v1/staff/users`, `POST /api/v1/staff/users/{id}/reset-pin` | teacher roster |
-| `GET /api/v1/quiz/topics`, `POST /api/v1/quiz/generate` (`save_to_bank: true`), `GET /api/v1/quiz/generation-metrics` | topic cards, question generation, ETA |
-| `POST /api/v1/session`, `/start`, `/close`, `/reveal`, `/next`, `GET /api/v1/session/{id}/report` | teacher match control |
-| `GET /api/v1/session/{id}/speech?lang=es` | teacher device: offline multi-tier TTS (Qwen3-TTS -> Sherpa -> Piper -> espeak-ng) WAV read out loud when the >51% rule fires |
-| `GET /api/v1/session/current`, `GET /api/v1/session/{id}` | students and screen (polling), teacher (own match) |
-| `POST /api/v1/session/{id}/vote` | student vote |
-
-Client-side only (per browser `localStorage`): the bearer token, the teacher's current session id and
-per-round reveal history (for the summary page), and each student's own votes/score. The ESP32
-clicker transport (Week 7) is not part of Pilas. A clicker votes on the same vote endpoint, and
-the server labels its vote `hardware` from the clicker's session; a `transport_type` sent in the
-body is ignored.
-
----
-
-## 2. React PWA — Modern Modular Classroom Client (`pwa/app/`)
-
-`pwa/app/` is the modular, type-safe React 19 + TypeScript + Vite Progressive Web Application designed under Feature-Sliced Design (FSD). It maintains strict 1-to-1 feature parity with `pilas/` while eliminating monolithic code and providing automated test coverage.
 
 ### Directory Structure & FSD Architecture
 
 ```
 pwa/
-├── pilas/                  # Reference classroom client (vanilla HTML/JS)
-├── app/                    # Modern classroom client (React 19 + TypeScript + Vite FSD)
+├── app/                    # Classroom client (React 19 + TypeScript + Vite FSD)
 │   ├── index.html          # SPA HTML template
 │   ├── package.json        # Dependencies & scripts (React 19, TypeScript, Vite, Vitest)
 │   ├── tsconfig.json       # Strict TypeScript compiler options
@@ -103,21 +60,19 @@ pwa/
 │       │   ├── lib/                # Storage & audio synthesis helpers
 │       │   └── ui/                 # Reusable accessible UI components
 │       └── test/           # Vitest environment mocks & setup
+├── tareas/                 # Grade-specific take-home math apps & APK download page
 └── README.md
 ```
 
 ### Serving via Backend
 
 The backend (`backend/src/main.py`) serves the React PWA build output (`.cache/pwa/dist`)
-by default and supports runtime selection of the frontend directory via the `PWA_STATIC_DIR`
+by default and supports overriding the client directory via the `PWA_STATIC_DIR`
 environment variable:
 
 ```bash
-# Default: serves .cache/pwa/dist (built from pwa/app; fails fast if never built)
-python -m uvicorn main:app --app-dir backend/src
-
-# Legacy fallback: serve the vanilla reference client explicitly:
-export PWA_STATIC_DIR="pwa/pilas"
+# Build once (or run `python run.py`), then serve .cache/pwa/dist:
+pnpm --dir pwa/app install && pnpm --dir pwa/app run build
 python -m uvicorn main:app --app-dir backend/src
 ```
 
@@ -206,9 +161,9 @@ No Android phone was tested.
 
 ---
 
-## <a id="3-tareas--take-home-math-apps-tareas"></a>3. Tareas — take-home math apps (`tareas/`)
+## <a id="3-tareas--take-home-math-apps-tareas"></a>2. Tareas — take-home math apps (`tareas/`)
 
-Grade-specific math apps that students also take home. Unlike `pilas/` and `app/` they need no
+Grade-specific math apps that students also take home. Unlike `app/` they need no
 backend: plain static files, no build step.
 
 | Path | Served at | What it is |
@@ -217,7 +172,7 @@ backend: plain static files, no build step.
 | [`tareas/segundo/`](tareas/segundo/README.md) | `/tareas/segundo/` | "Matemáticas 2º con Q'uq'" — 2nd-grade (Segundo) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`segundo.apk`). |
 | [`tareas/tercero/`](tareas/tercero/README.md) | `/tareas/tercero/` | "Matemáticas 3º con Q'uq'" — 3rd-grade (Tercero) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`tercero.apk`). |
 | [`tareas/android/`](tareas/android/README.md) | — | Android wrapper: one product flavor per grade packs `primero/`, `segundo/` and `tercero/public` into three offline APKs (`gradlew publishApk`). |
-| `tareas/descargas/` | `/descargas/` | Family download page: pick your grade (Primero, Segundo, Tercero), install steps in Spanish, and the three APKs. A grade whose APK is missing is hidden. |
+| `tareas/descargas/` | `/descargas/` | Family download page: pick your grade (Primero, Segundo, Tercero), install steps in Spanish plus audio guides in Kʼicheʼ and Qʼeqchiʼ (`audio/kiche.mp3`, `audio/qeqchi.mp3`), and the three APKs. A grade whose APK is missing is hidden. |
 | `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |
 
 **Why an APK and not an installable PWA:** browsers only run service workers (offline support) and
@@ -232,7 +187,7 @@ redirects (`RESERVED_PREFIXES`, `backend/src/api/captive.py`).
 
 ---
 
-## 4. Architecture & Offline Design
+## 3. Architecture & Offline Design
 
 * **Network Delivery**: Static pages served by the appliance over the isolated `Utz'tutor` AP; nginx in front publishes them on port 80 and lets phones' captive-portal probes open `/alumno/` automatically. Inside the phone's sign-in browser, `localStorage` (the login token) is sandboxed — opening the page later in the normal browser means logging in again.
 * **Same origin**: no CORS, no API host configuration — pages use relative `/api/v1` URLs.

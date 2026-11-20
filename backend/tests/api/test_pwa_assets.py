@@ -34,7 +34,7 @@ def test_root_asset_urls_stay_reserved():
 
 
 def test_missing_assets_stay_json_404(captive_env, temp_db, client):
-    """Legacy pilas client ships no manifest: aliases 404 instead of redirecting."""
+    """Minimal test client ships no manifest: aliases 404 instead of redirecting."""
     for url in (
         "/manifest.webmanifest",
         "/favicon.svg",
@@ -95,10 +95,10 @@ def test_client_static_dir_resolution(monkeypatch, tmp_path):
     monkeypatch.setenv("PWA_STATIC_DIR", "   ")
     assert _client_static_dir().parts[-3:] == ("pwa", "dist", "static")
 
-    monkeypatch.setenv("PWA_STATIC_DIR", "pwa/pilas")
+    monkeypatch.setenv("PWA_STATIC_DIR", "custom/client")
     resolved = _client_static_dir()
     assert resolved.name == "static"
-    assert resolved.parts[-2] == "pilas"
+    assert resolved.parts[-2] == "client"
 
     absolute = tmp_path / "abs-client"
     (absolute / "static").mkdir(parents=True)

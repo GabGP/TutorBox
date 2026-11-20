@@ -1,4 +1,4 @@
-# Utz'tutor backend — FastAPI API + Pilas classroom pages + captive-portal answers.
+# Utz'tutor backend — FastAPI API + PWA classroom pages + captive-portal answers.
 #
 # Runs uvicorn on 0.0.0.0:8000 from the repository checkout; nginx (infra/nginx/utztutor.conf)
 # publishes it on port 80. This file is a template: infra/ansible/jetson.yml fills in the user
@@ -13,7 +13,7 @@
 # in-memory rate limiters and session state must not be duplicated across processes.
 
 [Unit]
-Description=Utz'tutor backend (FastAPI + Pilas pages) on :8000
+Description=Utz'tutor backend (FastAPI + PWA pages) on :8000
 After=network-online.target ollama.service
 # Ollama serves the quiz and tutor models. Wants, not Requires: the seed question bank
 # keeps the class running when the model server is down.

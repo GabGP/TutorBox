@@ -4,7 +4,7 @@ The classroom client is mounted per folder (/maestro, /alumno, /pantalla,
 /static) so /api/* keeps JSON 404s. Browsers and iOS still request PWA files
 at "/": /manifest.webmanifest, /favicon.*, /icon-*, /apple-touch-icon*.png.
 These aliases serve the same bytes from <client>/static/ without a new mount.
-Missing files stay JSON 404 so backend tests can pin the legacy pilas client.
+Missing files stay JSON 404 so backend tests can run against a minimal client fixture.
 """
 
 import os

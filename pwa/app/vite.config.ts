@@ -16,11 +16,6 @@ function utztutorRouterPlugin(): Plugin {
           copyFileSync(indexHtml, resolve(destDir, 'index.html'));
         }
       }
-      const legacyCss = resolve(import.meta.dirname, '../pilas/static/tb.css');
-      const destStatic = resolve(outDir, 'static');
-      if (existsSync(legacyCss) && existsSync(destStatic)) {
-        copyFileSync(legacyCss, resolve(destStatic, 'tb.css'));
-      }
     },
   };
 }

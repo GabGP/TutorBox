@@ -38,6 +38,12 @@ def test_downloads_page_is_served(temp_db, client):
     for grade in ("primero", "segundo", "tercero"):  # the grade menu
         assert f'href="{grade}.apk"' in resp.text
         assert f'href="/tareas/{grade}/"' in resp.text
+    for lang in ("kiche", "qeqchi"):
+        assert f'src="audio/{lang}.mp3"' in resp.text
+        audio = client.get(f"/descargas/audio/{lang}.mp3")
+        assert audio.status_code == 200, lang
+        assert audio.headers["content-type"].startswith("audio/"), lang
+        assert len(audio.content) > 0
 
 
 def test_apk_is_served_as_an_android_package():

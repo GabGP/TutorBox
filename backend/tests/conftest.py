@@ -4,15 +4,33 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+from pathlib import Path
 from typing import TypeVar
 
 # Use minimum work factor for fast test execution (240x speedup)
 os.environ["BCRYPT_ROUNDS"] = "4"
 
-# Backend tests pin the legacy pilas client so the suite runs without a built
-# React PWA. Production default is .cache/pwa/dist (see src/main.py); must be
-# set before importing the app because mounts resolve at import time.
-os.environ.setdefault("PWA_STATIC_DIR", "pwa/pilas")
+
+def _make_worker_client_dir() -> str:
+    """Create a minimal static client fixture so backend tests run without a built PWA."""
+    root = Path(tempfile.mkdtemp(prefix="utztutor-client-"))
+    for page in ("maestro", "alumno", "pantalla"):
+        page_dir = root / page
+        page_dir.mkdir()
+        (page_dir / "index.html").write_text(
+            f"<!doctype html><title>{page}</title>\n", encoding="utf-8"
+        )
+    static_dir = root / "static"
+    static_dir.mkdir()
+    (static_dir / "app.css").write_text("/* test fixture */\n", encoding="utf-8")
+    return str(root)
+
+
+# Production default is .cache/pwa/dist (see src/main.py); must be set before
+# importing the app because mounts resolve at import time.
+_WORKER_CLIENT_DIR = _make_worker_client_dir()
+os.environ.setdefault("PWA_STATIC_DIR", _WORKER_CLIENT_DIR)
+atexit.register(shutil.rmtree, _WORKER_CLIENT_DIR, ignore_errors=True)
 
 # A test that asks for `client` before its database fixture starts the app on the
 # default database. Every pytest-xdist worker gets its own file for that, so the

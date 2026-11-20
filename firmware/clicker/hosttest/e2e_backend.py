@@ -3,16 +3,25 @@ teacher uses it, and what its database holds afterwards."""
 
 import json
 import os
+import shutil
 import socket
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
+
+
+def _make_client_stub() -> Path:
+    root = Path(tempfile.mkdtemp(prefix="utztutor-clicker-e2e-client-"))
+    for mount in ("maestro", "alumno", "pantalla", "static"):
+        (root / mount).mkdir()
+    return root
 
 
 def free_port() -> int:
@@ -24,12 +33,14 @@ def free_port() -> int:
 class Backend:
     def __init__(self, db_path: str, port: int):
         self.db_path, self.port, self.proc = db_path, port, None
+        self._client_dir: Path | None = None
 
     def start(self) -> None:
+        self._client_dir = _make_client_stub()
         env = dict(
             os.environ,
             DATABASE_PATH=self.db_path,
-            PWA_STATIC_DIR="pwa/pilas",
+            PWA_STATIC_DIR=str(self._client_dir),
             BCRYPT_ROUNDS="4",
             SEED_TEACHER_USERNAME="teacher1",
             SEED_TEACHER_PIN="1234",
@@ -70,6 +81,9 @@ class Backend:
             self.proc.terminate()
             self.proc.wait(timeout=10)
             self.proc = None
+        if self._client_dir:
+            shutil.rmtree(self._client_dir, ignore_errors=True)
+            self._client_dir = None
 
 
 class Api:

@@ -1,4 +1,4 @@
-"""Integration tests for the public session state consumed by Pilas clients."""
+"""Integration tests for the public session state consumed by classroom clients."""
 
 from core.db.session_repository import update_quiz_session_status
 from tests.api.session.test_session_endpoints import _seed_quiz_questions
@@ -113,12 +113,12 @@ def test_public_state_gates_question_and_result_by_phase(staff_db, client):
     assert client.get("/api/v1/session/current").json()["current_round"] == revealed
 
 
-def test_pilas_pages_are_served_by_the_backend(staff_db, client):
+def test_client_pages_are_served_by_the_backend(staff_db, client):
     for path in ("/maestro/", "/alumno/", "/pantalla/"):
         resp = client.get(path)
         assert resp.status_code == 200, path
         assert resp.headers["content-type"].startswith("text/html")
-    assert client.get("/static/tb.css").status_code == 200
+    assert client.get("/static/app.css").status_code == 200
     # TestClient's default Host ("testserver") is a foreign name for the captive portal.
     root = client.get("/", headers={"host": "localhost"}, follow_redirects=False)
     assert root.headers["location"] == "/alumno/"

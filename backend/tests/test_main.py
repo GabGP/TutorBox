@@ -81,11 +81,12 @@ def test_resolve_client_dir_handles_empty_string(monkeypatch):
     assert resolve_client_dir("   ") == DEFAULT_CLIENT_DIR
 
 
-def test_resolve_client_dir_explicit_pilas_override():
-    """Verifies legacy pilas client stays selectable via explicit override."""
-    resolved = resolve_client_dir("pwa/pilas")
-    assert resolved.name == "pilas"
-    assert resolved.parent.name == "pwa"
+def test_resolve_client_dir_explicit_env_override(monkeypatch):
+    """Verifies PWA_STATIC_DIR env var overrides the default client directory."""
+    monkeypatch.setenv("PWA_STATIC_DIR", "custom/client")
+    resolved = resolve_client_dir()
+    assert resolved.name == "client"
+    assert resolved.parent.name == "custom"
 
 
 def test_validate_client_dir_rejects_missing_mounts(tmp_path):

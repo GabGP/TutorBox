@@ -15,7 +15,6 @@ SEPARATOR_LINE = "--------------------------------------------------"
 
 PWA_DIST_LABEL = ".cache/pwa/dist"
 PWA_BUILD_CMD = "pnpm --dir pwa/app run build"
-LEGACY_CLIENT_ENV = "PWA_STATIC_DIR=pwa/pilas"
 MSG_BACKEND_FAIL_FAST = f"Backend default ({PWA_DIST_LABEL}) will fail fast on startup."
 
 
@@ -34,4 +33,3 @@ def print_separator() -> None:
 def print_fail_fast_hint() -> None:
     """Shared closing note when the PWA bundle is unavailable."""
     print(f"       {MSG_BACKEND_FAIL_FAST}")
-    print(f"       Explicitly set {LEGACY_CLIENT_ENV} for the legacy client.")

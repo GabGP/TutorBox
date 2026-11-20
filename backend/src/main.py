@@ -30,8 +30,7 @@ logger = logging.getLogger("utztutor")
 
 # Classroom web client (React PWA build output) served same-origin so pages call /api/v1 directly.
 # Default: .cache/pwa/dist (built from pwa/app via `pnpm run build` / `python run.py`).
-# Legacy fallback: pwa/pilas (vanilla reference client) — select explicitly via
-# PWA_STATIC_DIR=pwa/pilas. A missing default fails fast instead of silently serving stale UI.
+# A missing default fails fast instead of silently serving stale UI.
 # Mounted per folder (not at "/") so unknown API paths keep their JSON 404 and slash redirects.
 # Keep RESERVED_PREFIXES in api/captive.py in sync when adding a mount.
 CLIENT_MOUNTS = ("maestro", "alumno", "pantalla", "static")
@@ -54,8 +53,8 @@ mimetypes.add_type("application/vnd.android.package-archive", ".apk")
 def resolve_client_dir(raw_dir: str | None = None) -> Path:
     """Resolve directory for serving classroom web client assets.
 
-    Defaults to the React PWA build output (.cache/pwa/dist). Pass
-    PWA_STATIC_DIR=pwa/pilas (or raw_dir) to opt into the legacy client.
+    Defaults to the React PWA build output (.cache/pwa/dist). Override via
+    the PWA_STATIC_DIR environment variable (or raw_dir).
     """
     target = raw_dir if raw_dir is not None else os.getenv("PWA_STATIC_DIR")
     if target and target.strip():
@@ -74,8 +73,7 @@ def validate_client_dir(directory: Path) -> Path:
             f"Classroom web client directory missing: {directory} "
             f"(missing: {', '.join(missing)}). Build the React PWA with "
             f"`pnpm --dir pwa/app install && pnpm --dir pwa/app run build` or "
-            f"`python run.py`, or explicitly opt into the legacy client with "
-            f"`PWA_STATIC_DIR=pwa/pilas`."
+            f"`python run.py`."
         )
     return directory
 

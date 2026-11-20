@@ -81,6 +81,18 @@
       padding: 12px 14px; margin-bottom: 12px;
     }
     .note strong { display: block; margin-bottom: 2px; }
+    .audio-guide {
+      background: var(--card); border-left: 6px solid var(--green); border-radius: 18px;
+      padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    }
+    .audio-guide-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+      font-weight: 900; font-size: 1.05rem; color: var(--green-dark);
+    }
+    .audio-guide-head svg { width: 24px; height: 24px; flex: none; }
+    .audio-list { display: flex; flex-direction: column; gap: 12px; }
+    .audio-lang { display: block; font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
+    .audio-item audio { width: 100%; height: 44px; display: block; }
     code { font-family: inherit; font-weight: 900; color: var(--green-dark); }
     a.play { color: var(--green-dark); font-weight: 800; }
   </style>
@@ -149,6 +161,26 @@
   <p class="size">Para teléfonos Android · menos de 1 MB cada una · puedes tener las tres</p>
 
   <h2>Cómo instalarla</h2>
+  <section class="audio-guide" aria-label="Instrucciones en audio">
+    <div class="audio-guide-head">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4.5 3.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      <span>Escucha cómo instalarla</span>
+    </div>
+    <div class="audio-list">
+      <div class="audio-item">
+        <span class="audio-lang" id="audio-kiche-label">Kʼicheʼ</span>
+        <audio controls preload="none" src="audio/kiche.mp3" aria-labelledby="audio-kiche-label">
+          Tu navegador no puede reproducir este audio. <a href="audio/kiche.mp3">Descargar audio en Kʼicheʼ</a>.
+        </audio>
+      </div>
+      <div class="audio-item">
+        <span class="audio-lang" id="audio-qeqchi-label">Qʼeqchiʼ</span>
+        <audio controls preload="none" src="audio/qeqchi.mp3" aria-labelledby="audio-qeqchi-label">
+          Tu navegador no puede reproducir este audio. <a href="audio/qeqchi.mp3">Descargar audio en Qʼeqchiʼ</a>.
+        </audio>
+      </div>
+    </div>
+  </section>
   <ol>
     <li>
       <svg viewBox="0 0 72 72" aria-hidden="true"><rect x="16" y="4" width="40" height="64" rx="7" fill="#37474F" /><rect x="20" y="10" width="32" height="50" rx="3" fill="#E3F4FB" /><rect x="24" y="30" width="24" height="10" rx="5" fill="#FFD54F" /><circle cx="44" cy="44" r="6" fill="#FFB74D" opacity=".9" /></svg>
@@ -207,6 +239,16 @@
       })
   )).then((available) => {
     if (!available.some(Boolean)) document.getElementById('missing').style.display = 'block';
+  });
+
+  // Keep only one language audio playing at a time.
+  const audioPlayers = document.querySelectorAll('.audio-guide audio');
+  audioPlayers.forEach((player) => {
+    player.addEventListener('play', () => {
+      audioPlayers.forEach((other) => {
+        if (other !== player && !other.paused) other.pause();
+      });
+    });
   });
 </script>
 </body>
