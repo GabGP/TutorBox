@@ -45,9 +45,11 @@ describe('useQuestionGenerator stop, resume and cancel', () => {
     act(() => result.current.stopGeneration());
     const firstSignal = vi.mocked(generatorApi.generateQuestion).mock.calls[0][1];
     expect(firstSignal?.aborted).toBe(true);
-    await waitFor(() => expect(result.current.isPaused).toBe(true));
+    // Paused turns on at once; the question goes back to pending once the
+    // aborted request has rejected, a tick later.
+    await waitFor(() => expect(result.current.progress?.statuses).toEqual(['pending']));
+    expect(result.current.isPaused).toBe(true);
     expect(result.current.isGenerating).toBe(true);
-    expect(result.current.progress?.statuses).toEqual(['pending']);
 
     act(() => result.current.resumeGeneration());
 
