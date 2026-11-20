@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Check, CheckCircle2, ChevronDown, Circle, Eye, Pencil, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { CheckCircle2, Circle, Eye, Pencil, Trash2 } from 'lucide-react';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
@@ -10,19 +10,25 @@ import styles from './BankQuestionRow.module.css';
 import viewStyles from './QuestionBankView.module.css';
 import type { BankQuestion } from './bankApi';
 
+/**
+ * Horizontal travel, in px, above which a click on the face is the end of a
+ * drag rather than a tap (a mouse drag still fires its click). Same guard as
+ * the clicker rows; taps stay well under it.
+ */
+const DRAG_CLICK_TOLERANCE_PX = 8;
+
 export interface BankQuestionRowProps {
   question: BankQuestion;
   selectable: boolean;
   /** Seleccionar mode: a tap toggles the question for the match. */
   selecting?: boolean;
   selected: boolean;
-  /** Select mode only: the inline option editor is open below the row. */
-  expanded?: boolean;
-  /** Select mode only: rendered under the row while expanded. */
-  expandedContent?: React.ReactNode;
   confirmArmed: boolean;
   swipeOpen: boolean;
+  /** Tap on the face: toggles the question in Seleccionar mode, else slides the row open or shut. */
   onFaceTap: (question: BankQuestion) => void;
+  /** The circle in Seleccionar mode. */
+  onToggleSelect: (id: string) => void;
   onOpenDetail: (question: BankQuestion) => void;
   onEdit: (question: BankQuestion) => void;
   onArmDelete: (id: string) => void;
@@ -34,9 +40,9 @@ export interface BankQuestionRowProps {
 /**
  * One bank row: either the swipe strip (Info/Edit/Delete) or, once
  * delete is armed, a full-row press-and-hold confirm with an explicit
- * Cancelar affordance. In the picker the face toggles an inline panel
- * (expandedContent) and a tag marks questions chosen for the match; in
- * Seleccionar mode a tap toggles the question instead, shown by a check mark.
+ * Cancelar affordance. A tap on the face only slides the row open or shut;
+ * the actions live in the strip. In Seleccionar mode a tap on the face or on
+ * its circle toggles the question for the match; a check marks the chosen.
  * Escape disarms; opening another row disarms via onOpenChange.
  */
 export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
@@ -44,11 +50,10 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   selectable,
   selecting = false,
   selected,
-  expanded = false,
-  expandedContent,
   confirmArmed,
   swipeOpen,
   onFaceTap,
+  onToggleSelect,
   onOpenDetail,
   onEdit,
   onArmDelete,
@@ -56,6 +61,15 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   onDisarmDelete,
   onOpenChange,
 }) => {
+  // Where the pointer went down on the face; null when no press is pending.
+  const pressX = useRef<number | null>(null);
+  const handleFaceClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const startX = pressX.current;
+    pressX.current = null;
+    if (startX !== null && Math.abs(event.clientX - startX) > DRAG_CLICK_TOLERANCE_PX) return;
+    onFaceTap(question);
+  };
+
   useEffect(() => {
     if (!confirmArmed) return;
     const onKey = (event: KeyboardEvent) => {
@@ -66,14 +80,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   }, [confirmArmed, onDisarmDelete]);
 
   return (
-    <div
-      role="listitem"
-      className={
-        selectable
-          ? `${viewStyles.selectRow} ${selected ? viewStyles.selectRowOn : ''} ${expanded ? viewStyles.selectRowOpen : ''}`
-          : undefined
-      }
-    >
+    <div role="listitem">
       <div className={utils.grow}>
         {confirmArmed ? (
           <div className={styles.confirmRow}>
@@ -129,39 +136,45 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
               },
             ]}
           >
-            {selecting &&
-              (selected ? (
-                <CheckCircle2 size={22} aria-hidden className={`${viewStyles.selectMark} ${viewStyles.selectMarkOn}`} />
-              ) : (
-                <Circle size={22} aria-hidden className={viewStyles.selectMark} />
-              ))}
+            {/* The check is the only mark of a chosen question; in Seleccionar
+                mode it becomes a circle button that toggles it. */}
+            {selectable && !selecting && selected && (
+              <span
+                className={`${viewStyles.selectMark} ${viewStyles.selectMarkOn}`}
+                role="img"
+                aria-label="En el juego"
+              >
+                <CheckCircle2 size={22} aria-hidden />
+              </span>
+            )}
+            {selecting && (
+              <button
+                type="button"
+                className={`${viewStyles.selectMark} ${selected ? viewStyles.selectMarkOn : ''}`}
+                aria-label={`${selected ? 'Quitar' : 'Elegir'} pregunta ${question.id}`}
+                aria-pressed={selected}
+                onClick={() => onToggleSelect(question.id)}
+              >
+                {selected ? <CheckCircle2 size={22} aria-hidden /> : <Circle size={22} aria-hidden />}
+              </button>
+            )}
             <button
               type="button"
               className={`${listStyles.studentName} ${viewStyles.faceButton}`}
-              onClick={() => onFaceTap(question)}
-              aria-expanded={selectable && !selecting ? expanded : undefined}
+              onPointerDown={(event) => {
+                pressX.current = event.clientX;
+              }}
+              onClick={handleFaceClick}
+              aria-expanded={selecting ? undefined : swipeOpen}
               aria-pressed={selecting ? selected : undefined}
             >
               {question.question_text}
             </button>
-            {selectable && selected && (
-              <span className={`${listStyles.roleTag} ${viewStyles.chosenTag}`}>
-                <Check size={14} aria-hidden /> En el juego
-              </span>
-            )}
             <span className={`${listStyles.roleTag} ${viewStyles.topicTag}`}>
               {getTopicLabel(question.topic)}
             </span>
-            {selectable && !selecting && (
-              <ChevronDown
-                size={18}
-                aria-hidden
-                className={`${viewStyles.chev} ${expanded ? viewStyles.chevOpen : ''}`}
-              />
-            )}
           </SwipeRow>
         )}
-        {selectable && !selecting && expanded && !confirmArmed && expandedContent}
       </div>
     </div>
   );

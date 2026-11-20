@@ -28,43 +28,30 @@
 
 .selectMark {
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   color: var(--mute2);
+  cursor: pointer;
+}
+
+.selectMark:not(button) {
+  cursor: default;
+}
+
+.selectMark:is(button):hover {
+  background: var(--tint);
+}
+
+.selectMark:focus-visible {
+  outline: 3px solid var(--p);
+  outline-offset: 1px;
 }
 
 .selectMarkOn {
   color: var(--ok);
-}
-
-.selectRow {
-  border: 2px solid transparent;
-  border-radius: 16px;
-  transition: border-color 0.16s ease, background 0.16s ease;
-}
-
-.selectRowOn {
-  border-color: var(--ok);
-}
-
-.selectRowOpen {
-  background: var(--tint);
-}
-
-.chosenTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--ok);
-  background: var(--ok-bg);
-}
-
-.chev {
-  flex: 0 0 auto;
-  color: var(--mute2);
-  transition: transform 0.16s ease;
-}
-
-.chevOpen {
-  transform: rotate(180deg);
 }
 
 .faceButton {

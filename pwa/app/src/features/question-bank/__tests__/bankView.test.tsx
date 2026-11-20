@@ -5,31 +5,45 @@ import { QuestionBankView } from '../QuestionBankView';
 import { question } from './bankFixture';
 
 describe('QuestionBankView browsing and selection', () => {
-  it('lists questions and opens detail sheet', async () => {
+  it('slides a row open on tap instead of opening the detail', async () => {
     vi.spyOn(httpClient, 'requestApi').mockImplementation(
       async (_m: string, path: string) => {
         if (path.startsWith('/quiz/topics')) return [];
-        if (path === '/quiz/questions/q1') return question;
         if (path.startsWith('/quiz/questions'))
           return { questions: [question], total: 1 };
         return {};
       }
     );
     render(<QuestionBankView />);
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' })
-      ).toBeInTheDocument()
+    const face = await screen.findByRole('button', { name: '¿Cuánto es 27 + 15?' });
+    const root = face.parentElement!.parentElement!;
+    expect(root).toHaveAttribute('data-open', 'false');
+
+    fireEvent.click(face);
+    expect(root).toHaveAttribute('data-open', 'true');
+    expect(face).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByLabelText('Opción A')).toBeNull();
+
+    fireEvent.click(face);
+    expect(root).toHaveAttribute('data-open', 'false');
+    vi.restoreAllMocks();
+  });
+
+  it('ignores the click that ends a mouse drag on the face', async () => {
+    vi.spyOn(httpClient, 'requestApi').mockImplementation(
+      async (_m: string, path: string) => {
+        if (path.startsWith('/quiz/questions'))
+          return { questions: [question], total: 1 };
+        return [];
+      }
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' })
-    );
-    await waitFor(() =>
-      expect(screen.getByText(/Olvidó la llevada/)).toBeInTheDocument()
-    );
-    expect(
-      screen.getByRole('dialog', { name: 'Detalle pregunta q1' })
-    ).toBeInTheDocument();
+    render(<QuestionBankView />);
+    const face = await screen.findByRole('button', { name: '¿Cuánto es 27 + 15?' });
+    const root = face.parentElement!.parentElement!;
+    fireEvent.pointerDown(face, { clientX: 200 });
+    fireEvent.click(face, { clientX: 120 });
+    expect(root).toHaveAttribute('data-open', 'false');
     vi.restoreAllMocks();
   });
 
@@ -177,14 +191,7 @@ describe('QuestionBankView browsing and selection', () => {
       }
     );
     render(<QuestionBankView />);
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' })
-      ).toBeInTheDocument()
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' })
-    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver detalle pregunta q1' }));
     await waitFor(() => expect(calls).toContain('GET /quiz/questions/q1'));
     vi.restoreAllMocks();
   });
@@ -233,85 +240,6 @@ describe('QuestionBankView browsing and selection', () => {
     );
     // Same as Edit: the strip stays open behind the sheet.
     expect(root).toHaveAttribute('data-open', 'true');
-    vi.restoreAllMocks();
-  });
-
-  it('unfolds options with explanations on row tap in the picker', async () => {
-    const onToggleSelect = vi.fn();
-    vi.spyOn(httpClient, 'requestApi').mockImplementation(
-      async (_m: string, path: string) => {
-        if (path.startsWith('/quiz/questions'))
-          return { questions: [question], total: 1 };
-        return [];
-      }
-    );
-    render(
-      <QuestionBankView
-        selectable
-        selectedIds={[]}
-        onToggleSelect={onToggleSelect}
-      />
-    );
-    await waitFor(() =>
-      expect(screen.getByText('¿Cuánto es 27 + 15?')).toBeInTheDocument()
-    );
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    const face = screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' });
-    fireEvent.click(face);
-    expect(face).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByLabelText('Opción A')).toHaveValue('32');
-    expect(screen.getByLabelText('Opción B')).toHaveValue('42');
-    expect(screen.getByLabelText('Explicación A')).toHaveValue('Olvidó la llevada');
-    expect(screen.queryByLabelText('Explicación B')).not.toBeInTheDocument();
-    expect(screen.getByText('Respuesta correcta')).toBeInTheDocument();
-    // Opening never selects, and the panel has no select button: that is Seleccionar.
-    expect(onToggleSelect).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: /Usar en el juego/ })).toBeNull();
-    fireEvent.click(face);
-    expect(screen.queryByLabelText('Opción A')).not.toBeInTheDocument();
-    vi.restoreAllMocks();
-  });
-
-  it('saves inline edits back to the bank', async () => {
-    const calls: { m: string; path: string; body?: unknown }[] = [];
-    vi.spyOn(httpClient, 'requestApi').mockImplementation(
-      async (m: string, path: string, body?: unknown) => {
-        calls.push({ m, path, body });
-        if (m === 'PUT') return { ...question, ...(body as object) };
-        if (path.startsWith('/quiz/questions'))
-          return { questions: [question], total: 1 };
-        return [];
-      }
-    );
-    render(<QuestionBankView selectable selectedIds={['q1']} onToggleSelect={vi.fn()} />);
-    await waitFor(() =>
-      expect(screen.getByText('¿Cuánto es 27 + 15?')).toBeInTheDocument()
-    );
-    expect(screen.getByText('En el juego')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' }));
-    const save = screen.getByRole('button', { name: 'Guardar' });
-    expect(save).toBeDisabled();
-    fireEvent.change(screen.getByLabelText('Opción D'), { target: { value: '44' } });
-    fireEvent.change(screen.getByLabelText('Explicación D'), {
-      target: { value: 'Sumó dos de más' },
-    });
-    expect(save).toBeEnabled();
-    fireEvent.click(save);
-    await waitFor(() =>
-      expect(screen.getByText('Pregunta guardada en el banco.')).toBeInTheDocument()
-    );
-    const put = calls.find((c) => c.m === 'PUT');
-    expect(put?.path).toBe('/quiz/questions/q1');
-    expect(put?.body).toMatchObject({
-      id: 'q1',
-      correct_option: 'B',
-      options: { A: '32', B: '42', C: '41', D: '44' },
-      distractors: {
-        A: { misconception: 'no-lleva', explanation: 'Olvidó la llevada' },
-        D: { misconception: 'conteo', explanation: 'Sumó dos de más' },
-      },
-    });
-    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled();
     vi.restoreAllMocks();
   });
 });

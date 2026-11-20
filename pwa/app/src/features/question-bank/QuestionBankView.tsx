@@ -12,7 +12,6 @@ import formStyles from '../../shared/styles/forms.module.css';
 import listStyles from '../../shared/styles/lists.module.css';
 import styles from './QuestionBankView.module.css';
 import { BankQuestion, bankApi } from './bankApi';
-import { BankQuestionInlineEditor } from './BankQuestionInlineEditor';
 import { BankQuestionRow } from './BankQuestionRow';
 import { QuestionDetailSheet } from './QuestionDetailSheet';
 import { QuestionEditSheet } from './QuestionEditSheet';
@@ -26,11 +25,11 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * actions, detail in a floating sheet (refreshed from the server on open),
  * full-row hold-to-confirm delete (see BankQuestionRow), and an edit
  * affordance opening the floating edit sheet.
- * In the quiz-prep picker (`selectable`) tapping a row unfolds its four
- * options with their explanations, editable in place and saved back to
- * the bank; the Seleccionar button switches to a select mode where one
- * tap adds or removes a question from the match, as many as wanted, until
- * Listo. Swiping keeps its actions in both modes. Creation lives in the
+ * A tap on a row only slides it open or shut (same as swiping left); the
+ * actions live in the strip. In the quiz-prep picker (`selectable`) the
+ * Seleccionar button switches to a select mode where one tap on a row or
+ * its circle adds or removes the question from the match, as many as
+ * wanted, until Listo. Swiping keeps its actions in both modes. Creation lives in the
  * Crear tab; the JSON contract viewer is admin-only.
  * Load and mutation failures float as error toasts so the list never
  * shifts; successes already toast through the same queue.
@@ -63,7 +62,6 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [detail, setDetail] = useState<BankQuestion | null>(null);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selecting, setSelecting] = useState(false);
 
   const load = useCallback(async (t: string, off: number, size: number) => {
@@ -101,16 +99,23 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     }
   };
 
+  const handleSwipeOpenChange = (id: string, next: boolean) => {
+    setOpenSwipeId(next ? id : null);
+    // Disarm this row on close; disarm any other armed row when opening a
+    // different one so confirm never leaks.
+    if (!next) {
+      if (confirmDelete === id) setConfirmDelete(null);
+    } else if (confirmDelete && confirmDelete !== id) {
+      setConfirmDelete(null);
+    }
+  };
+
   const handleFaceTap = (q: BankQuestion) => {
     if (selectable && selecting) {
       onToggleSelect?.(q.id);
       return;
     }
-    if (selectable) {
-      setExpandedId((cur) => (cur === q.id ? null : q.id));
-      return;
-    }
-    void handleOpenDetail(q);
+    handleSwipeOpenChange(q.id, openSwipeId !== q.id);
   };
 
   const handleDeleteCommit = async (id: string) => {
@@ -137,16 +142,8 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     setConfirmDelete(null);
   }, []);
 
-  const handleSavedInline = (saved: BankQuestion) => {
-    setQuestions((prev) => prev.map((x) => (x.id === saved.id ? saved : x)));
-    pushToast({ message: 'Pregunta guardada en el banco.' });
-  };
-
   const handleSavedEdit = (id: string) => {
     setEditing(null);
-    // The inline panel seeds its draft once; close it so it never
-    // shows the pre-edit text.
-    if (expandedId === id) setExpandedId(null);
     setOpenSwipeId(null);
     pushToast({ message: `Pregunta actualizada (${id}).` });
     load(topic, offset, pageSize);
@@ -165,10 +162,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               type="button"
               className={`${formStyles.toggleLink} ${selecting ? styles.selectingOn : ''}`}
               aria-pressed={selecting}
-              onClick={() => {
-                setSelecting((cur) => !cur);
-                setExpandedId(null);
-              }}
+              onClick={() => setSelecting((cur) => !cur)}
             >
               {selecting ? 'Listo' : 'Seleccionar'}
             </button>
@@ -231,32 +225,16 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               selectable={selectable}
               selecting={selectable && selecting}
               selected={selectedIds.includes(q.id)}
-              expanded={expandedId === q.id}
-              expandedContent={
-                <BankQuestionInlineEditor
-                  question={q}
-                  onSaved={handleSavedInline}
-                  onError={(message) => pushToast({ message, tone: 'error' })}
-                />
-              }
               confirmArmed={confirmDelete === q.id}
               swipeOpen={openSwipeId === q.id}
               onFaceTap={handleFaceTap}
+              onToggleSelect={(id) => onToggleSelect?.(id)}
               onOpenDetail={(row) => void handleOpenDetail(row)}
               onEdit={(row) => setEditing(row)}
               onArmDelete={handleArmDelete}
               onCommitDelete={(id) => void handleDeleteCommit(id)}
               onDisarmDelete={handleDisarmDelete}
-              onOpenChange={(next) => {
-                setOpenSwipeId(next ? q.id : null);
-                // Disarm this row on close; disarm any other armed row
-                // when opening a different one so confirm never leaks.
-                if (!next) {
-                  if (confirmDelete === q.id) setConfirmDelete(null);
-                } else if (confirmDelete && confirmDelete !== q.id) {
-                  setConfirmDelete(null);
-                }
-              }}
+              onOpenChange={(next) => handleSwipeOpenChange(q.id, next)}
             />
           ))}
         </DataList>
