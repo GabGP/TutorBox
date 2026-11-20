@@ -5,7 +5,7 @@
  * the clicker that held them; unassigning, deleting and 404s behave as in
  * docs/api/devices.md), so reload-after-mutation assertions see real state.
  */
-import { act, screen } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import * as httpClient from '../../../shared/api/httpClient';
 import { ApiError } from '../../../shared/api/httpClient';
@@ -223,4 +223,16 @@ export function clickerRow(deviceId: string): HTMLElement {
   const row = screen.getByLabelText(`Clicker ${deviceId}`).closest('[role="listitem"]');
   if (!(row instanceof HTMLElement)) throw new Error(`No hay fila para ${deviceId}`);
   return row;
+}
+
+/**
+ * Opens a row's Info or Editar action from its swipe strip, as a teacher
+ * would: a tap on the id only slides the row.
+ */
+export async function openFromStrip(deviceId: string, action: 'Ver detalle' | 'Editar'): Promise<void> {
+  await screen.findByRole('button', { name: deviceId });
+  const button = await within(clickerRow(deviceId)).findByRole('button', {
+    name: action === 'Editar' ? `Editar clicker ${deviceId}` : `Ver detalle clicker ${deviceId}`,
+  });
+  fireEvent.click(button);
 }

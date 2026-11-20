@@ -45,7 +45,7 @@ describe('BankPickStep', () => {
       screen.getByRole('tab', { name: /Elegir/ })
     ).toHaveAttribute('aria-selected', 'true');
     await waitFor(() =>
-      expect(screen.getByText(/sin generar/)).toBeInTheDocument()
+      expect(screen.getByText(/Con Seleccionar eliges varias/)).toBeInTheDocument()
     );
     vi.restoreAllMocks();
   });

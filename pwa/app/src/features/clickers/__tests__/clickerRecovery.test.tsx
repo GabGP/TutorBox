@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 import { ClickerFleetView } from '../ClickerFleetView';
-import { clickerRow, flushRequests, installFakeFleet, type FakeFleet } from './clickerFixture';
+import { clickerRow, flushRequests, installFakeFleet, openFromStrip, type FakeFleet } from './clickerFixture';
 
 /** Removes a clicker from the fake server only, as if another teacher had deleted it. */
 function deleteOnServer(fleet: FakeFleet, deviceId: string) {
@@ -19,7 +19,7 @@ describe('ClickerFleetView when the server no longer has a clicker', () => {
   it('a 404 on Quitar alumno toasts it and removes the stale row', async () => {
     const fleet = installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-A4CF12' }));
+    await openFromStrip('ESP32-A4CF12', 'Editar');
     deleteOnServer(fleet, 'ESP32-A4CF12');
     fireEvent.click(screen.getByRole('button', { name: 'Quitar alumno' }));
     expect(await screen.findByText('Ese clicker ya no existe.')).toBeInTheDocument();

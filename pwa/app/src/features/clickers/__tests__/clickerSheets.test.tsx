@@ -9,19 +9,12 @@ import {
   clickerRow,
   FLEET_SEED,
   installFakeFleet,
+  openFromStrip,
   serverStudent,
   stringIdStudent,
 } from './clickerFixture';
 
 const HINT = 'El clicker vota como el alumno elegido. Cambiarlo no requiere volver a configurar el clicker.';
-
-/** Opens a row's Info or Editar action from the strip, as a teacher would. */
-async function openFromStrip(deviceId: string, action: 'Ver detalle' | 'Editar') {
-  const button = await within(clickerRow(deviceId)).findByRole('button', {
-    name: action === 'Editar' ? `Editar clicker ${deviceId}` : `Ver detalle clicker ${deviceId}`,
-  });
-  fireEvent.click(button);
-}
 
 function editSelect(): HTMLSelectElement {
   return screen.getByLabelText('Alumno del clicker') as HTMLSelectElement;
@@ -102,7 +95,7 @@ describe('ClickerFleetView edit sheet options', () => {
     });
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-B7' });
-    fireEvent.click(screen.getByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     const labels = Array.from(editSelect().options).map((option) => option.textContent);
     expect(labels).toEqual([
       'Elija un alumno',
@@ -123,7 +116,7 @@ describe('ClickerFleetView edit sheet options', () => {
       ],
     });
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-A4CF12' }));
+    await openFromStrip('ESP32-A4CF12', 'Editar');
     const labels = Array.from(editSelect().options).map((option) => option.textContent);
     expect(labels).toEqual(['Elija un alumno', 'beto', 'diego']);
     expect(editSelect()).toHaveValue('4');
@@ -138,7 +131,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('keeps Asignar disabled until a different student is chosen', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     const assign = screen.getByRole('button', { name: 'Asignar' });
     expect(assign).toBeDisabled();
     chooseStudent('2');
@@ -148,7 +141,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('disables Asignar while the choice is already the clicker student', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-A4CF12' }));
+    await openFromStrip('ESP32-A4CF12', 'Editar');
     const assign = screen.getByRole('button', { name: 'Asignar' });
     expect(assign).toBeDisabled();
     chooseStudent('3');
@@ -160,7 +153,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('posts the numeric student id, closes on success and toasts', async () => {
     const fleet = installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     chooseStudent('2');
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
     expect(await screen.findByText('ESP32-B7 asignado a beto.')).toBeInTheDocument();
@@ -175,7 +168,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('moving a student leaves their old clicker Sin alumno after the reload', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     chooseStudent('1');
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
     expect(await screen.findByText('ESP32-B7 asignado a ana.')).toBeInTheDocument();
@@ -186,10 +179,10 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('shows Quitar alumno only for an assigned clicker, then unassigns and closes', async () => {
     const fleet = installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     expect(screen.queryByRole('button', { name: 'Quitar alumno' })).not.toBeInTheDocument();
     fireEvent.keyDown(document.body, { key: 'Escape' });
-    fireEvent.click(screen.getByRole('button', { name: 'ESP32-A4CF12' }));
+    await openFromStrip('ESP32-A4CF12', 'Editar');
     fireEvent.click(screen.getByRole('button', { name: 'Quitar alumno' }));
     expect(await screen.findByText('ESP32-A4CF12 quedó sin alumno.')).toBeInTheDocument();
     expect(fleet.requests).toContainEqual({
@@ -203,7 +196,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('shows the hint under the actions', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     expect(screen.getByText(HINT)).toBeInTheDocument();
   });
 
@@ -215,7 +208,7 @@ describe('ClickerFleetView edit sheet actions', () => {
     const fleet = installFakeFleet();
     fleet.failNext('POST', '/staff/devices/ESP32-B7/assign', error);
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     chooseStudent('2');
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
     expect(await screen.findByText(message)).toBeInTheDocument();
@@ -229,7 +222,7 @@ describe('ClickerFleetView edit sheet actions', () => {
     const fleet = installFakeFleet();
     fleet.failNext('POST', '/staff/devices/ESP32-A4CF12/unassign', error);
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-A4CF12' }));
+    await openFromStrip('ESP32-A4CF12', 'Editar');
     fireEvent.click(screen.getByRole('button', { name: 'Quitar alumno' }));
     expect(await screen.findByText(message)).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Editar clicker ESP32-A4CF12' })).toBeInTheDocument();
@@ -241,7 +234,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   ])('an enabled Asignar with %s always sends the assign request', async (_shape, students) => {
     const fleet = installFakeFleet({ students });
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     chooseStudent('2');
     const assign = screen.getByRole('button', { name: 'Asignar' });
     expect(assign).toBeEnabled();
@@ -259,7 +252,7 @@ describe('ClickerFleetView edit sheet actions', () => {
   it('explains that no student can be picked when the account list is empty', async () => {
     installFakeFleet({ students: [] });
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     expect(editSelect()).toBeDisabled();
     expect(screen.getByText('No hay alumnos registrados.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Asignar' })).toBeDisabled();

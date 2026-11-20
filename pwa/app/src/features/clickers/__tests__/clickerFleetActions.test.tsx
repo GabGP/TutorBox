@@ -4,7 +4,7 @@ import { ApiError } from '../../../shared/api/httpClient';
 import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 import { ClickerFleetSheet } from '../ClickerFleetSheet';
 import { ClickerFleetView } from '../ClickerFleetView';
-import { clickerRow, flushRequests, installFakeFleet } from './clickerFixture';
+import { clickerRow, flushRequests, installFakeFleet, openFromStrip } from './clickerFixture';
 
 function armDelete(deviceId: string) {
   fireEvent.click(within(clickerRow(deviceId)).getByRole('button', { name: 'Eliminar' }));
@@ -133,7 +133,7 @@ describe('ClickerFleetView row actions', () => {
   it('a committed delete closes the sheet that shows that clicker', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     expect(screen.getByRole('dialog', { name: 'Editar clicker ESP32-B7' })).toBeInTheDocument();
     armDelete('ESP32-B7');
     setupHoldTimers();
@@ -169,7 +169,7 @@ describe('ClickerFleetSheet Escape ordering', () => {
     const onClose = vi.fn();
     installFakeFleet();
     render(<ClickerFleetSheet onClose={onClose} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     expect(screen.getByRole('dialog', { name: 'Editar clicker ESP32-B7' })).toBeInTheDocument();
     pressEscape();
     expect(screen.queryByRole('dialog', { name: 'Editar clicker ESP32-B7' })).not.toBeInTheDocument();
@@ -202,7 +202,7 @@ describe('clicker feature requests', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
     await screen.findByText('ESP32-B7 asignado a beto.');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'ESP32-B7' }));
+    await openFromStrip('ESP32-B7', 'Editar');
     fireEvent.click(screen.getByRole('button', { name: 'Quitar alumno' }));
     await screen.findByText('ESP32-B7 quedó sin alumno.');
 

@@ -65,6 +65,8 @@ describe('useTeacherCoordinator cancelMatch', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    // A finished match loads its report; it never needs to arrive here.
+    vi.mocked(sessionApi.getSessionReport).mockReturnValue(new Promise(() => undefined));
   });
 
   async function renderWith(session: SessionModel) {
