@@ -21,12 +21,13 @@
   position: sticky;
   top: 0;
   z-index: 5;
-  height: 62px;
+  /* Below the status bar or notch of a phone (viewport-fit=cover). */
+  height: calc(62px + env(safe-area-inset-top));
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 var(--gut) 0 calc(var(--gut) - 8px);
+  padding: env(safe-area-inset-top) var(--gut) 0 calc(var(--gut) - 8px);
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
@@ -225,6 +226,38 @@
 
 .secondaryBtn:hover:not(:disabled) {
   background: #f1f8fb;
+}
+
+/* Phones: lower buttons, the secondary only as wide as its word, so the
+   primary label (Terminar la pregunta, Comenzar el juego) fits whole. */
+@media (max-width: 420px) {
+  .footer {
+    padding: 12px var(--gut) calc(12px + env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+  .btns {
+    gap: 8px;
+  }
+  .primaryBtn,
+  .secondaryBtn {
+    height: 56px;
+    border-radius: 28px;
+  }
+  .primaryBtn,
+  .primaryHold {
+    min-height: 56px;
+    white-space: nowrap;
+    padding: 0 12px;
+    font-size: 17px;
+  }
+  .secondaryBtn,
+  .secondaryHold {
+    flex: 0 0 auto;
+    min-width: 104px;
+    min-height: 56px;
+    padding: 0 18px;
+    font-size: 16px;
+  }
 }
 
 @media (min-width: 760px) {

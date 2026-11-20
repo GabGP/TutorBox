@@ -61,6 +61,9 @@
   height: calc(var(--hb-wave, 6px) * 2); border-radius: 50%;
 }
 
+/* At rest the fill is empty: no wave edge peeking out of a rounded corner. */
+.root[data-progress='0.000'] .fill::after { display: none; }
+
 .glow { box-shadow: 0 0 0 calc(var(--hb-progress, 0) * 14px) color-mix(in srgb, var(--hb-fill, #1f3e33) 28%, transparent); }
 .glow.done { animation: hbGlowPulse 0.55s ease-out; }
 

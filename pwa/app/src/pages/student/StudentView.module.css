@@ -40,12 +40,13 @@
 }
 
 .header {
-  height: 52px;
-  flex: 0 0 52px;
+  /* Below the status bar or notch of a phone (viewport-fit=cover). */
+  height: calc(52px + env(safe-area-inset-top));
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: env(safe-area-inset-top) 20px 0;
   color: var(--mute2);
   font-size: 13px;
   font-weight: 500;
@@ -153,7 +154,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 20px 12px;
+  /* A gap under the header, so a screen's first block never touches it. */
+  padding: 16px 20px calc(12px + env(safe-area-inset-bottom));
   max-width: 440px;
   width: 100%;
   margin: 0 auto;
