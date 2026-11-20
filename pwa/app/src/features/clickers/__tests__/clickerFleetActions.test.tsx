@@ -4,7 +4,7 @@ import { ApiError } from '../../../shared/api/httpClient';
 import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 import { ClickerFleetSheet } from '../ClickerFleetSheet';
 import { ClickerFleetView } from '../ClickerFleetView';
-import { clickerRow, flushRequests, installFakeFleet, openFromStrip } from './clickerFixture';
+import { addFormInput, clickerRow, flushRequests, installFakeFleet, openFromStrip } from './clickerFixture';
 
 function armDelete(deviceId: string) {
   fireEvent.click(within(clickerRow(deviceId)).getByRole('button', { name: 'Eliminar' }));
@@ -189,7 +189,7 @@ describe('clicker feature requests', () => {
     render(<ClickerFleetSheet onClose={vi.fn()} />);
     await screen.findByRole('button', { name: 'ESP32-B7' });
 
-    fireEvent.change(screen.getByLabelText('Código del clicker'), { target: { value: 'ESP32-C3' } });
+    fireEvent.change(addFormInput(), { target: { value: 'ESP32-C3' } });
     fireEvent.click(screen.getByRole('button', { name: 'Agregar' }));
     await screen.findByText('Clicker ESP32-C3 agregado.');
 

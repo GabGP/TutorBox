@@ -1,4 +1,5 @@
 import React, { useId, useState } from 'react';
+import { Plus } from 'lucide-react';
 import formStyles from '../../shared/styles/forms.module.css';
 import { clickerIdError } from './clickerId';
 import styles from './clickers.module.css';
@@ -13,8 +14,12 @@ export interface ClickerAddFormProps {
  * a malformed id shows inline and never reaches the server. Server refusals
  * (409, 422, others) arrive as error toasts from the parent. The typed text
  * stays after a refusal so the teacher can correct it; it clears on success.
+ * The field stays hidden behind Agregar por código until the teacher asks for
+ * it: an input on screen when the sheet opens let a phone raise its keyboard
+ * on its own, and new clickers appear by themselves anyway.
  */
 export const ClickerAddForm: React.FC<ClickerAddFormProps> = ({ onRegister }) => {
+  const [open, setOpen] = useState(false);
   const [typedId, setTypedId] = useState('');
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,8 +43,31 @@ export const ClickerAddForm: React.FC<ClickerAddFormProps> = ({ onRegister }) =>
     }
   };
 
+  const toggle = (
+    <button
+      type="button"
+      className={formStyles.toggleLink}
+      aria-expanded={open}
+      onClick={() => {
+        setOpen((wasOpen) => !wasOpen);
+        setInlineError(null);
+      }}
+    >
+      {open ? (
+        'Ocultar'
+      ) : (
+        <>
+          <Plus size={16} aria-hidden /> Agregar por código
+        </>
+      )}
+    </button>
+  );
+
+  if (!open) return <div className={styles.addStack}>{toggle}</div>;
+
   return (
     <div className={styles.addStack}>
+      {toggle}
       <form className={formStyles.addForm} onSubmit={handleSubmit} noValidate>
         <input
           id="newClicker"
@@ -52,6 +80,8 @@ export const ClickerAddForm: React.FC<ClickerAddFormProps> = ({ onRegister }) =>
           autoCorrect="off"
           spellCheck={false}
           autoComplete="off"
+          // Opened on purpose to type a code, so the keyboard may come up now.
+          autoFocus
           value={typedId}
           onChange={(event) => {
             setTypedId(event.target.value);

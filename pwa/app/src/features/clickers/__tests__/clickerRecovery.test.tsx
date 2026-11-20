@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { advanceHold, setupHoldTimers, teardownHoldTimers } from '../../../test/holdTimers';
 import { ClickerFleetView } from '../ClickerFleetView';
-import { clickerRow, flushRequests, installFakeFleet, openFromStrip, type FakeFleet } from './clickerFixture';
+import { addFormInput, clickerRow, flushRequests, installFakeFleet, openFromStrip, type FakeFleet } from './clickerFixture';
 
 /** Removes a clicker from the fake server only, as if another teacher had deleted it. */
 function deleteOnServer(fleet: FakeFleet, deviceId: string) {
@@ -58,11 +58,11 @@ describe('ClickerFleetView toasts', () => {
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-B7' });
 
-    fireEvent.change(screen.getByLabelText('Código del clicker'), { target: { value: 'ESP32-C3' } });
+    fireEvent.change(addFormInput(), { target: { value: 'ESP32-C3' } });
     fireEvent.click(screen.getByRole('button', { name: 'Agregar' }));
     expect(await screen.findByText('Clicker ESP32-C3 agregado.')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Código del clicker'), { target: { value: 'ESP32-C4' } });
+    fireEvent.change(addFormInput(), { target: { value: 'ESP32-C4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Agregar' }));
     expect(await screen.findByText('Clicker ESP32-C4 agregado.')).toBeInTheDocument();
     expect(screen.queryByText('Clicker ESP32-C3 agregado.')).not.toBeInTheDocument();

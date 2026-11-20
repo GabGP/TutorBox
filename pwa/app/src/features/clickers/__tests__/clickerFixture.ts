@@ -236,3 +236,11 @@ export async function openFromStrip(deviceId: string, action: 'Ver detalle' | 'E
   });
   fireEvent.click(button);
 }
+
+/** The add-by-code input, opening the collapsed form first as a teacher would. */
+export function addFormInput(): HTMLElement {
+  const shown = screen.queryByLabelText('Código del clicker');
+  if (shown) return shown;
+  fireEvent.click(screen.getByRole('button', { name: 'Agregar por código' }));
+  return screen.getByLabelText('Código del clicker');
+}

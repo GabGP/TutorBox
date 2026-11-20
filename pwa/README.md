@@ -150,7 +150,7 @@ The back arrow works on the bank pick (back to the topic) and in **Preparar el j
 * **Cerrar sesión** is the last row of **Ajustes**, so it is reachable in every mode and at every step. The quiz footer no longer has a `Salir` button.
 * Failures and passing notices are toasts, never lines inside the page: a refused mode switch, a failed poll of the class list or the tutor list, a report that does not load, a refused role, PIN or name change, a failed tutor message and a refused image in the tutor chat. A poll that keeps failing stays one toast. Inline text is kept for field validation next to its input and for a temporary PIN, which a toast must never carry.
 * Toasts float above a bottom bar instead of covering it: the quiz footer and the tutor chat composer publish their height (`useToastDock`, CSS variable `--toast-dock`).
-* During a match the footer holds **Cancelar** on the left and **Terminar la pregunta** on the right, both press-and-hold and both in the footer's pill shape.
+* During a match the footer holds **Cancelar** on the left and **Terminar la pregunta** on the right, both press-and-hold and both in the footer's pill shape. A plain tap on either shows a toast saying to hold it, and the hold has no iOS long-press callout to cancel it. When a step fails because the backend is restarting (no answer, 502 or 503), the toast says so instead of a generic failure.
 
 ---
 
@@ -158,7 +158,7 @@ The back arrow works on the bank pick (back to the topic) and in **Preparar el j
 
 The **Clickers** button in the `/maestro/` header (before the settings button) opens the ESP32 clicker fleet in its own sheet, from `src/features/clickers/`.
 
-A clicker that is switched on appears in the list by itself. It is unassigned, and it shows **Nuevo** for 10 minutes after its first contact. The teacher only needs to switch it on and then assign a student. The add form stays for a clicker that should be known before it is switched on.
+A clicker that is switched on appears in the list by itself. It is unassigned, and it shows **Nuevo** for 10 minutes after its first contact. The teacher only needs to switch it on and then assign a student. For a clicker that should be known before it is switched on, **Agregar por código** opens the add form. The field is not on screen until then: a text field present when the sheet opened let a phone raise its keyboard by itself.
 
 The list reloads every 5 seconds while the sheet is open and the page is visible. It also reloads at once when the page comes back. A failed reload keeps the list on screen and tries again at the next reload.
 

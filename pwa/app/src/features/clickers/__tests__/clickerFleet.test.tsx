@@ -3,12 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../../shared/api/httpClient';
 import { ClickerFleetView } from '../ClickerFleetView';
 import { CLICKER_ID_ERROR } from '../clickerId';
-import { FLEET_SEED, clickerRow, installFakeFleet } from './clickerFixture';
+import { addFormInput, FLEET_SEED, clickerRow, installFakeFleet } from './clickerFixture';
 
 const EMPTY_TEXT = 'Encienda un clicker: aparece aquí solo.';
 
 function typeClickerId(text: string) {
-  fireEvent.change(screen.getByLabelText('Código del clicker'), { target: { value: text } });
+  fireEvent.change(addFormInput(), { target: { value: text } });
 }
 
 function pressAgregar() {
@@ -96,10 +96,25 @@ describe('ClickerFleetView add form', () => {
     vi.restoreAllMocks();
   });
 
+  it('opens with no text field, so a phone keeps its keyboard down until asked', async () => {
+    installFakeFleet();
+    render(<ClickerFleetView />);
+    await screen.findByRole('button', { name: 'ESP32-A4CF12' });
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+
+    const toggle = screen.getByRole('button', { name: 'Agregar por código' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+
+    expect(screen.getByLabelText('Código del clicker')).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar' }));
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
   it('uses the Spanish label, placeholder and input attributes', async () => {
     installFakeFleet();
     render(<ClickerFleetView />);
-    const input = screen.getByLabelText('Código del clicker');
+    const input = addFormInput();
     expect(input).toHaveAttribute('placeholder', 'Código de la etiqueta (ej. ESP32-A4CF12)');
     expect(input).toHaveAttribute('maxlength', '32');
     expect(input).toHaveAttribute('autocapitalize', 'off');
@@ -112,6 +127,7 @@ describe('ClickerFleetView add form', () => {
     installFakeFleet();
     render(<ClickerFleetView />);
     await screen.findByRole('button', { name: 'ESP32-A4CF12' });
+    addFormInput();
     const button = screen.getByRole('button', { name: 'Agregar' });
     expect(button).toBeDisabled();
     typeClickerId('ESP32-C3');
@@ -134,7 +150,7 @@ describe('ClickerFleetView add form', () => {
     });
     expect(await screen.findByRole('button', { name: 'ESP32-C3' })).toBeInTheDocument();
     expect(screen.getByText('1 de 3 con alumno')).toBeInTheDocument();
-    expect(screen.getByLabelText('Código del clicker')).toHaveValue('');
+    expect(addFormInput()).toHaveValue('');
   });
 
   it('rejects a malformed id inline and sends nothing', async () => {
@@ -144,7 +160,7 @@ describe('ClickerFleetView add form', () => {
     typeClickerId('ESP 32');
     pressAgregar();
     expect(screen.getByText(CLICKER_ID_ERROR)).toBeInTheDocument();
-    expect(screen.getByLabelText('Código del clicker')).toHaveAttribute('aria-invalid', 'true');
+    expect(addFormInput()).toHaveAttribute('aria-invalid', 'true');
     expect(fleet.requests.some((request) => request.method === 'POST')).toBe(false);
   });
 
@@ -166,7 +182,7 @@ describe('ClickerFleetView add form', () => {
     typeClickerId('ESP32-B7');
     pressAgregar();
     expect(await screen.findByText('Ese clicker ya está registrado.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Código del clicker')).toHaveValue('ESP32-B7');
+    expect(addFormInput()).toHaveValue('ESP32-B7');
   });
 
   it('toasts a 422 from the server with the id rule text', async () => {
