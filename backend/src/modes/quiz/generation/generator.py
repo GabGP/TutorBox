@@ -1,6 +1,7 @@
 """Pipeline for LLM question generation, schema enforcement, SymPy and distractor verification."""
 
 import random
+from collections.abc import Callable
 
 from core.llm import LLMClient
 from modes.quiz.generation.attempt_runner import execute_generation_attempt
@@ -12,6 +13,7 @@ from modes.quiz.generation.prompt import (
 from modes.quiz.generation.response_format import build_quiz_response_format
 from modes.quiz.generation.shuffler import shuffle_quiz_question
 from modes.quiz.generation.types import (
+    GenerationCancelled,
     GenerationError,
     GenerationResult,
     get_quiz_max_retries,
@@ -21,7 +23,12 @@ from modes.quiz.validation.distractor_consistency import DistractorConsistencyVa
 from modes.quiz.validation.taxonomy_validator import TaxonomyValidator
 from modes.quiz.validation.validator import MathValidatorInterface, SymPyMathValidator
 
-__all__ = ["GenerationError", "GenerationResult", "QuizQuestionGenerator"]
+__all__ = [
+    "GenerationCancelled",
+    "GenerationError",
+    "GenerationResult",
+    "QuizQuestionGenerator",
+]
 
 
 class QuizQuestionGenerator:
@@ -60,8 +67,14 @@ class QuizQuestionGenerator:
         subconcept: str | None = None,
         max_retries: int | None = None,
         question_id: str | None = None,
+        should_stop: Callable[[], bool] | None = None,
     ) -> GenerationResult:
-        """Generates a validated diagnostic quiz question using a feedback-driven retry loop."""
+        """Generates a validated diagnostic quiz question using a feedback-driven retry loop.
+
+        `should_stop` is checked before every attempt and handed to the LLM
+        client, which drops an in-flight request once it turns True; either way
+        the loop raises GenerationCancelled.
+        """
         # 1. Prepare subconcept-aware system prompt, base user prompt, and JSON schema format
         retries = max_retries if max_retries is not None else get_quiz_max_retries()
         system_prompt = build_quiz_system_prompt(topic, subconcept)
@@ -78,6 +91,8 @@ class QuizQuestionGenerator:
 
         # 3. Execute feedback-driven retry loop up to max_retries attempts
         while state.attempt <= state.max_retries:
+            if should_stop is not None and should_stop():
+                raise GenerationCancelled("Generation stopped by the caller.")
             validated_question = execute_generation_attempt(
                 client=self.llm_client,
                 system_prompt=system_prompt,
@@ -91,6 +106,7 @@ class QuizQuestionGenerator:
                 taxonomy_validator=self.taxonomy_validator,
                 dedup_validator=self.dedup_validator,
                 distractor_validator=self.distractor_validator,
+                should_stop=should_stop,
             )
 
             # 4. Success: shuffle options to eliminate positional bias and package result

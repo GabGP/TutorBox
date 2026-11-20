@@ -9,6 +9,7 @@ import styles from './TeacherLobby.module.css';
 export interface TeacherLobbyProps {
   session: SessionModel | null;
   progress: GenerationProgress | null;
+  isGenerationPaused?: boolean;
   hostAddress: string;
   onManageUsers: () => void;
   onOpenClickers: () => void;
@@ -22,6 +23,7 @@ export interface TeacherLobbyProps {
 export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
   session,
   progress,
+  isGenerationPaused,
   hostAddress,
   onManageUsers,
   onOpenClickers,
@@ -32,6 +34,7 @@ export const TeacherLobby: React.FC<TeacherLobbyProps> = ({
         <QuestionGenerationProgress
           progress={progress}
           isComplete={Boolean(session)}
+          isPaused={isGenerationPaused}
         />
       ) : (
         <div className={styles.hero}>

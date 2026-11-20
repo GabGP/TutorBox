@@ -8,17 +8,37 @@ import { generatorApi } from './generatorApi';
  * Handles cancellation tokens, progress telemetry tracking, estimated generation time,
  * and batch creation of questions with SymPy verification.
  *
+ * `stopGeneration` aborts the in-flight request (the backend stops between
+ * attempts and saves nothing) and pauses the loop; `resumeGeneration` asks
+ * for the stopped question again and `cancelGeneration` ends the run.
+ *
  * @returns {object} Generation progress status, execution flags, error state, and lifecycle triggers.
  */
 export function useQuestionGenerator() {
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const tokenRef = useRef<number>(0);
+  const inFlightRef = useRef<AbortController | null>(null);
+  const settlePauseRef = useRef<((resume: boolean) => void) | null>(null);
+
+  const stopGeneration = useCallback(() => {
+    if (!inFlightRef.current) return;
+    setIsPaused(true);
+    inFlightRef.current.abort();
+  }, []);
+
+  const resumeGeneration = useCallback(() => {
+    settlePauseRef.current?.(true);
+  }, []);
 
   const cancelGeneration = useCallback(() => {
     tokenRef.current += 1;
+    inFlightRef.current?.abort();
+    settlePauseRef.current?.(false);
     setIsGenerating(false);
+    setIsPaused(false);
     setProgress(null);
   }, []);
 
@@ -89,19 +109,35 @@ export function useQuestionGenerator() {
         draft.currentSubconcept = subconcept;
         publish();
 
+        const request = new AbortController();
+        inFlightRef.current = request;
         try {
-          const res = await generatorApi.generateQuestion({
-            topic: effectiveTopic,
-            subconcept,
-            save_to_bank: true,
-          });
+          const res = await generatorApi.generateQuestion(
+            { topic: effectiveTopic, subconcept, save_to_bank: true },
+            request.signal
+          );
           if (tokenRef.current !== currentToken) return null;
           draft.ids = [...draft.ids, res.question.id];
           statuses[i] = 'success';
         } catch {
           if (tokenRef.current !== currentToken) return null;
+          if (request.signal.aborted) {
+            // Stopped by the teacher: wait for Reanudar or Cancelar.
+            statuses[i] = 'pending';
+            publish();
+            const resume = await new Promise<boolean>((settle) => {
+              settlePauseRef.current = settle;
+            });
+            settlePauseRef.current = null;
+            if (!resume || tokenRef.current !== currentToken) return null;
+            setIsPaused(false);
+            i--;
+            continue;
+          }
           draft.failed++;
           statuses[i] = 'failed';
+        } finally {
+          inFlightRef.current = null;
         }
 
         draft.done++;
@@ -132,8 +168,11 @@ export function useQuestionGenerator() {
   return {
     progress,
     isGenerating,
+    isPaused,
     error,
     startGeneration,
+    stopGeneration,
+    resumeGeneration,
     cancelGeneration,
   };
 }

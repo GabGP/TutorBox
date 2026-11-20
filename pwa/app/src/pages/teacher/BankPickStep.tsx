@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, Minus, Plus, Zap } from 'lucide-react';
+import { BookOpen, Minus, Play, Plus, Square, X, Zap } from 'lucide-react';
 import { QuestionBankView } from '../../features/question-bank/QuestionBankView';
 import { QuestionForm } from '../../features/question-bank/QuestionForm';
 import { QuestionGenerationProgress } from '../../features/question-generator/QuestionGenerationProgress';
@@ -36,6 +36,11 @@ export interface BankPickStepProps {
   genError?: string | null;
   progress: GenerationProgress | null;
   pregenerating: boolean;
+  /** Detener was pressed: creation waits for Reanudar or Cancelar. */
+  pregenerationPaused?: boolean;
+  onStopPregeneration?: () => void;
+  onResumePregeneration?: () => void;
+  onCancelPregeneration?: () => void;
   bankIds: string[];
   onToggleBankId: (id: string) => void;
   onEnsureBankIds: (ids: string[]) => void;
@@ -57,6 +62,10 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   genError,
   progress,
   pregenerating,
+  pregenerationPaused = false,
+  onStopPregeneration,
+  onResumePregeneration,
+  onCancelPregeneration,
   bankIds,
   onToggleBankId,
   onEnsureBankIds,
@@ -144,17 +153,33 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
             </div>
           </div>
           <div className={formStyles.addForm}>
-            <button
-              type="button"
-              className={formStyles.submitAdd}
-              onClick={handlePregenerate}
-              disabled={pregenerating}
-            >
-              {pregenerating ? 'Generando…' : <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Pre-generar en banco</span>}
-            </button>
+            {!pregenerating && (
+              <button type="button" className={formStyles.submitAdd} onClick={handlePregenerate}>
+                <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Pre-generar en banco</span>
+              </button>
+            )}
+            {pregenerating && !pregenerationPaused && (
+              <button type="button" className={formStyles.submitAdd} onClick={onStopPregeneration}>
+                <span className={utils.rowInline6}><Square size={16} aria-hidden /> Detener</span>
+              </button>
+            )}
+            {pregenerating && pregenerationPaused && (
+              <>
+                <button type="button" className={formStyles.submitAdd} onClick={onCancelPregeneration}>
+                  <span className={utils.rowInline6}><X size={18} aria-hidden /> Cancelar</span>
+                </button>
+                <button type="button" className={formStyles.submitAdd} onClick={onResumePregeneration}>
+                  <span className={utils.rowInline6}><Play size={16} aria-hidden /> Reanudar</span>
+                </button>
+              </>
+            )}
           </div>
           {progress && (
-            <QuestionGenerationProgress progress={progress} isComplete={false} />
+            <QuestionGenerationProgress
+              progress={progress}
+              isComplete={false}
+              isPaused={pregenerationPaused}
+            />
           )}
           <p className={styles.description}>
             Las nuevas preguntas se eligen solas para el juego.

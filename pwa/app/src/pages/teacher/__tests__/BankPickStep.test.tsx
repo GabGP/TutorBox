@@ -85,4 +85,38 @@ describe('BankPickStep', () => {
     await waitFor(() => expect(onEnsureBankIds).toHaveBeenCalledWith(['q9']));
     vi.restoreAllMocks();
   });
+
+  it('offers Detener while pre-generating, then Cancelar and Reanudar', () => {
+    mockBankBackend();
+    const controls = {
+      onStopPregeneration: vi.fn(),
+      onResumePregeneration: vi.fn(),
+      onCancelPregeneration: vi.fn(),
+    };
+    const progress = { done: 1, total: 3, failed: 0, ids: ['q1'], eta: 5, currentIndex: 2 };
+    const { rerender } = render(
+      <BankPickStep {...baseProps} {...controls} progress={progress} pregenerating />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: /Pre-generar/ }));
+
+    expect(screen.queryByRole('button', { name: /Pre-generar en banco/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Detener' }));
+    expect(controls.onStopPregeneration).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <BankPickStep
+        {...baseProps}
+        {...controls}
+        progress={progress}
+        pregenerating
+        pregenerationPaused
+      />
+    );
+    expect(screen.getByRole('heading', { name: 'Creación detenida' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reanudar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(controls.onResumePregeneration).toHaveBeenCalledTimes(1);
+    expect(controls.onCancelPregeneration).toHaveBeenCalledTimes(1);
+    vi.restoreAllMocks();
+  });
 });

@@ -14,6 +14,8 @@ export { formatDuration } from '../../shared/lib/format';
 export interface QuestionGenerationProgressProps {
   progress: GenerationProgress;
   isComplete?: boolean;
+  /** Stopped by the teacher: the clock and animations hold until Reanudar. */
+  isPaused?: boolean;
 }
 
 export const STAGE_ICONS = [PenLine, Palette, Ruler, Save] as const;
@@ -21,11 +23,12 @@ export const STAGE_ICONS = [PenLine, Palette, Ruler, Save] as const;
 export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProps> = ({
   progress,
   isComplete: forceComplete,
+  isPaused = false,
 }) => {
   const total = progress.total || 1;
   const isDone = Boolean(forceComplete || (progress.done >= total && total > 0));
   const { stageIndex, elapsedSeconds, currentIdx, questionStartSecond } =
-    useGenerationClock(progress, isDone);
+    useGenerationClock(progress, isDone || isPaused);
 
   const percent = isDone ? 100 : Math.min(100, Math.round((progress.done / total) * 100));
   const remaining = isDone ? 0 : Math.max(0, total - progress.done);
@@ -51,7 +54,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
       <div className={styles.header}>
         <div className={styles.orbitContainer} aria-hidden="true">
           <div className={styles.orbitTrack} />
-          {!isDone && <div className={styles.orbitRing} />}
+          {!isDone && !isPaused && <div className={styles.orbitRing} />}
           <div className={`${styles.orbitCore} ${isDone ? styles.orbitCoreDone : ''}`}>{isDone ? <Check size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />}</div>
         </div>
         <div className={styles.titles}>
@@ -63,6 +66,8 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
           )}
           {isDone ? (
             <h2 className={styles.title}>¡Preguntas listas para jugar!</h2>
+          ) : isPaused ? (
+            <h2 className={styles.title}>Creación detenida</h2>
           ) : (
             <ShinyText
               text="Creando las preguntas con IA..."
@@ -78,7 +83,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
           <span className={styles.questionCounter}>Pregunta <strong>{isDone ? total : currentIdx}</strong> de <strong>{total}</strong></span>
           <span className={styles.percentText}>{percent}%</span>
         </div>
-        <ProgressBar value={percent} animated={!isDone} size="md" label="Progreso general" speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS} />
+        <ProgressBar value={percent} animated={!isDone && !isPaused} size="md" label="Progreso general" speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS} />
         <div className={styles.stageCaption} aria-live="polite" aria-atomic="true">
           <span key={captionText} className={styles.stageText}><StageIcon size={14} aria-hidden />{captionText}</span>
         </div>

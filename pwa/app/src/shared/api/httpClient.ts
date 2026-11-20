@@ -50,13 +50,15 @@ async function throwForBadResponse(response: Response): Promise<never> {
  * @param {string} path - Relative endpoint path under `/api/v1`.
  * @param {unknown} [body] - Optional JSON payload.
  * @param {boolean} [auth=true] - Whether to include stored Bearer authorization token.
+ * @param {AbortSignal} [signal] - Aborts the request; the rejection is the fetch AbortError.
  * @returns {Promise<T>} Typed parsed JSON response.
  */
 export async function requestApi<T = unknown>(
   method: string,
   path: string,
   body?: unknown,
-  auth = true
+  auth = true,
+  signal?: AbortSignal
 ): Promise<T> {
   const headers = auth ? buildHeaders(body, true) : { 'Content-Type': 'application/json' };
 
@@ -66,8 +68,10 @@ export async function requestApi<T = unknown>(
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
     });
-  } catch {
+  } catch (fetchError) {
+    if (signal?.aborted) throw fetchError;
     throw new ApiError(getErrorMessage(0), 0);
   }
 

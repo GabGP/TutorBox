@@ -1,5 +1,6 @@
 """Mock LLM client implementation for testing and simulation."""
 
+from collections.abc import Callable
 from typing import Any
 
 from core.llm.base import LLMClient
@@ -28,6 +29,7 @@ class MockLLMClient(LLMClient):
         system_prompt: str,
         user_prompt: str,
         response_format: dict[str, Any] | None = None,
+        should_stop: Callable[[], bool] | None = None,
     ) -> str:
         self.call_history.append((system_prompt, user_prompt))
         self.recorded_response_formats.append(response_format)

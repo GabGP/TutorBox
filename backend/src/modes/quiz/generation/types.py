@@ -48,3 +48,7 @@ class GenerationError(Exception):
         self.duration_ms = duration_ms
         self.model_name = model_name
         self.accumulated_errors = accumulated_errors or []
+
+
+class GenerationCancelled(Exception):
+    """Raised when the caller asked to stop before the pipeline finished."""

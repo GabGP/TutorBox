@@ -78,13 +78,14 @@ export const generatorApi = {
    * @param {string} payload.topic - Math topic slug.
    * @param {string | null} [payload.subconcept] - Optional curriculum subconcept.
    * @param {boolean} payload.save_to_bank - Whether to persist generated question to the SQLite question bank.
+   * @param {AbortSignal} [signal] - Aborting closes the connection, which stops the backend between attempts.
    * @returns {Promise<GenerateQuestionResponse>} Newly generated, validated multiple-choice question.
    */
   async generateQuestion(payload: {
     topic: string;
     subconcept?: string | null;
     save_to_bank: boolean;
-  }): Promise<GenerateQuestionResponse> {
-    return requestApi<GenerateQuestionResponse>('POST', '/quiz/generate', payload);
+  }, signal?: AbortSignal): Promise<GenerateQuestionResponse> {
+    return requestApi<GenerateQuestionResponse>('POST', '/quiz/generate', payload, true, signal);
   },
 };

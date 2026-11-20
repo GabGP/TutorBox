@@ -178,3 +178,38 @@ def test_execute_generation_attempt_llm_failure():
     assert "ConnectionError" in str(exc_info.value) or "LLM offline" in str(
         exc_info.value
     )
+
+
+def test_execute_generation_attempt_stopped_mid_call_is_cancelled():
+    """A stop during the LLM call raises GenerationCancelled, not a failure."""
+    from core.llm import LLMCallCancelled
+    from modes.quiz.generation.types import GenerationCancelled
+
+    received_stop_checks: list[object] = []
+
+    class StoppedClient:
+        def generate(self, *args, **kwargs):
+            received_stop_checks.append(kwargs.get("should_stop"))
+            raise LLMCallCancelled("stopped")
+
+    def stop_now() -> bool:
+        return True
+
+    state = GenerationState("mock", "prompt", "prompt", max_retries=3)
+    with pytest.raises(GenerationCancelled):
+        execute_generation_attempt(
+            client=StoppedClient(),  # type: ignore[arg-type]
+            system_prompt="sys",
+            base_user_prompt="prompt",
+            response_format=build_quiz_response_format(),
+            state=state,
+            topic="arithmetic",
+            subconcept="order_of_operations",
+            question_id="q_test_1",
+            math_validator=SymPyMathValidator(),
+            taxonomy_validator=TaxonomyValidator(),
+            dedup_validator=DeduplicationValidator(),
+            should_stop=stop_now,
+        )
+    assert received_stop_checks == [stop_now]
+    assert state.accumulated_errors == []

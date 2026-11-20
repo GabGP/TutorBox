@@ -48,6 +48,9 @@ const idleCoordinator = {
   session: null,
   progress: null,
   isGenerating: false,
+  isGenerationPaused: false,
+  stopGeneration: vi.fn(),
+  resumeGeneration: vi.fn(),
   genError: null,
   history: [],
   report: null,
@@ -57,6 +60,7 @@ const idleCoordinator = {
   toggleBankId: vi.fn(),
   ensureBankIds: vi.fn(),
   pregenerate: vi.fn(),
+  cancelPregeneration: vi.fn(),
   advancePrimary: vi.fn(),
   resetSession: vi.fn(),
 };

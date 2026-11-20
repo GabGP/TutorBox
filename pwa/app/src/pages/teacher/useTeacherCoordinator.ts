@@ -101,8 +101,16 @@ export function useTeacherCoordinator(
     enabled: enabled && Boolean(sid),
   });
 
-  const { progress, isGenerating, error: genError, startGeneration, cancelGeneration } =
-    useQuestionGenerator();
+  const {
+    progress,
+    isGenerating,
+    isPaused: isGenerationPaused,
+    error: genError,
+    startGeneration,
+    stopGeneration,
+    resumeGeneration,
+    cancelGeneration,
+  } = useQuestionGenerator();
 
   const { preloadIfUnloaded, unloadIfLoaded } = useTTSLifecycle();
 
@@ -124,6 +132,13 @@ export function useTeacherCoordinator(
     resetSelection();
     storage.clearTeacherSessionId();
   }, [cancelGeneration, setSession, setHistory, setReport, resetSelection, unloadIfLoaded]);
+
+  /** Cancelar in Pre-generar: the questions already saved stay chosen. */
+  const cancelPregeneration = useCallback(() => {
+    const alreadySavedIds = progress?.ids ?? [];
+    cancelGeneration();
+    if (alreadySavedIds.length > 0) ensureBankIds(alreadySavedIds);
+  }, [progress, cancelGeneration, ensureBankIds]);
 
   const pregenerate = useCallback(async () => {
     const ids = await startGeneration(topic, count, topics);
@@ -211,6 +226,9 @@ export function useTeacherCoordinator(
     session,
     progress,
     isGenerating,
+    isGenerationPaused,
+    stopGeneration,
+    resumeGeneration,
     genError,
     history,
     report,
@@ -220,6 +238,7 @@ export function useTeacherCoordinator(
     toggleBankId,
     ensureBankIds,
     pregenerate,
+    cancelPregeneration,
     advancePrimary,
     resetSession,
   };

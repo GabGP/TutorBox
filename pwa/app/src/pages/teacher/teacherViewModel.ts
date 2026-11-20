@@ -2,7 +2,7 @@ import type { SessionModel } from '../../features/session-engine/session.types';
 import type { QuestionSource } from './useWizardSelection';
 import {
   getPrimaryActionLabel,
-  SECONDARY_ACTION_LABELS,
+  getSecondaryActionLabel,
   TEACHER_STEP_TITLES,
   type TeacherStep,
 } from './teacherViewConfig';
@@ -13,6 +13,7 @@ export interface TeacherViewModelInput {
   source: QuestionSource;
   bankIds: string[];
   isGenerating: boolean;
+  isGenerationPaused?: boolean;
   roundClosed: boolean;
   isLast: boolean;
   hasSessionForLobby: boolean;
@@ -49,6 +50,7 @@ export function getTeacherStep(
  */
 export function getTeacherViewModel(input: TeacherViewModelInput): TeacherViewModel {
   const { session, wizard, source, bankIds, isGenerating, roundClosed, isLast } = input;
+  const isGenerationPaused = Boolean(input.isGenerationPaused);
   const step = getTeacherStep(session, wizard);
   const key = step as TeacherStep;
   const [subtitle, title] = TEACHER_STEP_TITLES[key] ?? ["Utz'tutor", 'Panel'];
@@ -58,17 +60,17 @@ export function getTeacherViewModel(input: TeacherViewModelInput): TeacherViewMo
     ? bankIds.length > 0
       ? `Jugar con ${bankIds.length}`
       : 'Elige preguntas del banco'
-    : getPrimaryActionLabel(step, isGenerating, roundClosed, isLast);
+    : getPrimaryActionLabel(step, isGenerating, isGenerationPaused, roundClosed, isLast);
   return {
     step,
     title,
     subtitle,
     primaryText,
-    secondaryText: SECONDARY_ACTION_LABELS[key],
+    secondaryText: getSecondaryActionLabel(step, isGenerating, isGenerationPaused),
     wizardIdx: ['topic', 'count', 'lobby'].indexOf(step),
     isBankEmpty,
     isPrimaryDisabled:
-      isGenerating || isBankEmpty || (step === 'lobby' && !input.hasSessionForLobby),
+      (isGenerating && !isGenerationPaused) || isBankEmpty || (step === 'lobby' && !input.hasSessionForLobby && !isGenerationPaused),
     isLobbySuccess: step === 'lobby' && input.hasSessionForLobby,
   };
 }

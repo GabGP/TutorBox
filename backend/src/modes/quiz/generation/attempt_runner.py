@@ -1,9 +1,10 @@
 """Single-attempt execution, LLM query dispatch, and error recording for quiz generation."""
 
 import json
+from collections.abc import Callable
 from typing import Any
 
-from core.llm import LLMClient
+from core.llm import LLMCallCancelled, LLMClient
 from modes.quiz.contracts.models import QuizQuestion
 from modes.quiz.generation.generation_state import GenerationState
 from modes.quiz.generation.prompt import build_feedback_prompt
@@ -12,6 +13,7 @@ from modes.quiz.generation.response_processor import (
     extract_scratchpad,
     process_generated_response,
 )
+from modes.quiz.generation.types import GenerationCancelled
 from modes.quiz.validation.deduplication import DeduplicationValidator
 from modes.quiz.validation.distractor_consistency import DistractorConsistencyValidator
 from modes.quiz.validation.taxonomy_validator import TaxonomyValidator
@@ -23,8 +25,13 @@ def execute_llm_query(
     system_prompt: str,
     user_prompt: str,
     response_format: dict[str, Any],
+    should_stop: Callable[[], bool] | None = None,
 ) -> str:
     """Executes the LLM request handling optional structured response format."""
+    if should_stop is not None:
+        return client.generate(
+            system_prompt, user_prompt, response_format, should_stop=should_stop
+        )
     try:
         return client.generate(system_prompt, user_prompt, response_format)
     except TypeError:
@@ -44,6 +51,7 @@ def execute_generation_attempt(
     taxonomy_validator: TaxonomyValidator,
     dedup_validator: DeduplicationValidator,
     distractor_validator: DistractorConsistencyValidator | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> QuizQuestion | None:
     """Executes a single generation attempt and updates state on rejection or error.
 
@@ -53,8 +61,16 @@ def execute_generation_attempt(
     # 1. Query local SLM completion endpoint with structured format
     try:
         raw_response = execute_llm_query(
-            client, system_prompt, state.current_user_prompt, response_format
+            client,
+            system_prompt,
+            state.current_user_prompt,
+            response_format,
+            should_stop,
         )
+    except LLMCallCancelled as stopped:
+        raise GenerationCancelled(
+            "Generation stopped during the LLM call."
+        ) from stopped
     except Exception as llm_err:
         raise state.build_llm_failure_error(llm_err) from llm_err
 

@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from core.llm import LLMClient, MockLLMClient
 from modes.quiz.generation.generator import QuizQuestionGenerator
 
@@ -172,3 +174,15 @@ def test_generator_with_derivation_scratchpad():
     assert result.metadata.scratchpad == (
         "1. Root x=17. 2. 5 + 3 * 4. 3. Distractors: 32, 20, 60."
     )
+
+
+def test_generate_raises_cancelled_before_querying_llm():
+    """A caller that already asked to stop gets GenerationCancelled, no LLM call."""
+    from modes.quiz.generation.types import GenerationCancelled
+
+    mock_llm = MockLLMClient(["unused"])
+    generator = QuizQuestionGenerator(llm_client=mock_llm)
+
+    with pytest.raises(GenerationCancelled):
+        generator.generate(topic="arithmetic", should_stop=lambda: True)
+    assert mock_llm.call_history == []

@@ -22,6 +22,8 @@ export interface QuizSetupProps {
   count: number;
   genError?: string | null;
   progress: GenerationProgress | null;
+  /** The teacher pressed Detener: creation waits for Reanudar or Cancelar. */
+  isGenerationPaused?: boolean;
   source: 'generate' | 'bank';
   bankStep: React.ReactNode;
   onSelectTopic: (topic: string) => void;
@@ -113,6 +115,7 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
         <TeacherLobby
           session={session}
           progress={quiz.progress}
+          isGenerationPaused={quiz.isGenerationPaused}
           hostAddress={hostAddress}
           onManageUsers={lobby.onManageUsers}
           onOpenClickers={lobby.onOpenClickers}

@@ -3,6 +3,7 @@
 import json
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from typing import Any
 
 from core.config import (
@@ -13,6 +14,7 @@ from core.config import (
     get_settings,
 )
 from core.llm.base import LLMClient
+from core.llm.cancellable_post import post_json_until_stopped
 
 __all__ = [
     "DEFAULT_SLM_BASE_URL",
@@ -112,10 +114,16 @@ class LocalSLMClient(LLMClient):
         system_prompt: str,
         user_prompt: str,
         response_format: dict[str, Any] | None = None,
+        should_stop: Callable[[], bool] | None = None,
     ) -> str:
         endpoint_url = f"{self.base_url}/chat/completions"
         payload = self._build_request_payload(
             system_prompt, user_prompt, response_format=response_format
         )
-        response_data = self._execute_http_post(endpoint_url, payload)
+        if should_stop is None:
+            response_data = self._execute_http_post(endpoint_url, payload)
+        else:
+            response_data = post_json_until_stopped(
+                endpoint_url, payload, self.timeout, should_stop
+            )
         return self._parse_completion_response(response_data)

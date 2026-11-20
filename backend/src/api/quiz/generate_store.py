@@ -1,0 +1,136 @@
+"""Blocking half of quiz generation: pipeline run, bank save and telemetry."""
+
+import logging
+from collections.abc import Callable
+
+from fastapi import HTTPException, status
+
+from core.db.audit import record_audit
+from core.db.database import get_db
+from core.db.question_repository import create_question, get_question_by_id
+from core.db.telemetry_repository import record_generation_log
+from core.security import AuthContext
+from modes.quiz.contracts.models import (
+    GenerateQuestionRequest,
+    GenerateQuestionResponse,
+    QuizQuestionResponse,
+)
+from modes.quiz.contracts.taxonomy import is_valid_subconcept, is_valid_topic
+from modes.quiz.generation.generator import QuizQuestionGenerator
+from modes.quiz.generation.types import GenerationCancelled, GenerationError
+
+logger = logging.getLogger(__name__)
+
+
+def generate_and_store(
+    payload: GenerateQuestionRequest,
+    ctx: AuthContext,
+    generator: QuizQuestionGenerator,
+    client_has_left: Callable[[], bool],
+) -> GenerateQuestionResponse:
+    """Runs the rejection and retry pipeline, then saves and logs the question."""
+    # 1. Validate topic and subconcept against curriculum taxonomy
+    if not is_valid_topic(payload.topic):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Invalid topic: '{payload.topic}'.",
+        )
+    if payload.subconcept and not is_valid_subconcept(
+        payload.topic, payload.subconcept
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Invalid subconcept: '{payload.subconcept}' "
+                f"for topic '{payload.topic}'."
+            ),
+        )
+
+    # 2. Execute feedback-driven generation loop
+    try:
+        result = generator.generate(
+            topic=payload.topic,
+            subconcept=payload.subconcept,
+            should_stop=client_has_left,
+        )
+    except GenerationError as err:
+        logger.error("Quiz generation failed: %s", err)
+        # Persist failure telemetry record with rejection trail
+        with get_db() as conn:
+            record_generation_log(
+                conn,
+                user_id=ctx.user_id,
+                topic=payload.topic,
+                subconcept=payload.subconcept,
+                model_name=err.model_name,
+                attempts=err.attempts,
+                duration_ms=err.duration_ms,
+                success=False,
+                question_id=None,
+                rejection_history=err.accumulated_errors,
+            )
+            conn.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to generate valid quiz question: {err}",
+        ) from err
+
+    # A question finished after the teacher stopped is not saved to the bank.
+    if client_has_left():
+        raise GenerationCancelled("The client left before the question was saved.")
+
+    question = result.question
+    saved_id: str | None = None
+    created_at: str | None = None
+
+    # 3. Optionally persist to question bank and record telemetry
+    with get_db() as conn:
+        if payload.save_to_bank:
+            saved_id = create_question(
+                conn,
+                question=question,
+                source="llm",
+                sympy_verified=True,
+            )
+            record_audit(
+                conn,
+                actor_user_id=ctx.user_id,
+                action="quiz_question_generated",
+                target_user_id=None,
+            )
+            saved_question = get_question_by_id(conn, saved_id)
+            if saved_question is not None:
+                created_at = saved_question.created_at
+
+        # Log successful generation telemetry
+        record_generation_log(
+            conn,
+            user_id=ctx.user_id,
+            topic=payload.topic,
+            subconcept=payload.subconcept,
+            model_name=result.metadata.model_name,
+            attempts=result.metadata.attempts,
+            duration_ms=result.metadata.duration_ms,
+            success=True,
+            question_id=saved_id,
+            rejection_history=result.metadata.rejection_history,
+        )
+        conn.commit()
+
+    # 4. Return envelope containing question payload and telemetry metadata
+    question_response = QuizQuestionResponse(
+        id=saved_id or question.id,
+        topic=question.topic,
+        subconcept=question.subconcept,
+        question_text=question.question_text,
+        options=question.options,
+        correct_option=question.correct_option,
+        distractors=question.distractors,
+        source="llm",
+        sympy_verified=True,
+        created_at=created_at,
+    )
+    return GenerateQuestionResponse(
+        question=question_response,
+        metadata=result.metadata,
+    )

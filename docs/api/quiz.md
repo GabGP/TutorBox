@@ -213,6 +213,8 @@ Execute deterministic SymPy validation on an arbitrary multiple-choice diagnosti
 
 Generate a new diagnostic question on-demand using the local SLM with the rejection and retry pipeline.
 
+**Stopping**: the server watches the connection while the pipeline runs (`backend/src/api/quiz/disconnect_watch.py`, polled every 0.5 s). Once the client closes it (the teacher presses **Detener** or **Cancelar**, which aborts the `fetch`), the pipeline makes no further LLM attempt, saves nothing to the bank, writes no telemetry row, and ends with `499`. An LLM call already in flight is dropped too: `LocalSLMClient` shuts its socket to the model server down (`backend/src/core/llm/cancellable_post.py`, polled every 0.2 s), and Ollama/llama-server cancel the generation when the connection closes, so the model is free within about a second.
+
 * **Authorization**: Teacher, Admin
 * **Request Body**:
   ```json
@@ -267,6 +269,7 @@ Generate a new diagnostic question on-demand using the local SLM with the reject
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
   * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
   * `502 Bad Gateway`: SLM generation failed all retry attempts (persists failure log to telemetry database).
+  * `499 Client Closed Request`: The client disconnected before the question was saved. Nobody reads it; it only shows in the server log.
 
 ---
 

@@ -30,10 +30,24 @@ export const SECONDARY_ACTION_LABELS: Partial<Record<TeacherStep, string>> = {
 };
 
 /**
+ * Secondary label: while questions are being created the lobby offers
+ * Detener first; Cancelar only appears once generation is stopped or done.
+ */
+export function getSecondaryActionLabel(
+  step: string,
+  isGenerating: boolean,
+  isGenerationPaused: boolean
+): string | undefined {
+  if (step === 'lobby' && isGenerating && !isGenerationPaused) return 'Detener';
+  return SECONDARY_ACTION_LABELS[step as TeacherStep];
+}
+
+/**
  * Computes the dynamic Spanish button label for the main progression CTA button in the teacher view.
  *
  * @param {string} step - Active teacher step ('topic', 'count', 'lobby', 'question', 'reveal', 'stats').
  * @param {boolean} isGenerating - Whether background AI question generation is actively running.
+ * @param {boolean} isGenerationPaused - Whether the teacher stopped generation (Detener).
  * @param {boolean} isClosed - Whether the current question round voting window has closed.
  * @param {boolean} isLastRound - Whether the active round is the final question of the session.
  * @returns {string} The computed Spanish button text.
@@ -41,6 +55,7 @@ export const SECONDARY_ACTION_LABELS: Partial<Record<TeacherStep, string>> = {
 export function getPrimaryActionLabel(
   step: string,
   isGenerating: boolean,
+  isGenerationPaused: boolean,
   isClosed: boolean,
   isLastRound: boolean
 ): string {
@@ -50,6 +65,7 @@ export function getPrimaryActionLabel(
     case 'count':
       return 'Crear las preguntas';
     case 'lobby':
+      if (isGenerationPaused) return 'Reanudar';
       return isGenerating ? 'Creando preguntas…' : 'Comenzar el juego';
     case 'question':
       return isClosed ? 'Ver resultado' : 'Terminar la pregunta';

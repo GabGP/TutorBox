@@ -109,11 +109,13 @@ export const TeacherView: React.FC = () => {
     source: coordinator.source,
     bankIds: coordinator.bankIds,
     isGenerating: coordinator.isGenerating,
+    isGenerationPaused: coordinator.isGenerationPaused,
     roundClosed: curRound?.status === 'closed',
     isLast,
     hasSessionForLobby: Boolean(coordinator.session),
   });
   const step = vm.step;
+  const secondaryTextIsStop = vm.secondaryText === 'Detener';
 
   const handlePlaySpeech = useCallback(() => {
     if (curRound) {
@@ -133,6 +135,8 @@ export const TeacherView: React.FC = () => {
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const handlePrimary = useCallback(async () => {
+    // Reanudar: the generating primary action is still awaiting, so skip the busy guard.
+    if (coordinator.isGenerationPaused) return coordinator.resumeGeneration();
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -150,8 +154,9 @@ export const TeacherView: React.FC = () => {
   const handleSecondary = useCallback(() => {
     stopPlayback();
     if (step === 'topic') logout();
+    else if (secondaryTextIsStop) coordinator.stopGeneration();
     else coordinator.resetSession();
-  }, [step, stopPlayback, logout, coordinator]);
+  }, [step, secondaryTextIsStop, stopPlayback, logout, coordinator]);
 
   const handleCloseSettings = useCallback(() => {
     const pref = storage.getVoicePreference();
@@ -209,6 +214,7 @@ export const TeacherView: React.FC = () => {
               count: coordinator.count,
               genError: coordinator.genError,
               progress: coordinator.progress,
+              isGenerationPaused: coordinator.isGenerationPaused,
               source: coordinator.source,
               bankStep: (
                 <BankPickStep
@@ -218,6 +224,10 @@ export const TeacherView: React.FC = () => {
                   genError={coordinator.genError}
                   progress={coordinator.progress}
                   pregenerating={coordinator.isGenerating}
+                  pregenerationPaused={coordinator.isGenerationPaused}
+                  onStopPregeneration={coordinator.stopGeneration}
+                  onResumePregeneration={coordinator.resumeGeneration}
+                  onCancelPregeneration={coordinator.cancelPregeneration}
                   bankIds={coordinator.bankIds}
                   onToggleBankId={coordinator.toggleBankId}
                   onEnsureBankIds={coordinator.ensureBankIds}
@@ -250,7 +260,10 @@ export const TeacherView: React.FC = () => {
           <TeacherFooter
             primaryText={primaryText}
             secondaryText={secondaryText}
-            isPrimaryDisabled={vm.isPrimaryDisabled || busy}
+            // While stopped the generating action is still pending (busy) but Reanudar must work.
+            isPrimaryDisabled={
+              vm.isPrimaryDisabled || (busy && !coordinator.isGenerationPaused)
+            }
             isLobbySuccess={vm.isLobbySuccess}
             wizardIndex={wizardIdx}
             onPrimary={handlePrimary}
