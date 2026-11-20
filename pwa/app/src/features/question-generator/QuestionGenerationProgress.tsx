@@ -47,7 +47,9 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
       ? `${successCount} de ${total} preguntas listas. ${failedCount} no salieron del modelo.`
       : 'Preguntas y distractores pedagógicos verificados con éxito.'
     : PEDAGOGICAL_STAGES[stageIndex];
-  const StageIcon = isDone ? Check : STAGE_ICONS[stageIndex % STAGE_ICONS.length];
+  const nothingCameOut = isDone && successCount === 0 && failedCount > 0;
+  const DoneIcon = nothingCameOut ? TriangleAlert : Check;
+  const StageIcon = isDone ? DoneIcon : STAGE_ICONS[stageIndex % STAGE_ICONS.length];
 
   return (
     <section className={styles.card} aria-label="Progreso de creación de preguntas" id="gen-progress">
@@ -55,7 +57,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
         <div className={styles.orbitContainer} aria-hidden="true">
           <div className={styles.orbitTrack} />
           {!isDone && !isPaused && <div className={styles.orbitRing} />}
-          <div className={`${styles.orbitCore} ${isDone ? styles.orbitCoreDone : ''}`}>{isDone ? <Check size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />}</div>
+          <div className={`${styles.orbitCore} ${isDone ? styles.orbitCoreDone : ''}`}>{isDone ? <DoneIcon size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />}</div>
         </div>
         <div className={styles.titles}>
           {(topicLabel || subconceptLabel) && (
@@ -64,7 +66,9 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
               {subconceptLabel && <span className={styles.subconceptBadge}>{subconceptLabel}</span>}
             </div>
           )}
-          {isDone ? (
+          {nothingCameOut ? (
+            <h2 className={styles.title}>No salió ninguna pregunta</h2>
+          ) : isDone ? (
             <h2 className={styles.title}>¡Preguntas listas para jugar!</h2>
           ) : isPaused ? (
             <h2 className={styles.title}>Creación detenida</h2>

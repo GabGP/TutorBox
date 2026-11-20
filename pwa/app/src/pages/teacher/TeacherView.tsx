@@ -216,6 +216,7 @@ export const TeacherView: React.FC = () => {
                   onStopGeneration={coordinator.stopGeneration}
                   onResumeGeneration={coordinator.resumeGeneration}
                   onCancelGeneration={coordinator.cancelBankGeneration}
+                  onGenerateMore={coordinator.clearGenerationResult}
                   bankIds={coordinator.bankIds}
                   onToggleBankId={coordinator.toggleBankId}
                   onEnsureBankIds={coordinator.ensureBankIds}

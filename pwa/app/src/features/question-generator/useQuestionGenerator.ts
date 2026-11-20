@@ -11,6 +11,8 @@ import { generatorApi } from './generatorApi';
  * `stopGeneration` aborts the in-flight request (the backend stops between
  * attempts and saves nothing) and pauses the loop; `resumeGeneration` asks
  * for the stopped question again and `cancelGeneration` ends the run.
+ * A finished run keeps its progress (the result stays on screen) until
+ * `clearProgress` is called.
  *
  * @returns {object} Generation progress status, execution flags, error state, and lifecycle triggers.
  */
@@ -39,6 +41,10 @@ export function useQuestionGenerator() {
     settlePauseRef.current?.(false);
     setIsGenerating(false);
     setIsPaused(false);
+    setProgress(null);
+  }, []);
+
+  const clearProgress = useCallback(() => {
     setProgress(null);
   }, []);
 
@@ -174,5 +180,6 @@ export function useQuestionGenerator() {
     stopGeneration,
     resumeGeneration,
     cancelGeneration,
+    clearProgress,
   };
 }

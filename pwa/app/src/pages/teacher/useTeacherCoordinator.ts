@@ -108,6 +108,7 @@ export function useTeacherCoordinator(
     stopGeneration,
     resumeGeneration,
     cancelGeneration,
+    clearProgress: clearGenerationResult,
   } = useQuestionGenerator();
 
   const { preloadIfUnloaded, unloadIfLoaded } = useTTSLifecycle();
@@ -210,6 +211,7 @@ export function useTeacherCoordinator(
     isGenerationPaused,
     stopGeneration,
     resumeGeneration,
+    clearGenerationResult,
     genError,
     history,
     report,

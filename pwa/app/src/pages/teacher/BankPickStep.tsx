@@ -41,6 +41,8 @@ export interface BankPickStepProps {
   onStopGeneration?: () => void;
   onResumeGeneration?: () => void;
   onCancelGeneration?: () => void;
+  /** Clears a finished run's result so the counter comes back. */
+  onGenerateMore?: () => void;
   bankIds: string[];
   onToggleBankId: (id: string) => void;
   onEnsureBankIds: (ids: string[]) => void;
@@ -66,6 +68,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
   onStopGeneration,
   onResumeGeneration,
   onCancelGeneration,
+  onGenerateMore,
   bankIds,
   onToggleBankId,
   onEnsureBankIds,
@@ -129,8 +132,9 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
 
       {tab === 'generar' && (
         <>
-          {/* While it runs, the status card takes the counter's place, as in the lobby. */}
-          {generating && progress ? (
+          {/* The status card takes the counter's place while it runs and keeps
+              the result (ready or failed) until the teacher asks for more. */}
+          {progress ? (
             <QuestionGenerationProgress
               progress={progress}
               isComplete={false}
@@ -162,9 +166,14 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
             </div>
           )}
           <div className={formStyles.addForm}>
-            {!generating && (
+            {!generating && !progress && (
               <button type="button" className={formStyles.submitAdd} onClick={handleGenerate}>
                 <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Generar en banco</span>
+              </button>
+            )}
+            {!generating && progress && (
+              <button type="button" className={formStyles.submitAdd} onClick={onGenerateMore}>
+                <span className={utils.rowInline6}><Plus size={18} aria-hidden /> Generar más</span>
               </button>
             )}
             {generating && !generationPaused && (

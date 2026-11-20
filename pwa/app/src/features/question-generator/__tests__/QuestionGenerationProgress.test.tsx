@@ -179,4 +179,23 @@ describe('QuestionGenerationProgress Component', () => {
     });
     expect(screen.getByText(/Tiempo transcurrido/).textContent).toContain('0s');
   });
+
+  it('says no question came out when every one failed', () => {
+    render(
+      <QuestionGenerationProgress
+        progress={{
+          done: 2,
+          total: 2,
+          failed: 2,
+          ids: [],
+          eta: 12,
+          statuses: ['failed', 'failed'],
+        }}
+      />
+    );
+
+    expect(screen.getByRole('heading', { name: 'No salió ninguna pregunta' })).toBeInTheDocument();
+    expect(screen.queryByText('¡Preguntas listas para jugar!')).toBeNull();
+    expect(screen.getByText('0 de 2 preguntas listas. 2 no salieron del modelo.')).toBeInTheDocument();
+  });
 });

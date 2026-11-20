@@ -120,9 +120,45 @@ describe('BankPickStep', () => {
     expect(controls.onResumeGeneration).toHaveBeenCalledTimes(1);
     expect(controls.onCancelGeneration).toHaveBeenCalledTimes(1);
 
-    rerender(<BankPickStep {...baseProps} {...controls} progress={progress} />);
+    // Cancelar clears the progress in the coordinator, so the counter comes back.
+    rerender(<BankPickStep {...baseProps} {...controls} progress={null} />);
     expect(screen.getByRole('button', { name: 'Generar una más' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Progreso de creación de preguntas' })).toBeNull();
+    vi.restoreAllMocks();
+  });
+
+  it('keeps a finished result on screen until Generar más', () => {
+    mockBankBackend();
+    const onGenerateMore = vi.fn();
+    const finished = {
+      done: 3,
+      total: 3,
+      failed: 1,
+      ids: ['q1', 'q2'],
+      eta: 5,
+      currentIndex: 3,
+      statuses: ['success', 'failed', 'success'] as const,
+    };
+    const { rerender } = render(
+      <BankPickStep
+        {...baseProps}
+        progress={{ ...finished, statuses: [...finished.statuses] }}
+        onGenerateMore={onGenerateMore}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: /^Generar$/ }));
+
+    expect(screen.getByRole('region', { name: 'Progreso de creación de preguntas' })).toBeInTheDocument();
+    expect(screen.getByText('2 de 3 preguntas listas. 1 no salieron del modelo.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Generar una más' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Generar en banco/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Generar más/ }));
+    expect(onGenerateMore).toHaveBeenCalledTimes(1);
+
+    rerender(<BankPickStep {...baseProps} progress={null} onGenerateMore={onGenerateMore} />);
+    expect(screen.getByRole('button', { name: 'Generar una más' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Generar en banco/ })).toBeInTheDocument();
     vi.restoreAllMocks();
   });
 });

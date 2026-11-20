@@ -108,4 +108,17 @@ describe('useQuestionGenerator stop, resume and cancel', () => {
     act(() => result.current.stopGeneration());
     expect(result.current.isPaused).toBe(false);
   });
+
+  it('keeps a finished run on screen until clearProgress', async () => {
+    vi.mocked(generatorApi.generateQuestion).mockImplementation(() => answerWith('q1'));
+    const { result } = renderHook(() => useQuestionGenerator());
+
+    await act(async () => {
+      await result.current.startGeneration('arithmetic', 1, []);
+    });
+    expect(result.current.progress?.done).toBe(1);
+
+    act(() => result.current.clearProgress());
+    expect(result.current.progress).toBeNull();
+  });
 });

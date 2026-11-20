@@ -60,6 +60,7 @@ const idleCoordinator = {
   ensureBankIds: vi.fn(),
   generateIntoBank: vi.fn(),
   cancelBankGeneration: vi.fn(),
+  clearGenerationResult: vi.fn(),
   advancePrimary: vi.fn(),
   resetSession: vi.fn(),
 };
