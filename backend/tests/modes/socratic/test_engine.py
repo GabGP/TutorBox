@@ -143,7 +143,9 @@ class _SlowClient(LLMClient):
         self.started = threading.Event()
         self.release = threading.Event()
 
-    def generate(self, system_prompt, user_prompt, response_format=None) -> str:
+    def generate(
+        self, system_prompt, user_prompt, response_format=None, should_stop=None
+    ) -> str:
         self.started.set()
         self.release.wait(5)
         return "ok"

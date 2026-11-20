@@ -1,6 +1,7 @@
 """Tests for abstract LLMClient interface."""
 
 import inspect
+from collections.abc import Callable
 
 from core.llm.base import LLMClient
 
@@ -20,8 +21,11 @@ def test_abstract_llm_client_generate_super_call():
             system_prompt: str,
             user_prompt: str,
             response_format: dict | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
-            return super().generate(system_prompt, user_prompt, response_format)
+            return super().generate(
+                system_prompt, user_prompt, response_format, should_stop
+            )
 
     dummy_instance = DummyClient()
     assert dummy_instance.generate("system_prompt", "user_prompt") is None

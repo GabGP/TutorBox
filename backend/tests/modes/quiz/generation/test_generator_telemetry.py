@@ -1,6 +1,7 @@
 """Unit tests for QuizQuestionGenerator telemetry, duration, attempts, and error tracking."""
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -92,6 +93,7 @@ def test_generator_retry_telemetry_captures_rejections():
             system_prompt: str,
             user_prompt: str,
             response_format: dict[str, Any] | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
             resp = self._responses[self._index]
             self._index = min(self._index + 1, len(self._responses) - 1)
@@ -120,6 +122,7 @@ def test_generator_exhaustion_telemetry_in_generation_error():
             system_prompt: str,
             user_prompt: str,
             response_format: dict[str, Any] | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
             return "invalid json output"
 
@@ -145,6 +148,7 @@ def test_generator_llm_exception_telemetry():
             system_prompt: str,
             user_prompt: str,
             response_format: dict[str, Any] | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
             raise ConnectionRefusedError("LocalSLM offline")
 

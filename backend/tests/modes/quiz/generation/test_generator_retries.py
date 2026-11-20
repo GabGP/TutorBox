@@ -1,6 +1,7 @@
 """Unit tests for QuizQuestionGenerator rejection and retry recovery cycles."""
 
 import json
+from collections.abc import Callable
 
 import pytest
 
@@ -191,6 +192,7 @@ def test_generator_llm_request_failure_raises_generation_error():
             system_prompt: str,
             user_prompt: str,
             response_format: dict | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
             raise RuntimeError("Connection refused")
 

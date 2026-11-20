@@ -6,6 +6,7 @@ import threading
 import time
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any, cast
 
 import pytest
 
@@ -25,26 +26,25 @@ class _FakeLLMServer(ThreadingHTTPServer):
 
 
 class _Handler(BaseHTTPRequestHandler):
-    server: _FakeLLMServer
-
-    def log_message(self, *_args) -> None:
+    def log_message(self, format: str, *args: Any) -> None:
         """Keeps the test output quiet."""
 
     def do_POST(self) -> None:
+        fake = cast(_FakeLLMServer, self.server)
         length = int(self.headers["Content-Length"])
-        self.server.received_bodies.append(json.loads(self.rfile.read(length)))
-        deadline = time.monotonic() + self.server.answer_delay
+        fake.received_bodies.append(json.loads(self.rfile.read(length)))
+        deadline = time.monotonic() + fake.answer_delay
         while time.monotonic() < deadline:
             # A closed client shows up as end-of-stream on the read side.
             self.connection.settimeout(0.05)
             try:
                 if self.connection.recv(1) == b"":
-                    self.server.client_left.set()
+                    fake.client_left.set()
                     return
             except TimeoutError:
                 continue
         body = json.dumps(COMPLETION).encode()
-        self.send_response(self.server.answer_status)
+        self.send_response(fake.answer_status)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

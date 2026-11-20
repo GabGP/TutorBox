@@ -1,6 +1,7 @@
 """Unit tests for attempt_runner module."""
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -60,6 +61,7 @@ def test_execute_llm_query_type_error_fallback():
             system_prompt: str,
             user_prompt: str,
             response_format: dict[str, Any] | None = None,
+            should_stop: Callable[[], bool] | None = None,
         ) -> str:
             if response_format is not None:
                 raise TypeError("Unsupported response_format argument")
