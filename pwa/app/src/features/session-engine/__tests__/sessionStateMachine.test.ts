@@ -62,11 +62,30 @@ describe('Two-Tier Session State Machine', () => {
       };
       expect(computeDisplayStep(completedSession)).toBe('stats');
     });
+
+    it('goes back to idle when the teacher cancels, even mid-question', () => {
+      const cancelled: SessionModel = {
+        ...baseSession,
+        status: 'abandoned',
+        current_round: { ...baseRound, status: 'closed' },
+      };
+      expect(computeDisplayStep(cancelled)).toBe('idle');
+    });
   });
 
   describe('computeStudentStep', () => {
     it('resolves wait in lobby', () => {
       expect(computeStudentStep(baseSession, false)).toBe('wait');
+    });
+
+    it('sends the student back to waiting when the teacher cancels the match', () => {
+      const cancelled: SessionModel = {
+        ...baseSession,
+        status: 'abandoned',
+        current_round: { ...baseRound, status: 'closed' },
+      };
+      expect(computeStudentStep(cancelled, false)).toBe('wait');
+      expect(computeStudentStep(cancelled, true)).toBe('wait');
     });
 
     it('resolves play when round is open and student has not voted', () => {

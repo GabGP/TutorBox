@@ -65,6 +65,7 @@ function lobbyCoordinator(overrides: Record<string, unknown> = {}) {
     cancelBankGeneration: vi.fn(),
     clearGenerationResult: vi.fn(),
     advancePrimary: vi.fn(),
+    cancelMatch: vi.fn(),
     resetSession: vi.fn(),
     ...overrides,
   } as unknown as ReturnType<typeof useTeacherCoordinator>;
@@ -154,5 +155,16 @@ describe('TeacherView lobby', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Clickers' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Ajustes' })).not.toBeInTheDocument();
+  });
+
+  it('Cancelar in the lobby ends the match on the server, not just on this screen', () => {
+    const coordinator = lobbyCoordinator();
+    vi.mocked(useTeacherCoordinator).mockReturnValue(coordinator);
+    render(<TeacherView />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(coordinator.cancelMatch).toHaveBeenCalledTimes(1);
+    expect(coordinator.resetSession).not.toHaveBeenCalled();
   });
 });

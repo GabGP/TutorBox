@@ -10,7 +10,8 @@ export type DisplayStep = 'idle' | 'question' | 'reveal' | 'stats';
  * @returns {DisplayStep} The corresponding display step ('idle', 'question', 'reveal', 'stats').
  */
 export function computeDisplayStep(session: SessionModel | null): DisplayStep {
-  if (!session || session.status === 'lobby') {
+  // A cancelled match goes back to the waiting screen, whatever round it was on.
+  if (!session || session.status === 'lobby' || session.status === 'abandoned') {
     return 'idle';
   }
   if (session.status === 'completed') {
@@ -40,7 +41,8 @@ export function computeStudentStep(
   session: SessionModel | null,
   hasVotedThisRound: boolean
 ): StudentStep {
-  if (!session || session.status === 'lobby') {
+  // A cancelled match sends the student back to waiting for the next one.
+  if (!session || session.status === 'lobby' || session.status === 'abandoned') {
     return 'wait';
   }
   if (session.status === 'completed') {

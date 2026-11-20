@@ -26,6 +26,9 @@ export const TEACHER_STEP_TITLES: Record<TeacherStep, [string, string]> = {
 export const SECONDARY_ACTION_LABELS: Partial<Record<TeacherStep, string>> = {
   topic: 'Salir',
   lobby: 'Cancelar',
+  // A started match can be cancelled at any point; the footer asks for a hold.
+  question: 'Cancelar',
+  reveal: 'Cancelar',
   stats: 'Inicio',
 };
 

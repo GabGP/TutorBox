@@ -148,7 +148,9 @@ export const TeacherView: React.FC = () => {
   const handleSecondary = useCallback(() => {
     stopPlayback();
     if (step === 'topic') logout();
-    else coordinator.resetSession();
+    else if (step === 'stats') coordinator.resetSession();
+    // Lobby or a started match: the server ends it, so phones and the screen leave too.
+    else void coordinator.cancelMatch();
   }, [step, stopPlayback, logout, coordinator]);
 
   const handleCloseSettings = useCallback(() => {
@@ -247,6 +249,7 @@ export const TeacherView: React.FC = () => {
           <TeacherFooter
             primaryText={primaryText}
             secondaryText={secondaryText}
+            isSecondaryHold={vm.isSecondaryHold}
             isPrimaryDisabled={vm.isPrimaryDisabled || busy}
             isLobbySuccess={vm.isLobbySuccess}
             wizardIndex={wizardIdx}

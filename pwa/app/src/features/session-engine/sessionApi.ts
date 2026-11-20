@@ -97,6 +97,17 @@ export const sessionApi = {
   },
 
   /**
+   * Cancels a match in the lobby or mid-game via `POST /session/{id}/abandon`:
+   * it leaves `/session/current` and its open round stops taking votes.
+   *
+   * @param {string} id - Session UUID.
+   * @returns {Promise<SessionModel>} The session, now `abandoned`.
+   */
+  async abandonSession(id: string): Promise<SessionModel> {
+    return requestApi<SessionModel>('POST', `/session/${id}/abandon`);
+  },
+
+  /**
    * Retrieves summary statistics and accuracy report for a finished match via `GET /session/{id}/report`.
    *
    * @param {string} id - Session UUID.

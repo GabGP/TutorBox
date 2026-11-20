@@ -133,6 +133,23 @@ export function useTeacherCoordinator(
   }, [cancelGeneration, setSession, setHistory, setReport, resetSelection, unloadIfLoaded]);
 
   /** Cancelar in Generar: the questions already saved stay chosen. */
+  /**
+   * Cancelar in the lobby or mid-game: the server ends the match first, so
+   * students and the screen leave it too, then the console starts over.
+   * A match the server already ended (409) or lost (404) still resets.
+   */
+  const cancelMatch = useCallback(async () => {
+    const running = session && (session.status === 'lobby' || session.status === 'active');
+    if (running) {
+      try {
+        await sessionApi.abandonSession(session.id);
+      } catch {
+        // Nothing left to cancel on the server; the console resets anyway.
+      }
+    }
+    resetSession();
+  }, [session, resetSession]);
+
   const cancelBankGeneration = useCallback(() => {
     const alreadySavedIds = progress?.ids ?? [];
     cancelGeneration();
@@ -221,6 +238,7 @@ export function useTeacherCoordinator(
     generateIntoBank,
     cancelBankGeneration,
     advancePrimary,
+    cancelMatch,
     resetSession,
   };
 }

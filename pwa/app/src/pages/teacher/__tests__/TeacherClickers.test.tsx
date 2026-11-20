@@ -62,6 +62,7 @@ const idleCoordinator = {
   cancelBankGeneration: vi.fn(),
   clearGenerationResult: vi.fn(),
   advancePrimary: vi.fn(),
+  cancelMatch: vi.fn(),
   resetSession: vi.fn(),
 };
 

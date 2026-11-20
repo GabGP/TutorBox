@@ -21,6 +21,8 @@ export interface TeacherViewModel {
   subtitle: string;
   primaryText: string;
   secondaryText: string | undefined;
+  /** Cancelar mid-game ends the match for the whole class, so it is a press-and-hold. */
+  isSecondaryHold: boolean;
   wizardIdx: number;
   isBankEmpty: boolean;
   isPrimaryDisabled: boolean;
@@ -64,6 +66,7 @@ export function getTeacherViewModel(input: TeacherViewModelInput): TeacherViewMo
     subtitle,
     primaryText,
     secondaryText: SECONDARY_ACTION_LABELS[key],
+    isSecondaryHold: step === 'question' || step === 'reveal',
     wizardIdx: ['topic', 'count', 'lobby'].indexOf(step),
     isBankEmpty,
     isPrimaryDisabled: isBankEmpty || (isBankStep && isGenerating),

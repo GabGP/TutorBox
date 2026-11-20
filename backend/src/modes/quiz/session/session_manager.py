@@ -13,7 +13,12 @@ from modes.quiz.session.exceptions import (
     InvalidSessionStateError,
     SessionNotFoundError,
 )
-from modes.quiz.session.models import QuizSessionRecord, RoundStatus, SessionStatus
+from modes.quiz.session.models import (
+    QuizRoundRecord,
+    QuizSessionRecord,
+    RoundStatus,
+    SessionStatus,
+)
 
 
 def initialize_quiz_session(
@@ -95,4 +100,30 @@ def advance_quiz_session(conn: sqlite3.Connection, session_id: str) -> int | Non
         SessionStatus.COMPLETED.value,
         ended_at=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
+    return None
+
+
+def abandon_quiz_session(
+    conn: sqlite3.Connection, session_id: str
+) -> QuizRoundRecord | None:
+    """Ends a lobby or active session early (the teacher cancelled it).
+
+    Returns the round still open for votes, which the caller closes, or None.
+    A completed or already abandoned session cannot be cancelled.
+    """
+    session = get_quiz_session(conn, session_id)
+    if session is None:
+        raise SessionNotFoundError(session_id)
+    if session.status not in (SessionStatus.LOBBY.value, SessionStatus.ACTIVE.value):
+        raise InvalidSessionStateError(f"Session '{session_id}' already ended.")
+
+    update_quiz_session_status(
+        conn,
+        session_id,
+        SessionStatus.ABANDONED.value,
+        ended_at=time.strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    current = get_round_by_index(conn, session_id, session.current_round_index)
+    if current is not None and current.status == RoundStatus.OPEN.value:
+        return current
     return None

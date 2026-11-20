@@ -27,6 +27,7 @@ These endpoints coordinate real-time classroom quiz matches: teacher match initi
 | `POST` | `/api/v1/session/{session_id}/close` | Teacher, Admin | Close the active voting window |
 | `POST` | `/api/v1/session/{session_id}/reveal` | Teacher, Admin | Aggregate votes and evaluate >51% Rule |
 | `POST` | `/api/v1/session/{session_id}/next` | Teacher, Admin | Advance to next round or complete match |
+| `POST` | `/api/v1/session/{session_id}/abandon` | Teacher, Admin | Cancel a match in the lobby or mid-game |
 | `GET` | `/api/v1/session/{session_id}/speech` | Teacher, Admin | Spoken misconception explanation (WAV) when the >51% Rule fired |
 | `GET` | `/api/v1/session/{session_id}/report` | Teacher, Admin | Performance summary and accuracy statistics |
 
@@ -246,6 +247,21 @@ Advances the session to the next question round, or marks the match as `complete
   * `200 OK`: `SessionStateResponse` with incremented `current_round_index` and round status `open`, or session status `completed`.
   * `404 Not Found`: Session not found.
   * `409 Conflict`: Session not `active` (still in the lobby or already finished), current round not yet `revealed` (a repeated tap), or a concurrent request already opened the next round.
+
+---
+
+### <a id="post-session-abandon"></a>`POST /api/v1/session/{session_id}/abandon`
+
+Cancels a match the teacher no longer wants: from the lobby, or at any point once it started (a question open, closed or revealed). The session becomes `abandoned` with an `ended_at` time, so it leaves `GET /session/current`; a round still open for votes is closed and its countdown stopped, so a later press gets `409`. Other rounds keep the status they had. On the teacher console it is **Cancelar** in the lobby (one tap) and during the match (a two-second hold, because it ends the match for the whole class). Student phones and the classroom screen go back to waiting.
+
+* **Authorization**: Teacher, Admin
+* **Path Parameters**:
+  * `session_id` (`string`, required): Unique session identifier.
+* **Responses**:
+  * `200 OK`: `SessionStateResponse` with session status `abandoned`.
+  * `403 Forbidden`: Caller is a student.
+  * `404 Not Found`: Session not found.
+  * `409 Conflict`: The match already ended (`completed` or `abandoned`).
 
 ---
 

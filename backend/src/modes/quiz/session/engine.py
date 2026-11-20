@@ -135,5 +135,11 @@ class QuizSessionEngine:
         self._emit("session_completed", {"session_id": session_id})
         return None
 
+    def abandon_session(self, session_id: str) -> None:
+        """Ends a lobby or active match early; an open round stops taking votes."""
+        if open_round := session_manager.abandon_quiz_session(self.conn, session_id):
+            turn_manager.close_turn_round(self.conn, self._timers, open_round.id)
+        self._emit("session_abandoned", {"session_id": session_id})
+
 
 __all__ = ["EventListener", "QuizSessionEngine", "reset_shared_session_state"]

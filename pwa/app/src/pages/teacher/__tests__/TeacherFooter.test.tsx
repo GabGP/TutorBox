@@ -35,3 +35,40 @@ describe('TeacherFooter primary guard', () => {
     }
   });
 });
+
+describe('TeacherFooter secondary guard', () => {
+  it('keeps Cancelar in the lobby a single tap', () => {
+    const onSecondary = vi.fn();
+    render(
+      <TeacherFooter {...baseProps} primaryText="Comenzar el juego" secondaryText="Cancelar" onSecondary={onSecondary} />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onSecondary).toHaveBeenCalledTimes(1);
+  });
+
+  it('guards Cancelar during a started match behind a 2000ms hold', () => {
+    const onSecondary = vi.fn();
+    setupHoldTimers();
+    try {
+      render(
+        <TeacherFooter
+          {...baseProps}
+          primaryText="Siguiente pregunta"
+          secondaryText="Cancelar"
+          isSecondaryHold
+          onSecondary={onSecondary}
+        />
+      );
+      const holdBtn = screen.getByRole('button', { name: 'Mantén para cancelar el juego' });
+      fireEvent.click(holdBtn);
+      expect(onSecondary).not.toHaveBeenCalled();
+      fireEvent.pointerDown(holdBtn, { pointerId: 1 });
+      advanceHold(1200);
+      expect(onSecondary).not.toHaveBeenCalled();
+      advanceHold(800);
+      expect(onSecondary).toHaveBeenCalledTimes(1);
+    } finally {
+      teardownHoldTimers();
+    }
+  });
+});

@@ -102,6 +102,7 @@ describe('TeacherView Component', () => {
       cancelBankGeneration: vi.fn(),
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
+      cancelMatch: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -150,6 +151,7 @@ describe('TeacherView Component', () => {
       cancelBankGeneration: vi.fn(),
       clearGenerationResult: vi.fn(),
       advancePrimary,
+      cancelMatch: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -202,6 +204,7 @@ describe('TeacherView Component', () => {
       cancelBankGeneration: vi.fn(),
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
+      cancelMatch: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -254,6 +257,7 @@ describe('TeacherView Component', () => {
       cancelBankGeneration: vi.fn(),
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
+      cancelMatch: vi.fn(),
       resetSession: vi.fn(),
     });
 
@@ -334,6 +338,7 @@ describe('TeacherView Component', () => {
       cancelBankGeneration: vi.fn(),
       clearGenerationResult: vi.fn(),
       advancePrimary: vi.fn(),
+      cancelMatch: vi.fn(),
       resetSession: vi.fn(),
     });
 
