@@ -113,7 +113,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
         <>
           <p className={styles.description}>
             Toca una pregunta para ver y editar sus opciones ({getTopicLabel(selectedTopic)}).
-            El juego se crea solo con las que elijas, sin generar.
+            Con Seleccionar eliges varias de un toque; el juego se crea solo con esas.
           </p>
           <QuestionBankView
             selectable

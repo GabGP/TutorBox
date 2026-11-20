@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Check, ChevronDown, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Circle, Eye, Pencil, Trash2 } from 'lucide-react';
 import { getTopicLabel } from '../../shared/taxonomy/labels';
 import listStyles from '../../shared/styles/lists.module.css';
 import utils from '../../shared/styles/utils.module.css';
@@ -13,6 +13,8 @@ import type { BankQuestion } from './bankApi';
 export interface BankQuestionRowProps {
   question: BankQuestion;
   selectable: boolean;
+  /** Seleccionar mode: a tap toggles the question for the match. */
+  selecting?: boolean;
   selected: boolean;
   /** Select mode only: the inline option editor is open below the row. */
   expanded?: boolean;
@@ -32,13 +34,15 @@ export interface BankQuestionRowProps {
 /**
  * One bank row: either the swipe strip (Info/Edit/Delete) or, once
  * delete is armed, a full-row press-and-hold confirm with an explicit
- * Cancelar affordance. In select mode the face toggles an inline panel
- * (expandedContent) and a tag marks questions chosen for the match.
+ * Cancelar affordance. In the picker the face toggles an inline panel
+ * (expandedContent) and a tag marks questions chosen for the match; in
+ * Seleccionar mode a tap toggles the question instead, shown by a check mark.
  * Escape disarms; opening another row disarms via onOpenChange.
  */
 export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
   question,
   selectable,
+  selecting = false,
   selected,
   expanded = false,
   expandedContent,
@@ -125,11 +129,18 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
               },
             ]}
           >
+            {selecting &&
+              (selected ? (
+                <CheckCircle2 size={22} aria-hidden className={`${viewStyles.selectMark} ${viewStyles.selectMarkOn}`} />
+              ) : (
+                <Circle size={22} aria-hidden className={viewStyles.selectMark} />
+              ))}
             <button
               type="button"
               className={`${listStyles.studentName} ${viewStyles.faceButton}`}
               onClick={() => onFaceTap(question)}
-              aria-expanded={selectable ? expanded : undefined}
+              aria-expanded={selectable && !selecting ? expanded : undefined}
+              aria-pressed={selecting ? selected : undefined}
             >
               {question.question_text}
             </button>
@@ -141,7 +152,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
             <span className={`${listStyles.roleTag} ${viewStyles.topicTag}`}>
               {getTopicLabel(question.topic)}
             </span>
-            {selectable && (
+            {selectable && !selecting && (
               <ChevronDown
                 size={18}
                 aria-hidden
@@ -150,7 +161,7 @@ export const BankQuestionRow: React.FC<BankQuestionRowProps> = ({
             )}
           </SwipeRow>
         )}
-        {selectable && expanded && !confirmArmed && expandedContent}
+        {selectable && !selecting && expanded && !confirmArmed && expandedContent}
       </div>
     </div>
   );

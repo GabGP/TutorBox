@@ -117,11 +117,6 @@
   background: var(--tint2);
 }
 
-.buttonOn {
-  background: var(--ok-bg);
-  color: var(--ok);
-}
-
 .buttonPrimary {
   background: var(--p);
   color: #fff;

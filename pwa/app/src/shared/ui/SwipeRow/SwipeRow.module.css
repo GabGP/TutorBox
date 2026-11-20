@@ -102,6 +102,30 @@
   min-width: 0;
 }
 
+.swipeHint {
+  /* Trailing cue that the face slides left to reveal its actions. */
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--mute2);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.swipeHint:hover {
+  background: var(--tint);
+  color: var(--p);
+}
+
+.swipeHint:focus-visible {
+  outline: 3px solid var(--p);
+  outline-offset: 1px;
+}
+
 .isOpen .face {
   /* transform is set inline to match measured action width */
 }

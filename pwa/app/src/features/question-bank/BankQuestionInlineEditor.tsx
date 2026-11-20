@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Minus, Plus } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { OPTION_LETTERS } from '../../shared/constants/options';
 import { toErrorMessage } from '../../shared/lib/errors';
 import { getMisconceptionLabel } from '../../shared/taxonomy/labels';
@@ -8,8 +8,6 @@ import { BankQuestion, bankApi } from './bankApi';
 
 export interface BankQuestionInlineEditorProps {
   question: BankQuestion;
-  selected: boolean;
-  onToggleSelect: (id: string) => void;
   onSaved: (saved: BankQuestion) => void;
   onError: (message: string) => void;
 }
@@ -27,12 +25,10 @@ function explanationsOf(question: BankQuestion): Record<string, string> {
  * its distractor explanation, edited in place and saved straight back to
  * the bank (`PUT /quiz/questions/{id}`). The correct letter, taxonomy and
  * misconception slugs are kept as stored — the full edit sheet covers
- * those. Selection for the match is an explicit toggle, not a checkbox.
+ * those. Choosing questions for the match is the list's Seleccionar mode.
  */
 export const BankQuestionInlineEditor: React.FC<BankQuestionInlineEditorProps> = ({
   question,
-  selected,
-  onToggleSelect,
   onSaved,
   onError,
 }) => {
@@ -127,15 +123,6 @@ export const BankQuestionInlineEditor: React.FC<BankQuestionInlineEditorProps> =
         );
       })}
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={`${styles.button} ${selected ? styles.buttonOn : ''}`}
-          aria-pressed={selected}
-          onClick={() => onToggleSelect(question.id)}
-        >
-          {selected ? <Minus size={18} aria-hidden /> : <Plus size={18} aria-hidden />}
-          {selected ? 'Quitar del juego' : 'Usar en el juego'}
-        </button>
         <button
           type="button"
           className={`${styles.button} ${styles.buttonPrimary}`}

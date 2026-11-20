@@ -26,10 +26,11 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * actions, detail in a floating sheet (refreshed from the server on open),
  * full-row hold-to-confirm delete (see BankQuestionRow), and an edit
  * affordance opening the floating edit sheet.
- * Optional select mode lets the quiz-prep flow build a match from
- * hand-picked questions: tapping a row unfolds its four options with
- * their explanations, editable in place and saved back to the bank,
- * next to a Usar/Quitar toggle for the match. Creation lives in the
+ * In the quiz-prep picker (`selectable`) tapping a row unfolds its four
+ * options with their explanations, editable in place and saved back to
+ * the bank; the Seleccionar button switches to a select mode where one
+ * tap adds or removes a question from the match, as many as wanted, until
+ * Listo. Swiping keeps its actions in both modes. Creation lives in the
  * Crear tab; the JSON contract viewer is admin-only.
  * Load and mutation failures float as error toasts so the list never
  * shifts; successes already toast through the same queue.
@@ -63,6 +64,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   const [detail, setDetail] = useState<BankQuestion | null>(null);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selecting, setSelecting] = useState(false);
 
   const load = useCallback(async (t: string, off: number, size: number) => {
     setLoading(true);
@@ -100,6 +102,10 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
   };
 
   const handleFaceTap = (q: BankQuestion) => {
+    if (selectable && selecting) {
+      onToggleSelect?.(q.id);
+      return;
+    }
     if (selectable) {
       setExpandedId((cur) => (cur === q.id ? null : q.id));
       return;
@@ -150,8 +156,23 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
     <div className={listStyles.container} id="bank">
       <div className={listStyles.rowb}>
         <b>Banco de preguntas</b>
-        <span id="bankCount">
-          {selectable ? `${selectedIds.length} elegidas · ${total}` : total}
+        <span className={styles.headerEnd}>
+          <span id="bankCount">
+            {selectable ? `${selectedIds.length} elegidas · ${total}` : total}
+          </span>
+          {selectable && (
+            <button
+              type="button"
+              className={`${formStyles.toggleLink} ${selecting ? styles.selectingOn : ''}`}
+              aria-pressed={selecting}
+              onClick={() => {
+                setSelecting((cur) => !cur);
+                setExpandedId(null);
+              }}
+            >
+              {selecting ? 'Listo' : 'Seleccionar'}
+            </button>
+          )}
         </span>
       </div>
 
@@ -208,13 +229,12 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({
               key={q.id}
               question={q}
               selectable={selectable}
+              selecting={selectable && selecting}
               selected={selectedIds.includes(q.id)}
               expanded={expandedId === q.id}
               expandedContent={
                 <BankQuestionInlineEditor
                   question={q}
-                  selected={selectedIds.includes(q.id)}
-                  onToggleSelect={(id) => onToggleSelect?.(id)}
                   onSaved={handleSavedInline}
                   onError={(message) => pushToast({ message, tone: 'error' })}
                 />

@@ -236,7 +236,7 @@ describe('QuestionBankView browsing and selection', () => {
     vi.restoreAllMocks();
   });
 
-  it('unfolds options with explanations on row tap in select mode', async () => {
+  it('unfolds options with explanations on row tap in the picker', async () => {
     const onToggleSelect = vi.fn();
     vi.spyOn(httpClient, 'requestApi').mockImplementation(
       async (_m: string, path: string) => {
@@ -264,10 +264,9 @@ describe('QuestionBankView browsing and selection', () => {
     expect(screen.getByLabelText('Explicación A')).toHaveValue('Olvidó la llevada');
     expect(screen.queryByLabelText('Explicación B')).not.toBeInTheDocument();
     expect(screen.getByText('Respuesta correcta')).toBeInTheDocument();
-    // Opening never selects; selection is the explicit toggle.
+    // Opening never selects, and the panel has no select button: that is Seleccionar.
     expect(onToggleSelect).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: /Usar en el juego/ }));
-    expect(onToggleSelect).toHaveBeenCalledWith('q1');
+    expect(screen.queryByRole('button', { name: /Usar en el juego/ })).toBeNull();
     fireEvent.click(face);
     expect(screen.queryByLabelText('Opción A')).not.toBeInTheDocument();
     vi.restoreAllMocks();
@@ -292,7 +291,6 @@ describe('QuestionBankView browsing and selection', () => {
     fireEvent.click(screen.getByRole('button', { name: '¿Cuánto es 27 + 15?' }));
     const save = screen.getByRole('button', { name: 'Guardar' });
     expect(save).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Quitar del juego/ })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Opción D'), { target: { value: '44' } });
     fireEvent.change(screen.getByLabelText('Explicación D'), {
       target: { value: 'Sumó dos de más' },

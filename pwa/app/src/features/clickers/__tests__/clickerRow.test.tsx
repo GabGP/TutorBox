@@ -99,6 +99,7 @@ describe('ClickerRow face', () => {
       'Editar clicker ESP32-A4CF12',
       'Eliminar',
       'ESP32-A4CF12',
+      'Mostrar acciones',
     ]);
   });
 

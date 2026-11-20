@@ -75,4 +75,36 @@ describe('SwipeRow', () => {
     fireEvent.pointerUp(face, { clientX: 0 });
     expect(root).toHaveAttribute('data-open', 'true');
   });
+
+  it('shows an arrow that tells the row slides left and toggles the strip', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <SwipeRow open={false} onOpenChange={onOpenChange} actions={actions}>
+        Row
+      </SwipeRow>
+    );
+    const hint = screen.getByRole('button', { name: 'Mostrar acciones' });
+    expect(hint).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(hint);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+
+    rerender(
+      <SwipeRow open onOpenChange={onOpenChange} actions={actions}>
+        Row
+      </SwipeRow>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar acciones' }));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('shows no arrow when there is nothing to slide to', () => {
+    const { rerender } = render(<SwipeRow actions={[]}>Row</SwipeRow>);
+    expect(screen.queryByRole('button', { name: 'Mostrar acciones' })).toBeNull();
+    rerender(
+      <SwipeRow disabled actions={actions}>
+        Row
+      </SwipeRow>
+    );
+    expect(screen.queryByRole('button', { name: 'Mostrar acciones' })).toBeNull();
+  });
 });

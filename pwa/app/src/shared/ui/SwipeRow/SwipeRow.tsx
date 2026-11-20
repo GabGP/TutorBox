@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './SwipeRow.module.css';
 
 export interface SwipeRowAction {
@@ -45,6 +46,8 @@ const OPEN_THRESHOLD_PX = 40;
  * it doubles as the desktop interaction (no hover-only affordances).
  * Actions are plain buttons so keyboard/screen-reader users never need
  * to swipe. Esc closes. Respects `prefers-reduced-motion`.
+ * A chevron at the end of the face tells the row can be slid left (it
+ * points right once open) and toggles the strip when tapped.
  */
 export const SwipeRow: React.FC<SwipeRowProps> = ({
   children,
@@ -186,6 +189,17 @@ export const SwipeRow: React.FC<SwipeRowProps> = ({
         }}
       >
         {children}
+        {!disabled && actions.length > 0 && (
+          <button
+            type="button"
+            className={styles.swipeHint}
+            aria-label={open ? 'Ocultar acciones' : 'Mostrar acciones'}
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <ChevronRight size={18} aria-hidden /> : <ChevronLeft size={18} aria-hidden />}
+          </button>
+        )}
       </div>
     </div>
   );

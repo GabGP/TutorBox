@@ -16,6 +16,25 @@
   border-radius: 12px;
 }
 
+.headerEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.selectingOn {
+  background: var(--tint);
+}
+
+.selectMark {
+  flex: 0 0 auto;
+  color: var(--mute2);
+}
+
+.selectMarkOn {
+  color: var(--ok);
+}
+
 .selectRow {
   border: 2px solid transparent;
   border-radius: 16px;
