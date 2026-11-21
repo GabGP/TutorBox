@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Circle, Hourglass, Palette, PenLine, Ruler, Save, Sparkles, Timer, TriangleAlert, X, Zap } from 'lucide-react';
 import { ProgressBar } from '../../shared/ui/ProgressBar/ProgressBar';
+import { ModelLoadingLine } from './ModelLoadingLine';
 import { ShinyText } from '../../shared/ui/ShinyText/ShinyText';
 import { GenerationProgress } from './generator.types';
 import { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';
@@ -20,6 +21,9 @@ export interface QuestionGenerationProgressProps {
 
 export const STAGE_ICONS = [PenLine, Palette, Ruler, Save] as const;
 
+/** Shown while the quiz model loads, before the first question starts. */
+export const MODEL_LOADING_TEXT = 'Cargando el modelo de preguntas…';
+
 export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProps> = ({
   progress,
   isComplete: forceComplete,
@@ -38,6 +42,7 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
   const liveRemaining = !isDone && !isPaused && remaining > 0 ? currentQRemaining + Math.max(0, remaining - 1) * effectiveEta : null;
   const formattedElapsed = formatDuration(elapsedSeconds, false) || '0s', formattedEta = formatDuration(liveRemaining, true);
   const topicLabel = progress.currentTopic ? getTopicLabel(progress.currentTopic) : '', subconceptLabel = getSubconceptLabel(progress.currentSubconcept);
+  const modelLoading = Boolean(progress.modelLoading);
   const colsMobile = total <= PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX ? total : PROGRESS_ANIMATION.MOBILE_PILL_COLS_MAX;
   const colsDesktop = total <= PROGRESS_ANIMATION.DESKTOP_PILL_COLS_MAX ? total : PROGRESS_ANIMATION.DESKTOP_PILL_COLS_MAX;
   const failedCount = progress.failed || 0;
@@ -87,10 +92,16 @@ export const QuestionGenerationProgress: React.FC<QuestionGenerationProgressProp
           <span className={styles.questionCounter}>Pregunta <strong>{isDone ? total : currentIdx}</strong> de <strong>{total}</strong></span>
           <span className={styles.percentText}>{percent}%</span>
         </div>
-        <ProgressBar value={percent} animated={!isDone && !isPaused} size="md" label="Progreso general" speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS} />
-        <div className={styles.stageCaption} aria-live="polite" aria-atomic="true">
-          <span key={captionText} className={styles.stageText}><StageIcon size={14} aria-hidden />{captionText}</span>
-        </div>
+        {modelLoading ? (
+          <ModelLoadingLine text={MODEL_LOADING_TEXT} />
+        ) : (
+          <>
+            <ProgressBar value={percent} animated={!isDone && !isPaused} size="md" label="Progreso general" speed={PROGRESS_ANIMATION.SHIMMER_SPEED_SECONDS} />
+            <div className={styles.stageCaption} aria-live="polite" aria-atomic="true">
+              <span key={captionText} className={styles.stageText}><StageIcon size={14} aria-hidden />{captionText}</span>
+            </div>
+          </>
+        )}
       </div>
       <div className={styles.pillsList} role="list" aria-label="Estado por pregunta" style={{ '--cols-mobile': colsMobile, '--cols-desktop': colsDesktop } as React.CSSProperties}>
         {Array.from({ length: total }, (_, i) => {

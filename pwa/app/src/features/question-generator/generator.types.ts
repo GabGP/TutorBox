@@ -65,6 +65,8 @@ export interface GenerationProgress {
   currentSubconcept?: string | null;
   currentIndex?: number;
   statuses?: QuestionGenerationStatus[];
+  /** True while the quiz model loads before the first question (the card shows a loading line). */
+  modelLoading?: boolean;
 }
 
 export { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';

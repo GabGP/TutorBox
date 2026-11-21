@@ -1,0 +1,51 @@
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.track {
+  position: relative;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--line2, #d7e4db);
+  overflow: hidden;
+}
+
+.beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  border-radius: inherit;
+  background: var(--p, #1f3e33);
+  animation: modelBeam 1.4s ease-in-out infinite;
+}
+
+@keyframes modelBeam {
+  from {
+    left: -35%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute, #4d5d55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.35;
+  }
+}

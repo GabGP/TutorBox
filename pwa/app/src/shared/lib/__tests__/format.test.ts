@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatFullDate } from '../format';
+import { formatDuration, formatFullDate, formatSecondsEs } from '../format';
 
 describe('formatDuration', () => {
   it('renders seconds with an optional estimate prefix', () => {
@@ -32,5 +32,14 @@ describe('formatFullDate', () => {
     const out = formatFullDate('2026-03-04T10:05:00');
     expect(out).toContain('04/03/2026');
     expect(out).toContain('10:05');
+  });
+});
+
+describe('formatSecondsEs', () => {
+  it('writes milliseconds as seconds with a decimal comma', () => {
+    expect(formatSecondsEs(3200)).toBe('3,2');
+    expect(formatSecondsEs(0)).toBe('0,0');
+    expect(formatSecondsEs(12_000)).toBe('12,0');
+    expect(formatSecondsEs(1250)).toBe('1,3');
   });
 });

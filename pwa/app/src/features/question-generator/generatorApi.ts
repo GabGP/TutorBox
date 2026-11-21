@@ -1,5 +1,6 @@
 import { requestApi } from '../../shared/api/httpClient';
 import { toQuery } from '../../shared/api/query';
+import type { ModelResidency } from '../model-residency/residency.types';
 import {
   FullGenerationMetrics,
   GenerateQuestionResponse,
@@ -87,5 +88,23 @@ export const generatorApi = {
     save_to_bank: boolean;
   }, signal?: AbortSignal): Promise<GenerateQuestionResponse> {
     return requestApi<GenerateQuestionResponse>('POST', '/quiz/generate', payload, true, signal);
+  },
+
+  /**
+   * Loads the quiz model into memory before a question batch (`POST /quiz/model/load`).
+   *
+   * @returns {Promise<ModelResidency>} What the server did; `loaded` carries the load time.
+   */
+  async loadQuizModel(): Promise<ModelResidency> {
+    return requestApi<ModelResidency>('POST', '/quiz/model/load');
+  },
+
+  /**
+   * Unloads the quiz model when a batch ends or is cancelled (`POST /quiz/model/unload`).
+   *
+   * @returns {Promise<ModelResidency>} What the server did.
+   */
+  async unloadQuizModel(): Promise<ModelResidency> {
+    return requestApi<ModelResidency>('POST', '/quiz/model/unload');
   },
 };

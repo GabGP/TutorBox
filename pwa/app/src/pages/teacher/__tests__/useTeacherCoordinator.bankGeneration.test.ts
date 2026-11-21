@@ -4,7 +4,12 @@ import { generatorApi } from '../../../features/question-generator/generatorApi'
 import { useTeacherCoordinator } from '../useTeacherCoordinator';
 
 vi.mock('../../../features/question-generator/generatorApi', () => ({
-  generatorApi: { getMetrics: vi.fn(), generateQuestion: vi.fn() },
+  generatorApi: {
+    getMetrics: vi.fn(),
+    generateQuestion: vi.fn(),
+    loadQuizModel: vi.fn().mockResolvedValue({ action: 'disabled' }),
+    unloadQuizModel: vi.fn().mockResolvedValue({ action: 'disabled' }),
+  },
 }));
 vi.mock('../../../shared/taxonomy/useTopics', () => ({
   useTopics: () => ({ topics: [] }),

@@ -17,6 +17,12 @@ describe('modeApi', () => {
     await modeApi.setMode('tutor');
     expect(spy).toHaveBeenLastCalledWith('PUT', '/mode', { mode: 'tutor' });
   });
+
+  it('answers a switch with the mode saved and the tutor model outcome', async () => {
+    const model = { model: 'tutor', action: 'loaded', duration_ms: 3200, detail: null };
+    vi.spyOn(httpClient, 'requestApi').mockResolvedValue({ mode: 'tutor', model });
+    expect(await modeApi.setMode('tutor')).toEqual({ mode: 'tutor', model });
+  });
 });
 
 describe('useApplianceMode', () => {

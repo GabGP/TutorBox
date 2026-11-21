@@ -2,6 +2,23 @@ import { useCallback, useRef, useState } from 'react';
 import { PROGRESS_ANIMATION } from './generator.constants';
 import { GenerationProgress, QuestionGenerationStatus, TopicModel } from './generator.types';
 import { generatorApi } from './generatorApi';
+import type { QuizModelLifecycle } from './useQuizModelLifecycle';
+
+/** The progress card shown while the quiz model loads, before the batch has begun. */
+function modelLoadingProgress(count: number, topic: string, availableTopics: TopicModel[]): GenerationProgress {
+  return {
+    done: 0,
+    total: count,
+    failed: 0,
+    ids: [],
+    eta: PROGRESS_ANIMATION.DEFAULT_QUESTION_ETA_SECONDS,
+    currentIndex: 1,
+    currentTopic: topic || (availableTopics.length > 0 ? availableTopics[0].name : 'arithmetic'),
+    currentSubconcept: null,
+    statuses: Array<QuestionGenerationStatus>(count).fill('pending'),
+    modelLoading: true,
+  };
+}
 
 /**
  * Custom React hook for controlling iterative AI question generation.
@@ -14,9 +31,13 @@ import { generatorApi } from './generatorApi';
  * A finished run keeps its progress (the result stays on screen) until
  * `clearProgress` is called.
  *
+ * With `modelLifecycle`, the run loads the quiz model before its first question and releases
+ * it when the run ends, including a cancel. A pause keeps the model loaded.
+ *
+ * @param {QuizModelLifecycle} [modelLifecycle] - Loads and releases the quiz model around a run.
  * @returns {object} Generation progress status, execution flags, error state, and lifecycle triggers.
  */
-export function useQuestionGenerator() {
+export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +69,16 @@ export function useQuestionGenerator() {
     setProgress(null);
   }, []);
 
-  const startGeneration = useCallback(
-    async (topic: string, count: number, availableTopics: TopicModel[]) => {
-      const currentToken = ++tokenRef.current;
-      setIsGenerating(true);
-      setError(null);
+  /** One batch: its questions in order, until done, cancelled or the token moves on. */
+  const runBatch = useCallback(
+    async (
+      currentToken: number,
+      topic: string,
+      count: number,
+      availableTopics: TopicModel[]
+    ): Promise<string[] | null> => {
+      // A cancel that arrived while the quiz model was loading ends the run before it starts.
+      if (tokenRef.current !== currentToken) return null;
 
       const startTime = Date.now();
       let eta: number = PROGRESS_ANIMATION.DEFAULT_QUESTION_ETA_SECONDS;
@@ -169,6 +195,24 @@ export function useQuestionGenerator() {
       return draft.ids;
     },
     []
+  );
+
+  const startGeneration = useCallback(
+    async (topic: string, count: number, availableTopics: TopicModel[]) => {
+      const currentToken = ++tokenRef.current;
+      setIsGenerating(true);
+      setError(null);
+      setProgress(modelLoadingProgress(count, topic, availableTopics));
+      await modelLifecycle?.loadForBatch();
+      // A cancel during the load left no progress behind: nothing to clear then.
+      setProgress((previous) => (previous ? { ...previous, modelLoading: false } : previous));
+      try {
+        return await runBatch(currentToken, topic, count, availableTopics);
+      } finally {
+        await modelLifecycle?.releaseAfterBatch();
+      }
+    },
+    [modelLifecycle, runBatch]
   );
 
   return {

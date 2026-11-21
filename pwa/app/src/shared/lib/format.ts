@@ -15,6 +15,11 @@ export function formatDuration(seconds: number | null | undefined, isEstimate = 
   return rem > 0 ? `${prefix}${mins} min ${rem}s` : `${prefix}${mins} min`;
 }
 
+/** Milliseconds as seconds with one decimal and a decimal comma, as Spanish writes it: `3,2`. */
+export function formatSecondsEs(milliseconds: number): string {
+  return (milliseconds / 1000).toFixed(1).replace('.', ',');
+}
+
 /** Full `dd/mm/yyyy hh:mm` stamp; em-dash when the log carries no date. */
 export function formatFullDate(value?: string | null): string {
   if (!value) return '—';

@@ -29,6 +29,14 @@
   text-align: center;
 }
 
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--p-dark, var(--mute));
+  font-weight: 700;
+}
+
 .option[aria-pressed='true'] {
   border-color: var(--p);
   background: var(--p-soft);

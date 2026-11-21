@@ -1,7 +1,14 @@
 import { requestApi } from '../../shared/api/httpClient';
+import type { ModelResidency } from '../model-residency/residency.types';
 
 /** Classroom-wide mode the teacher picks from /maestro/ (docs/api/system.md#classroom-mode). */
 export type ApplianceMode = 'quiz' | 'tutor' | 'apps';
+
+/** What the backend saved (`mode`) and what it did with the tutor model (`model`). */
+export interface ModeChange {
+  mode: ApplianceMode;
+  model: ModelResidency;
+}
 
 /**
  * API client for the classroom mode switch.
@@ -13,9 +20,11 @@ export const modeApi = {
     return mode;
   },
 
-  /** Teacher/admin only; the backend answers 409 while a quiz round is live. */
-  async setMode(mode: ApplianceMode): Promise<ApplianceMode> {
-    const res = await requestApi<{ mode: ApplianceMode }>('PUT', '/mode', { mode });
-    return res.mode;
+  /**
+   * Teacher/admin only; the backend answers 409 while a quiz round is live. The answer also
+   * says what happened to the tutor model (loaded for tutor mode, unloaded when leaving it).
+   */
+  async setMode(mode: ApplianceMode): Promise<ModeChange> {
+    return requestApi<ModeChange>('PUT', '/mode', { mode });
   },
 };

@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useQuestionGenerator } from '../../features/question-generator/useQuestionGenerator';
+import { useQuizModelLifecycle } from '../../features/question-generator/useQuizModelLifecycle';
+import { NO_NOTICES, type NoticeSink } from '../../features/model-residency/residencyNotices';
 import { useTopics } from '../../shared/taxonomy/useTopics';
 import { SessionModel } from '../../features/session-engine/session.types';
 import { sessionApi } from '../../features/session-engine/sessionApi';
@@ -17,6 +19,8 @@ export type { TeacherWizardStep } from './useWizardSelection';
 interface UseTeacherCoordinatorOptions {
   enabled?: boolean;
   voiceLang?: SpeechLanguage;
+  /** Toast queue for the quiz model's load and unload messages. */
+  notices?: NoticeSink;
 }
 
 /** Titles new matches `Pilas <es-date>` with the standard 20s round clock. */
@@ -86,12 +90,12 @@ async function abandonRunningMatch(session: SessionModel | null): Promise<void> 
  * status.
  *
  * @param {string | null} initialSid - Optional cached teacher session ID.
- * @param {UseTeacherCoordinatorOptions} [options={}] - Hook options (e.g. enable gating).
+ * @param {UseTeacherCoordinatorOptions} [options={}] - Hook options (enable gating, voice, toasts).
  * @returns {object} Full teacher coordinator state, session models, telemetry, and progression actions.
  */
 export function useTeacherCoordinator(
   initialSid: string | null,
-  { enabled = true, voiceLang = 'es' }: UseTeacherCoordinatorOptions = {}
+  { enabled = true, voiceLang = 'es', notices = NO_NOTICES }: UseTeacherCoordinatorOptions = {}
 ) {
   const [sid, setSid] = useState<string | null>(initialSid);
   const {
@@ -113,6 +117,7 @@ export function useTeacherCoordinator(
     enabled: enabled && Boolean(sid),
   });
 
+  const quizModel = useQuizModelLifecycle(notices);
   const {
     progress,
     isGenerating,
@@ -123,7 +128,7 @@ export function useTeacherCoordinator(
     resumeGeneration,
     cancelGeneration,
     clearProgress: clearGenerationResult,
-  } = useQuestionGenerator();
+  } = useQuestionGenerator(quizModel);
 
   const { preloadIfUnloaded, unloadIfLoaded } = useTTSLifecycle();
 

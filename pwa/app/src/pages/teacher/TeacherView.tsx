@@ -53,12 +53,14 @@ export const TeacherView: React.FC = () => {
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
-  const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang });
-  const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
-    usePlayedRounds(coordinator.sid, voiceLang);
   const { users, deleted, showDeleted, pinNotice, toasts, pushToast, dismissToast, addStudent, resetStudentPin, deleteStudent, changeUserRole, recoverStudent, toggleDeleted } = useRosterManager({
     enabled: isStaff,
   });
+  // Mode and generation notices float in the same queue as the roster's messages.
+  const notices = { pushToast, dismissToast };
+  const coordinator = useTeacherCoordinator(initialSid, { enabled: isStaff, voiceLang, notices });
+  const { voiceDone, setVoiceDone, markPlayed, hasPlayed, reconcileVoiceKey } =
+    usePlayedRounds(coordinator.sid, voiceLang);
   const openSettings = (section?: SettingsSectionId) => {
     setSettingsSection(section);
     setShowSettings(true);
@@ -66,7 +68,7 @@ export const TeacherView: React.FC = () => {
   const creatableRoles =
     user?.role === 'admin' ? ['student', 'teacher', 'admin'] : ['student', 'teacher'];
   // The appliance has no keyboard: this page is the remote that picks the class mode.
-  const classMode = useApplianceMode({ enabled: isStaff });
+  const classMode = useApplianceMode({ enabled: isStaff, notices });
   const mode = classMode.mode ?? 'quiz';
   useErrorToast(classMode.error, pushToast);
   const host = useHostAddress();
@@ -199,6 +201,7 @@ export const TeacherView: React.FC = () => {
         <ModePicker
           mode={classMode.mode}
           saving={classMode.saving}
+          pendingMode={classMode.pendingMode}
           onChange={classMode.setMode}
         />
       )}
