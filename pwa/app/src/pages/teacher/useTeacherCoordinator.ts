@@ -96,7 +96,7 @@ export function useTeacherCoordinator(
     resumeGeneration,
     cancelGeneration,
     clearProgress: clearGenerationResult,
-  } = useQuestionGenerator(quizModel);
+  } = useQuestionGenerator(quizModel, (message) => notices.pushToast({ message, tone: 'warn' }));
 
   const lobbyVoice = useLobbyVoice(notices);
 

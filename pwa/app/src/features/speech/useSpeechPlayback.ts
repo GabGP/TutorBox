@@ -4,6 +4,7 @@ import { getSpeechVoiceKey, speechApi } from './speechApi';
 import { SpeechLanguage, SpeechState } from './speech.types';
 import { SPEECH_LANGUAGE_NAMES, isMayanLanguage } from './speechLanguages';
 import { useAudioPlayer } from './useAudioPlayer';
+import { explainSpeechFailure } from '../../shared/lib/modelFailures';
 import { useVoiceCache } from './useVoiceCache';
 
 export interface UseSpeechPlaybackReturn {
@@ -30,8 +31,11 @@ function waitForNextPaint(): Promise<void> {
  */
 export function useSpeechPlayback(
   sessionId: string | null,
-  language: SpeechLanguage = 'es'
+  language: SpeechLanguage = 'es',
+  onError?: (message: string) => void
 ): UseSpeechPlaybackReturn {
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
   const [state, setState] = useState<SpeechState>('idle');
   const [message, setMessage] = useState('');
   const [currentRound, setCurrentRound] = useState<number>(-1);
@@ -219,15 +223,13 @@ export function useSpeechPlayback(
           url = await pendingFetch;
         } catch (err: unknown) {
           if (!isCurrent()) return;
-          const e = err as { status?: number };
+          const noVoiceMessage = isMayanLanguage(language)
+            ? `Todavía no hay voz en ${SPEECH_LANGUAGE_NAMES[language]}; lea la explicación en voz alta.`
+            : 'Este aparato no tiene voz instalada (espeak-ng).';
+          const failure = explainSpeechFailure(err, noVoiceMessage);
           setState('error');
-          setMessage(
-            e.status === 503
-              ? isMayanLanguage(language)
-                ? `Todavía no hay voz en ${SPEECH_LANGUAGE_NAMES[language]}; lea la explicación en voz alta.`
-                : 'Este aparato no tiene voz instalada (espeak-ng).'
-              : 'No se pudo preparar la voz.'
-          );
+          setMessage(failure);
+          onErrorRef.current?.(failure);
           return;
         }
 

@@ -73,9 +73,11 @@ export const TeacherView: React.FC = () => {
   useErrorToast(classMode.error, pushToast);
   const host = useHostAddress();
 
+  // A voice that could not speak (often out of memory) also floats as a warning toast.
   const { state: speechState, message: speechMsg, speak, prefetch, stopPlayback } = useSpeechPlayback(
     coordinator.sid,
-    voiceLang
+    voiceLang,
+    (message) => pushToast({ message, tone: 'warn' })
   );
 
   const curRound = coordinator.session?.current_round;

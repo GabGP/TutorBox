@@ -3,6 +3,7 @@ import { PROGRESS_ANIMATION } from './generator.constants';
 import { GenerationProgress, QuestionGenerationStatus, TopicModel } from './generator.types';
 import { generatorApi } from './generatorApi';
 import type { QuizModelLifecycle } from './useQuizModelLifecycle';
+import { explainGenerationFailure } from '../../shared/lib/modelFailures';
 
 /** The progress card shown while the quiz model loads, before the batch has begun. */
 function modelLoadingProgress(count: number, topic: string, availableTopics: TopicModel[]): GenerationProgress {
@@ -34,10 +35,19 @@ function modelLoadingProgress(count: number, topic: string, availableTopics: Top
  * With `modelLifecycle`, the run loads the quiz model before its first question and releases
  * it when the run ends, including a cancel. A pause keeps the model loaded.
  *
+ * Each question that fails calls `onQuestionFailed` with a Spanish sentence naming the cause
+ * (out of memory, model server restarting, too slow, failed review), for a toast.
+ *
  * @param {QuizModelLifecycle} [modelLifecycle] - Loads and releases the quiz model around a run.
+ * @param {(message: string) => void} [onQuestionFailed] - Receives the reason of each failed question.
  * @returns {object} Generation progress status, execution flags, error state, and lifecycle triggers.
  */
-export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
+export function useQuestionGenerator(
+  modelLifecycle?: QuizModelLifecycle,
+  onQuestionFailed?: (message: string) => void
+) {
+  const onQuestionFailedRef = useRef(onQuestionFailed);
+  onQuestionFailedRef.current = onQuestionFailed;
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -155,7 +165,7 @@ export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
           if (tokenRef.current !== currentToken) return null;
           draft.ids = [...draft.ids, res.question.id];
           statuses[i] = 'success';
-        } catch {
+        } catch (err: unknown) {
           if (tokenRef.current !== currentToken) return null;
           if (request.signal.aborted) {
             // Stopped by the teacher: wait for Reanudar or Cancelar.
@@ -172,6 +182,7 @@ export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
           }
           draft.failed++;
           statuses[i] = 'failed';
+          onQuestionFailedRef.current?.(explainGenerationFailure(err, i + 1));
         } finally {
           inFlightRef.current = null;
         }

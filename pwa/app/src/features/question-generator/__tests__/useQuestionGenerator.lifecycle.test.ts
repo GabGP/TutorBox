@@ -162,4 +162,23 @@ describe('useQuestionGenerator with a quiz model lifecycle', () => {
     expect(result.current.progress?.modelLoading).toBeFalsy();
     expect(result.current.progress?.done).toBe(2);
   });
+
+  it('reports why each failed question failed, and carries on with the next', async () => {
+    const { ApiError } = await import('../../../shared/api/httpClient');
+    vi.mocked(generatorApi.generateQuestion)
+      .mockRejectedValueOnce(new ApiError('Bad Gateway', 502, 'LocalSLM HTTP 500: unexpected EOF'))
+      .mockImplementationOnce(() => answerWith('q_two'));
+    const failures: string[] = [];
+    const { result } = renderHook(() => useQuestionGenerator(undefined, (message) => failures.push(message)));
+
+    let ids: string[] | null = null;
+    await act(async () => {
+      ids = await result.current.startGeneration('arithmetic', 2, []);
+    });
+
+    expect(ids).toEqual(['q_two']);
+    expect(failures).toEqual([
+      'Pregunta 1: el modelo se quedó sin memoria y el Jetson lo detuvo. Libera memoria en Estado del Jetson y vuelve a intentarlo.',
+    ]);
+  });
 });

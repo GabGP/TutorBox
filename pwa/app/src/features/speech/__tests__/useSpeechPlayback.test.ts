@@ -286,6 +286,23 @@ describe('useSpeechPlayback Hook', () => {
     expect(result.current.state).toBe('playing');
   });
 
+  it('explains a voice that timed out and reports it for a toast', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockRejectedValue({
+      status: 500,
+      detail: 'Qwen synthesis timed out after 10.0s.',
+    });
+    const onError = vi.fn();
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es', onError));
+    await act(async () => {
+      await result.current.speak(0);
+    });
+
+    expect(result.current.state).toBe('error');
+    expect(result.current.message).toMatch(/^La voz no cupo en memoria o tardó demasiado/);
+    expect(onError).toHaveBeenCalledWith(result.current.message);
+  });
+
   it('silently ignores errors during background prefetch', async () => {
     vi.spyOn(speechApi, 'getSpeechBlobUrl').mockRejectedValue({ status: 409 });
 
