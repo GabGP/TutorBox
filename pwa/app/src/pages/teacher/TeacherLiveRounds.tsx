@@ -17,7 +17,6 @@ export interface TeacherLiveRoundsProps {
   voicePlayed: boolean;
   voiceLang: SpeechLanguage;
   speechState: SpeechState;
-  speechMessage: string;
   onPlaySpeech: () => void;
   onSkipSpeech: () => void;
 }
@@ -38,7 +37,6 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
   voicePlayed,
   voiceLang,
   speechState,
-  speechMessage,
   onPlaySpeech,
   onSkipSpeech,
 }) => {
@@ -124,7 +122,6 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
             dominantOptionText={q.options[decision.dominant_distractor] || ''}
             explanation={decision.explanation}
             speechState={speechState}
-            speechMessage={speechMessage}
             voiceLang={voiceLang}
             onPlay={onPlaySpeech}
             onSkip={onSkipSpeech}

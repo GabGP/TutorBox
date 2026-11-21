@@ -59,7 +59,6 @@ function renderReveal(
       voicePlayed={voicePlayed}
       voiceLang="es"
       speechState="idle"
-      speechMessage=""
       onPlaySpeech={onPlaySpeech}
       onSkipSpeech={vi.fn()}
     />

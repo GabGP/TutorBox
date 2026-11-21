@@ -66,4 +66,12 @@ describe('RemediationAlert Component', () => {
     fireEvent.click(playBtn!);
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
+
+  it('never prints a status line under the buttons, since the button shows each phase', () => {
+    for (const speechState of ['idle', 'loading', 'playing', 'done', 'error', 'blocked'] as const) {
+      const { unmount } = render(<RemediationAlert {...defaultProps} speechState={speechState} />);
+      expect(document.getElementById('speechState')).toBeNull();
+      unmount();
+    }
+  });
 });

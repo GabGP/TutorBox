@@ -24,7 +24,6 @@ export interface LiveVoiceProps {
   played: boolean;
   lang: SpeechLanguage;
   state: SpeechState;
-  message: string;
   onPlay: () => void;
   onSkip: () => void;
 }
@@ -94,7 +93,6 @@ export const TeacherMainContent: React.FC<TeacherMainContentProps> = ({
           voicePlayed={voice.played}
           voiceLang={voice.lang}
           speechState={voice.state}
-          speechMessage={voice.message}
           onPlaySpeech={voice.onPlay}
           onSkipSpeech={voice.onSkip}
         />

@@ -75,8 +75,9 @@ export const TeacherView: React.FC = () => {
   useErrorToast(classMode.error, pushToast);
   const host = useHostAddress();
 
-  // A voice that could not speak (often out of memory) also floats as a warning toast.
-  const { state: speechState, message: speechMsg, speak, prefetch, stopPlayback } = useSpeechPlayback(
+  // A voice that could not speak (often out of memory), a failed playback or a blocked
+  // autoplay floats as a warning toast; the play button shows every other phase.
+  const { state: speechState, speak, prefetch, stopPlayback } = useSpeechPlayback(
     coordinator.sid,
     voiceLang,
     (message) => pushToast({ message, tone: 'warn' })
@@ -256,7 +257,6 @@ export const TeacherView: React.FC = () => {
               played: curRound ? hasPlayed(curRound.round_index) : false,
               lang: voiceLang,
               state: speechState,
-              message: speechMsg,
               onPlay: handlePlaySpeech,
               onSkip: handleSkipSpeech,
             }}

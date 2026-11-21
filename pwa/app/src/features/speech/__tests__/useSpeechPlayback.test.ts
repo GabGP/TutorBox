@@ -241,6 +241,35 @@ describe('useSpeechPlayback Hook', () => {
     expect(result.current.message).toBe('Toque “Escuchar” para reproducir la explicación.');
   });
 
+  it('reports a blocked autoplay for a toast', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:test-audio-url');
+    mockPlayer.play = vi.fn().mockRejectedValue(new Error('NotAllowedError'));
+    const onError = vi.fn();
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es', onError));
+    await act(async () => {
+      await result.current.speak(0);
+    });
+
+    expect(onError).toHaveBeenCalledWith('Toque “Escuchar” para reproducir la explicación.');
+  });
+
+  it('reports a playback failure for a toast', async () => {
+    vi.spyOn(speechApi, 'getSpeechBlobUrl').mockResolvedValue('blob:test-audio-url');
+    const onError = vi.fn();
+
+    const { result } = renderHook(() => useSpeechPlayback('s1', 'es', onError));
+    await act(async () => {
+      await result.current.speak(0);
+    });
+    act(() => {
+      mockPlayer.onerror?.();
+    });
+
+    expect(result.current.state).toBe('error');
+    expect(onError).toHaveBeenCalledWith('No se pudo reproducir el audio.');
+  });
+
   it('handles 503 voice unavailable for Spanish and Kiche', async () => {
     vi.spyOn(speechApi, 'getSpeechBlobUrl').mockRejectedValue({ status: 503 });
 

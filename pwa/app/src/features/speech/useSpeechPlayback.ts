@@ -133,12 +133,16 @@ export function useSpeechPlayback(
           setMessage('Explicación leída.');
         },
         onError: () => {
+          const failure = 'No se pudo reproducir el audio.';
           setState('error');
-          setMessage('No se pudo reproducir el audio.');
+          setMessage(failure);
+          onErrorRef.current?.(failure);
         },
         onBlocked: () => {
+          const hint = 'Toque “Escuchar” para reproducir la explicación.';
           setState('blocked');
-          setMessage('Toque “Escuchar” para reproducir la explicación.');
+          setMessage(hint);
+          onErrorRef.current?.(hint);
         },
       });
     },

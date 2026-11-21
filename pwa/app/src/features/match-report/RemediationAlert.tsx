@@ -13,7 +13,6 @@ export interface RemediationAlertProps {
   dominantOptionText: string;
   explanation: string;
   speechState: SpeechState;
-  speechMessage?: string;
   voiceLang: SpeechLanguage;
   onPlay: () => void;
   onSkip: () => void;
@@ -31,7 +30,6 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
   dominantOptionText,
   explanation,
   speechState,
-  speechMessage,
   voiceLang,
   onPlay,
   onSkip,
@@ -93,11 +91,6 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
           {isBusy ? 'Detener' : 'Saltar'}
         </button>
       </div>
-      {speechMessage && (
-        <div id="speechState" role="status" aria-live="polite">
-          {speechMessage}
-        </div>
-      )}
     </div>
   );
 };
