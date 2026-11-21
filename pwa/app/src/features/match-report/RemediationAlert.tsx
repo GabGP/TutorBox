@@ -2,6 +2,7 @@ import React from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { PlayButton } from '../../shared/ui/PlayButton/PlayButton';
 import { SpeechLanguage, SpeechState } from '../speech/speech.types';
+import { SPEECH_LANGUAGE_NAMES } from '../speech/speechLanguages';
 import styles from './report.module.css';
 
 export interface RemediationAlertProps {
@@ -37,8 +38,7 @@ export const RemediationAlert: React.FC<RemediationAlertProps> = ({
 }) => {
   if (!shouldShow) return null;
 
-  const defaultVoiceLabel =
-    voiceLang === 'es' ? 'Escuchar en español' : "Escuchar en k'iche'";
+  const defaultVoiceLabel = `Escuchar en ${SPEECH_LANGUAGE_NAMES[voiceLang]}`;
 
   const isBusy = speechState === 'loading' || speechState === 'playing';
 

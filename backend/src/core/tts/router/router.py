@@ -6,6 +6,7 @@ from core.config import get_settings
 from core.tts.engines import (
     EspeakBackend,
     KokoroBackend,
+    MmsBackend,
     PiperBackend,
     QwenBackend,
     SherpaBackend,
@@ -18,10 +19,7 @@ from core.tts.router.selection import (
     resolve_target_backend,
 )
 
-__all__ = [
-    "TTSRouter",
-    "get_tts_router",
-]
+__all__ = ["TTSRouter", "get_tts_router"]
 
 
 class TTSRouter:
@@ -46,6 +44,7 @@ class TTSRouter:
             "kokoro": self.kokoro,
             "qwen3-tts": self.qwen,
             "qwen": self.qwen,
+            "mms": MmsBackend(),
             **(backends or {}),
         }
         self._cache: dict[tuple[str, ...], bytes] = {}

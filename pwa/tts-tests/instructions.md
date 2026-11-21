@@ -13,7 +13,7 @@ Setup works like the Spanish voices. A kit set up with Ansible (`voice_tier: all
 ./run.py --download-models mayan   # Python packages (mayan-audio extra) + both MMS models
 ```
 
-That installs the `mayan-audio` extra of `backend/pyproject.toml` (CPU-only PyTorch, transformers, SciPy, LAME) and downloads both checkpoints to `.cache/models/tts/mms/`. Then:
+That installs the `mayan-audio` extra of `backend/pyproject.toml` (CPU-only PyTorch, transformers, SciPy, LAME), downloads both checkpoints to `.cache/models/tts/mms/` and exports each to `model.onnx`, which the classroom voice engine uses ([Voice Feedback §5](../../docs/architecture/voice-feedback.md)). Then:
 
 ```bash
 .cache/venv/bin/python pwa/tts-tests/generate_tts.py            # WAVs next to the script

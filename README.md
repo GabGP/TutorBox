@@ -15,7 +15,7 @@
 
 <p align="center">
   <strong>A classroom AI tutor in a box, for rural schools with no internet at all.</strong><br>
-  A small computer and a Wi-Fi router turn any classroom into an interactive maths lesson: students answer on their phones or on cheap button clickers, and the box spots common mistakes and explains them out loud, in Spanish or K'iche'.
+  A small computer and a Wi-Fi router turn any classroom into an interactive maths lesson: students answer on their phones or on cheap button clickers, and the box spots common mistakes and explains them out loud, in Spanish or a Mayan language (K'iche' or Q'eqchi').
 </p>
 
 <p align="center">
@@ -41,7 +41,7 @@ Many schools in rural Guatemala have no internet and few resources, and many stu
 
 - **Three modes in one box:** a [classroom quiz](#classroom-quiz) the whole class plays together, a [Socratic tutor](#a-tutor-that-never-gives-the-answer) for practice after class, and [take-home apps](#take-home-apps) with offline games for each grade.
 - **Wrong answers that teach.** Every wrong option is designed around a specific mistake ("divided only the numerator", "subtracted to simplify"), so the results show *why* students got it wrong, not just how many.
-- **Speaks up when the class is stuck.** If more than 51% of the students pick the same wrong answer, the box explains that mistake aloud, offline, in Spanish or K'iche'.
+- **Speaks up when the class is stuck.** If more than 51% of the students pick the same wrong answer, the box explains that mistake aloud, offline, in Spanish, K'iche' or Q'eqchi'. The explanations themselves are still written in Spanish only: the Mayan voices read them until native speakers translate them.
 - **AI that is kept honest.** A small language model on the box (Gemma) writes new questions and talks to students, but a computer algebra engine (SymPy) [checks the maths](#ai-that-is-kept-honest) every time. The model never decides what is correct.
 - **Works with or without phones.** Students answer on a phone or on an [ESP32 clicker](#clickers-for-students-without-phones) with four buttons and a light.
 - **Safe for kids.** Students log in with a PIN that's stored hashed, never in plain text, and the network is a closed local Wi-Fi.
@@ -178,7 +178,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv, if needed
 A first teacher account, `teacher1`, is created automatically; change its PIN before real use (see the [authentication docs](docs/api/auth.md)).
 
 - **Without the language model** the question bank and quizzes still work; generating new questions needs `llama-server` on `127.0.0.1:8080`.
-- **Voices:** without the neural voice models it falls back to eSpeak-ng. Download better voices with `./run.py --download-models all` (or `minimal`, `kokoro`, `qwen`, `mayan`). `mayan` fetches the K'iche' and Q'eqchi' models (Meta MMS-TTS) that make the install audio guides on `/descargas`.
+- **Voices:** without the neural voice models it falls back to eSpeak-ng. Download better voices with `./run.py --download-models all` (or `minimal`, `kokoro`, `qwen`, `mayan`). `mayan` fetches the K'iche' and Q'eqchi' voices (Meta MMS-TTS): the classroom explanations in those languages and the install audio guides on `/descargas`.
 - **A real classroom kit** (the Jetson and its router) is set up with Ansible: follow the [kit setup guide](infra/ansible/README.md), which runs `./run.py --prepare`.
 
 ---
@@ -195,7 +195,7 @@ graph TD
         API <--> SymPy["SymPy: checks all the maths"]
         API <--> DB[("SQLite")]
         API <--> LLM["Gemma via llama.cpp:<br/>writes questions, tutors"]
-        API <--> Voice["Offline voices:<br/>Qwen3-TTS → Sherpa → Piper → eSpeak"]
+        API <--> Voice["Offline voices:<br/>Qwen3-TTS → Sherpa → Piper → eSpeak<br/>MMS-TTS for K'iche' and Q'eqchi'"]
         API --> HDMI["Classroom display (HDMI)"]
     end
 ```
@@ -204,7 +204,7 @@ graph TD
 - **Frontend:** a React and Vite progressive web app, served by Nginx from the box.
 - **Maths:** SymPy is the only authority on whether an answer is correct.
 - **Language model:** Gemma 4 (A2B, quantised to Q4_K_M) through `llama.cpp`.
-- **Voices:** Qwen3-TTS for the best Spanish, falling back to Sherpa-ONNX, Piper and finally eSpeak-ng so there is always a voice. K'iche' has its own voice slot for the classroom explanations. For the Mayan languages, Meta MMS-TTS (K'iche' and Q'eqchi', on the CPU) makes the take-home install guides.
+- **Voices:** Qwen3-TTS for the best Spanish, falling back to Sherpa-ONNX, Piper and finally eSpeak-ng so there is always a voice. For the Mayan languages, Meta MMS-TTS voices (K'iche' and Q'eqchi', ONNX on the CPU) speak the classroom explanations and make the take-home install guides.
 
 ```text
 TutorBox/

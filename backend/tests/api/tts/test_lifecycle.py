@@ -168,6 +168,19 @@ def test_tts_voices_listing(
     )
 
 
+def test_tts_voices_listing_names_the_mms_voice_per_mayan_language(
+    client: TestClient, teacher_headers: dict[str, str]
+) -> None:
+    """Verifies each Mayan language lists its MMS voice; only Kʼicheʼ lists Piper."""
+    res_quc = client.get("/api/v1/tts/voices?lang=quc", headers=teacher_headers)
+    assert res_quc.json()[0] == {"id": "quc", "lang": "quc", "engine": "mms"}
+    assert any(v["engine"] == "piper" for v in res_quc.json())
+
+    res_kek = client.get("/api/v1/tts/voices?lang=kek", headers=teacher_headers)
+    assert res_kek.status_code == 200
+    assert res_kek.json() == [{"id": "kek", "lang": "kek", "engine": "mms"}]
+
+
 def test_tts_load_evicts_other_resident_engines(
     client: TestClient, teacher_headers: dict[str, str]
 ) -> None:

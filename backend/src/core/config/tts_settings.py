@@ -12,6 +12,7 @@ from core.config.constants import (
     DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
+    DEFAULT_TTS_MMS_MODEL_DIR,
     DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
@@ -139,5 +140,6 @@ def build_tts_config() -> TTSConfig:
             else DEFAULT_TTS_KOKORO_PROVIDER
         ),
         melo_voice=_env("TTS_MELO_VOICE", DEFAULT_TTS_MELO_VOICE).strip(),
+        mms_model_dir=_env("TTS_MMS_MODEL_DIR", DEFAULT_TTS_MMS_MODEL_DIR).strip(),
         **build_qwen_config(),
     )

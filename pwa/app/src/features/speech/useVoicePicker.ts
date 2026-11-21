@@ -4,6 +4,7 @@ import { storage } from '../../shared/lib/storage';
 import { useToastQueue } from '../../shared/ui/Toast/useToastQueue';
 import { speechApi, ttsApi } from './speechApi';
 import type { SpeechLanguage, TTSStatusResponse, TTSVoiceItem } from './speech.types';
+import { toSpeechLanguage } from './speechLanguages';
 
 export type PreviewPhase = 'idle' | 'loading' | 'playing';
 
@@ -27,7 +28,7 @@ export function parseKey(key: string): { engine?: string; voice?: string } {
 export function useVoicePicker() {
   const [lang, setLang] = useState<SpeechLanguage>(() => {
     const pref = storage.getVoicePreference();
-    return pref?.lang === 'quc' ? 'quc' : 'es';
+    return toSpeechLanguage(pref?.lang);
   });
   const [voices, setVoices] = useState<TTSVoiceItem[]>([]);
   const [voiceKey, setVoiceKey] = useState(() => {

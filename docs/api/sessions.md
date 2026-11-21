@@ -277,8 +277,11 @@ round that did not trigger it. Allows speculative pre-fetching during the `close
   * `session_id` (`string`, required): Unique session identifier.
 * **Query Parameters**:
    * `lang` (`string`, optional, default `es`): `es` (Spanish, routed through Qwen3-TTS ->
-     Sherpa-ONNX -> Piper -> eSpeak) or `quc` (K'iche', only when the configured Piper model or
-     `TTS_VOICE_QUC` is available).
+     Sherpa-ONNX -> Piper -> eSpeak), `quc` (K'iche': the MMS voice, then a Piper K'iche' model,
+     then eSpeak only when `TTS_VOICE_QUC` names an installed voice) or `kek` (Q'eqchi': the MMS
+     voice only). A Mayan request never falls back to a Spanish voice. The MMS voices come from
+     `./run.py --download-models mayan` (see [Voice Feedback §5](../architecture/voice-feedback.md#5-mayan-language-routing-kiche-quc-and-qeqchi-kek)).
+     They read the **Spanish** script below: there are no K'iche' or Q'eqchi' explanations yet.
 * **Spoken script**: `Atención: {dominant_percentage} por ciento del grupo respondió {option}.` +
   the distractor explanation + `La respuesta correcta es {correct}.` Arithmetic is rewritten into
   words before synthesis (`6/8` → *seis sobre ocho*, `75%` → *setenta y cinco por ciento*).
@@ -291,7 +294,7 @@ round that did not trigger it. Allows speculative pre-fetching during the `close
   * `404 Not Found`: Session, active round, or its question not found.
   * `409 Conflict`: Round is still active (`open` / `pending`), or the >51% Rule did not trigger (detail names the
     evaluator `reason`, e.g. `majority_correct`, `tie_between_distractors`).
-  * `422 Unprocessable Entity`: `lang` outside `es` / `quc`.
+  * `422 Unprocessable Entity`: `lang` outside `es` / `quc` / `kek`.
   * `500 Internal Server Error`: Synthesizer ran but crashed or produced no audio.
   * `503 Service Unavailable`: Voice engine is disabled (`TTS_ENABLED=false`), missing required models,
     or no voice is configured for the requested language.
@@ -302,6 +305,7 @@ round that did not trigger it. Allows speculative pre-fetching during the `close
 `TTS_PIPER_BINARY`, `TTS_PIPER_MODEL_DIR` (default `/opt/utztutor/models/tts`),
 `TTS_PIPER_MODEL_ES` (default `es_ES-sharvard-medium.onnx`), `TTS_PIPER_SPEAKER_ES` (default `1`),
 `TTS_PIPER_MODEL_QUC` (default `quc_Latn-maya-medium.onnx`), `TTS_PIPER_SPEAKER_QUC` (default `0`),
+`TTS_MMS_MODEL_DIR` (default `mms`, under `.cache/models/tts` or `TTS_PIPER_MODEL_DIR`),
 `TTS_PIPER_LENGTH_SCALE` (default `1.12`), `TTS_PIPER_NOISE_SCALE` (default `0.35`),
 `TTS_PIPER_NOISE_W_SCALE` (default `0.45`), `TTS_QWEN_BINARY`, `TTS_QWEN_GGUF_PATH`, `TTS_QWEN_THREADS`,
 `TTS_QWEN_CONTEXT` (default `1024`), `TTS_QWEN_BATCH` (default `128`).

@@ -12,6 +12,7 @@ import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
 import { ApiError } from '../../shared/api/httpClient';
 import { SpeechLanguage } from '../../features/speech/speech.types';
+import { SPEECH_LANGUAGES, toSpeechLanguage } from '../../features/speech/speechLanguages';
 import { getSpeechVoiceKey } from '../../features/speech/speechApi';
 import { useSpeechPlayback } from '../../features/speech/useSpeechPlayback';
 import { TeacherModeNotice } from '../../features/mode/ModeCards';
@@ -41,7 +42,7 @@ export const TeacherView: React.FC = () => {
   const { user, pendingPin, mustChangePin, login, handlePinChange, logout, restoreSession } = useAuth();
   const [voiceLang, setVoiceLang] = useState<SpeechLanguage>(() => {
     const pref = storage.getVoicePreference();
-    return pref?.lang === 'quc' ? 'quc' : 'es';
+    return toSpeechLanguage(pref?.lang);
   });
   const [roleError, setRoleError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -165,7 +166,7 @@ export const TeacherView: React.FC = () => {
 
   const handleCloseSettings = useCallback(() => {
     const pref = storage.getVoicePreference();
-    if (pref?.lang && (pref.lang === 'es' || pref.lang === 'quc') && pref.lang !== voiceLang) {
+    if (pref?.lang && SPEECH_LANGUAGES.includes(pref.lang as SpeechLanguage) && pref.lang !== voiceLang) {
       setVoiceLang(pref.lang as SpeechLanguage);
     }
     const currentKey = getSpeechVoiceKey((pref?.lang as SpeechLanguage) || voiceLang);

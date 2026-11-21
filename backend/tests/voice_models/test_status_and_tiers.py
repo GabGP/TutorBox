@@ -32,7 +32,7 @@ def test_check_models_status_reports_correctly(tmp_path):
     for model_name in ("mms-tts-quc-dialect_central", "mms-tts-kek"):
         model_dir = tmp_path / "mms" / model_name
         model_dir.mkdir(parents=True)
-        for file_name in catalog.MMS_FILE_NAMES:
+        for file_name in (*catalog.MMS_FILE_NAMES, catalog.MMS_ONNX_NAME):
             (model_dir / file_name).write_bytes(b"mms")
 
     status_full = status.check_models(tmp_path)

@@ -23,7 +23,9 @@ class TTSLoadRequest(BaseModel):
     engine: str | None = Field(
         default=None, description="Target engine (piper, espeak, etc.)"
     )
-    lang: Literal["es", "quc"] = Field(default="es", description="Language code")
+    lang: Literal["es", "quc", "kek"] = Field(
+        default="es", description="Language code: es, quc (Kʼicheʼ) or kek (Qʼeqchiʼ)"
+    )
     voice: str | None = Field(default=None, description="Specific voice identifier")
 
 
@@ -61,7 +63,9 @@ class TTSPreviewRequest(BaseModel):
     engine: str | None = Field(
         default=None, description="Target engine (piper, espeak, etc.)"
     )
-    lang: Literal["es", "quc"] = Field(default="es", description="Language code")
+    lang: Literal["es", "quc", "kek"] = Field(
+        default="es", description="Language code: es, quc (Kʼicheʼ) or kek (Qʼeqchiʼ)"
+    )
     voice: str | None = Field(default=None, description="Specific voice identifier")
     text: str | None = Field(
         default=None,

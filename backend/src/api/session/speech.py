@@ -29,7 +29,7 @@ from modes.quiz.session.speech import build_intervention_script
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-SpeechLanguage = Literal["es", "quc"]
+SpeechLanguage = Literal["es", "quc", "kek"]
 
 __all__ = ["SpeechLanguage", "clear_speech_cache", "round_speech", "router"]
 

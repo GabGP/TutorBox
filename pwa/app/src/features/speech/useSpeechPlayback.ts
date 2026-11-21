@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { getAudioPlayer, stopAudio, unlockAudio } from '../../shared/lib/sound';
 import { getSpeechVoiceKey, speechApi } from './speechApi';
 import { SpeechLanguage, SpeechState } from './speech.types';
+import { SPEECH_LANGUAGE_NAMES, isMayanLanguage } from './speechLanguages';
 import { useAudioPlayer } from './useAudioPlayer';
 import { useVoiceCache } from './useVoiceCache';
 
@@ -222,8 +223,8 @@ export function useSpeechPlayback(
           setState('error');
           setMessage(
             e.status === 503
-              ? language === 'quc'
-                ? "Todavía no hay voz en k'iche'; lea la explicación en voz alta."
+              ? isMayanLanguage(language)
+                ? `Todavía no hay voz en ${SPEECH_LANGUAGE_NAMES[language]}; lea la explicación en voz alta.`
                 : 'Este aparato no tiene voz instalada (espeak-ng).'
               : 'No se pudo preparar la voz.'
           );

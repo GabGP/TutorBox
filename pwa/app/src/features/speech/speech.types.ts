@@ -1,4 +1,4 @@
-export type SpeechLanguage = 'es' | 'quc';
+export type SpeechLanguage = 'es' | 'quc' | 'kek';
 
 export type SpeechState =
   | 'idle'

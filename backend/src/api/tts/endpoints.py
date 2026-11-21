@@ -134,7 +134,10 @@ def list_tts_voices(
                 engine="qwen3-tts",
             )
         )
-    elif lang == "quc":
+    elif lang in ("quc", "kek"):
+        # One MMS voice per Mayan language, named by the language code.
+        voices.append(TTSVoiceItem(id=lang, lang=lang, engine="mms"))
+    if lang == "quc":
         voices.append(TTSVoiceItem(id=tts.piper_model_quc, lang="quc", engine="piper"))
         if tts.voice_quc:
             voices.append(TTSVoiceItem(id=tts.voice_quc, lang="quc", engine="espeak"))

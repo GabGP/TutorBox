@@ -60,6 +60,7 @@ export const VoicePicker: React.FC<VoicePickerProps> = ({ isAdmin = false }) => 
         >
           <option value="es">Español</option>
           <option value="quc">K&apos;iche&apos;</option>
+          <option value="kek">Q&apos;eqchi&apos;</option>
         </select>
         <select
           id="voicePick"

@@ -140,3 +140,19 @@ def test_tts_preview_synthesis_error_returns_500(
     )
     assert res.status_code == 500
     unload.assert_called_once_with(engine="piper")
+
+
+def test_tts_preview_accepts_qeqchi(
+    client: TestClient, teacher_headers: dict[str, str], monkeypatch
+) -> None:
+    """Qʼeqchiʼ previews speak the short Mayan sample with the requested engine."""
+    _, synth = _patch_router(monkeypatch, loaded=True)
+    res = client.post(
+        "/api/v1/tts/preview",
+        json={"engine": "mms", "lang": "kek"},
+        headers=teacher_headers,
+    )
+    assert res.status_code == 200
+    assert synth is not None
+    assert synth.call_args.args[0] == "Utz'tutor."
+    assert synth.call_args.kwargs["lang"] == "kek"

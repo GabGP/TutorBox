@@ -6,6 +6,7 @@ from typing import Any
 from core.config import get_settings
 from core.tts.exceptions import TTSUnavailableError
 from core.tts.protocols import TTSBackend
+from core.tts.router.mayan import MAYAN_LANGUAGES, resolve_mayan_backend
 
 __all__ = [
     "_MAX_CACHE_ENTRIES",
@@ -40,32 +41,6 @@ def get_auto_backends(
     return tuple(available)
 
 
-def _resolve_quc_backend(
-    target_engine: str,
-    piper: TTSBackend,
-    espeak: TTSBackend,
-    voice_quc: str,
-) -> TTSBackend:
-    """Selects appropriate backend for Mayan K'iche' speech."""
-    if target_engine == "espeak":
-        if voice_quc and espeak.is_available(voice_quc):
-            return espeak
-        raise TTSUnavailableError("eSpeak cannot synthesize Mayan K'iche'.")
-    if target_engine == "piper":
-        if piper.is_available("quc"):
-            return piper
-        raise TTSUnavailableError("Piper K'iche' model is not installed.")
-    if target_engine == "auto":
-        if piper.is_available("quc"):
-            return piper
-        if voice_quc and espeak.is_available(voice_quc):
-            return espeak
-        raise TTSUnavailableError("No speech voice is configured for language 'quc'.")
-    raise TTSUnavailableError(
-        f"TTS engine '{target_engine}' is not registered or does not support 'quc'."
-    )
-
-
 def resolve_target_backend(
     backends: dict[str, TTSBackend],
     piper: TTSBackend,
@@ -76,9 +51,11 @@ def resolve_target_backend(
     """Resolves the active synthesis backend given language, engine override, and settings."""
     target_engine = (engine or get_settings().tts.engine).lower()
 
-    if lang == "quc":
+    if lang in MAYAN_LANGUAGES:
         settings = get_settings().tts
-        return _resolve_quc_backend(target_engine, piper, espeak, settings.voice_quc)
+        return resolve_mayan_backend(
+            target_engine, lang, backends, piper, espeak, settings.voice_quc
+        )
 
     if engine:
         if target_engine in backends:
@@ -141,6 +118,7 @@ def get_engine_status(backend: TTSBackend) -> dict[str, Any]:
         "kokoro": cfg.kokoro_voice,
         "melo": cfg.melo_voice,
         "qwen3-tts": cfg.qwen_gguf_path,
+        "mms": cfg.mms_model_dir,
     }
     model_id = mid_map.get(backend.engine_name, cfg.voice)
     return {

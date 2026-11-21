@@ -257,6 +257,12 @@ describe('useSpeechPlayback Hook', () => {
     });
     expect(qucResult.current.state).toBe('error');
     expect(qucResult.current.message).toBe("Todavía no hay voz en k'iche'; lea la explicación en voz alta.");
+
+    const { result: kekResult } = renderHook(() => useSpeechPlayback('s1', 'kek'));
+    await act(async () => {
+      await kekResult.current.speak(0);
+    });
+    expect(kekResult.current.message).toBe("Todavía no hay voz en q'eqchi'; lea la explicación en voz alta.");
   });
 
   it('prefetches speech audio blob in background and plays synchronously on speak', async () => {

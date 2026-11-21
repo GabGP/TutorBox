@@ -14,6 +14,7 @@ from core.config.constants import (
     DEFAULT_TTS_KOKORO_VOICE,
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
+    DEFAULT_TTS_MMS_MODEL_DIR,
     DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
@@ -79,6 +80,7 @@ class TTSConfig:
     kokoro_speaker_id: int = DEFAULT_TTS_KOKORO_SPEAKER_ID
     kokoro_provider: str = DEFAULT_TTS_KOKORO_PROVIDER
     melo_voice: str = DEFAULT_TTS_MELO_VOICE
+    mms_model_dir: str = DEFAULT_TTS_MMS_MODEL_DIR
     qwen_binary: str = DEFAULT_TTS_QWEN_BINARY
     qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
     qwen_threads: int = DEFAULT_TTS_QWEN_THREADS

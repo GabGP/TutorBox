@@ -139,9 +139,9 @@
       failed_when: not check_pwa.stat.exists
       ignore_errors: true
 
-    # The downloads page's Kʼicheʼ and Qʼeqchiʼ audio guides are made on the kit by
-    # pwa/tts-tests/generate_tts.py: it needs the mayan-audio packages and both MMS models.
-    - name: The Mayan audio-guide generator has its packages and models
+    # The Kʼicheʼ and Qʼeqchiʼ voices: the classroom engine needs both MMS models exported to
+    # ONNX, and the downloads page's guide generator (pwa/tts-tests) the mayan-audio packages.
+    - name: The Mayan voices and the audio-guide generator are installed
       ansible.builtin.command:
         argv:
           - "{{ repo_dir }}/.cache/venv/bin/python"

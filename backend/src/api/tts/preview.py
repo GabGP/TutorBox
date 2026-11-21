@@ -18,6 +18,7 @@ __all__ = ["router"]
 PREVIEW_SAMPLE_TEXT: dict[str, str] = {
     "es": "Hola, esta es la voz de Utz'tutor para tu clase.",
     "quc": "Utz'tutor.",
+    "kek": "Utz'tutor.",
 }
 
 

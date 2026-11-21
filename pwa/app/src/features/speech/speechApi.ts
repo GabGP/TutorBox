@@ -59,7 +59,7 @@ export const speechApi = {
    * language; otherwise the configured default engine speaks.
    *
    * @param {string} sessionId - Active session UUID.
-   * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es' or 'quc').
+   * @param {SpeechLanguage} [language='es'] - Targeted synthesis language ('es', 'quc' or 'kek').
    * @returns {Promise<string>} Blob URL ready for HTMLAudioElement playback.
    */
   async getSpeechBlobUrl(sessionId: string, language: SpeechLanguage = 'es'): Promise<string> {

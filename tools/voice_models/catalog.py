@@ -38,6 +38,8 @@ MMS_KICHE_MODEL = "mms-tts-quc-dialect_central"
 MMS_QEQCHI_MODEL = "mms-tts-kek"
 MMS_MODELS = (MMS_KICHE_MODEL, MMS_QEQCHI_MODEL)
 MMS_WEIGHTS_NAME = "model.safetensors"
+# Exported after the download for the backend's ONNX Runtime engine (core/tts/engines/mms).
+MMS_ONNX_NAME = "model.onnx"
 MMS_FILE_NAMES = (
     "config.json",
     "vocab.json",

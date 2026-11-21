@@ -11,16 +11,26 @@ def _populate(models_dir, file_content=b"mms"):
     for model_name in MODEL_NAMES:
         model_dir = models_dir / "mms" / model_name
         model_dir.mkdir(parents=True, exist_ok=True)
-        for file_name in catalog.MMS_FILE_NAMES:
+        for file_name in (*catalog.MMS_FILE_NAMES, catalog.MMS_ONNX_NAME):
             (model_dir / file_name).write_bytes(file_content)
 
 
 def test_download_mms_fetches_every_file_of_both_checkpoints(tmp_path):
     """Verifies each checkpoint file comes from its Hugging Face repo into mms/<name>/."""
-    with patch(
-        "tools.voice_models.mms.download_file", return_value=True
-    ) as mock_download:
+    with (
+        patch(
+            "tools.voice_models.mms.download_file", return_value=True
+        ) as mock_download,
+        patch(
+            "tools.voice_models.mms.export_mms_onnx", return_value=True
+        ) as mock_export,
+    ):
         assert mms.download_mms(tmp_path, force=True) is True
+
+    assert [call.args for call in mock_export.call_args_list] == [
+        (tmp_path / "mms" / model_name,) for model_name in MODEL_NAMES
+    ]
+    assert all(call.kwargs["force"] is True for call in mock_export.call_args_list)
 
     requested = [call.args[:2] for call in mock_download.call_args_list]
     assert requested == [
@@ -45,11 +55,27 @@ def test_download_mms_keeps_going_after_one_file_fails(tmp_path):
     """Verifies a failed file fails the step but the remaining files are still tried."""
     file_count = len(MODEL_NAMES) * len(catalog.MMS_FILE_NAMES)
     results = [False] + [True] * (file_count - 1)
-    with patch(
-        "tools.voice_models.mms.download_file", side_effect=results
-    ) as mock_download:
+    with (
+        patch(
+            "tools.voice_models.mms.download_file", side_effect=results
+        ) as mock_download,
+        patch(
+            "tools.voice_models.mms.export_mms_onnx", return_value=True
+        ) as mock_export,
+    ):
         assert mms.download_mms(tmp_path) is False
     assert mock_download.call_count == file_count
+    # The checkpoint with a missing file is not exported; the other one is.
+    assert [call.args[0].name for call in mock_export.call_args_list] == ["mms-tts-kek"]
+
+
+def test_download_mms_fails_when_an_export_fails(tmp_path):
+    """Verifies a failed ONNX export fails the tier."""
+    with (
+        patch("tools.voice_models.mms.download_file", return_value=True),
+        patch("tools.voice_models.mms.export_mms_onnx", side_effect=[False, True]),
+    ):
+        assert mms.download_mms(tmp_path) is False
 
 
 def test_mms_models_present_needs_every_file(tmp_path):
