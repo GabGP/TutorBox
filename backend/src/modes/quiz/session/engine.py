@@ -45,6 +45,11 @@ class QuizSessionEngine:
             return None
         return round(timer.remaining_seconds(), 1) if timer.is_running() else 0.0
 
+    def get_seconds_until_start(self, round_id: str) -> float | None:
+        """Start countdown left before the round takes votes, or None if unmanaged."""
+        timer = self._timers.get(round_id)
+        return None if timer is None else round(timer.seconds_until_start(), 1)
+
     def create_session(
         self,
         session_id: str,

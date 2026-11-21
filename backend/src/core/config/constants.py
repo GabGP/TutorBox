@@ -30,6 +30,9 @@ DEFAULT_SLM_MANAGE_RESIDENCY: bool = True
 DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS: float = 90.0
 
 DEFAULT_QUIZ_MAX_RETRIES: int = 3
+# 3-2-1 on every screen before the first round of a game takes votes; the round's own
+# answer time starts after it, so the countdown never shortens it. 0 turns it off.
+DEFAULT_QUIZ_START_COUNTDOWN_SECONDS: float = 3.0
 
 # Offline classroom voice (multi-tier: qwen3-tts → sherpa/piper → espeak) for >51% spoken intervention.
 DEFAULT_TTS_ENABLED: bool = True

@@ -12,6 +12,7 @@ from core.config.constants import (
     DEFAULT_CAPTIVE_PORTAL_URL,
     DEFAULT_DB_PATH,
     DEFAULT_QUIZ_MAX_RETRIES,
+    DEFAULT_QUIZ_START_COUNTDOWN_SECONDS,
     DEFAULT_SEED_TEACHER_PIN,
     DEFAULT_SEED_TEACHER_USERNAME,
     DEFAULT_SIGNUP_MAX_EVENTS,
@@ -57,6 +58,7 @@ class LLMConfig:
 @dataclass(frozen=True)
 class QuizConfig:
     max_retries: int = DEFAULT_QUIZ_MAX_RETRIES
+    start_countdown_seconds: float = DEFAULT_QUIZ_START_COUNTDOWN_SECONDS
 
 
 @dataclass(frozen=True)

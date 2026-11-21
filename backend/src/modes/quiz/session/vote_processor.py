@@ -63,6 +63,10 @@ def process_student_vote(
     if round_record.status != RoundStatus.OPEN.value:
         raise InvalidRoundStateError(f"Round '{round_id}' is not open.")
 
+    if timer and not timer.has_started():
+        raise InvalidRoundStateError(
+            "Voting has not started: the countdown is running."
+        )
     if timer and timer.is_expired():
         raise InvalidRoundStateError("Voting window has expired.")
 

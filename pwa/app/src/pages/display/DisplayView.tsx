@@ -3,6 +3,7 @@ import { useApplianceMode } from '../../features/mode/useApplianceMode';
 import { TutorWall } from '../../features/tutor/TutorWall';
 import { computeDisplayStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
+import { StartCountdown } from '../../features/session-engine/StartCountdown';
 import { OPTION_LETTERS } from '../../shared/constants/options';
 import { getSessionQueryParamId, useHostAddress } from '../../shared/routing/session';
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
@@ -66,6 +67,7 @@ export const DisplayView: React.FC = () => {
 
   return (
     <div className={styles.displayShell}>
+      <StartCountdown startsIn={round?.starts_in} />
       {step === 'idle' && (
         <section id="s-idle" className={`${styles.section} ${styles.center}`}>
           <div className={styles.logo} aria-hidden>

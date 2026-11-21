@@ -48,6 +48,9 @@ os.environ["TTS_MMS_MODEL_DIR"] = os.path.join(_WORKER_DATABASE_DIR, "no-mms-voi
 # may load or unload a model. Residency tests switch the manager on with fake HTTP.
 os.environ["SLM_MANAGE_RESIDENCY"] = "false"
 
+# Tests vote as soon as a game starts: no 3-2-1 unless a countdown test sets one.
+os.environ["QUIZ_START_COUNTDOWN_SECONDS"] = "0"
+
 import pytest
 from fastapi.testclient import TestClient
 

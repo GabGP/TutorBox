@@ -58,6 +58,9 @@ class SessionRoundInfo(BaseModel):
     question_id: str | None = None
     duration_seconds: int = 30
     time_remaining: float | None = None
+    # Seconds left of the 3-2-1 before the first round takes votes (0 once voting runs);
+    # None when the backend has no timer for the round (e.g. after a restart).
+    starts_in: float | None = None
     votes_cast: int = 0
     question: RoundQuestionView | None = None
     result: RoundResultView | None = None

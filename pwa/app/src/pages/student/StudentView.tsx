@@ -6,6 +6,7 @@ import { ForcedPinModal } from '../../features/auth/ForcedPinModal';
 import { useAuth } from '../../features/auth/useAuth';
 import { computeStudentStep } from '../../features/session-engine/sessionStateMachine';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
+import { StartCountdown } from '../../features/session-engine/StartCountdown';
 import { useStudentVoting } from '../../features/voting/useStudentVoting';
 import { getSessionQueryParamId } from '../../features/session-engine/sessionApi';
 import { useOptionKeyboard } from '../../shared/lib/keyboard';
@@ -224,6 +225,7 @@ export const StudentView: React.FC = () => {
         </span>
       </header>
       <main className={styles.mainContent}>{renderContent()}</main>
+      <StartCountdown startsIn={currentRound?.starts_in} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { RemediationAlert } from '../../features/match-report/RemediationAlert';
 import { SpeechLanguage, SpeechState } from '../../features/speech/speech.types';
 import { RoundModel, SessionModel } from '../../features/session-engine/session.types';
+import { StartCountdown } from '../../features/session-engine/StartCountdown';
 import { CountdownRing } from '../../shared/ui/CountdownRing/CountdownRing';
 import { TallyBars } from '../../shared/ui/TallyBars/TallyBars';
 import utils from '../../shared/styles/utils.module.css';
@@ -69,6 +70,7 @@ export const TeacherLiveRounds: React.FC<TeacherLiveRoundsProps> = ({
 
     return (
       <section id="s-question" className={styles.stack}>
+        <StartCountdown startsIn={round.starts_in} />
         <div className={styles.topRow}>
           <CountdownRing
             id="ring"

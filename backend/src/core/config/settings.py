@@ -10,6 +10,7 @@ from core.config.constants import (
     DEFAULT_BCRYPT_ROUNDS,
     DEFAULT_BUSY_TIMEOUT_MS,
     DEFAULT_QUIZ_MAX_RETRIES,
+    DEFAULT_QUIZ_START_COUNTDOWN_SECONDS,
     DEFAULT_SEED_TEACHER_PIN,
     DEFAULT_SEED_TEACHER_USERNAME,
     DEFAULT_SIGNUP_MAX_EVENTS,
@@ -112,6 +113,12 @@ def get_settings(*, reload: bool = False) -> Settings:
         quiz=QuizConfig(
             max_retries=parse_int(
                 "QUIZ_MAX_RETRIES", DEFAULT_QUIZ_MAX_RETRIES, min_value=1
+            ),
+            start_countdown_seconds=parse_float(
+                "QUIZ_START_COUNTDOWN_SECONDS",
+                DEFAULT_QUIZ_START_COUNTDOWN_SECONDS,
+                min_value=0.0,
+                max_value=10.0,
             ),
         ),
         tts=build_tts_config(),

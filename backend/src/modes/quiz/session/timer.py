@@ -18,12 +18,27 @@ class RoundTimer:
         self._started_at_monotonic: float | None = None
         self._is_stopped: bool = False
 
-    def start(self, *, start_time: float | None = None) -> None:
-        """Starts the round timer."""
-        self._started_at_monotonic = (
-            start_time if start_time is not None else self._clock()
-        )
+    def start(
+        self, *, start_time: float | None = None, delay_seconds: float = 0.0
+    ) -> None:
+        """Starts the round timer, `delay_seconds` from now (the game's start countdown).
+
+        Until then the round is open but takes no votes, and its full duration remains.
+        """
+        now = start_time if start_time is not None else self._clock()
+        self._started_at_monotonic = now + max(0.0, delay_seconds)
         self._is_stopped = False
+
+    def seconds_until_start(self, *, current_time: float | None = None) -> float:
+        """Seconds of start countdown left; 0.0 once voting has begun (or never started)."""
+        if self._started_at_monotonic is None or self._is_stopped:
+            return 0.0
+        now = current_time if current_time is not None else self._clock()
+        return max(0.0, self._started_at_monotonic - now)
+
+    def has_started(self, *, current_time: float | None = None) -> bool:
+        """False while the start countdown runs: votes are refused until it ends."""
+        return self.seconds_until_start(current_time=current_time) <= 0.0
 
     def stop(self) -> None:
         """Stops the round timer."""

@@ -35,6 +35,8 @@ export interface RoundModel {
   round_index: number;
   duration_seconds: number;
   time_remaining: number | null;
+  /** Seconds of 3-2-1 left before the game's first round takes votes; 0 or absent once it does. */
+  starts_in?: number | null;
   status: RoundStatus;
   votes_cast: number;
   question?: QuestionModel;

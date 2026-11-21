@@ -3,6 +3,7 @@
 import sqlite3
 import time
 
+from core.config import get_settings
 from core.db.question_repository import get_question_by_id
 from core.db.round_repository import (
     get_quiz_round,
@@ -30,7 +31,11 @@ def open_turn_round(
     session_id: str,
     round_index: int,
 ) -> QuizRoundRecord:
-    """Transitions a pending round to open and activates its countdown timer."""
+    """Transitions a pending round to open and activates its countdown timer.
+
+    Round 0 opens when the game starts (only start_session opens it), so it waits for
+    the start countdown (QUIZ_START_COUNTDOWN_SECONDS) before taking votes.
+    """
     round_record = get_round_by_index(conn, session_id, round_index)
     if round_record is None:
         raise RoundNotFoundError(f"session={session_id}, index={round_index}")
@@ -38,7 +43,9 @@ def open_turn_round(
         raise InvalidRoundStateError(f"Round already {round_record.status}.")
 
     timer = RoundTimer(round_record.duration_seconds)
-    timer.start()
+    is_game_start = round_index == 0
+    countdown = get_settings(reload=True).quiz.start_countdown_seconds
+    timer.start(delay_seconds=countdown if is_game_start else 0.0)
     timers[round_record.id] = timer
 
     update_quiz_round_status(

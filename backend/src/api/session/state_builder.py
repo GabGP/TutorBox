@@ -56,6 +56,7 @@ def _round_info(
         question_id=round_record.question_id,
         duration_seconds=round_record.duration_seconds,
         time_remaining=engine.get_remaining_time(round_record.id),
+        starts_in=engine.get_seconds_until_start(round_record.id),
         votes_cast=count_votes_for_round(conn, round_record.id),
     )
     if round_record.status == RoundStatus.PENDING.value or not round_record.question_id:

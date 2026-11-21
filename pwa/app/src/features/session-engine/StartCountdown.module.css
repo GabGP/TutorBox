@@ -1,0 +1,55 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--p-dark, #14291f) 92%, transparent);
+  color: #fff;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.4rem, 5vw, 2.6rem);
+  font-weight: 800;
+}
+
+.digit {
+  font-size: clamp(8rem, 40vmin, 22rem);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: countdownPop 1s ease-out both;
+}
+
+.caption {
+  margin: 0;
+  font-size: clamp(1rem, 3.5vw, 1.6rem);
+  opacity: 0.85;
+}
+
+@keyframes countdownPop {
+  from {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digit {
+    animation: none;
+  }
+}

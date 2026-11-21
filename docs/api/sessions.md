@@ -104,6 +104,7 @@ Publicly inspectable state of a session and active round countdown. Polled by st
         "question_id": "q_add_001",
         "duration_seconds": 20,
         "time_remaining": 12.5,
+        "starts_in": 0.0,
         "votes_cast": 7,
         "question": { "question_text": "¿Cuánto es 54 + 38?", "options": { "A": "82", "B": "16", "C": "92", "D": "812" } },
         "result": null
@@ -126,12 +127,13 @@ Publicly inspectable state of a session and active round countdown. Polled by st
 * **Notes**:
   * `time_remaining` is `null` when no in-memory timer exists for the round (e.g. after a backend restart); clients treat it as "no countdown" rather than "expired".
   * In `lobby` the round is `pending` and `question` is `null`, so the first question is not visible before the teacher starts.
+  * `starts_in` is the start countdown left, in seconds, before the round takes votes. Only the first round of a game has one (`QUIZ_START_COUNTDOWN_SECONDS`, default 3, `0` turns it off); later rounds answer `0.0`, and it is `null` like `time_remaining` when no in-memory timer exists. The teacher's phone, the student phones and the classroom screen show a full-screen 3-2-1 while it is above 0. `time_remaining` keeps the round's full `duration_seconds` until the countdown ends: the answer time starts after it.
 
 ---
 
 ### <a id="post-session-start"></a>`POST /api/v1/session/{session_id}/start`
 
-Transitions session state from `lobby` to `active` and opens the first question round with its countdown timer.
+Transitions session state from `lobby` to `active` and opens the first question round with its countdown timer. The round takes votes after the start countdown (`current_round.starts_in`, 3 s by default; see the notes above).
 
 * **Authorization**: Teacher, Admin
 * **Path Parameters**:
@@ -179,7 +181,7 @@ Ingests a student vote. Enforces **first-press locking** at both engine and data
   * `400 Bad Request`: Invalid option (not `"A"`, `"B"`, `"C"`, or `"D"`).
   * `401 Unauthorized`: Missing, invalid, expired or revoked session token.
   * `404 Not Found`: Session or active round not found.
-  * `409 Conflict`: First-press lock violation (student already voted in this round, from a phone or a clicker) or round not in `open` state.
+  * `409 Conflict`: First-press lock violation (student already voted in this round, from a phone or a clicker), round not in `open` state, or the game's start countdown still running (`"Voting has not started: the countdown is running."`).
   * `422 Unprocessable Content`: Input validation error.
 
 ---
