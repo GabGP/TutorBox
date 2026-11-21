@@ -7,6 +7,7 @@ import { TeacherSettingsSheet } from './TeacherSettingsSheet';
 import type { SettingsSectionId } from '../../features/settings/SettingsView';
 import { ClickerFleetSheet } from '../../features/clickers/ClickerFleetSheet';
 import { ReportsView } from '../../features/reports/ReportsView';
+import { SystemHealthSheet } from '../../features/system-health/SystemHealthSheet';
 import { Sheet } from '../../shared/ui/Sheet/Sheet';
 import { ToastViewport } from '../../shared/ui/Toast/ToastViewport';
 import { useErrorToast } from '../../shared/ui/Toast/useErrorToast';
@@ -50,6 +51,7 @@ export const TeacherView: React.FC = () => {
   const [settingsSection, setSettingsSection] = useState<SettingsSectionId | undefined>(undefined);
   const [showClickers, setShowClickers] = useState(false);
   const [showReports, setShowReports] = useState(false);
+  const [showSystemHealth, setShowSystemHealth] = useState(false);
 
   const isStaff = Boolean(user && ['teacher', 'admin'].includes(user.role));
   const initialSid = storage.getTeacherSessionId();
@@ -93,6 +95,7 @@ export const TeacherView: React.FC = () => {
       setShowSettings(false);
       setShowClickers(false);
       setShowReports(false);
+      setShowSystemHealth(false);
     }
   }, [user]);
 
@@ -198,6 +201,7 @@ export const TeacherView: React.FC = () => {
         onOpenSettings={() => openSettings()}
         onOpenClickers={() => setShowClickers(true)}
         onOpenReports={() => setShowReports(true)}
+        onOpenSystemHealth={() => setShowSystemHealth(true)}
       />
       {showModePicker && (
         <ModePicker
@@ -292,6 +296,7 @@ export const TeacherView: React.FC = () => {
         />
       )}
       {showClickers && isStaff && <ClickerFleetSheet onClose={() => setShowClickers(false)} />}
+      {showSystemHealth && isStaff && <SystemHealthSheet onClose={() => setShowSystemHealth(false)} />}
       {showReports && isStaff && (
         <Sheet label="Reportes" onClose={() => setShowReports(false)}>
           <ReportsView />

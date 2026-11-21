@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BarChart3, Gamepad2, Settings } from 'lucide-react';
+import { Activity, ArrowLeft, BarChart3, Gamepad2, Settings } from 'lucide-react';
 import utils from '../../shared/styles/utils.module.css';
 import styles from './TeacherView.module.css';
 
@@ -14,6 +14,8 @@ export interface TeacherHeaderProps {
   onOpenClickers?: () => void;
   /** Opens the quiz / tutor / games reports sheet; hidden when absent. */
   onOpenReports?: () => void;
+  /** Opens the Jetson health panel; hidden when absent. */
+  onOpenSystemHealth?: () => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   onOpenSettings,
   onOpenClickers,
   onOpenReports,
+  onOpenSystemHealth,
 }) => {
   return (
     <header className={styles.header}>
@@ -62,6 +65,11 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
       {onOpenClickers && (
         <button id="clickers" onClick={onOpenClickers} aria-label="Clickers" className={styles.iconBtn}>
           <Gamepad2 size={18} aria-hidden />
+        </button>
+      )}
+      {onOpenSystemHealth && (
+        <button id="systemHealth" onClick={onOpenSystemHealth} aria-label="Estado del Jetson" className={styles.iconBtn}>
+          <Activity size={18} aria-hidden />
         </button>
       )}
       {onOpenSettings && (

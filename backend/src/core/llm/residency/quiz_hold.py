@@ -48,6 +48,11 @@ class QuizModelHold:
         with self._lock:
             return self._generations_in_flight > 0 or self._countdown is not None
 
+    def generation_in_flight(self) -> bool:
+        """True while a question generation runs (a countdown alone does not count)."""
+        with self._lock:
+            return self._generations_in_flight > 0
+
     def arm(self) -> None:
         """Starts (or restarts) the idle countdown."""
         with self._lock:

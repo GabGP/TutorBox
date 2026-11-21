@@ -73,6 +73,10 @@ class ModelResidencyManager:
                 )
             return self._unload(self._tutor_model)
 
+    def quiz_generation_in_flight(self) -> bool:
+        """True while a question generation runs; the quiz model must stay loaded for it."""
+        return self._quiz_hold.generation_in_flight()
+
     def load_quiz(self) -> ModelResidencyResult:
         """Loads the quiz model at the start of a batch and arms the idle countdown."""
         if not self._enabled:

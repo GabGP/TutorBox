@@ -46,7 +46,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
 ## <a id="1-components--architecture"></a>1. Components & Architecture
 
 - **FastAPI Core Application**:
-  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, physical ESP32 clicker fleet management (`api/staff/`), the clicker login and its first-contact enrollment (`api/devices/`: `POST /api/v1/devices/auth`), and the presence heartbeat and the teacher's class view (`api/presence/`).
+  - Modular sub-routers for health probes, captive-portal connectivity probes (`api/captive.py`: `302 → /alumno/` so a phone joining the classroom Wi-Fi opens the student page), authentication sessions, student self-service, staff administration, physical ESP32 clicker fleet management (`api/staff/`), the clicker login and its first-contact enrollment (`api/devices/`: `POST /api/v1/devices/auth`), and the presence heartbeat and the teacher's class view (`api/presence/`), and the Jetson health panel with its memory release (`api/system/`, readers in `core/system_health/`, [System API](../docs/api/system.md)).
   - OpenAPI automated documentation generator (`/docs` and `/openapi.json`).
 - **Security & Access Control**:
   - Role-based access control (RBAC) with `student`, `teacher`, and `admin` roles.
@@ -260,7 +260,7 @@ backend/
 ├── schemas/           # Canonical versioned JSON Schema contract artifacts (Draft 2020-12)
 │   └── v1/            # Version 1.0.0 schema artifacts (quiz_question.schema.json)
 ├── src/
-│   ├── api/           # FastAPI route modules (auth, devices, games, health, llm, presence, quiz, session, staff, tts, users) mounted under /api/v1
+│   ├── api/           # FastAPI route modules (auth, devices, games, health, llm, presence, quiz, session, staff, system, tts, users) mounted under /api/v1
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
 │   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event, clicker device, class roster), migrations & audit

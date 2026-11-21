@@ -80,7 +80,7 @@ describe('TeacherHeader Clickers button', () => {
     expect(screen.queryByRole('button', { name: 'Clickers' })).not.toBeInTheDocument();
   });
 
-  it('calls the handler and sits before the settings button', () => {
+  it('calls the handler and sits between the health and the settings buttons', () => {
     const onOpenClickers = vi.fn();
     render(
       <TeacherHeader
@@ -90,10 +90,12 @@ describe('TeacherHeader Clickers button', () => {
         onBack={vi.fn()}
         onOpenSettings={vi.fn()}
         onOpenClickers={onOpenClickers}
+        onOpenSystemHealth={vi.fn()}
       />
     );
     const names = screen.getAllByRole('button').map((button) => button.getAttribute('aria-label') ?? button.textContent);
-    expect(names.indexOf('Clickers')).toBe(names.indexOf('Ajustes') - 1);
+    expect(names.indexOf('Clickers')).toBe(names.indexOf('Estado del Jetson') - 1);
+    expect(names.indexOf('Estado del Jetson')).toBe(names.indexOf('Ajustes') - 1);
     fireEvent.click(screen.getByRole('button', { name: 'Clickers' }));
     expect(onOpenClickers).toHaveBeenCalledTimes(1);
   });

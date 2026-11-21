@@ -13,6 +13,7 @@ from api.presence import router as presence_router
 from api.quiz import router as quiz_router
 from api.session import router as session_router
 from api.staff import router as staff_router
+from api.system import router as system_router
 from api.tts import router as tts_router
 from api.tutor import router as tutor_router
 from api.users import router as users_router
@@ -30,6 +31,7 @@ api_v1_router.include_router(tutor_router, prefix="/tutor")
 api_v1_router.include_router(games_router, prefix="/games")
 api_v1_router.include_router(devices_router, prefix="/devices")
 api_v1_router.include_router(presence_router, prefix="/presence")
+api_v1_router.include_router(system_router, prefix="/system")
 
 root_router = APIRouter()
 root_router.include_router(health_router)

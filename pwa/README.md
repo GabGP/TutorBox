@@ -94,7 +94,7 @@ pnpm build      # Build production bundle to dist/
 `src/features/mode/` lets the teacher pick the class mode (quiz, tutor, take-home) from `/maestro/`;
 `/pantalla/` and `/alumno/` poll it and follow. See [Three Modes §4](../docs/architecture/three-modes.md#4-choosing-the-mode).
 
-The `/maestro/` top bar follows the mode. In quiz mode it shows the wizard step (`Paso 1 de 3`, `En juego`…); in tutor mode it reads `Modo tutor · Chat de práctica` and in take-home mode `Llevar a casa · App para el teléfono`. The bar itself never moves: a fixed 62 px height, one line each for title and subtitle (ending in … when too long), the back arrow's place always kept, and the same round Reportes, Clickers and Ajustes buttons in every mode.
+The `/maestro/` top bar follows the mode. In quiz mode it shows the wizard step (`Paso 1 de 3`, `En juego`…); in tutor mode it reads `Modo tutor · Chat de práctica` and in take-home mode `Llevar a casa · App para el teléfono`. The bar itself never moves: a fixed 62 px height, one line each for title and subtitle (ending in … when too long), the back arrow's place always kept, and the same round Reportes, Clickers, Estado del Jetson and Ajustes buttons in every mode.
 
 The back arrow works on the bank pick (back to the topic) and in **Preparar el juego** (back to the bank pick: the match that has not started is ended on the server, and the topic and the chosen questions stay). The quiz voice language is chosen in **Ajustes → Voz**, when a voice is saved as the default; the bar has no voice toggle.
 
@@ -108,6 +108,12 @@ The back arrow works on the bank pick (back to the topic) and in **Preparar el j
 * During a match the footer holds **Cancelar** on the left and **Terminar la pregunta** on the right, both press-and-hold and both in the footer's pill shape. A plain tap on either shows a toast saying to hold it, and the hold has no iOS long-press callout to cancel it. When a step fails because the backend is restarting (no answer, 502 or 503), the toast says so instead of a generic failure.
 
 ---
+
+### Estado del Jetson (teacher header)
+
+The **Estado del Jetson** button (heart-rate icon, between **Clickers** and the settings button) opens the appliance's health in its own sheet, from `src/features/system-health/`. It shows the CPU (all cores and their clocks), the GPU load and clock, the memory the models and the voice can still use, the temperatures, the power of each rail, the disk, the Ollama models in memory with their GPU share, and the voices loaded. Each card says what the reading means and when to worry, in Spanish, and its status word (**Bien**, **Atención**, **Crítico**, or **Sin datos**) is shown next to its colour.
+
+The sheet samples the appliance every 5 seconds while it is open and the page is visible, and stops when it closes. **Liberar memoria** unloads the models and voices the current mode does not need, loads back what the mode asks for, and shows a summary toast in Spanish; a step that failed turns the toast into a warning. The endpoints are in the [System API](../docs/api/system.md).
 
 ### Clickers (teacher header)
 

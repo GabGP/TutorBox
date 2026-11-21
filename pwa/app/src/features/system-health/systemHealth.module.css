@@ -1,0 +1,162 @@
+/* Jetson health panel: colours are design tokens only. A status is told apart by its word
+   as well as its colour, and each status sets the two custom properties its parts read. */
+
+.ok {
+  --status-color: var(--ok);
+  --status-bg: var(--ok-bg);
+  --p: var(--status-color);
+}
+
+.warn {
+  --status-color: var(--warn);
+  --status-bg: var(--warn-bg);
+  --p: var(--status-color);
+}
+
+.critical {
+  --status-color: var(--bad);
+  --status-bg: var(--bad-bg);
+  --p: var(--status-color);
+}
+
+.unknown {
+  --status-color: var(--mute2);
+  --status-bg: var(--chip);
+  --p: var(--status-color);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--mute2);
+}
+
+.releaseBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.releaseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--p);
+  color: #fff;
+  font-weight: 600;
+}
+
+.releaseButton:disabled {
+  opacity: 0.6;
+}
+
+/* Cards fill the sheet: two columns on a tablet, one on a 360 px phone. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  overflow-wrap: anywhere;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cardValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.badge {
+  flex: 0 0 auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--status-color, var(--mute2));
+  background: var(--status-bg, var(--chip));
+}
+
+.explanation {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--mute);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--ink2);
+}
+
+.modelName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A per-core line: name, its bar (flexible), then the clock. */
+.coreRow {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--mute2);
+}
