@@ -44,6 +44,10 @@ atexit.register(shutil.rmtree, _WORKER_DATABASE_DIR, ignore_errors=True)
 # default no MMS voice exists. Tests that need one build it under tmp_path.
 os.environ["TTS_MMS_MODEL_DIR"] = os.path.join(_WORKER_DATABASE_DIR, "no-mms-voices")
 
+# The repo's .env points at a real Ollama (the dev Jetson), and this must win over it: no test
+# may load or unload a model. Residency tests switch the manager on with fake HTTP.
+os.environ["SLM_MANAGE_RESIDENCY"] = "false"
+
 import pytest
 from fastapi.testclient import TestClient
 

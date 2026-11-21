@@ -17,7 +17,9 @@ from core.config.constants import (
     DEFAULT_SIGNUP_MAX_EVENTS,
     DEFAULT_SIGNUP_WINDOW_SECONDS,
     DEFAULT_SLM_BASE_URL,
+    DEFAULT_SLM_MANAGE_RESIDENCY,
     DEFAULT_SLM_MODEL_NAME,
+    DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
 )
@@ -48,6 +50,8 @@ class LLMConfig:
     model_name: str = DEFAULT_SLM_MODEL_NAME
     temperature: float = DEFAULT_SLM_TEMPERATURE
     timeout_seconds: float = DEFAULT_SLM_TIMEOUT_SECONDS
+    manage_residency: bool = DEFAULT_SLM_MANAGE_RESIDENCY
+    quiz_idle_unload_seconds: float = DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS
 
 
 @dataclass(frozen=True)

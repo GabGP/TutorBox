@@ -23,6 +23,11 @@ DEFAULT_SLM_BASE_URL: str = "http://127.0.0.1:8080/v1"
 DEFAULT_SLM_MODEL_NAME: str = "default"
 DEFAULT_SLM_TEMPERATURE: float = 0.7
 DEFAULT_SLM_TIMEOUT_SECONDS: float = 60.0
+# Model residency (core/llm/residency): the app loads each Ollama model only while the classroom
+# needs it. Off: the app never calls Ollama's native model API and the server keeps its defaults.
+DEFAULT_SLM_MANAGE_RESIDENCY: bool = True
+# A quiz model with no generation for this long is unloaded, e.g. after a teacher closed the page.
+DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS: float = 90.0
 
 DEFAULT_QUIZ_MAX_RETRIES: int = 3
 

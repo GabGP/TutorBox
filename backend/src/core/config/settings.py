@@ -15,7 +15,9 @@ from core.config.constants import (
     DEFAULT_SIGNUP_MAX_EVENTS,
     DEFAULT_SIGNUP_WINDOW_SECONDS,
     DEFAULT_SLM_BASE_URL,
+    DEFAULT_SLM_MANAGE_RESIDENCY,
     DEFAULT_SLM_MODEL_NAME,
+    DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS,
     DEFAULT_SLM_TEMPERATURE,
     DEFAULT_SLM_TIMEOUT_SECONDS,
 )
@@ -26,7 +28,7 @@ from core.config.models import (
     SecurityConfig,
     Settings,
 )
-from core.config.parsers import parse_db_path, parse_float, parse_int
+from core.config.parsers import parse_bool, parse_db_path, parse_float, parse_int
 from core.config.tts_settings import build_tts_config
 
 __all__ = ["clear_settings_cache", "get_settings"]
@@ -97,6 +99,14 @@ def get_settings(*, reload: bool = False) -> Settings:
                 DEFAULT_SLM_TIMEOUT_SECONDS,
                 min_value=0.1,
                 fallback_env_name="SLM_TIMEOUT",
+            ),
+            manage_residency=parse_bool(
+                "SLM_MANAGE_RESIDENCY", DEFAULT_SLM_MANAGE_RESIDENCY
+            ),
+            quiz_idle_unload_seconds=parse_float(
+                "SLM_QUIZ_IDLE_UNLOAD_SECONDS",
+                DEFAULT_SLM_QUIZ_IDLE_UNLOAD_SECONDS,
+                min_value=1.0,
             ),
         ),
         quiz=QuizConfig(
