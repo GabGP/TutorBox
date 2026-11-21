@@ -5,6 +5,8 @@ import type { ModelResidency, ResidencyDirection } from './residency.types';
 /** Spanish copy for one model's toasts. */
 export interface ResidencyCopy {
   loaded: (seconds: string) => string;
+  /** Loaded, but only `percent` % fits on the GPU: the rest runs on the CPU, slowly. */
+  partialGpu: (seconds: string, percent: number) => string;
   unloaded: string;
   loadFailed: string;
   unloadFailed: string;
@@ -28,7 +30,8 @@ function warning(message: string): ToastPush {
 
 /**
  * The toast for one load or unload. A null result means the request itself failed, which reads
- * like a failed residency. 'kept', 'unsupported' and 'disabled' say nothing: the teacher does
+ * like a failed residency. A load that did not fit entirely on the GPU warns: the model works,
+ * but slowly, because the Jetson had too little free memory. 'kept', 'unsupported' and 'disabled' say nothing: the teacher does
  * not need to know that the model was left alone or that the server does not manage it.
  *
  * @param {ModelResidency | null} result - The backend answer, or null when the request failed.
@@ -44,8 +47,14 @@ export function residencyNotice(
   const failure = direction === 'load' ? copy.loadFailed : copy.unloadFailed;
   if (result === null) return warning(failure);
   switch (result.action) {
-    case 'loaded':
-      return { message: copy.loaded(formatSecondsEs(result.duration_ms ?? 0)), tone: 'success' };
+    case 'loaded': {
+      const seconds = formatSecondsEs(result.duration_ms ?? 0);
+      const gpuPercent = result.gpu_percent;
+      if (typeof gpuPercent === 'number' && gpuPercent < 100) {
+        return warning(copy.partialGpu(seconds, gpuPercent));
+      }
+      return { message: copy.loaded(seconds), tone: 'success' };
+    }
     case 'unloaded':
       return { message: copy.unloaded, tone: 'success' };
     case 'failed':

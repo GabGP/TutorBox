@@ -10,6 +10,9 @@ export const QUIZ_LOADING_MESSAGE = 'Cargando el modelo de preguntas…';
 /** Toast wording for the quiz model. */
 export const QUIZ_MODEL_COPY: ResidencyCopy = {
   loaded: (seconds) => `Modelo de preguntas cargado (${seconds} s)`,
+  partialGpu: (seconds, percent) =>
+    `Modelo de preguntas cargado (${seconds} s), pero solo el ${percent} % cabe en la GPU: ` +
+    'las preguntas tardarán mucho más.',
   unloaded: 'Modelo de preguntas descargado de la memoria',
   loadFailed: 'No se pudo cargar el modelo de preguntas. La generación lo intentará de nuevo.',
   unloadFailed: 'No se pudo descargar el modelo de preguntas de la memoria.',

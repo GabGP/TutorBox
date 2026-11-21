@@ -9,6 +9,8 @@ export interface ModelResidency {
   duration_ms: number | null;
   /** Server-side reason; for logs only, never shown to the teacher. */
   detail: string | null;
+  /** After a load: the share of the model on the GPU (0-100). Below 100 it runs slowly. */
+  gpu_percent?: number | null;
 }
 
 /** Whether the request asked for the model to be loaded or unloaded. */

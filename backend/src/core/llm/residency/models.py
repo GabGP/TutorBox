@@ -28,6 +28,9 @@ class ModelResidencyResult(BaseModel):
     action: ResidencyAction
     duration_ms: float | None = None
     detail: str | None = None
+    # After a load: the share of the model Ollama placed on the GPU. Below 100 the rest
+    # runs on the CPU, several times slower (the Jetson had too little free memory).
+    gpu_percent: int | None = None
 
 
 class ResidencyError(Exception):

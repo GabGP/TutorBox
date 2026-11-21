@@ -100,4 +100,8 @@ def test_the_real_manager_is_used_when_nothing_is_patched(monkeypatch, saved_mod
     assert thread is not None
     thread.join(timeout=5)
 
-    assert fake_server.calls == [("resident", None), ("load", "tutor:latest")]
+    assert fake_server.calls == [
+        ("resident", None),
+        ("load", "tutor:latest"),
+        ("gpu", "tutor:latest"),
+    ]

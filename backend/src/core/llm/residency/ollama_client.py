@@ -46,6 +46,19 @@ class OllamaResidencyClient:
             names.update(str(entry[key]) for key in ("name", "model") if key in entry)
         return names
 
+    def gpu_percent(self, model_name: str) -> int | None:
+        """Share of the loaded model on the GPU (0-100), or None when Ollama does not say."""
+        answer = request_json(
+            "GET", f"{self._root}/api/ps", None, self._timeout_seconds
+        )
+        for entry in _as_list(answer.get("models")):
+            if model_name not in (entry.get("name"), entry.get("model")):
+                continue
+            size, size_vram = entry.get("size"), entry.get("size_vram")
+            if isinstance(size, int) and isinstance(size_vram, int) and size > 0:
+                return round(100 * size_vram / size)
+        return None
+
     def _generate(self, body: dict[str, Any]) -> dict[str, Any]:
         # stream false: one JSON object instead of Ollama's line-by-line stream.
         return request_json(

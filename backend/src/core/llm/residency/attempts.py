@@ -13,7 +13,7 @@ from core.llm.residency.models import (
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["attempt_request", "outcome"]
+__all__ = ["attempt_request", "outcome", "with_gpu_share"]
 
 
 def outcome(
@@ -41,3 +41,23 @@ def attempt_request(
     return ModelResidencyResult(
         model=model_name, action=success_action, duration_ms=duration_ms
     )
+
+
+def with_gpu_share(
+    result: ModelResidencyResult, read_gpu_percent: Callable[[], int | None]
+) -> ModelResidencyResult:
+    """Adds how much of a just-loaded model is on the GPU; a model partly on the CPU is slow."""
+    if result.action != "loaded":
+        return result
+    try:
+        gpu_percent = read_gpu_percent()
+    except ResidencyError as error:
+        logger.warning("Could not read where %s was placed: %s", result.model, error)
+        return result
+    if gpu_percent is not None and gpu_percent < 100:
+        logger.warning(
+            "Model %s is only %d%% on the GPU; the rest runs on the CPU, slowly.",
+            result.model,
+            gpu_percent,
+        )
+    return result.model_copy(update={"gpu_percent": gpu_percent})

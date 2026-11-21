@@ -57,10 +57,12 @@ def test_entering_tutor_mode_loads_the_tutor_model(client):
 
     result = manager.apply_mode("tutor")
 
-    assert client.calls == [("load", TUTOR)]
+    # Every load is followed by a look at where Ollama placed the model.
+    assert client.calls == [("load", TUTOR), ("gpu", TUTOR)]
     assert result.model == TUTOR
     assert result.action == "loaded"
     assert result.duration_ms == pytest.approx(3200.0)
+    assert result.gpu_percent == 100
 
 
 def test_leaving_tutor_mode_unloads_the_tutor_model(client):
@@ -136,7 +138,12 @@ def test_reconcile_unloads_a_leftover_quiz_model_then_applies_the_mode(client):
 
     result = manager.reconcile("tutor")
 
-    assert client.calls == [("resident", None), ("unload", QUIZ), ("load", TUTOR)]
+    assert client.calls == [
+        ("resident", None),
+        ("unload", QUIZ),
+        ("load", TUTOR),
+        ("gpu", TUTOR),
+    ]
     assert result.action == "loaded"
 
 
@@ -163,7 +170,7 @@ def test_reconcile_with_one_model_for_both_roles_only_applies_the_mode(client):
 
     manager.reconcile("tutor")
 
-    assert client.calls == [("load", QUIZ)]
+    assert client.calls == [("load", QUIZ), ("gpu", QUIZ)]
 
 
 def test_reconcile_does_nothing_when_disabled(client):

@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from typing import Protocol
 
 from core.db.mode_repository import ApplianceMode
-from core.llm.residency.attempts import attempt_request, outcome
+from core.llm.residency.attempts import attempt_request, outcome, with_gpu_share
 from core.llm.residency.models import ModelResidencyResult, ResidencyError
 from core.llm.residency.quiz_hold import QuizModelHold, TimerFactory
 
@@ -28,6 +28,8 @@ class ResidencyClient(Protocol):
     def unload(self, model_name: str) -> None: ...
 
     def resident_models(self) -> set[str]: ...
+
+    def gpu_percent(self, model_name: str) -> int | None: ...
 
 
 class ModelResidencyManager:
@@ -124,9 +126,10 @@ class ModelResidencyManager:
         return self._unload(self._quiz_model)
 
     def _load(self, model_name: str) -> ModelResidencyResult:
-        return attempt_request(
+        result = attempt_request(
             model_name, "loaded", lambda: self._client.load(model_name)
         )
+        return with_gpu_share(result, lambda: self._client.gpu_percent(model_name))
 
     def _unload(self, model_name: str) -> ModelResidencyResult:
         return attempt_request(

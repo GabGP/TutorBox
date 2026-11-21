@@ -93,7 +93,7 @@ follow the choice. Implemented in `backend/src/api/mode.py`, stored in the singl
 * **`PUT`** — `require_roles("teacher", "admin")`. Body `{"mode": "tutor"}` → `200`:
   ```json
   {"mode": "tutor", "model": {"model": "hf.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q8_0",
-   "action": "loaded", "duration_ms": 3200.0, "detail": null}}
+   "action": "loaded", "duration_ms": 3200.0, "detail": null, "gpu_percent": 100}}
   ```
   `model` is the tutor model's outcome (see [Model residency](#model-residency)); it is always present.
   The answer waits for the load, so a switch into tutor mode takes as long as the load does. Records a `mode_changed` audit event. Two switches that arrive together are
@@ -131,7 +131,7 @@ The `model` outcome (in the `PUT` above and in the two quiz endpoints) has these
 
 | `action` | Meaning |
 | :--- | :--- |
-| `loaded` | The model is in memory. `duration_ms` is the load time. |
+| `loaded` | The model is in memory. `duration_ms` is the load time; `gpu_percent` is the share Ollama placed on the GPU (from `/api/ps`: `size_vram / size`), or `null` when it does not say. |
 | `unloaded` | The model was dropped from memory. |
 | `kept` | Left in memory because the other role still needs it: the quiz and tutor models are one and the same, and a quiz batch or tutor mode still uses it. |
 | `failed` | Ollama refused the request or did not answer; `detail` says why. Nothing else fails: the mode is saved and a generation still runs. |
@@ -139,6 +139,12 @@ The `model` outcome (in the `PUT` above and in the two quiz endpoints) has these
 | `disabled` | `SLM_MANAGE_RESIDENCY=false`: the backend never calls Ollama's model API. |
 
 `detail` is for logs. The teacher's screen shows only a toast for `loaded`, `unloaded` and `failed`.
+
+`gpu_percent` below 100 means the Jetson had too little free memory when the model loaded: Ollama ran
+the remaining layers on the CPU, several times slower (on 2026-11-21 the quiz model got 24 of its 37
+layers on the GPU and one attempt passed the 120 s timeout, against 18–30 s with all 37). The backend
+logs a warning, and the teacher's screen shows a warning toast in place of the success toast. The
+`gpu_percent` field is only set for `loaded`.
 
 ---
 

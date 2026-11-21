@@ -70,6 +70,8 @@ class FakeResidencyClient:
         self.load_error: Exception | None = None
         self.unload_error: Exception | None = None
         self.list_error: Exception | None = None
+        self.gpu_error: Exception | None = None
+        self.gpu_share: int | None = 100
         self.load_ms = 3200.0
 
     def load(self, model_name: str) -> float:
@@ -89,8 +91,14 @@ class FakeResidencyClient:
             raise self.list_error
         return set(self.resident)
 
+    def gpu_percent(self, model_name: str) -> int | None:
+        self.calls.append(("gpu", model_name))
+        if self.gpu_error is not None:
+            raise self.gpu_error
+        return self.gpu_share
+
     def called(self) -> list[tuple[str, str | None]]:
-        return [call for call in self.calls if call[0] != "resident"]
+        return [call for call in self.calls if call[0] not in ("resident", "gpu")]
 
 
 class FakeCountdown:
