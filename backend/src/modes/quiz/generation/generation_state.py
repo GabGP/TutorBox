@@ -62,11 +62,16 @@ class GenerationState:
         )
 
     def build_llm_failure_error(self, cause: Exception) -> GenerationError:
-        """Constructs a descriptive GenerationError when an LLM transport call fails."""
+        """Constructs a descriptive GenerationError when an LLM transport call fails.
+
+        The failure joins the rejection history, so the generation log shows why the
+        attempt ended (a timeout, a killed model, an unreachable server).
+        """
+        failure = f"SLM completion request failed on attempt {self.attempt}: {cause}"
         return GenerationError(
-            f"SLM completion request failed on attempt {self.attempt}: {cause}",
+            failure,
             attempts=self.attempt,
             duration_ms=self.duration_ms,
             model_name=self.model_name,
-            accumulated_errors=list(self.accumulated_errors),
+            accumulated_errors=[*self.accumulated_errors, failure],
         )

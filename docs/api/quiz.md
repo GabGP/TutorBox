@@ -272,7 +272,7 @@ Generate a new diagnostic question on-demand using the local SLM with the reject
     ```
   * `403 Forbidden`: Caller is a student or has pending PIN rotation.
   * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
-  * `502 Bad Gateway`: SLM generation failed all retry attempts (persists failure log to telemetry database).
+  * `502 Bad Gateway`: SLM generation failed all retry attempts, or the model server failed (a timeout, a killed model, Ollama unreachable). Either way the failure is saved to the telemetry database; for a model-server failure its message is the last entry of `rejection_history`, so the generation activity shows why.
   * `499 Client Closed Request`: The client disconnected before the question was saved. Nobody reads it; it only shows in the server log.
 
 ---

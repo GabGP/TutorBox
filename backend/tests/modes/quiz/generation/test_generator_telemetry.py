@@ -162,7 +162,9 @@ def test_generator_llm_exception_telemetry():
     assert err.attempts == 1
     assert err.duration_ms >= 0.0
     assert err.model_name == "local-qwen"
-    assert err.accumulated_errors == []
+    # The transport failure is the only entry: the generation log shows why it stopped.
+    assert len(err.accumulated_errors) == 1
+    assert "LocalSLM offline" in err.accumulated_errors[0]
 
 
 def test_generator_retry_after_math_failure_telemetry():

@@ -88,3 +88,17 @@ def test_generation_state_build_llm_failure_error():
     assert err.attempts == 1
     assert "SLM completion request failed on attempt 1" in str(err)
     assert "llama-server unavailable" in str(err)
+    assert err.accumulated_errors == [str(err)]
+
+
+def test_llm_failure_keeps_earlier_rejections_before_the_failure():
+    state = GenerationState(
+        model_name="test-slm",
+        base_user_prompt="base prompt",
+        current_user_prompt="base prompt",
+        max_retries=3,
+    )
+    state.accumulated_errors.append("Duplicate option values")
+    err = state.build_llm_failure_error(TimeoutError("timed out"))
+    assert err.accumulated_errors[0] == "Duplicate option values"
+    assert err.accumulated_errors[1].endswith("timed out")
