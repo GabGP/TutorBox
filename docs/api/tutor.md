@@ -124,7 +124,9 @@ instead, as it did before, and the rewording guards below apply.
 
 Measured on the Jetson, the 1.5B distill asked to tutor freely invents dialogue turns and states the
 answer; asked to reword a given hint it stays close to it. Model replies take about 5–15 s (the model always
-reasons first); the first one after Ollama unloads the model takes about 30 s.
+reasons first). The model is loaded when the class enters tutor mode and unloaded when it leaves
+([model residency](system.md#model-residency)), so the first reply is no slower than the others; only
+a reply after a failed load pays the load time of about 30 s.
 
 ---
 
@@ -157,3 +159,7 @@ containment check ([Socratic Pedagogy §4](../architecture/socratic-pedagogy.md#
 ```bash
 ollama pull hf.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q8_0   # ~1.9 GB, the default TUTOR_MODEL_NAME
 ```
+
+The backend loads that model when the class enters tutor mode and unloads it when the class leaves
+(`SLM_MANAGE_RESIDENCY`, default on; see [System: model residency](system.md#model-residency)). That
+needs Ollama's keep-alive drop-in, which the Ansible setup installs.

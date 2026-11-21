@@ -60,6 +60,7 @@ FastAPI application designed to run on the NVIDIA Jetson Orin Nano, with local d
   - **Security & Access Control (`core/security`)**: Role-based access control (RBAC), forced PIN rotation, in-memory rate limiting (credential lockout & sliding window), bearer session token lifecycle, the scope of a clicker's session, which is vote and presence heartbeat only (`get_voter_session` in `auth_session.py`), and zero-credential logging guards.
   - **Mathematical Engine & SymPy Parser (`core/math_engine`)**: Deterministic SymPy AST parsing, arithmetic evaluation, and linear equation solver with non-equality proofs.
   - **LLM Client Layer (`core/llm`)**: Abstract client protocol, local HTTP SLM client with timeout/retry safeguards, and mock client for deterministic testing.
+  - **Model Residency (`core/llm/residency`)**: loads the tutor model while the class is in tutor mode and the quiz model during a question batch, and unloads each when it is no longer needed (idle countdown as a backstop), through Ollama's native `/api/generate` and `/api/ps`. Never raises for a server problem; it reports the outcome instead ([System: model residency](../docs/api/system.md#model-residency)).
   - **Offline Voice & Lifecycle (`core/tts`, `api/tts`, `api/llm`)**: Multi-tier pluggable voice synthesis for the >51% spoken intervention — state-of-the-art **Qwen3-TTS** (1.7B autoregressive transformer on CUDA), ultra-fast **Sherpa-ONNX / Piper VITS** (Latin American Spanish and Mayan K'iche'), high-fidelity **Kokoro-82M**, and **espeak-ng** formant fallback; hardware-contained LRU audio caching, and explicit quiz-agnostic lifecycle endpoints (`/api/v1/tts/load`, `/api/v1/tts/unload`, `/api/v1/tts/status`, `/api/v1/tts/voices`, and `/api/v1/llm/*` proxy).
 
 - **Appliance Operating Modes (`modes/`)**:
@@ -124,6 +125,9 @@ python3 -m pip install -e ".[dev]"
 ### Environment Variables & Configuration (`.env`)
 
 Copy the template `.env.example` to `.env` in the repository root to customize database paths, bcrypt work factors, rate limits, and SLM inference parameters:
+
+* `SLM_MANAGE_RESIDENCY` (default `true`): the backend loads and unloads the Ollama models itself. `false` leaves the models to the server; the tests always run with it off.
+* `SLM_QUIZ_IDLE_UNLOAD_SECONDS` (default `90`): seconds without a question generation before the quiz model is unloaded.
 
 ---
 
@@ -260,7 +264,7 @@ backend/
 │   ├── core/          # Platform infrastructure & transversal foundation
 │   │   ├── config/    # Centralized typed domain settings engine and .env environment loader
 │   │   ├── db/        # SQLite connection, repositories (quiz, session, round, vote, telemetry, game event, clicker device, class roster), migrations & audit
-│   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, and test mock client
+│   │   ├── llm/       # Abstract LLM client interface, HTTP local SLM client, Ollama model residency (residency/), and test mock client
 │   │   ├── logging/   # Unified application & access log formatting with captive probe filtering
 │   │   ├── math_engine/ # Deterministic SymPy AST parsing, arithmetic, and linear equation solver
 │   │   ├── security/  # bcrypt PIN hashing, session tokens, and rate limiters

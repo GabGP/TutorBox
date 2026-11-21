@@ -32,7 +32,8 @@ def test_teacher_switches_mode_and_everyone_sees_it(staff_db, client):
     resp = client.put("/api/v1/mode", json={"mode": "tutor"}, headers=headers)
 
     assert resp.status_code == 200
-    assert resp.json() == {"mode": "tutor"}
+    assert resp.json()["mode"] == "tutor"
+    assert resp.json()["model"]["action"] == "disabled"  # residency is off in tests
     assert client.get("/api/v1/mode").json() == {"mode": "tutor"}
 
 

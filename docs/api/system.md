@@ -22,7 +22,7 @@ The system and health probe endpoints allow the local nginx reverse proxy, stude
 | `GET` | `/health` | Public | System and database diagnostic probe |
 | `GET`/`HEAD` | `/generate_204`, `/gen_204`, `/hotspot-detect.html`, `/library/test/success.html`, `/connecttest.txt`, `/ncsi.txt`, `/redirect`, `/success.txt`, `/canonical.html`, `/check_network_status.txt` | Public | Captive-portal connectivity probes → `302` to the student page |
 | `GET` | `/api/v1/mode` | Public | Classroom-wide active mode (`quiz`, `tutor`, `apps`) |
-| `PUT` | `/api/v1/mode` | Teacher, Admin | Teacher switches the active mode from their phone |
+| `PUT` | `/api/v1/mode` | Teacher, Admin | Teacher switches the active mode from their phone; the answer says what happened to the tutor model |
 
 ---
 
@@ -90,8 +90,14 @@ follow the choice. Implemented in `backend/src/api/mode.py`, stored in the singl
 | `apps` | Students download the take-home Android app from [`/descargas/`](../../pwa/README.md#3-tareas--take-home-math-apps-tareas). |
 
 * **`GET`** — Public, no body. `200 {"mode": "quiz"}`.
-* **`PUT`** — `require_roles("teacher", "admin")`. Body `{"mode": "tutor"}` → `200 {"mode": "tutor"}`;
-  records a `mode_changed` audit event.
+* **`PUT`** — `require_roles("teacher", "admin")`. Body `{"mode": "tutor"}` → `200`:
+  ```json
+  {"mode": "tutor", "model": {"model": "hf.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q8_0",
+   "action": "loaded", "duration_ms": 3200.0, "detail": null}}
+  ```
+  `model` is the tutor model's outcome (see [Model residency](#model-residency)); it is always present.
+  The answer waits for the load, so a switch into tutor mode takes as long as the load does. Records a `mode_changed` audit event. Two switches that arrive together are
+  applied one after the other, so the last one decides both the saved mode and the model.
 
 | Status | Trigger |
 | :--- | :--- |
@@ -99,6 +105,40 @@ follow the choice. Implemented in `backend/src/api/mode.py`, stored in the singl
 | `403` | Caller is a student, or has a pending PIN rotation. |
 | `409` | Switching away from `quiz` while a session is `active`: `{"detail": "Termina el juego antes de cambiar de modo."}`. A session still in `lobby` does not block. |
 | `422` | `mode` is not one of `quiz`, `tutor`, `apps`. |
+
+### <a id="model-residency"></a>Model residency (the Ollama models in memory)
+
+The appliance serves two models through Ollama (`SLM_BASE_URL`): the quiz model (`SLM_MODEL_NAME`,
+`qwen2.5:3b`) and the tutor model (`TUTOR_MODEL_NAME`, a DeepSeek-R1 distill of 1.5B parameters). Both
+together take a large part of the Jetson's 8 GB shared with the voice engine, so the backend keeps each
+one in memory only while the classroom needs it. Implemented in `backend/src/core/llm/residency/`.
+
+* **Tutor model**: loaded when the class enters `tutor` mode (the `PUT` above waits for the load), and
+  unloaded when the class leaves it.
+* **Quiz model**: loaded when a teacher's question batch starts (`POST /api/v1/quiz/model/load`) and
+  unloaded when the batch ends, is cancelled or is abandoned (`POST /api/v1/quiz/model/unload`). A
+  generation that finds the model unloaded loads it itself. If no generation runs for
+  `SLM_QUIZ_IDLE_UNLOAD_SECONDS` (default 90), the backend unloads the model anyway: that covers a
+  teacher who closed the page in the middle of a batch.
+* **Ollama keeps models until told otherwise.** Its OpenAI endpoint ignores `keep_alive`, and its
+  default is 5 minutes, which would evict the tutor model in a quiet tutor session. The Ansible setup
+  installs the drop-in [`infra/systemd/ollama-utztutor.conf`](../../infra/systemd/ollama-utztutor.conf)
+  (`OLLAMA_KEEP_ALIVE=-1`, `OLLAMA_MAX_LOADED_MODELS=2`), so the backend alone decides when a model leaves.
+* **At startup** the backend unloads a quiz model left in memory by an earlier run, then applies the saved
+  mode. It runs in a background thread, so startup never waits for Ollama.
+
+The `model` outcome (in the `PUT` above and in the two quiz endpoints) has these values for `action`:
+
+| `action` | Meaning |
+| :--- | :--- |
+| `loaded` | The model is in memory. `duration_ms` is the load time. |
+| `unloaded` | The model was dropped from memory. |
+| `kept` | Left in memory because the other role still needs it: the quiz and tutor models are one and the same, and a quiz batch or tutor mode still uses it. |
+| `failed` | Ollama refused the request or did not answer; `detail` says why. Nothing else fails: the mode is saved and a generation still runs. |
+| `unsupported` | The server at `SLM_BASE_URL` has no Ollama model API (for example llama.cpp). Nothing is managed. |
+| `disabled` | `SLM_MANAGE_RESIDENCY=false`: the backend never calls Ollama's model API. |
+
+`detail` is for logs. The teacher's screen shows only a toast for `loaded`, `unloaded` and `failed`.
 
 ---
 

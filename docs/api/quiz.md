@@ -23,6 +23,8 @@ These endpoints govern the diagnostic question lifecycle: discovering curriculum
 | `GET` | `/api/v1/quiz/schema` | Public | Canonical JSON Schema (Draft 2020-12) for diagnostic items |
 | `POST` | `/api/v1/quiz/validate` | Teacher, Admin | Deterministic SymPy math validation for question items |
 | `POST` | `/api/v1/quiz/generate` | Teacher, Admin | Generate new diagnostic question using local SLM with retries |
+| `POST` | `/api/v1/quiz/model/load` | Teacher, Admin | Load the quiz model into memory before a question batch |
+| `POST` | `/api/v1/quiz/model/unload` | Teacher, Admin | Unload the quiz model when the batch ends or is cancelled |
 | `GET` | `/api/v1/quiz/generation-logs` | Teacher, Admin | Query historical SLM generation telemetry and rejections |
 | `GET` | `/api/v1/quiz/generation-metrics` | Teacher, Admin | Aggregated SLM generation latency and reliability metrics |
 | `GET` | `/api/v1/quiz/analytics` | Teacher, Admin | Daily, weekly or monthly class report: accuracy per topic, change vs previous period, top misconceptions |
@@ -215,6 +217,8 @@ Generate a new diagnostic question on-demand using the local SLM with the reject
 
 **Stopping**: the server watches the connection while the pipeline runs (`backend/src/api/quiz/disconnect_watch.py`, polled every 0.5 s). Once the client closes it (the teacher presses **Detener** or **Cancelar**, which aborts the `fetch`), the pipeline makes no further LLM attempt, saves nothing to the bank, writes no telemetry row, and ends with `499`. An LLM call already in flight is dropped too: `LocalSLMClient` shuts its socket to the model server down (`backend/src/core/llm/cancellable_post.py`, polled every 0.2 s), and Ollama/llama-server cancel the generation when the connection closes, so the model is free within about a second.
 
+**Model in memory**: a generation holds the quiz model while it runs. It loads the model itself when no `POST /quiz/model/load` came before (the batch in the PWA always sends one), and it leaves the model loaded afterwards: the batch releases it with `POST /quiz/model/unload`, and the idle countdown releases it when nothing runs for `SLM_QUIZ_IDLE_UNLOAD_SECONDS`.
+
 * **Authorization**: Teacher, Admin
 * **Request Body**:
   ```json
@@ -270,6 +274,24 @@ Generate a new diagnostic question on-demand using the local SLM with the reject
   * `422 Unprocessable Entity`: Invalid topic or subconcept slug.
   * `502 Bad Gateway`: SLM generation failed all retry attempts (persists failure log to telemetry database).
   * `499 Client Closed Request`: The client disconnected before the question was saved. Nobody reads it; it only shows in the server log.
+
+---
+
+### <a id="post-quiz-model-load"></a>`POST /api/v1/quiz/model/load`
+
+Loads the quiz model (`SLM_MODEL_NAME`) into memory before a question batch. The teacher's PWA sends it when the batch starts. A failed load does not stop the batch: the first `POST /quiz/generate` loads the model on demand.
+
+* **Authorization**: Teacher, Admin (`403` for students, `401` without a token).
+* **Request Body**: none.
+* **Response `200 OK`**: the model's outcome, for example
+  ```json
+  {"model": "qwen2.5:3b", "action": "loaded", "duration_ms": 3180.5, "detail": null}
+  ```
+  The `action` values are described in [Model residency](system.md#model-residency). A server problem comes back as `action: "failed"`, with `200`.
+
+### <a id="post-quiz-model-unload"></a>`POST /api/v1/quiz/model/unload`
+
+Unloads the quiz model at the end of a batch, or when the batch was cancelled or abandoned. Same authorization and answer as the load. A generation still running when this is called finishes on the model it has; after it ends, the idle countdown is armed again and unloads the model if nothing else needs it.
 
 ---
 

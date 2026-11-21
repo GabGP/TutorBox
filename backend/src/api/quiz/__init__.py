@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from api.quiz.analytics import router as analytics_router
 from api.quiz.generate import router as generate_router
+from api.quiz.model_residency import router as model_residency_router
 from api.quiz.questions_read import router as questions_read_router
 from api.quiz.questions_update import router as questions_update_router
 from api.quiz.questions_write import router as questions_write_router
@@ -17,6 +18,7 @@ router.include_router(topics_router)
 router.include_router(schema_router)
 router.include_router(validate_router)
 router.include_router(generate_router)
+router.include_router(model_residency_router)
 router.include_router(questions_read_router)
 router.include_router(questions_write_router)
 router.include_router(questions_update_router)
@@ -26,6 +28,7 @@ router.include_router(analytics_router)
 __all__ = [
     "analytics_router",
     "generate_router",
+    "model_residency_router",
     "questions_read_router",
     "questions_update_router",
     "questions_write_router",

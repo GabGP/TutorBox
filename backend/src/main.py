@@ -17,6 +17,7 @@ from core.db.database import get_db_path
 from core.db.legacy_database import adopt_legacy_database
 from core.db.migrations import apply_migrations
 from core.db.seed_users import seed_teacher
+from core.llm.residency import start_residency_reconcile
 from core.logging import setup_logging
 from core.tts.engines.provider import configure_onnxruntime_dll_paths
 from modes.quiz.seed_data import seed_question_bank
@@ -96,6 +97,7 @@ async def lifespan(app: FastAPI):
     logger.info("Question bank ready (newly seeded questions: %d).", seeded_count)
     if seed_teacher(db_path):
         logger.info("Bootstrap teacher account created.")
+    start_residency_reconcile()
     logger.info("Utz'tutor ready.")
     yield
     logger.info("Shutting down Utz'tutor backend appliance...")
