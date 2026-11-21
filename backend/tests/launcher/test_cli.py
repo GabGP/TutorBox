@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from tools.launcher import cli
+from tools.voice_models.tiers import TARGET_CHOICES
 
 
 def _parse_flags(monkeypatch, *flags: str) -> argparse.Namespace:
@@ -63,10 +64,12 @@ def test_download_models_without_value_selects_minimal(monkeypatch):
     assert arguments.download_models == "minimal"
 
 
-def test_download_models_with_value_keeps_that_tier(monkeypatch):
-    """Verifies --download-models all selects the all voice tier."""
-    arguments = _parse_flags(monkeypatch, "--download-models", "all")
-    assert arguments.download_models == "all"
+@pytest.mark.parametrize("tier", ["minimal", "kokoro", "qwen", "mayan", "all"])
+def test_download_models_with_value_keeps_that_tier(monkeypatch, tier):
+    """Verifies every launcher tier is kept and is one the downloader accepts."""
+    arguments = _parse_flags(monkeypatch, "--download-models", tier)
+    assert arguments.download_models == tier
+    assert tier in TARGET_CHOICES
 
 
 def test_download_models_rejects_unknown_tier(monkeypatch):

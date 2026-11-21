@@ -10,10 +10,11 @@ from tools.voice_models.catalog import (
     QWEN_GGUF_NAME,
     QWEN_MMPROJ_NAME,
 )
+from tools.voice_models.mms import mms_models_present
 
 
 def check_models(models_dir: Path) -> dict[str, bool]:
-    """Checks status of all three neural engine models."""
+    """Checks status of the three classroom voices and the Mayan audio-guide models."""
     piper_file = models_dir / PIPER_ONNX_NAME
     kokoro_dir = models_dir / KOKORO_DIR_NAME
     kokoro_voices = kokoro_dir / KOKORO_VOICES_NAME
@@ -30,4 +31,5 @@ def check_models(models_dir: Path) -> dict[str, bool]:
         and qwen_gguf.stat().st_size > 0
         and qwen_mmproj.is_file()
         and qwen_mmproj.stat().st_size > 0,
+        "mms": mms_models_present(models_dir),
     }

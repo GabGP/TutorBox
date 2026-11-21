@@ -139,6 +139,32 @@
       failed_when: not check_pwa.stat.exists
       ignore_errors: true
 
+    # The downloads page's Kʼicheʼ and Qʼeqchiʼ audio guides are made on the kit by
+    # pwa/tts-tests/generate_tts.py: it needs the mayan-audio packages and both MMS models.
+    - name: The Mayan audio-guide generator has its packages and models
+      ansible.builtin.command:
+        argv:
+          - "{{ repo_dir }}/.cache/venv/bin/python"
+          - -c
+          - |
+            import importlib.util, sys
+            from pathlib import Path
+            sys.path.insert(0, ".")
+            from tools.voice_models.catalog import DEFAULT_MODELS_DIR
+            from tools.voice_models.mms import mms_models_present
+            missing = [name for name in ("torch", "transformers", "scipy", "lameenc")
+                       if importlib.util.find_spec(name) is None]
+            if not mms_models_present(DEFAULT_MODELS_DIR):
+                missing.append("MMS models in " + str(DEFAULT_MODELS_DIR / "mms"))
+            sys.exit("Missing: " + ", ".join(missing) if missing else 0)
+        chdir: "{{ repo_dir }}"
+      environment:
+        PYTHONPYCACHEPREFIX: "{{ repo_dir }}/.cache/pycache"
+      register: check_mayan_audio
+      changed_when: false
+      when: voice_tier in ['mayan', 'all']
+      ignore_errors: true
+
     - name: The Qwen3-TTS daemon is built for the GPU
       ansible.builtin.stat:
         path: "{{ repo_dir }}/.cache/bin/llama.cpp/libggml-cuda.so"

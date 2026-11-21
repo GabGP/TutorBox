@@ -172,7 +172,7 @@ backend: plain static files, no build step.
 | [`tareas/segundo/`](tareas/segundo/README.md) | `/tareas/segundo/` | "Matemáticas 2º con Q'uq'" — 2nd-grade (Segundo) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`segundo.apk`). |
 | [`tareas/tercero/`](tareas/tercero/README.md) | `/tareas/tercero/` | "Matemáticas 3º con Q'uq'" — 3rd-grade (Tercero) CNB math, same engine and design; 7 levels, one per competencia. Browser and APK (`tercero.apk`). |
 | [`tareas/android/`](tareas/android/README.md) | — | Android wrapper: one product flavor per grade packs `primero/`, `segundo/` and `tercero/public` into three offline APKs (`gradlew publishApk`). |
-| `tareas/descargas/` | `/descargas/` | Family download page: pick your grade (Primero, Segundo, Tercero), install steps in Spanish plus audio guides in Kʼicheʼ and Qʼeqchiʼ (`audio/kiche.mp3`, `audio/qeqchi.mp3`), and the three APKs. A grade whose APK is missing is hidden. |
+| `tareas/descargas/` | `/descargas/` | Family download page: pick your grade (Primero, Segundo, Tercero), install steps in Spanish plus audio guides in Kʼicheʼ and Qʼeqchiʼ (`audio/kiche.mp3`, `audio/qeqchi.mp3`, made by [`tts-tests/generate_tts.py --publish`](tts-tests/instructions.md)), and the three APKs. A grade whose APK is missing is hidden. |
 | `tareas/cnb/` | — | CNB curriculum sources (MINEDUC PDFs/Word, grades 1–5) the lessons are aligned to. |
 
 **Why an APK and not an installable PWA:** browsers only run service workers (offline support) and

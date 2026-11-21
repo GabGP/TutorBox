@@ -10,8 +10,8 @@ import pytest
 
 from tools.voice_models import catalog, cli, download_models
 
-ALL_PRESENT = {"piper": True, "kokoro": True, "qwen": True}
-ALL_MISSING = {"piper": False, "kokoro": False, "qwen": False}
+ALL_PRESENT = {"piper": True, "kokoro": True, "qwen": True, "mms": True}
+ALL_MISSING = {"piper": False, "kokoro": False, "qwen": False, "mms": False}
 
 
 def test_defaults_when_no_flags_are_given(monkeypatch):
@@ -57,7 +57,7 @@ def test_unknown_target_is_rejected(monkeypatch):
 
 def test_diagnostic_marks_missing_engines(capsys):
     """Verifies the report names each engine and flags only the missing ones."""
-    cli.print_diagnostic({"piper": True, "kokoro": False, "qwen": True})
+    cli.print_diagnostic({"piper": True, "kokoro": False, "qwen": True, "mms": False})
     report_lines = capsys.readouterr().out.splitlines()
     assert "Utz'tutor TTS Models Diagnostic" in report_lines[1]
     assert "Piper / Sherpa (Spanish)" in report_lines[3]
@@ -66,6 +66,8 @@ def test_diagnostic_marks_missing_engines(capsys):
     assert report_lines[4].endswith("Missing")
     assert "Qwen3-TTS (GGUF Weights)" in report_lines[5]
     assert "Missing" not in report_lines[5]
+    assert "MMS (Kʼicheʼ, Qʼeqchiʼ)" in report_lines[6]
+    assert report_lines[6].endswith("Missing")
 
 
 @pytest.mark.parametrize(
@@ -159,5 +161,5 @@ def test_entry_point_runs_as_a_script_from_any_directory(tmp_path):
         check=False,
     )
     assert completed.returncode == 1
-    assert completed.stdout.count("Missing") == 3
+    assert completed.stdout.count("Missing") == 4
     assert completed.stderr == ""

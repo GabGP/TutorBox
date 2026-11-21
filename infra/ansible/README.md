@@ -184,7 +184,7 @@ daemon. What it does, in order:
 | `cuda` | The CUDA compiler (`cuda-minimal-build-13-2`, `libcublas-dev-13-2`). The base image has the CUDA runtime only. |
 | `tools` | Checks `uv`; installs Node.js (24 LTS, which the PWA's Vitest needs) and pnpm under `~/.local`, at the pinned versions. |
 | `ollama` | Installs Ollama at the pinned version, starts `ollama.service`, pulls the quiz and tutor models. |
-| `app` | Writes `<repo>/.env`, then runs `run.py --prepare --download-models all --build-llama --require-cuda`. |
+| `app` | Writes `<repo>/.env`, then runs `run.py --prepare --download-models all --build-llama --require-cuda`. That installs every Python package, including the `mayan-audio` extra (CPU-only PyTorch, transformers) for the Kʼicheʼ and Qʼeqchiʼ audio guides, and every voice model: the Spanish ones and the two Meta MMS Mayan models (about 290 MB). |
 | `nginx` | Installs and enables the site, removes Ubuntu's default site. |
 | `services` | Installs, enables and starts `utztutor-backend` and `utztutor-power`. The backend unit has `OOMPolicy=continue`: when the kernel kills the Qwen3-TTS daemon for memory, only the daemon goes and the backend falls back to another voice, instead of systemd restarting the whole backend in the middle of a match. |
 | `kiosk` | Automatic login, a desktop that never blanks or locks, Firefox policies, and the classroom-screen unit. |
@@ -318,7 +318,9 @@ checks that failed. It checks that:
 - `http://localhost/health` answers, a captive-portal probe is redirected to
   `http://<dns_name>/alumno/`, and an unknown API path on a foreign name stays a `404`.
 - Ollama has the kit's models, the PWA is built, the voice models are present and the Qwen3-TTS
-  daemon is a GPU build.
+  daemon is a GPU build. With `voice_tier` `mayan` or `all`, the Kʼicheʼ and Qʼeqchiʼ audio-guide
+  generator ([`pwa/tts-tests/`](../../pwa/tts-tests/instructions.md)) has its Python packages and
+  both MMS models.
 - The Jetson holds `192.168.8.2` and does not take DNS from the router.
 - The router answers every name with the Jetson's address, and its settings and firmware match
   `kit.yml` and `router_firmware`.

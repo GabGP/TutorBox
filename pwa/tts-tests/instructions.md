@@ -1,9 +1,26 @@
 # APK Installation Audio Instructions (Kʼicheʼ & Qʼeqchiʼ)
 
-Generated with Meta MMS Text-to-Speech via [generate_tts.py](generate_tts.py):
+Generated offline with Meta MMS Text-to-Speech via [generate_tts.py](generate_tts.py):
 
-- **Kʼicheʼ (Central):** `facebook/mms-tts-quc-dialect_central` → [kiche_instruction.wav](kiche_instruction.wav)
-- **Qʼeqchiʼ:** `facebook/mms-tts-kek` → [qeqchi_instruction.wav](qeqchi_instruction.wav)
+- **Kʼicheʼ (Central):** `facebook/mms-tts-quc-dialect_central` → [kiche_instruction.wav](kiche_instruction.wav), published as `pwa/tareas/descargas/audio/kiche.mp3`
+- **Qʼeqchiʼ:** `facebook/mms-tts-kek` → [qeqchi_instruction.wav](qeqchi_instruction.wav), published as `pwa/tareas/descargas/audio/qeqchi.mp3`
+
+## Setup and Use
+
+Setup works like the Spanish voices. A kit set up with Ansible (`voice_tier: all`, the default) already has everything. By hand, from the repository root:
+
+```bash
+./run.py --download-models mayan   # Python packages (mayan-audio extra) + both MMS models
+```
+
+That installs the `mayan-audio` extra of `backend/pyproject.toml` (CPU-only PyTorch, transformers, SciPy, LAME) and downloads both checkpoints to `.cache/models/tts/mms/`. Then:
+
+```bash
+.cache/venv/bin/python pwa/tts-tests/generate_tts.py            # WAVs next to the script
+.cache/venv/bin/python pwa/tts-tests/generate_tts.py --publish  # also the MP3s on /descargas/
+```
+
+It runs on the CPU, never touches the network (about 2 minutes on the Jetson for both languages) and stops with the setup command if a package or a model is missing. The text lives in [guide_clauses.py](guide_clauses.py), the synthesis and MP3 encoding in [synthesis.py](synthesis.py).
 
 ## Why the MMS Input Spelling Differs from Modern ALMG Orthography
 

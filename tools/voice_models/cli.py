@@ -63,6 +63,10 @@ def print_diagnostic(status: dict[str, bool]) -> None:
         f"  * Qwen3-TTS (GGUF Weights) : "
         f"{TAG_OK if status['qwen'] else TAG_WARN + ' Missing'}"
     )
+    print(
+        f"  * MMS (Kʼicheʼ, Qʼeqchiʼ)   : "
+        f"{TAG_OK if status['mms'] else TAG_WARN + ' Missing'}"
+    )
     print(SEPARATOR_LINE)
 
 

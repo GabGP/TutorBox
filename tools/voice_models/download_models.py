@@ -5,6 +5,7 @@ Downloads neural acoustic models for offline classroom speech synthesis:
 - Piper / Sherpa Spanish Harvard baseline (VITS, ~76 MB)
 - Kokoro-82M multilingual INT8 StyleTTS2 ONNX (~140 MB compressed)
 - Qwen3-TTS 1.7B Base GGUF weights & mmproj (~1.5 GB)
+- Meta MMS-TTS Kʼicheʼ and Qʼeqchiʼ checkpoints for the downloads-page audio guides (~290 MB)
 
 The steps themselves live in the sibling modules; this file only starts them.
 
@@ -12,6 +13,7 @@ Usage:
     python tools/voice_models/download_models.py                   # Downloads minimal tier (Piper/Sherpa Spanish)
     python tools/voice_models/download_models.py --target kokoro   # Downloads Kokoro-82M
     python tools/voice_models/download_models.py --target qwen     # Downloads Qwen3-TTS GGUF
+    python tools/voice_models/download_models.py --target mayan    # Downloads MMS Kʼicheʼ + Qʼeqchiʼ
     python tools/voice_models/download_models.py --target all      # Downloads all neural models
     python tools/voice_models/download_models.py --check-only      # Checks model status without downloading
 """

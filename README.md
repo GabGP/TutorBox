@@ -33,7 +33,7 @@
 
 ## Why it exists
 
-Many schools in rural Guatemala have no internet and few resources, and many students learn in K'iche' as well as Spanish. Utz'tutor brings an AI tutor to them anyway: everything, including the language model and the voices, runs on a box in the classroom. Nothing ever needs a connection.
+Many schools in rural Guatemala have no internet and few resources, and many students grow up speaking a Mayan language, such as K'iche' or Q'eqchi', as well as Spanish. Utz'tutor brings an AI tutor to them anyway: everything, including the language model and the voices, runs on a box in the classroom. Nothing ever needs a connection.
 
 ---
 
@@ -98,7 +98,7 @@ After class, students practise on their phones. When an answer is wrong, the tut
   <sub>The first-grade app: pick a character, follow Q'uq' the quetzal across the map, and play.</sub>
 </p>
 
-In take-home mode the box serves an Android app for each grade (first, second and third) at `/descargas`. Once installed it works with no connection at all: short "look, listen, tap" games that need no reading, one level per competency of the national curriculum (CNB), with progress saved on the phone.
+In take-home mode the box serves an Android app for each grade (first, second and third) at `/descargas`. Once installed it works with no connection at all: short "look, listen, tap" games that need no reading, one level per competency of the national curriculum (CNB), with progress saved on the phone. Families who don't read Spanish can listen to the install steps in K'iche' or Q'eqchi' on the same page; the box makes those audio guides itself, offline (see [the generator](pwa/tts-tests/instructions.md)).
 
 ---
 
@@ -178,7 +178,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv, if needed
 A first teacher account, `teacher1`, is created automatically; change its PIN before real use (see the [authentication docs](docs/api/auth.md)).
 
 - **Without the language model** the question bank and quizzes still work; generating new questions needs `llama-server` on `127.0.0.1:8080`.
-- **Voices:** without the neural voice models it falls back to eSpeak-ng. Download better voices with `./run.py --download-models all` (or `minimal`, `kokoro`, `qwen`).
+- **Voices:** without the neural voice models it falls back to eSpeak-ng. Download better voices with `./run.py --download-models all` (or `minimal`, `kokoro`, `qwen`, `mayan`). `mayan` fetches the K'iche' and Q'eqchi' models (Meta MMS-TTS) that make the install audio guides on `/descargas`.
 - **A real classroom kit** (the Jetson and its router) is set up with Ansible: follow the [kit setup guide](infra/ansible/README.md), which runs `./run.py --prepare`.
 
 ---
@@ -204,7 +204,7 @@ graph TD
 - **Frontend:** a React and Vite progressive web app, served by Nginx from the box.
 - **Maths:** SymPy is the only authority on whether an answer is correct.
 - **Language model:** Gemma 4 (A2B, quantised to Q4_K_M) through `llama.cpp`.
-- **Voices:** Qwen3-TTS for the best Spanish, falling back to Sherpa-ONNX, Piper and finally eSpeak-ng so there is always a voice.
+- **Voices:** Qwen3-TTS for the best Spanish, falling back to Sherpa-ONNX, Piper and finally eSpeak-ng so there is always a voice. K'iche' has its own voice slot for the classroom explanations. For the Mayan languages, Meta MMS-TTS (K'iche' and Q'eqchi', on the CPU) makes the take-home install guides.
 
 ```text
 TutorBox/

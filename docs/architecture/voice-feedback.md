@@ -56,6 +56,8 @@ Formant synthesis does not provide a dependable K'iche' phonological inventory. 
 
 Qwen3-TTS is not part of the K'iche' auto path because the deployed voice and validation assets are Spanish-first.
 
+**Take-home audio guides (K'iche' and Q'eqchi')**: the APK install steps on `/descargas/` are pre-recorded MP3s, not router output. `pwa/tts-tests/generate_tts.py` makes them offline on the CPU with Meta MMS-TTS (`mms-tts-quc-dialect_central`, `mms-tts-kek`). The models come from `./run.py --download-models mayan` (also part of `all`), and the Python packages from the `mayan-audio` extra. The backend never loads MMS, so it adds nothing to the classroom memory budget. See [the generator's notes](../../pwa/tts-tests/instructions.md).
+
 ## 6. Peak Calibration & Sample-Rate Policy
 
 `peak` in `summary.csv` is the largest absolute PCM sample divided by 32,768. It is not perceived loudness. Earlier results mixed native levels: eSpeak and Piper reached `1.00`, Melo measured `0.611`, while Sherpa/Kokoro normalized to `0.78` and Qwen was calibrated to `0.78`. Production Piper, eSpeak, and Qwen now share the same linear peak calibration target (`0.78`), so new CSV comparisons are consistent without clipping.

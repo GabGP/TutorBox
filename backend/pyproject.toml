@@ -38,11 +38,29 @@ dev = [
     "cmake>=4.4.4",
     "ninja>=1.13.2",
 ]
+# Offline generator for the Kʼicheʼ and Qʼeqchiʼ audio guides on the downloads page
+# (pwa/tts-tests/generate_tts.py, Meta MMS-TTS). The backend never imports these.
+mayan-audio = [
+    "torch>=2.15.0",
+    "transformers>=5.23.0",
+    "scipy>=1.16.0",
+    "lameenc>=1.8.0",
+]
 
 [tool.uv]
 package = false
 link-mode = "copy"
 cache-dir = "../.cache/uv"
+
+# CPU-only torch: the MMS voices are small enough for the CPU, and the default
+# aarch64 wheel pulls about 4.5 GB of CUDA libraries onto every kit.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

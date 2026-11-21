@@ -54,8 +54,8 @@ tutor_model: "hf.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q8_0"
 ollama_models:
   - "{{ quiz_model }}"
   - "{{ tutor_model }}"
-# minimal | kokoro | qwen | all (run.py --download-models). qwen and all also build the
-# Qwen3-TTS daemon.
+# minimal | kokoro | qwen | mayan | all (run.py --download-models). qwen and all also build the
+# Qwen3-TTS daemon; mayan and all also fetch the MMS Kʼicheʼ / Qʼeqchiʼ audio-guide models.
 voice_tier: all
 # Build the Qwen3-TTS daemon for the GPU, and fail if that is not possible.
 tts_cuda: true

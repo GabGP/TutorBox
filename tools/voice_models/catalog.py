@@ -29,3 +29,19 @@ QWEN_BASE_URL = (
 QWEN_DIR_NAME = "qwen"
 QWEN_GGUF_NAME = "Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf"
 QWEN_MMPROJ_NAME = "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf"
+
+# Meta MMS-TTS (VITS) checkpoints for the Mayan audio guides on the downloads page,
+# read by pwa/tts-tests/generate_tts.py. Each lives in mms/<checkpoint name>/.
+MMS_BASE_URL = "https://huggingface.co/facebook"
+MMS_DIR_NAME = "mms"
+MMS_KICHE_MODEL = "mms-tts-quc-dialect_central"
+MMS_QEQCHI_MODEL = "mms-tts-kek"
+MMS_MODELS = (MMS_KICHE_MODEL, MMS_QEQCHI_MODEL)
+MMS_WEIGHTS_NAME = "model.safetensors"
+MMS_FILE_NAMES = (
+    "config.json",
+    "vocab.json",
+    "tokenizer_config.json",
+    "special_tokens_map.json",
+    MMS_WEIGHTS_NAME,
+)

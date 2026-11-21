@@ -4,8 +4,9 @@ from pathlib import Path
 
 from tools.voice_models.catalog import DEFAULT_MODELS_DIR
 from tools.voice_models.engines import download_kokoro, download_piper, download_qwen
+from tools.voice_models.mms import download_mms
 
-TARGET_CHOICES = ["minimal", "piper", "kokoro", "qwen", "all"]
+TARGET_CHOICES = ["minimal", "piper", "kokoro", "qwen", "mayan", "all"]
 DEFAULT_TARGET = "minimal"
 
 
@@ -25,5 +26,7 @@ def execute_download(
         success = download_kokoro(effective_dir, force=force) and success
     if target in ("qwen", "all"):
         success = download_qwen(effective_dir, force=force) and success
+    if target in ("mayan", "all"):
+        success = download_mms(effective_dir, force=force) and success
 
     return success

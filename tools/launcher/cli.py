@@ -39,8 +39,8 @@ def parse_arguments() -> argparse.Namespace:
         "--download-models",
         nargs="?",
         const="minimal",
-        choices=["minimal", "kokoro", "qwen", "all"],
-        help="Download voice models before launching (choices: minimal, kokoro, qwen, all; default: minimal)",
+        choices=["minimal", "kokoro", "qwen", "mayan", "all"],
+        help="Download voice models before launching (choices: minimal, kokoro, qwen, mayan, all; default: minimal)",
     )
     parser.add_argument(
         "--require-cuda",

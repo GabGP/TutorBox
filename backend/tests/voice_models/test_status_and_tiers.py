@@ -10,7 +10,12 @@ from tools.voice_models import catalog, status, tiers
 def test_check_models_status_reports_correctly(tmp_path):
     """Verifies check_models correctly identifies existing vs missing model files."""
     status_empty = status.check_models(tmp_path)
-    assert status_empty == {"piper": False, "kokoro": False, "qwen": False}
+    assert status_empty == {
+        "piper": False,
+        "kokoro": False,
+        "qwen": False,
+        "mms": False,
+    }
 
     # Populate piper
     (tmp_path / "es_ES-sharvard-medium.onnx").write_bytes(b"piper")
@@ -23,9 +28,15 @@ def test_check_models_status_reports_correctly(tmp_path):
     qwen_dir.mkdir(parents=True)
     (qwen_dir / "Qwen3-TTS-12Hz-1.7B-Base-Q4_K_M.gguf").write_bytes(b"gguf")
     (qwen_dir / "mmproj-Qwen3-TTS-12Hz-1.7B-Base-Q8_0.gguf").write_bytes(b"mmproj")
+    # Populate both MMS checkpoints
+    for model_name in ("mms-tts-quc-dialect_central", "mms-tts-kek"):
+        model_dir = tmp_path / "mms" / model_name
+        model_dir.mkdir(parents=True)
+        for file_name in catalog.MMS_FILE_NAMES:
+            (model_dir / file_name).write_bytes(b"mms")
 
     status_full = status.check_models(tmp_path)
-    assert status_full == {"piper": True, "kokoro": True, "qwen": True}
+    assert status_full == {"piper": True, "kokoro": True, "qwen": True, "mms": True}
 
 
 def test_check_models_treats_empty_files_as_missing(tmp_path):
@@ -39,6 +50,7 @@ def test_check_models_treats_empty_files_as_missing(tmp_path):
         "piper": False,
         "kokoro": False,
         "qwen": False,
+        "mms": False,
     }
 
 
@@ -50,11 +62,13 @@ def test_execute_download_routes_targets(tmp_path):
             "tools.voice_models.tiers.download_kokoro", return_value=True
         ) as m_kokoro,
         patch("tools.voice_models.tiers.download_qwen", return_value=True) as m_qwen,
+        patch("tools.voice_models.tiers.download_mms", return_value=True) as m_mms,
     ):
         tiers.execute_download("minimal", tmp_path)
         m_piper.assert_called_once()
         m_kokoro.assert_not_called()
         m_qwen.assert_not_called()
+        m_mms.assert_not_called()
 
     with (
         patch("tools.voice_models.tiers.download_piper", return_value=True) as m_piper,
@@ -62,16 +76,18 @@ def test_execute_download_routes_targets(tmp_path):
             "tools.voice_models.tiers.download_kokoro", return_value=True
         ) as m_kokoro,
         patch("tools.voice_models.tiers.download_qwen", return_value=True) as m_qwen,
+        patch("tools.voice_models.tiers.download_mms", return_value=True) as m_mms,
     ):
         tiers.execute_download("all", tmp_path)
         m_piper.assert_called_once()
         m_kokoro.assert_called_once()
         m_qwen.assert_called_once()
+        m_mms.assert_called_once()
 
 
 @pytest.mark.parametrize(
     ("target", "expected_engine"),
-    [("piper", "piper"), ("kokoro", "kokoro"), ("qwen", "qwen")],
+    [("piper", "piper"), ("kokoro", "kokoro"), ("qwen", "qwen"), ("mayan", "mms")],
 )
 def test_execute_download_single_engine_target(tmp_path, target, expected_engine):
     """Verifies a single-engine tier downloads that engine and no other."""
@@ -81,10 +97,16 @@ def test_execute_download_single_engine_target(tmp_path, target, expected_engine
             "tools.voice_models.tiers.download_kokoro", return_value=True
         ) as m_kokoro,
         patch("tools.voice_models.tiers.download_qwen", return_value=True) as m_qwen,
+        patch("tools.voice_models.tiers.download_mms", return_value=True) as m_mms,
     ):
         assert tiers.execute_download(target, tmp_path, force=True) is True
 
-    engine_mocks = {"piper": m_piper, "kokoro": m_kokoro, "qwen": m_qwen}
+    engine_mocks = {
+        "piper": m_piper,
+        "kokoro": m_kokoro,
+        "qwen": m_qwen,
+        "mms": m_mms,
+    }
     for engine_name, engine_mock in engine_mocks.items():
         if engine_name == expected_engine:
             engine_mock.assert_called_once_with(tmp_path, force=True)
@@ -100,10 +122,12 @@ def test_execute_download_keeps_going_after_one_engine_fails(tmp_path):
             "tools.voice_models.tiers.download_kokoro", return_value=True
         ) as m_kokoro,
         patch("tools.voice_models.tiers.download_qwen", return_value=True) as m_qwen,
+        patch("tools.voice_models.tiers.download_mms", return_value=True) as m_mms,
     ):
         assert tiers.execute_download("all", tmp_path) is False
     m_kokoro.assert_called_once()
     m_qwen.assert_called_once()
+    m_mms.assert_called_once()
 
 
 def test_execute_download_creates_missing_models_directory(tmp_path):
