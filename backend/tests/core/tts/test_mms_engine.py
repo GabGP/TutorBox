@@ -2,6 +2,7 @@
 
 import importlib.machinery
 import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -33,6 +34,10 @@ def mms_voices(tmp_path, monkeypatch):
     clear_settings_cache()
     session = MagicMock()
     session.run.return_value = [np.full((1, CLAUSE_SAMPLES), 0.5, dtype=np.float32)]
+    session.get_inputs.return_value = [
+        SimpleNamespace(name="input_ids"),
+        SimpleNamespace(name="speaking_rate"),
+    ]
     fake_onnxruntime = MagicMock()
     fake_onnxruntime.__spec__ = importlib.machinery.ModuleSpec("onnxruntime", None)
     fake_onnxruntime.InferenceSession.return_value = session
@@ -95,8 +100,10 @@ def test_synthesize_speaks_each_clause_with_a_pause(mms_voices):
 
     assert wav.startswith(b"RIFF")
     assert session.run.call_count == 3  # "Este", "es", "dos" (spoken from 2)
-    first_clause = session.run.call_args_list[0].args[1]["input_ids"]
+    first_inputs = session.run.call_args_list[0].args[1]
+    first_clause = first_inputs["input_ids"]
     assert first_clause.dtype == np.int64
+    assert float(first_inputs["speaking_rate"]) == pytest.approx(0.8)
     assert first_clause.tolist() == [[0, 3, 0, 6, 0, 7, 0, 3, 0]]
     pause_samples = int(SAMPLE_RATE * CLAUSE_PAUSE_SECONDS)
     expected_samples = 3 * CLAUSE_SAMPLES + 2 * pause_samples
@@ -151,3 +158,19 @@ def test_load_without_a_config_uses_the_mms_rate(mms_voices):
     (model_root / "mms-tts-kek" / "config.json").unlink()
     assert load_mms_voice("kek").sample_rate == SAMPLE_RATE
     assert load_mms_voice("kek").vocabulary == VOCABULARY
+
+
+def test_speaking_rate_comes_from_the_settings(mms_voices, monkeypatch):
+    _, _, session = mms_voices
+    monkeypatch.setenv("TTS_MMS_SPEAKING_RATE", "1.2")
+    clear_settings_cache()
+    MmsBackend().synthesize("sate", voice="quc")
+    assert float(session.run.call_args.args[1]["speaking_rate"]) == pytest.approx(1.2)
+
+
+def test_an_export_without_speaking_rate_speaks_at_its_own_pace(mms_voices):
+    """A model.onnx from before the input existed still works, without the rate."""
+    _, _, session = mms_voices
+    session.get_inputs.return_value = [SimpleNamespace(name="input_ids")]
+    MmsBackend().synthesize("sate", voice="kek")
+    assert set(session.run.call_args.args[1]) == {"input_ids"}

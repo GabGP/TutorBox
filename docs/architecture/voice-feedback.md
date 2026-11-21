@@ -26,7 +26,7 @@ Qwen3-TTS  ->  Sherpa-ONNX  ->  Piper  ->  eSpeak-ng
 | **RTF** | **0.2647x** | **0.0543x** | **0.0511x** | **0.0275x** |
 | **Output Sample Rate** | 24,000 Hz | 22,050 Hz | 22,050 Hz | Commonly 22,050 Hz |
 | **Production Peak** | 0.78 | 0.78 | 0.78 | 0.78 |
-| **Mayan Support** | Not used for Mayan routing | Spanish candidate only | Dedicated `quc` model slot (after MMS) | Only if `TTS_VOICE_QUC` names an installed voice |
+| **Mayan Support** | Not used for Mayan routing | Spanish candidate only | Spanish only (no Piper Mayan voice exists) | K'iche' only, if `TTS_VOICE_QUC` names an installed voice |
 | **System Role** | **Primary winner (`qwen3-tts`)** | **Secondary neural fallback** | **Tertiary neural fallback** | **Ultimate safety net** |
 
 Kokoro remains an experimental opt-in candidate. MeloTTS remains a rejected reference spike, with `harness_melo.py` intentionally retained for comparison.
@@ -51,8 +51,9 @@ Both Mayan languages are spoken by Meta MMS-TTS voices (`facebook/mms-tts-quc-di
 
 * **Install**: `./run.py --download-models mayan` (also part of `all`, which the Ansible kit setup uses) downloads both checkpoints to `.cache/models/tts/mms/<checkpoint>/` and exports each one to `model.onnx` with the PyTorch of the `mayan-audio` extra (`tools/voice_models/mms_onnx.py`). The export matches transformers sample for sample at every input length (checked with the random noise switched off, 2026-11-20).
 * **Runtime**: `core/tts/engines/mms` runs `model.onnx` with ONNX Runtime on the CPU (a `piper-tts` dependency), so the backend never imports PyTorch. Each voice is about 115 MB on disk; a test process with both voices loaded peaked at 509 MB resident. Warm synthesis takes about half the length of the audio on the Jetson CPU (RTF ≈ 0.5, default threads), so a 12-second explanation takes about 6 s, plus about 1 s for the first load.
+* **Speed**: `TTS_MMS_SPEAKING_RATE` (default `0.8`, 0.5–1.5) slows the checkpoints' own pace, which sounded fast in class. It is an input of `model.onnx`, so changing it needs no new export; the download step exports again any `model.onnx` made before that input existed.
 * **Text**: the MMS alphabets have no digits or punctuation. The engine rewrites the text with `normalize_for_speech`, then spells the remaining numbers in Spanish words (`numbers.py`), cuts it at punctuation and speaks each clause with a 0.3 s pause, mapping glottal-stop marks to the one the voice knows (K'iche' `ꞌ`, Q'eqchi' `'`).
-* **Router**: `lang=quc` in `auto` uses MMS, then the Piper K'iche' checkpoint (`TTS_PIPER_MODEL_QUC`), then eSpeak only when `TTS_VOICE_QUC` names an installed voice. `lang=kek` has the MMS voice only. `engine=mms` asks for it explicitly (`core/tts/router/mayan.py`).
+* **Router**: `lang=quc` in `auto` uses MMS, then eSpeak only when `TTS_VOICE_QUC` names an installed voice. The Piper K'iche' slot (`TTS_PIPER_MODEL_QUC`) was removed on 2026-11-21: no Piper K'iche' voice exists, so it never worked, and Piper now refuses Mayan codes. `lang=kek` has the MMS voice only. `engine=mms` asks for it explicitly (`core/tts/router/mayan.py`).
 * **Strict Error Gating**: with no Mayan voice installed the request answers `503 Service Unavailable` instead of speaking Spanish. The Spanish fallback ladder never applies to a Mayan language.
 * **Known limit — the text is Spanish**: the >51% script (`Atención: … por ciento del grupo respondió …`) and the distractor explanations exist only in Spanish, so a Mayan voice reads Spanish words with Mayan pronunciation. Classroom-ready Mayan speech needs explanations translated and checked by native K'iche' and Q'eqchi' speakers.
 

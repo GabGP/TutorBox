@@ -31,9 +31,7 @@ def _clean_piper_settings(monkeypatch: pytest.MonkeyPatch):
         "TTS_PIPER_BINARY",
         "TTS_PIPER_MODEL_DIR",
         "TTS_PIPER_MODEL_ES",
-        "TTS_PIPER_MODEL_QUC",
         "TTS_PIPER_SPEAKER_ES",
-        "TTS_PIPER_SPEAKER_QUC",
     ):
         monkeypatch.delenv(name, raising=False)
     clear_settings_cache()
@@ -95,10 +93,11 @@ def test_piper_backend_is_available_and_disabled(
     monkeypatch.setenv("TTS_PIPER_MODEL_ES", "custom-sharvard.onnx")
     clear_settings_cache()
     assert backend.is_available("es") is True
+    # Spanish only: a Mayan request is never read by the Spanish model.
     assert backend.is_available("quc") is False
-
-    (tmp_path / "quc_Latn-maya-medium.onnx").write_bytes(b"weights")
-    assert backend.is_available("quc") is True
+    assert backend.is_available("kek") is False
+    with pytest.raises(TTSUnavailableError, match="Piper has no voice for 'quc'"):
+        backend.synthesize("Hola clase", voice="quc")
 
 
 def test_synthesize_rejects_empty_or_disabled(monkeypatch: pytest.MonkeyPatch):

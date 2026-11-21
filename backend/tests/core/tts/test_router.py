@@ -111,14 +111,10 @@ def test_select_backend_explicit_piper(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_select_backend_quc_routing(monkeypatch: pytest.MonkeyPatch):
-    """Verifies Mayan K'iche' routes strictly to Piper or configured eSpeak."""
-    router, mock_piper, mock_espeak = _make_mock_router()
+    """Verifies Mayan K'iche' never uses Piper: MMS, else a configured eSpeak voice."""
+    router, _, mock_espeak = _make_mock_router()
 
-    mock_piper.is_available.side_effect = lambda v: v == "quc"
-    assert router.select_backend("quc") is mock_piper
-
-    mock_piper.is_available.side_effect = None
-    mock_piper.is_available.return_value = False
+    # Piper answers for every voice here, yet K'iche' must not pick it.
     with pytest.raises(TTSUnavailableError, match="No speech voice is configured"):
         router.select_backend("quc")
 
@@ -183,11 +179,17 @@ def test_synthesize_gracefully_falls_back_when_piper_crashes():
 
 def test_synthesize_quc_does_not_fallback_to_spanish_espeak():
     """Verifies Mayan synthesis does not silently fallback to Spanish eSpeak."""
-    router, mock_piper, _ = _make_mock_router()
-    mock_piper.synthesize.side_effect = TTSUnavailableError("Model missing")
+    router, mock_piper, mock_espeak = _make_mock_router()
+    mock_mms = MagicMock()
+    mock_mms.engine_name = "mms"
+    mock_mms.is_available.return_value = True
+    mock_mms.synthesize.side_effect = TTSUnavailableError("Model missing")
+    router._backends["mms"] = mock_mms
 
     with pytest.raises(TTSUnavailableError, match="Model missing"):
         router.synthesize("Mayan text", lang="quc")
+    mock_piper.synthesize.assert_not_called()
+    mock_espeak.synthesize.assert_not_called()
 
 
 def test_synthesize_speech_and_clear_cache():
@@ -275,18 +277,12 @@ def test_select_backend_configured_engine_no_fallback(monkeypatch: pytest.Monkey
 
 def test_select_backend_quc_additional_branches(monkeypatch: pytest.MonkeyPatch):
     """Verifies remaining K'iche' selection branches."""
-    router, mock_piper, _ = _make_mock_router()
+    router, _, _ = _make_mock_router()
 
+    # A Piper default engine has no K'iche' voice (the slot was removed 2026-11-21).
     monkeypatch.setenv("TTS_ENGINE", "piper")
     clear_settings_cache()
-    mock_piper.is_available.side_effect = lambda v: v == "quc"
-    assert router.select_backend("quc") is mock_piper
-
-    mock_piper.is_available.side_effect = None
-    mock_piper.is_available.return_value = False
-    with pytest.raises(
-        TTSUnavailableError, match="Piper K'iche' model is not installed"
-    ):
+    with pytest.raises(TTSUnavailableError, match="does not support 'quc'"):
         router.select_backend("quc")
 
     with pytest.raises(TTSUnavailableError, match="not registered or does not support"):

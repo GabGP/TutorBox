@@ -34,11 +34,16 @@ _DEFAULT_SAMPLE_RATE_HZ = 16000
 
 @dataclass(frozen=True)
 class MmsVoice:
-    """One loaded MMS voice: its ONNX session, alphabet and output rate."""
+    """One loaded MMS voice: its ONNX session, alphabet and output rate.
+
+    accepts_speaking_rate is False for a model.onnx exported before the
+    speaking_rate input existed; it then speaks at the checkpoint's own pace.
+    """
 
     session: Any
     vocabulary: dict[str, int]
     sample_rate: int
+    accepts_speaking_rate: bool
 
 
 def find_mms_dir(lang: str) -> Path | None:
@@ -85,4 +90,7 @@ def load_mms_voice(lang: str) -> MmsVoice:
         session=session,
         vocabulary=vocabulary,
         sample_rate=int(config.get("sampling_rate", _DEFAULT_SAMPLE_RATE_HZ)),
+        accepts_speaking_rate=any(
+            model_input.name == "speaking_rate" for model_input in session.get_inputs()
+        ),
     )

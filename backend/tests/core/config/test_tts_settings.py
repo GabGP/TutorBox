@@ -19,11 +19,9 @@ from core.config import (
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
     DEFAULT_TTS_PIPER_MODEL_ES,
-    DEFAULT_TTS_PIPER_MODEL_QUC,
     DEFAULT_TTS_PIPER_NOISE_SCALE,
     DEFAULT_TTS_PIPER_NOISE_W_SCALE,
     DEFAULT_TTS_PIPER_SPEAKER_ES,
-    DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_QWEN_BINARY,
     DEFAULT_TTS_QWEN_CONTEXT,
@@ -40,7 +38,11 @@ from core.config import (
     clear_settings_cache,
     get_settings,
 )
-from core.config.constants import DEFAULT_TTS_QWEN_BATCH, DEFAULT_TTS_QWEN_SPEAKER_FILE
+from core.config.constants import (
+    DEFAULT_TTS_MMS_SPEAKING_RATE,
+    DEFAULT_TTS_QWEN_BATCH,
+    DEFAULT_TTS_QWEN_SPEAKER_FILE,
+)
 from core.config.tts_settings import build_tts_config
 
 _TTS_ENV_VARS = (
@@ -57,9 +59,8 @@ _TTS_ENV_VARS = (
     "TTS_PIPER_BINARY",
     "TTS_PIPER_MODEL_DIR",
     "TTS_PIPER_MODEL_ES",
-    "TTS_PIPER_MODEL_QUC",
     "TTS_PIPER_SPEAKER_ES",
-    "TTS_PIPER_SPEAKER_QUC",
+    "TTS_MMS_SPEAKING_RATE",
     "TTS_PIPER_LENGTH_SCALE",
     "TTS_PIPER_NOISE_SCALE",
     "TTS_PIPER_NOISE_W_SCALE",
@@ -112,8 +113,7 @@ def test_build_tts_config_defaults() -> None:
     assert config.piper_model_dir == DEFAULT_TTS_PIPER_MODEL_DIR
     assert config.piper_model_es == DEFAULT_TTS_PIPER_MODEL_ES
     assert config.piper_speaker_es == DEFAULT_TTS_PIPER_SPEAKER_ES
-    assert config.piper_model_quc == DEFAULT_TTS_PIPER_MODEL_QUC
-    assert config.piper_speaker_quc == DEFAULT_TTS_PIPER_SPEAKER_QUC
+    assert config.mms_speaking_rate == DEFAULT_TTS_MMS_SPEAKING_RATE
     assert config.piper_length_scale == DEFAULT_TTS_PIPER_LENGTH_SCALE
     assert config.piper_noise_scale == DEFAULT_TTS_PIPER_NOISE_SCALE
     assert config.piper_noise_w_scale == DEFAULT_TTS_PIPER_NOISE_W_SCALE
@@ -155,8 +155,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     monkeypatch.setenv("TTS_PIPER_MODEL_DIR", " /var/models/tts ")
     monkeypatch.setenv("TTS_PIPER_MODEL_ES", "custom_es.onnx")
     monkeypatch.setenv("TTS_PIPER_SPEAKER_ES", "2")
-    monkeypatch.setenv("TTS_PIPER_MODEL_QUC", "custom_quc.onnx")
-    monkeypatch.setenv("TTS_PIPER_SPEAKER_QUC", "3")
+    monkeypatch.setenv("TTS_MMS_SPEAKING_RATE", "0.9")
     monkeypatch.setenv("TTS_PIPER_LENGTH_SCALE", "1.25")
     monkeypatch.setenv("TTS_PIPER_NOISE_SCALE", "0.45")
     monkeypatch.setenv("TTS_PIPER_NOISE_W_SCALE", "0.55")
@@ -195,8 +194,7 @@ def test_build_tts_config_env_overrides(monkeypatch) -> None:
     assert config.piper_model_dir == "/var/models/tts"
     assert config.piper_model_es == "custom_es.onnx"
     assert config.piper_speaker_es == 2
-    assert config.piper_model_quc == "custom_quc.onnx"
-    assert config.piper_speaker_quc == 3
+    assert config.mms_speaking_rate == 0.9
     assert config.piper_length_scale == 1.25
     assert config.piper_noise_scale == 0.45
     assert config.piper_noise_w_scale == 0.55

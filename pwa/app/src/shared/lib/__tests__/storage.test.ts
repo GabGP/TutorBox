@@ -67,4 +67,15 @@ describe('Typed Storage Adapter', () => {
     localStorage.setItem('tb_hist_s2', '{broken-json');
     expect(storage.getRoundHistory('s2')).toEqual([]);
   });
+
+  it('keeps K\'iche\' but drops the removed Piper K\'iche\' voice from a saved preference', () => {
+    storage.setVoicePreference({ lang: 'quc', engine: 'piper', voice: 'quc_Latn-maya-medium.onnx' });
+    expect(storage.getVoicePreference()).toEqual({ lang: 'quc' });
+
+    storage.setVoicePreference({ lang: 'quc', engine: 'mms', voice: 'quc' });
+    expect(storage.getVoicePreference()).toEqual({ lang: 'quc', engine: 'mms', voice: 'quc' });
+
+    storage.setVoicePreference({ lang: 'es', engine: 'piper', voice: 'es_ES-sharvard-medium.onnx' });
+    expect(storage.getVoicePreference()?.engine).toBe('piper');
+  });
 });

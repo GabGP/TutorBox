@@ -94,13 +94,18 @@ class MmsBackend:
             raise TTSSynthesisError("There is no text this voice can speak.")
 
         pause = np.zeros(int(mms_voice.sample_rate * CLAUSE_PAUSE_SECONDS))
+        speed: dict[str, np.ndarray] = {}
+        if mms_voice.accepts_speaking_rate:
+            rate = get_settings().tts.mms_speaking_rate
+            speed["speaking_rate"] = np.asarray(rate, dtype=np.float32)
         chunks: list[np.ndarray] = []
         try:
             for token_ids in clauses:
                 if chunks:
                     chunks.append(pause)
                 input_ids = np.asarray([token_ids], dtype=np.int64)
-                waveform = mms_voice.session.run(None, {"input_ids": input_ids})[0]
+                inputs = {"input_ids": input_ids, **speed}
+                waveform = mms_voice.session.run(None, inputs)[0]
                 chunks.append(np.asarray(waveform, dtype=np.float32).reshape(-1))
         except Exception as err:
             raise TTSSynthesisError(f"MMS synthesis failed: {err}") from err

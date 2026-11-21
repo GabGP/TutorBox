@@ -104,7 +104,11 @@ export const storage = {
   getVoicePreference: (): StoredVoicePreference | null => {
     try {
       const raw = localStorage.getItem('tb_voice');
-      return raw ? JSON.parse(raw) : null;
+      const pref: StoredVoicePreference | null = raw ? JSON.parse(raw) : null;
+      // The K'iche' Piper voice was removed on 2026-11-21 (no such model exists).
+      // A phone that saved it keeps K'iche' and lets the server pick its voice.
+      if (pref?.lang === 'quc' && pref.engine === 'piper') return { lang: 'quc' };
+      return pref;
     } catch {
       return null;
     }

@@ -82,7 +82,7 @@ describe('ttsApi and speechApi client contracts', () => {
   it('speechApi.getSpeechBlobUrl ignores saved voice of another language', async () => {
     localStorage.setItem(
       'tb_voice',
-      JSON.stringify({ lang: 'quc', engine: 'piper', voice: 'voz-q' })
+      JSON.stringify({ lang: 'quc', engine: 'mms', voice: 'quc' })
     );
     const spy = vi.spyOn(httpClient, 'requestBlobUrl').mockResolvedValue('blob:test');
 

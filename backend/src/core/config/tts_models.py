@@ -15,16 +15,15 @@ from core.config.constants import (
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
     DEFAULT_TTS_MMS_MODEL_DIR,
+    DEFAULT_TTS_MMS_SPEAKING_RATE,
     DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
     DEFAULT_TTS_PIPER_MODEL_ES,
-    DEFAULT_TTS_PIPER_MODEL_QUC,
     DEFAULT_TTS_PIPER_NOISE_SCALE,
     DEFAULT_TTS_PIPER_NOISE_W_SCALE,
     DEFAULT_TTS_PIPER_SPEAKER_ES,
-    DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_QWEN_BATCH,
     DEFAULT_TTS_QWEN_BINARY,
@@ -64,8 +63,6 @@ class TTSConfig:
     piper_model_dir: str = DEFAULT_TTS_PIPER_MODEL_DIR
     piper_model_es: str = DEFAULT_TTS_PIPER_MODEL_ES
     piper_speaker_es: int = DEFAULT_TTS_PIPER_SPEAKER_ES
-    piper_model_quc: str = DEFAULT_TTS_PIPER_MODEL_QUC
-    piper_speaker_quc: int = DEFAULT_TTS_PIPER_SPEAKER_QUC
     piper_length_scale: float = DEFAULT_TTS_PIPER_LENGTH_SCALE
     piper_noise_scale: float = DEFAULT_TTS_PIPER_NOISE_SCALE
     piper_noise_w_scale: float = DEFAULT_TTS_PIPER_NOISE_W_SCALE
@@ -81,6 +78,7 @@ class TTSConfig:
     kokoro_provider: str = DEFAULT_TTS_KOKORO_PROVIDER
     melo_voice: str = DEFAULT_TTS_MELO_VOICE
     mms_model_dir: str = DEFAULT_TTS_MMS_MODEL_DIR
+    mms_speaking_rate: float = DEFAULT_TTS_MMS_SPEAKING_RATE
     qwen_binary: str = DEFAULT_TTS_QWEN_BINARY
     qwen_gguf_path: str = DEFAULT_TTS_QWEN_GGUF_PATH
     qwen_threads: int = DEFAULT_TTS_QWEN_THREADS

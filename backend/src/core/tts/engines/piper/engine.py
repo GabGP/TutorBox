@@ -15,6 +15,7 @@ from core.tts.constants import (
     MILLISECONDS_PER_SECOND,
     SUBPROCESS_SUCCESS_EXIT_CODE,
 )
+from core.tts.engines.mms.models import MMS_CHECKPOINTS
 from core.tts.engines.piper.models import resolve_model_path, sanitize_model_config
 from core.tts.exceptions import TTSSynthesisError, TTSUnavailableError
 from core.tts.text import normalize_for_speech
@@ -33,9 +34,11 @@ class PiperBackend:
         return "piper"
 
     def _resolve_voice_and_speaker(self, voice: str | None) -> tuple[str, int]:
+        # Spanish only: no Piper voice exists for a Mayan language (MMS speaks those),
+        # and a Mayan request must never be read by the Spanish model.
+        if voice in MMS_CHECKPOINTS:
+            raise TTSUnavailableError(f"Piper has no voice for '{voice}'.")
         tts = get_settings().tts
-        if voice == "quc":
-            return tts.piper_model_quc, tts.piper_speaker_quc
         return tts.piper_model_es, tts.piper_speaker_es
 
     def is_available(self, voice: str | None = None) -> bool:
@@ -43,8 +46,8 @@ class PiperBackend:
         tts = get_settings().tts
         if not tts.enabled:
             return False
-        model_name, _ = self._resolve_voice_and_speaker(voice)
         try:
+            model_name, _ = self._resolve_voice_and_speaker(voice)
             resolve_model_path(model_name, tts.piper_model_dir)
             return True
         except TTSUnavailableError:

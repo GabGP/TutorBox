@@ -17,25 +17,19 @@ def _backend(name: str, available: bool) -> MagicMock:
     return backend
 
 
-def _resolve(engine, lang, *, mms=True, piper=False, espeak=False, voice_quc=""):
+def _resolve(engine, lang, *, mms=True, espeak=False, voice_quc=""):
     backends: dict[str, TTSBackend] = {"mms": _backend("mms", mms)}
     return resolve_mayan_backend(
-        engine,
-        lang,
-        backends,
-        _backend("piper", piper),
-        _backend("espeak", espeak),
-        voice_quc,
+        engine, lang, backends, _backend("espeak", espeak), voice_quc
     )
 
 
 @pytest.mark.parametrize("lang", ["quc", "kek"])
 def test_auto_prefers_the_mms_voice(lang):
-    assert _resolve("auto", lang, piper=True, espeak=True).engine_name == "mms"
+    assert _resolve("auto", lang, espeak=True, voice_quc="quc").engine_name == "mms"
 
 
-def test_auto_kiche_falls_back_to_piper_then_espeak():
-    assert _resolve("auto", "quc", mms=False, piper=True).engine_name == "piper"
+def test_auto_kiche_falls_back_to_a_configured_espeak_voice():
     espeak = _resolve("auto", "quc", mms=False, espeak=True, voice_quc="quc")
     assert espeak.engine_name == "espeak"
 
@@ -47,7 +41,7 @@ def test_auto_kiche_never_uses_espeak_without_a_kiche_voice():
 
 def test_auto_qeqchi_has_only_the_mms_voice():
     with pytest.raises(TTSUnavailableError, match="language 'kek'"):
-        _resolve("auto", "kek", mms=False, piper=True, espeak=True)
+        _resolve("auto", "kek", mms=False, espeak=True, voice_quc="quc")
 
 
 @pytest.mark.parametrize(
@@ -61,23 +55,24 @@ def test_explicit_mms(lang, language_name):
 
 def test_explicit_mms_without_any_mms_backend():
     with pytest.raises(TTSUnavailableError, match="voice is not installed"):
-        resolve_mayan_backend(
-            "mms", "kek", {}, _backend("piper", True), _backend("espeak", True), ""
-        )
+        resolve_mayan_backend("mms", "kek", {}, _backend("espeak", True), "")
 
 
 @pytest.mark.parametrize("engine", ["piper", "espeak", "qwen3-tts", "kokoro"])
 def test_qeqchi_refuses_engines_without_a_qeqchi_voice(engine):
     with pytest.raises(TTSUnavailableError, match="does not support 'kek'"):
-        _resolve(engine, "kek", piper=True, espeak=True)
+        _resolve(engine, "kek", espeak=True)
 
 
-def test_explicit_kiche_engines_keep_their_rules():
-    assert _resolve("piper", "quc", piper=True).engine_name == "piper"
+def test_explicit_kiche_engines():
+    """eSpeak only with a configured Kʼicheʼ voice; Piper has none (removed 2026-11-21)."""
     espeak = _resolve("espeak", "quc", espeak=True, voice_quc="quc")
     assert espeak.engine_name == "espeak"
-    with pytest.raises(TTSUnavailableError, match="does not support 'quc'"):
-        _resolve("kokoro", "quc")
+    with pytest.raises(TTSUnavailableError, match="eSpeak cannot synthesize"):
+        _resolve("espeak", "quc", espeak=True)
+    for engine in ("piper", "kokoro"):
+        with pytest.raises(TTSUnavailableError, match="does not support 'quc'"):
+            _resolve(engine, "quc")
 
 
 def test_router_registers_the_mms_backend():

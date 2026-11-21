@@ -54,7 +54,7 @@ def resolve_target_backend(
     if lang in MAYAN_LANGUAGES:
         settings = get_settings().tts
         return resolve_mayan_backend(
-            target_engine, lang, backends, piper, espeak, settings.voice_quc
+            target_engine, lang, backends, espeak, settings.voice_quc
         )
 
     if engine:

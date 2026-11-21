@@ -13,16 +13,15 @@ from core.config.constants import (
     DEFAULT_TTS_MAX_CHARS,
     DEFAULT_TTS_MELO_VOICE,
     DEFAULT_TTS_MMS_MODEL_DIR,
+    DEFAULT_TTS_MMS_SPEAKING_RATE,
     DEFAULT_TTS_MOSS_MODEL,
     DEFAULT_TTS_PIPER_BINARY,
     DEFAULT_TTS_PIPER_LENGTH_SCALE,
     DEFAULT_TTS_PIPER_MODEL_DIR,
     DEFAULT_TTS_PIPER_MODEL_ES,
-    DEFAULT_TTS_PIPER_MODEL_QUC,
     DEFAULT_TTS_PIPER_NOISE_SCALE,
     DEFAULT_TTS_PIPER_NOISE_W_SCALE,
     DEFAULT_TTS_PIPER_SPEAKER_ES,
-    DEFAULT_TTS_PIPER_SPEAKER_QUC,
     DEFAULT_TTS_PITCH,
     DEFAULT_TTS_SHERPA_MODEL_ES,
     DEFAULT_TTS_SHERPA_PROVIDER,
@@ -90,12 +89,6 @@ def build_tts_config() -> TTSConfig:
         piper_speaker_es=parse_int(
             "TTS_PIPER_SPEAKER_ES", DEFAULT_TTS_PIPER_SPEAKER_ES, min_value=0
         ),
-        piper_model_quc=_env(
-            "TTS_PIPER_MODEL_QUC", DEFAULT_TTS_PIPER_MODEL_QUC
-        ).strip(),
-        piper_speaker_quc=parse_int(
-            "TTS_PIPER_SPEAKER_QUC", DEFAULT_TTS_PIPER_SPEAKER_QUC, min_value=0
-        ),
         piper_length_scale=parse_float(
             "TTS_PIPER_LENGTH_SCALE",
             DEFAULT_TTS_PIPER_LENGTH_SCALE,
@@ -141,5 +134,11 @@ def build_tts_config() -> TTSConfig:
         ),
         melo_voice=_env("TTS_MELO_VOICE", DEFAULT_TTS_MELO_VOICE).strip(),
         mms_model_dir=_env("TTS_MMS_MODEL_DIR", DEFAULT_TTS_MMS_MODEL_DIR).strip(),
+        mms_speaking_rate=parse_float(
+            "TTS_MMS_SPEAKING_RATE",
+            DEFAULT_TTS_MMS_SPEAKING_RATE,
+            min_value=0.5,
+            max_value=1.5,
+        ),
         **build_qwen_config(),
     )

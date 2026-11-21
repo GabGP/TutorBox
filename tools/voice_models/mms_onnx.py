@@ -1,6 +1,8 @@
 """Exports a downloaded MMS checkpoint to model.onnx for the classroom voice engine.
 
 The backend runs the Mayan voices with ONNX Runtime, so it never loads PyTorch.
+The export takes speaking_rate as an input, so TTS_MMS_SPEAKING_RATE needs no
+new export; a model.onnx from before that input is exported again.
 The export needs PyTorch and transformers once, from the mayan-audio extra that
 run.py installs. A trace of the full model (random noise included) gives the
 same audio as transformers for every input length, checked on 2026-11-20.
@@ -35,8 +37,8 @@ def _export(model_dir: Path, onnx_path: Path) -> None:
             super().__init__()
             self.model = model
 
-        def forward(self, input_ids: Any) -> Any:
-            return self.model(input_ids=input_ids).waveform
+        def forward(self, input_ids: Any, speaking_rate: Any) -> Any:
+            return self.model(input_ids=input_ids, speaking_rate=speaking_rate).waveform
 
     model = VitsModel.from_pretrained(str(model_dir)).eval()
     trace_ids = torch.tensor([_trace_token_ids(model.config.vocab_size)])
@@ -44,9 +46,9 @@ def _export(model_dir: Path, onnx_path: Path) -> None:
         warnings.simplefilter("ignore")
         torch.onnx.export(
             _WaveformOnly(model),
-            (trace_ids,),
+            (trace_ids, torch.tensor(1.0)),
             str(onnx_path),
-            input_names=["input_ids"],
+            input_names=["input_ids", "speaking_rate"],
             output_names=["waveform"],
             dynamic_axes={"input_ids": {1: "tokens"}, "waveform": {1: "samples"}},
             opset_version=ONNX_OPSET,
@@ -54,10 +56,27 @@ def _export(model_dir: Path, onnx_path: Path) -> None:
         )
 
 
+def _is_current_export(onnx_path: Path) -> bool:
+    """True for a model.onnx that takes the speaking_rate input (exported 2026-11-21+)."""
+    if not (onnx_path.is_file() and onnx_path.stat().st_size > 0):
+        return False
+    try:
+        import onnxruntime
+
+        session = onnxruntime.InferenceSession(
+            str(onnx_path), providers=["CPUExecutionProvider"]
+        )
+    except Exception:  # noqa: BLE001 - an unreadable file is exported again
+        return False
+    return any(
+        model_input.name == "speaking_rate" for model_input in session.get_inputs()
+    )
+
+
 def export_mms_onnx(model_dir: Path, force: bool = False) -> bool:
-    """Writes <model_dir>/model.onnx unless it is already there."""
+    """Writes <model_dir>/model.onnx unless a current export is already there."""
     onnx_path = model_dir / MMS_ONNX_NAME
-    if onnx_path.is_file() and onnx_path.stat().st_size > 0 and not force:
+    if not force and _is_current_export(onnx_path):
         print(f"{TAG_OK} Already present: {model_dir.name}/{MMS_ONNX_NAME}")
         return True
     try:

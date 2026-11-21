@@ -41,10 +41,38 @@ def test_trace_ids_put_a_blank_between_characters():
     assert all(1 <= token < 37 for token in trace_ids[1::2])
 
 
-def test_existing_export_is_kept(tmp_path, capsys):
+def _fake_onnxruntime(input_names=("input_ids", "speaking_rate"), error=None):
+    fake = MagicMock()
+    if error:
+        fake.InferenceSession.side_effect = error
+    fake.InferenceSession.return_value.get_inputs.return_value = [
+        SimpleNamespace(name=name) for name in input_names
+    ]
+    return patch.dict(sys.modules, {"onnxruntime": fake})
+
+
+def test_current_export_is_kept(tmp_path, capsys):
     (tmp_path / "model.onnx").write_bytes(b"onnx")
-    assert mms_onnx.export_mms_onnx(tmp_path) is True
+    with _fake_onnxruntime():
+        assert mms_onnx.export_mms_onnx(tmp_path) is True
     assert "Already present" in capsys.readouterr().out
+
+
+def test_export_without_the_speaking_rate_input_is_redone(tmp_path):
+    """A model.onnx from before the speaking_rate input is exported again."""
+    (tmp_path / "model.onnx").write_bytes(b"old")
+    libraries, _, _ = _fake_export_libraries()
+    with _fake_onnxruntime(input_names=("input_ids",)), libraries:
+        assert mms_onnx.export_mms_onnx(tmp_path) is True
+    assert (tmp_path / "model.onnx").read_bytes() == b"onnx"
+
+
+def test_unreadable_export_is_redone(tmp_path):
+    (tmp_path / "model.onnx").write_bytes(b"broken")
+    libraries, _, _ = _fake_export_libraries()
+    with _fake_onnxruntime(error=RuntimeError("bad protobuf")), libraries:
+        assert mms_onnx.export_mms_onnx(tmp_path) is True
+    assert (tmp_path / "model.onnx").read_bytes() == b"onnx"
 
 
 def test_export_writes_model_onnx_atomically(tmp_path):
@@ -54,7 +82,7 @@ def test_export_writes_model_onnx_atomically(tmp_path):
     assert (tmp_path / "model.onnx").read_bytes() == b"onnx"
     assert not (tmp_path / "model.onnx.part").exists()
     fake_transformers.VitsModel.from_pretrained.assert_called_once_with(str(tmp_path))
-    assert fake_torch.export_kwargs["input_names"] == ["input_ids"]
+    assert fake_torch.export_kwargs["input_names"] == ["input_ids", "speaking_rate"]
     assert fake_torch.export_kwargs["dynamic_axes"]["input_ids"] == {1: "tokens"}
     assert fake_torch.export_kwargs["opset_version"] == mms_onnx.ONNX_OPSET
 
@@ -66,8 +94,8 @@ def test_export_wrapper_returns_only_the_waveform(tmp_path):
     wrapper = fake_torch.onnx.export.call_args.args[0]
     wrapper.model = MagicMock()
     wrapper.model.return_value.waveform = "waveform"
-    assert wrapper.forward("ids") == "waveform"
-    wrapper.model.assert_called_once_with(input_ids="ids")
+    assert wrapper.forward("ids", "rate") == "waveform"
+    wrapper.model.assert_called_once_with(input_ids="ids", speaking_rate="rate")
 
 
 def test_export_failure_removes_the_part_file(tmp_path, capsys):

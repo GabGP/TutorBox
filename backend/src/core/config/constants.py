@@ -47,8 +47,6 @@ DEFAULT_TTS_PIPER_BINARY: str = ""  # empty: auto-detect piper in PATH
 DEFAULT_TTS_PIPER_MODEL_DIR: str = "/opt/utztutor/models/tts"
 DEFAULT_TTS_PIPER_MODEL_ES: str = "es_ES-sharvard-medium.onnx"
 DEFAULT_TTS_PIPER_SPEAKER_ES: int = 1  # 1 = female educator, 0 = male educator
-DEFAULT_TTS_PIPER_MODEL_QUC: str = "quc_Latn-maya-medium.onnx"
-DEFAULT_TTS_PIPER_SPEAKER_QUC: int = 0
 DEFAULT_TTS_PIPER_LENGTH_SCALE: float = 1.12
 DEFAULT_TTS_PIPER_NOISE_SCALE: float = 0.35
 DEFAULT_TTS_PIPER_NOISE_W_SCALE: float = 0.45
@@ -62,6 +60,8 @@ DEFAULT_TTS_KOKORO_VOICE: str = "es"
 DEFAULT_TTS_KOKORO_MODEL_DIR: str = "kokoro-int8-multi-lang-v1_0"
 # Meta MMS-TTS Mayan voices (Kʼicheʼ, Qʼeqchiʼ) exported to ONNX by tools/voice_models.
 DEFAULT_TTS_MMS_MODEL_DIR: str = "mms"
+# MMS speaking rate: 1.0 is the checkpoints' own pace, which teachers found fast.
+DEFAULT_TTS_MMS_SPEAKING_RATE: float = 0.8
 DEFAULT_TTS_KOKORO_MODEL_FILE: str = "model.onnx"
 DEFAULT_TTS_KOKORO_SPEAKER_ID: int = 53  # 53 = em_santa (Spanish)
 DEFAULT_TTS_KOKORO_PROVIDER: str = "auto"  # "auto", "cpu", "cuda"
