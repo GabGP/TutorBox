@@ -109,6 +109,9 @@ export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
         currentIndex: 1,
         currentTopic: initialTopic,
         currentSubconcept: null as string | null,
+        startedAtMs: startTime,
+        questionStartedAtMs: startTime,
+        finishedAtMs: undefined as number | undefined,
       };
       const publish = () => {
         const snapshot: GenerationProgress = {
@@ -139,6 +142,7 @@ export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
         draft.currentIndex = i + 1;
         draft.currentTopic = effectiveTopic;
         draft.currentSubconcept = subconcept;
+        draft.questionStartedAtMs = Date.now();
         publish();
 
         const request = new AbortController();
@@ -183,6 +187,8 @@ export function useQuestionGenerator(modelLifecycle?: QuizModelLifecycle) {
         publish();
       }
 
+      draft.finishedAtMs = Date.now();
+      publish();
       setIsGenerating(false);
 
       if (draft.ids.length === 0) {

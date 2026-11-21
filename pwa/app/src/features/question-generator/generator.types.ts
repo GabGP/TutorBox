@@ -67,6 +67,15 @@ export interface GenerationProgress {
   statuses?: QuestionGenerationStatus[];
   /** True while the quiz model loads before the first question (the card shows a loading line). */
   modelLoading?: boolean;
+  /**
+   * Wall-clock times (Date.now() ms) owned by the batch, not by the progress card: the card
+   * unmounts when the teacher switches tab, and its timers must go on from these on return.
+   */
+  startedAtMs?: number;
+  /** When the current question was sent to the model. */
+  questionStartedAtMs?: number;
+  /** When the batch ended; the elapsed time stays at this value afterwards. */
+  finishedAtMs?: number;
 }
 
 export { PEDAGOGICAL_STAGES, PROGRESS_ANIMATION } from './generator.constants';
