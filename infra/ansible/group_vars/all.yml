@@ -68,6 +68,9 @@ app_env:
   SLM_MODEL_NAME: "{{ quiz_model }}"
   SLM_TEMPERATURE: "0.7"
   SLM_TIMEOUT_SECONDS: "120.0"
+  # The backend loads and unloads the Ollama models itself (backend/src/core/llm/residency).
+  SLM_MANAGE_RESIDENCY: "true"
+  SLM_QUIZ_IDLE_UNLOAD_SECONDS: "90.0"
   TUTOR_MODEL_NAME: "{{ tutor_model }}"
   CAPTIVE_PORTAL_URL: "http://{{ dns_name }}/alumno/"
 

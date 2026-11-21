@@ -132,6 +132,20 @@
         or (complaints | select('in', check_launcher.stdout) | list | length) > 0
       ignore_errors: true
 
+    - name: The Ollama drop-in is the repo's
+      ansible.builtin.command: cmp -s {{ repo_dir }}/infra/systemd/ollama-utztutor.conf /etc/systemd/system/ollama.service.d/utztutor.conf
+      register: check_ollama_dropin
+      changed_when: false
+      ignore_errors: true
+
+    # The drop-in is what keeps the tutor model loaded between turns: see the file's comment.
+    - name: Ollama keeps models loaded (OLLAMA_KEEP_ALIVE=-1)
+      ansible.builtin.command: systemctl show ollama -p Environment --value
+      register: check_ollama_environment
+      changed_when: false
+      failed_when: "'OLLAMA_KEEP_ALIVE=-1' not in check_ollama_environment.stdout.split()"
+      ignore_errors: true
+
     - name: The PWA is built
       ansible.builtin.stat:
         path: "{{ repo_dir }}/.cache/pwa/dist/index.html"

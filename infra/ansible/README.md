@@ -183,7 +183,7 @@ daemon. What it does, in order:
 | `packages` | `nginx-light`, `espeak-ng`, `git`, `build-essential`. |
 | `cuda` | The CUDA compiler (`cuda-minimal-build-13-2`, `libcublas-dev-13-2`). The base image has the CUDA runtime only. |
 | `tools` | Checks `uv`; installs Node.js (24 LTS, which the PWA's Vitest needs) and pnpm under `~/.local`, at the pinned versions. |
-| `ollama` | Installs Ollama at the pinned version, starts `ollama.service`, pulls the quiz and tutor models. |
+| `ollama` | Installs Ollama at the pinned version, installs the drop-in `infra/systemd/ollama-utztutor.conf` (`OLLAMA_KEEP_ALIVE=-1`, `OLLAMA_MAX_LOADED_MODELS=2`: the backend decides when a model leaves memory; a changed drop-in reloads systemd and restarts Ollama), starts `ollama.service`, pulls the quiz and tutor models. |
 | `app` | Writes `<repo>/.env`, then runs `run.py --prepare --download-models all --build-llama --require-cuda`. That installs every Python package, including the `mayan-audio` extra (CPU-only PyTorch, transformers) for the Kʼicheʼ and Qʼeqchiʼ audio guides, and every voice model: the Spanish ones and the two Meta MMS Mayan voices (about 290 MB, exported to ONNX for the classroom voice, another 230 MB). |
 | `nginx` | Installs and enables the site, removes Ubuntu's default site. |
 | `services` | Installs, enables and starts `utztutor-backend` and `utztutor-power`. The backend unit has `OOMPolicy=continue`: when the kernel kills the Qwen3-TTS daemon for memory, only the daemon goes and the backend falls back to another voice, instead of systemd restarting the whole backend in the middle of a match. |
@@ -313,6 +313,8 @@ checks that failed. It checks that:
 - `nginx`, `utztutor-backend`, `utztutor-power` and `ollama` are running and enabled, and no unit is
   in the failed state. `nvpmodel` is allowed to be (`known_failed_units`): it fails at boot on this
   board, and `utztutor-power` applies the 25W clock caps in its place.
+- The installed Ollama drop-in is the repository's, and `systemctl show ollama` reports
+  `OLLAMA_KEEP_ALIVE=-1` (without it the tutor model would leave memory after five idle minutes).
 - The 25W clock caps are the ones the kernel reports.
 - The installed nginx site and units are the ones in the repository.
 - `http://localhost/health` answers, a captive-portal probe is redirected to

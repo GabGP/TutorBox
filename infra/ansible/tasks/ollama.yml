@@ -15,6 +15,25 @@
     mode: "0644"
   when: ollama_found.rc != 0 or ollama_version not in ollama_found.stdout
 
+# The drop-in keeps models loaded for the backend to manage (backend/src/core/llm/residency).
+# Changing it reloads systemd and restarts Ollama (the handler in jetson.yml).
+- name: Make the Ollama drop-in folder
+  ansible.builtin.file:
+    path: /etc/systemd/system/ollama.service.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Install the Ollama drop-in (models stay loaded until the backend unloads them)
+  ansible.builtin.copy:
+    src: "{{ repo_dir }}/infra/systemd/ollama-utztutor.conf"
+    dest: /etc/systemd/system/ollama.service.d/utztutor.conf
+    mode: "0644"
+  become: true
+  notify:
+    - Reload systemd
+    - Restart Ollama
+
 # The output goes to the log only. When the install fails, Ansible shows the end of the log.
 - name: Install Ollama {{ ollama_version }}; follow {{ log_dir | relpath(repo_dir) }}/ollama-install.log
   ansible.builtin.shell: |
