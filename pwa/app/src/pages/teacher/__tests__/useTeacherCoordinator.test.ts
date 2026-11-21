@@ -17,18 +17,18 @@ vi.mock('../../../features/session-engine/sessionApi', () => ({
   },
 }));
 
-const { mockPreloadIfUnloaded, mockUnloadIfLoaded, mockTtsStatus, mockTtsUnload } =
+const { mockPrepareVoice, mockReleaseVoice, mockTtsStatus, mockTtsUnload } =
   vi.hoisted(() => ({
-    mockPreloadIfUnloaded: vi.fn(),
-    mockUnloadIfLoaded: vi.fn(),
+    mockPrepareVoice: vi.fn(),
+    mockReleaseVoice: vi.fn(),
     mockTtsStatus: vi.fn(),
     mockTtsUnload: vi.fn(),
   }));
 
-vi.mock('../../../features/speech/useTTSLifecycle', () => ({
-  useTTSLifecycle: () => ({
-    preloadIfUnloaded: mockPreloadIfUnloaded,
-    unloadIfLoaded: mockUnloadIfLoaded,
+vi.mock('../../../features/speech/useLobbyVoice', () => ({
+  useLobbyVoice: () => ({
+    prepare: mockPrepareVoice,
+    release: mockReleaseVoice,
   }),
 }));
 
@@ -275,7 +275,7 @@ describe('useTeacherCoordinator Hook', () => {
     expect(result.current.session).toBeNull();
   });
 
-  it('loads the saved voice engine exclusively when starting from lobby', async () => {
+  it('starts the game first, then loads the voice without waiting for it', async () => {
     const lobbySession: SessionModel = {
       ...baseSession,
       id: 's_lobby',
@@ -288,13 +288,16 @@ describe('useTeacherCoordinator Hook', () => {
     const activeSession: SessionModel = { ...lobbySession, status: 'active' };
     vi.mocked(sessionApi.getSessionById).mockResolvedValue(lobbySession);
     vi.mocked(sessionApi.startSession).mockResolvedValue(activeSession);
-    mockTtsStatus.mockResolvedValue({ engine: 'piper', loaded: false });
-    mockTtsUnload.mockResolvedValue({ engine: 'all', loaded: false });
-    mockPreloadIfUnloaded.mockResolvedValue(true);
-    localStorage.setItem(
-      'tb_voice',
-      JSON.stringify({ lang: 'es', engine: 'piper', voice: 'voz-x' })
-    );
+    const order: string[] = [];
+    vi.mocked(sessionApi.startSession).mockImplementation(async () => {
+      order.push('start');
+      return activeSession;
+    });
+    // A voice that never finishes loading must not hold the game back.
+    mockPrepareVoice.mockImplementation(() => {
+      order.push('voice');
+      return new Promise(() => undefined);
+    });
 
     const { result } = renderHook(() => useTeacherCoordinator('s_lobby'));
     await act(async () => {
@@ -306,9 +309,8 @@ describe('useTeacherCoordinator Hook', () => {
       await result.current.advancePrimary();
     });
 
-    expect(mockTtsStatus).toHaveBeenCalledWith('piper', 'es');
-    expect(mockTtsUnload).toHaveBeenCalled();
-    expect(mockPreloadIfUnloaded).toHaveBeenCalledWith('es', 'piper', 'voz-x');
-    expect(sessionApi.startSession).toHaveBeenCalledWith('s_lobby');
+    expect(order).toEqual(['start', 'voice']);
+    expect(mockPrepareVoice).toHaveBeenCalledWith('es');
+    expect(result.current.session?.status).toBe('active');
   });
 });

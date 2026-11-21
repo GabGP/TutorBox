@@ -19,18 +19,18 @@ vi.mock('../../../features/session-engine/sessionApi', () => ({
   },
 }));
 
-const { mockPreloadIfUnloaded, mockUnloadIfLoaded, mockTtsStatus, mockTtsUnload } =
+const { mockPrepareVoice, mockReleaseVoice, mockTtsStatus, mockTtsUnload } =
   vi.hoisted(() => ({
-    mockPreloadIfUnloaded: vi.fn(),
-    mockUnloadIfLoaded: vi.fn(),
+    mockPrepareVoice: vi.fn(),
+    mockReleaseVoice: vi.fn(),
     mockTtsStatus: vi.fn(),
     mockTtsUnload: vi.fn(),
   }));
 
-vi.mock('../../../features/speech/useTTSLifecycle', () => ({
-  useTTSLifecycle: () => ({
-    preloadIfUnloaded: mockPreloadIfUnloaded,
-    unloadIfLoaded: mockUnloadIfLoaded,
+vi.mock('../../../features/speech/useLobbyVoice', () => ({
+  useLobbyVoice: () => ({
+    prepare: mockPrepareVoice,
+    release: mockReleaseVoice,
   }),
 }));
 

@@ -133,7 +133,7 @@ Publicly inspectable state of a session and active round countdown. Polled by st
 
 ### <a id="post-session-start"></a>`POST /api/v1/session/{session_id}/start`
 
-Transitions session state from `lobby` to `active` and opens the first question round with its countdown timer. The round takes votes after the start countdown (`current_round.starts_in`, 3 s by default; see the notes above).
+Transitions session state from `lobby` to `active` and opens the first question round with its countdown timer. The round takes votes after the start countdown (`current_round.starts_in`, 3 s by default; see the notes above). The teacher console starts the game first and loads the class voice afterwards in the background (`POST /api/v1/tts/load`, with a toast for the load and, when the game ends, the unload), so a slow voice such as Qwen3-TTS never delays the start.
 
 * **Authorization**: Teacher, Admin
 * **Path Parameters**:

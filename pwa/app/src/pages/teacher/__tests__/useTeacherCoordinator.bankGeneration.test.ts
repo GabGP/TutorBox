@@ -14,8 +14,8 @@ vi.mock('../../../features/question-generator/generatorApi', () => ({
 vi.mock('../../../shared/taxonomy/useTopics', () => ({
   useTopics: () => ({ topics: [] }),
 }));
-vi.mock('../../../features/speech/useTTSLifecycle', () => ({
-  useTTSLifecycle: () => ({ preloadIfUnloaded: vi.fn(), unloadIfLoaded: vi.fn() }),
+vi.mock('../../../features/speech/useLobbyVoice', () => ({
+  useLobbyVoice: () => ({ prepare: vi.fn(), release: vi.fn() }),
 }));
 
 /** A generate call that only settles when aborted, like a slow model. */

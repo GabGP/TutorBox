@@ -6,9 +6,8 @@ import { useTopics } from '../../shared/taxonomy/useTopics';
 import { SessionModel } from '../../features/session-engine/session.types';
 import { sessionApi } from '../../features/session-engine/sessionApi';
 import { useSessionEngine } from '../../features/session-engine/useSessionEngine';
-import { ttsApi } from '../../features/speech/speechApi';
 import { SpeechLanguage } from '../../features/speech/speech.types';
-import { useTTSLifecycle } from '../../features/speech/useTTSLifecycle';
+import { useLobbyVoice } from '../../features/speech/useLobbyVoice';
 import { unlockAudio } from '../../shared/lib/sound';
 import { storage } from '../../shared/lib/storage';
 import { useSessionSideEffects, useVanishedSessionEffect } from './useSessionSideEffects';
@@ -36,37 +35,6 @@ async function createMatchSession(
   });
   storage.setTeacherSessionId(created.id);
   return created;
-}
-
-/**
- * Single-resident-engine policy: when the teacher saved a voice preference
- * for this language, make sure THAT engine is the one loaded (evicting
- * others); otherwise fall back to engine defaults. Never blocks game start
- * on TTS failures.
- */
-async function ensureLobbyVoice(
-  voiceLang: SpeechLanguage,
-  preloadIfUnloaded: (
-    lang: SpeechLanguage,
-    engine?: string,
-    voice?: string
-  ) => Promise<unknown>
-): Promise<void> {
-  try {
-    const pref = storage.getVoicePreference();
-    const usePref = pref?.lang === voiceLang ? pref : undefined;
-    if (usePref?.engine) {
-      const st = await ttsApi.getStatus(usePref.engine, voiceLang).catch(() => null);
-      if (!st?.loaded) {
-        await ttsApi.unload({}).catch(() => undefined);
-        await preloadIfUnloaded(voiceLang, usePref.engine, usePref.voice);
-      }
-    } else {
-      void preloadIfUnloaded(voiceLang);
-    }
-  } catch {
-    // Game starts even if voice setup fails.
-  }
 }
 
 /**
@@ -130,26 +98,26 @@ export function useTeacherCoordinator(
     clearProgress: clearGenerationResult,
   } = useQuestionGenerator(quizModel);
 
-  const { preloadIfUnloaded, unloadIfLoaded } = useTTSLifecycle();
+  const lobbyVoice = useLobbyVoice(notices);
 
   useVanishedSessionEffect(sid, sessionErr?.status, setSid, setSession);
   const { history, setHistory, report, setReport } = useSessionSideEffects({
     sid,
     session,
     setSession,
-    unloadIfLoaded,
+    unloadIfLoaded: lobbyVoice.release,
   });
 
   /** Drops the match from this console; the wizard selection is left as it is. */
   const clearMatch = useCallback(() => {
-    void unloadIfLoaded();
+    void lobbyVoice.release();
     cancelGeneration();
     setSid(null);
     setSession(null);
     setReport(null);
     setHistory([]);
     storage.clearTeacherSessionId();
-  }, [cancelGeneration, setSession, setHistory, setReport, unloadIfLoaded]);
+  }, [cancelGeneration, setSession, setHistory, setReport, lobbyVoice]);
 
   const resetSession = useCallback(() => {
     clearMatch();
@@ -205,9 +173,11 @@ export function useTeacherCoordinator(
     }
 
     if (session.status === 'lobby') {
-      await ensureLobbyVoice(voiceLang, preloadIfUnloaded);
+      // The game starts at once (3-2-1 on every screen); the voice loads meanwhile, since the
+      // first explanation is spoken a whole round later.
       const started = await sessionApi.startSession(session.id);
       setSession(started);
+      void lobbyVoice.prepare(voiceLang);
     } else if (session.status === 'active') {
       const r = session.current_round;
       if (r?.status === 'open') {
@@ -238,7 +208,7 @@ export function useTeacherCoordinator(
     voiceLang,
     bankIds,
     setSession,
-    preloadIfUnloaded,
+    lobbyVoice,
     resetSession,
   ]);
 
