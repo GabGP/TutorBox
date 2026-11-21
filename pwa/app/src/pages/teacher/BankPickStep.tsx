@@ -77,6 +77,9 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
 }) => {
   const [tab, setTab] = useState<BankTab>('elegir');
   const [reloadKey, setReloadKey] = useState(0);
+  // Each question that ends, saved or failed (`done` counts both), adds a line to the
+  // generation activity, so the activity reloads after every one.
+  const finishedQuestions = progress?.done ?? 0;
   const { toasts, pushToast, dismissToast } = useToastQueue();
 
   useEffect(() => {
@@ -199,7 +202,7 @@ export const BankPickStep: React.FC<BankPickStepProps> = ({
       )}
 
       <Collapsible title="Actividad de generación">
-        <TelemetryView />
+        <TelemetryView reloadKey={reloadKey + finishedQuestions} />
       </Collapsible>
       <ToastViewport toasts={toasts} onDismiss={(id) => dismissToast(id)} />
     </div>

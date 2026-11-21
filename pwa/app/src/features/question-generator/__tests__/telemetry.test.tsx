@@ -30,6 +30,21 @@ function mockBackend(logs: unknown[]) {
 }
 
 describe('TelemetryView', () => {
+  it('loads again when reloadKey changes', async () => {
+    mockBackend([]);
+    const { rerender } = render(<TelemetryView reloadKey={0} />);
+    const logCalls = () =>
+      vi.mocked(httpClient.requestApi).mock.calls.filter(([, path]) =>
+        String(path).startsWith('/quiz/generation-logs')
+      ).length;
+    await waitFor(() => expect(logCalls()).toBe(1));
+
+    rerender(<TelemetryView reloadKey={1} />);
+
+    await waitFor(() => expect(logCalls()).toBe(2));
+    vi.restoreAllMocks();
+  });
+
   it('renders metrics and logs', async () => {
     mockBackend([
       {

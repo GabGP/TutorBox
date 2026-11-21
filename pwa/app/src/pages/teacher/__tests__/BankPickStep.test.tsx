@@ -161,4 +161,29 @@ describe('BankPickStep', () => {
     expect(screen.getByRole('button', { name: /Generar en banco/ })).toBeInTheDocument();
     vi.restoreAllMocks();
   });
+
+  it('reloads the generation activity after every finished question', async () => {
+    mockBankBackend();
+    const logCalls = () =>
+      vi.mocked(httpClient.requestApi).mock.calls.filter(([, path]) =>
+        String(path).startsWith('/quiz/generation-logs')
+      ).length;
+    const running = (done: number) => ({
+      done,
+      total: 3,
+      failed: 0,
+      ids: [],
+      eta: 5,
+      currentIndex: done + 1,
+      statuses: ['generating', 'pending', 'pending'] as ('generating' | 'pending')[],
+    });
+    const { rerender } = render(<BankPickStep {...baseProps} progress={running(0)} generating />);
+    fireEvent.click(screen.getByRole('button', { name: 'Actividad de generación' }));
+    await waitFor(() => expect(logCalls()).toBe(1));
+
+    rerender(<BankPickStep {...baseProps} progress={running(1)} generating />);
+
+    await waitFor(() => expect(logCalls()).toBe(2));
+    vi.restoreAllMocks();
+  });
 });

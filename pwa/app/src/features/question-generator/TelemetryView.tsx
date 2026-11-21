@@ -30,8 +30,15 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
  * treatment (same as the question bank) while keeping all filters,
  * metrics info, and log details. Load failures float as error toasts;
  * the user-ID filter validation stays inline next to its field.
+ *
+ * A change of `reloadKey` loads the page again, keeping the filters: the bank step bumps it
+ * after every generated or failed question, as it does for the question bank.
  */
-export const TelemetryView: React.FC = () => {
+export interface TelemetryViewProps {
+  reloadKey?: number;
+}
+
+export const TelemetryView: React.FC<TelemetryViewProps> = ({ reloadKey = 0 }) => {
   const [metrics, setMetrics] = useState<FullGenerationMetrics | null>(null);
   const [logs, setLogs] = useState<GenerationLogItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -105,7 +112,7 @@ export const TelemetryView: React.FC = () => {
 
   useEffect(() => {
     load(topic, userId, successFilter, offset, pageSize);
-  }, [topic, userId, successFilter, offset, pageSize, load]);
+  }, [topic, userId, successFilter, offset, pageSize, load, reloadKey]);
 
   const userNameById = new Map(userOptions.map((u) => [u.id, u.username]));
   // Newest first (created_at, then id as tiebreak), so the latest
