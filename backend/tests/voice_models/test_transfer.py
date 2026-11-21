@@ -8,7 +8,7 @@ from tools.voice_models import transfer
 
 
 def _mock_http_response(payload: bytes, headers: dict[str, str]) -> MagicMock:
-    """Builds a fake urlopen response that streams the given payload."""
+    """Builds a fake open_url response that streams the given payload."""
     mock_response = MagicMock()
     mock_response.read.side_effect = io.BytesIO(payload).read
     mock_response.headers = headers
@@ -20,7 +20,7 @@ def test_download_file_already_present(tmp_path):
     target = tmp_path / "model.onnx"
     target.write_bytes(b"existing-weights")
 
-    with patch("urllib.request.urlopen") as mock_url:
+    with patch("tools.voice_models.transfer.open_url") as mock_url:
         result = transfer.download_file("http://mock/model.onnx", target, force=False)
         assert result is True
         mock_url.assert_not_called()
@@ -31,7 +31,7 @@ def test_download_file_success(tmp_path):
     target = tmp_path / "model.onnx"
     mock_response = _mock_http_response(b"fake-binary-data", {"Content-Length": "16"})
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("tools.voice_models.transfer.open_url") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
         result = transfer.download_file("http://mock/model.onnx", target, force=True)
         assert result is True
@@ -44,7 +44,7 @@ def test_download_file_failure_cleans_part(tmp_path):
     """Verifies download_file handles URLError and cleans up partial download file."""
     target = tmp_path / "model.onnx"
     with patch(
-        "urllib.request.urlopen",
+        "tools.voice_models.transfer.open_url",
         side_effect=urllib.error.URLError("Network unreachable"),
     ):
         result = transfer.download_file("http://mock/model.onnx", target)
@@ -60,7 +60,7 @@ def test_download_file_removes_part_file_when_stream_breaks(tmp_path):
     mock_response.read.side_effect = [b"first-chunk", OSError("Connection reset")]
     mock_response.headers = {"Content-Length": "64"}
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("tools.voice_models.transfer.open_url") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
         result = transfer.download_file("http://mock/model.onnx", target)
 
@@ -74,7 +74,7 @@ def test_download_file_prints_progress_when_length_is_known(tmp_path, capsys):
     target = tmp_path / "model.onnx"
     mock_response = _mock_http_response(b"fake-binary-data", {"Content-Length": "16"})
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("tools.voice_models.transfer.open_url") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
         transfer.download_file("http://mock/model.onnx", target, label="Mock model")
 
@@ -89,7 +89,7 @@ def test_download_file_skips_progress_without_content_length(tmp_path, capsys):
     target = tmp_path / "model.onnx"
     mock_response = _mock_http_response(b"fake-binary-data", {})
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("tools.voice_models.transfer.open_url") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
         result = transfer.download_file("http://mock/model.onnx", target)
 
@@ -103,7 +103,7 @@ def test_download_file_sends_downloader_user_agent(tmp_path):
     target = tmp_path / "model.onnx"
     mock_response = _mock_http_response(b"data", {})
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("tools.voice_models.transfer.open_url") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
         transfer.download_file("http://mock/model.onnx", target)
 

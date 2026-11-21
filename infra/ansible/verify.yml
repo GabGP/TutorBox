@@ -203,15 +203,27 @@
         check_router_dns.rc != 0 or ('Address: ' ~ jetson_ip) not in check_router_dns.stdout
       ignore_errors: true
 
+    # An unreachable router must fail its check, not stop the play before the summary.
     - name: Read the router's settings
-      ansible.builtin.include_tasks: tasks/router_run.yml
-      vars:
-        router_mode: verify
+      block:
+        - name: Run the router check
+          ansible.builtin.include_tasks: tasks/router_run.yml
+          vars:
+            router_mode: verify
+      rescue:
+        - name: Note that the router could not be read
+          ansible.builtin.set_fact:
+            router_unreachable: true
 
     - name: The router matches this kit's values
       ansible.builtin.assert:
-        that: (router_count | int) == 0
-        fail_msg: "{{ router_count }} router setting(s) differ; see the DRIFT lines above."
+        that:
+          - not (router_unreachable | default(false))
+          - (router_count | default(0) | int) == 0
+        fail_msg: >-
+          {{ ('The router at ' ~ router_ip ~ ' could not be read over SSH.')
+             if (router_unreachable | default(false))
+             else (router_count ~ ' router setting(s) differ; see the DRIFT lines above.') }}
         quiet: true
       register: check_router_settings
       ignore_errors: true

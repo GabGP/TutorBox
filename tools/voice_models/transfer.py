@@ -6,6 +6,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from tools.voice_models.connect import open_url
 from tools.voice_models.console import TAG_FAIL, TAG_INFO, TAG_OK
 
 USER_AGENT = "Utz'tutor-Appliance-Downloader/1.0"
@@ -45,9 +46,7 @@ def download_file(
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
 
     try:
-        with urllib.request.urlopen(
-            request, timeout=REQUEST_TIMEOUT_SECONDS
-        ) as response:
+        with open_url(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
             total_bytes = int(response.headers.get("Content-Length", 0))
             downloaded_bytes = 0
 
