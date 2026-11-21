@@ -123,7 +123,8 @@ def synthesize_steps(
         for clause_idx, clause in enumerate(clauses):
             result = tts_pipe(clause)
             sampling_rate = result["sampling_rate"]
-            audio = np.asarray(result["audio"][0], dtype=np.float32).squeeze()
+            # Older transformers return shape (1, samples), newer ones (samples,): squeeze both.
+            audio = np.asarray(result["audio"], dtype=np.float32).squeeze()
             chunks.append(audio)
 
             if clause_idx < len(clauses) - 1:
